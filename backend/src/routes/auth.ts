@@ -190,7 +190,7 @@ router.get('/naver/callback', async (req: Request, res: Response) => {
 			throw new Error('Failed to get access token')
 		}
 
-		const tokenData = await tokenResponse.json()
+		const tokenData = (await tokenResponse.json()) as { access_token: string }
 		const accessToken = tokenData.access_token
 
 		console.log('✅ Access token received')
@@ -207,7 +207,17 @@ router.get('/naver/callback', async (req: Request, res: Response) => {
 			throw new Error('Failed to get user profile')
 		}
 
-		const profileData = await profileResponse.json()
+		const profileData = (await profileResponse.json()) as {
+			resultcode: string
+			message?: string
+			response: {
+				id: string
+				email: string
+				name: string
+				mobile: string
+				profile_image: string
+			}
+		}
 
 		if (profileData.resultcode !== '00') {
 			console.error('❌ Naver API error:', profileData.message)
