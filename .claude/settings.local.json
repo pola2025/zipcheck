@@ -21,7 +21,8 @@
       "Bash(railway login:*)",
       "Bash(git init:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(gh auth:*)"
     ],
     "deny": [],
     "ask": []
