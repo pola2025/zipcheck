@@ -1,0 +1,34 @@
+{
+  "items": [
+    {
+      "category": "주방",
+      "itemName": "씽크대",
+      "quantity": 1,
+      "unit": "개",
+      "unitPrice": 1500000,
+      "totalPrice": 1500000,
+      "notes": "프리미엄 모델"
+    },
+    {
+      "category": "바닥",
+      "itemName": "강화마루",
+      "quantity": 35,
+      "unit": "m²",
+      "unitPrice": 80000,
+      "totalPrice": 2800000,
+      "notes": "12T 강화마루"
+    },
+    {
+      "category": "욕실",
+      "itemName": "세면대",
+      "quantity": 2,
+      "unit": "개",
+      "unitPrice": 400000,
+      "totalPrice": 800000,
+      "notes": "세트 상품"
+    }
+  ],
+  "propertyType": "아파트",
+  "propertySize": 32,
+  "region": "서울"
+}

@@ -1,0 +1,228 @@
+{
+  "overallScore": 72,
+  "priceLevel": "fair",
+  "totalEstimate": 32230000,
+  "marketAverage": 29800000,
+  "savingsPercent": 8.2,
+  "marginAnalysis": {
+    "estimatedMargin": 18.5,
+    "evaluation": "적정",
+    "isNormal": true,
+    "comment": "업체 마진이 정상 범위(10-20%) 내에 있습니다. 적정한 수준의 견적입니다."
+  },
+  "itemAnalysis": [
+    {
+      "category": "주방",
+      "item": "씽크대",
+      "estimatePrice": 2800000,
+      "marketAverage": 2450000,
+      "differencePercent": 14.3,
+      "evaluation": "fair",
+      "marginEstimate": 16.2,
+      "comment": "프리미엄 자재 적용으로 시장가보다 약간 높지만 정상 범위"
+    },
+    {
+      "category": "주방",
+      "item": "주방 타일",
+      "estimatePrice": 1020000,
+      "marketAverage": 920000,
+      "differencePercent": 10.9,
+      "evaluation": "good",
+      "marginEstimate": 14.5,
+      "comment": "적정 가격"
+    },
+    {
+      "category": "바닥",
+      "item": "강화마루",
+      "estimatePrice": 7980000,
+      "marketAverage": 7350000,
+      "differencePercent": 8.6,
+      "evaluation": "good",
+      "marginEstimate": 12.8,
+      "comment": "독일산 프리미엄 제품으로 합리적인 가격"
+    },
+    {
+      "category": "바닥",
+      "item": "현관 포세린 타일",
+      "estimatePrice": 720000,
+      "marketAverage": 650000,
+      "differencePercent": 10.8,
+      "evaluation": "good",
+      "marginEstimate": 13.2,
+      "comment": "적정 가격"
+    },
+    {
+      "category": "욕실",
+      "item": "욕실1 (안방)",
+      "estimatePrice": 4200000,
+      "marketAverage": 3600000,
+      "differencePercent": 16.7,
+      "evaluation": "fair",
+      "marginEstimate": 19.5,
+      "comment": "욕조 포함 시 정상 범위. 단, 가격 협상 여지 있음"
+    },
+    {
+      "category": "욕실",
+      "item": "욕실2 (공용)",
+      "estimatePrice": 3800000,
+      "marketAverage": 3200000,
+      "differencePercent": 18.8,
+      "evaluation": "fair",
+      "marginEstimate": 20.1,
+      "comment": "정상 범위 상한선. 재협상 권장"
+    },
+    {
+      "category": "도배",
+      "item": "실크벽지",
+      "estimatePrice": 1440000,
+      "marketAverage": 1280000,
+      "differencePercent": 12.5,
+      "evaluation": "good",
+      "marginEstimate": 15.0,
+      "comment": "적정 가격"
+    },
+    {
+      "category": "도배",
+      "item": "천장 도배",
+      "estimatePrice": 1120000,
+      "marketAverage": 1000000,
+      "differencePercent": 12.0,
+      "evaluation": "good",
+      "marginEstimate": 14.5,
+      "comment": "적정 가격"
+    },
+    {
+      "category": "중문",
+      "item": "거실 슬라이딩 중문",
+      "estimatePrice": 1850000,
+      "marketAverage": 1650000,
+      "differencePercent": 12.1,
+      "evaluation": "good",
+      "marginEstimate": 15.2,
+      "comment": "3연동 제품으로 적정 가격"
+    },
+    {
+      "category": "조명",
+      "item": "LED 매입등",
+      "estimatePrice": 810000,
+      "marketAverage": 720000,
+      "differencePercent": 12.5,
+      "evaluation": "good",
+      "marginEstimate": 15.0,
+      "comment": "적정 가격"
+    },
+    {
+      "category": "조명",
+      "item": "거실 펜던트",
+      "estimatePrice": 420000,
+      "marketAverage": 380000,
+      "differencePercent": 10.5,
+      "evaluation": "good",
+      "marginEstimate": 13.8,
+      "comment": "적정 가격"
+    },
+    {
+      "category": "도어",
+      "item": "방문 교체",
+      "estimatePrice": 1140000,
+      "marketAverage": 1050000,
+      "differencePercent": 8.6,
+      "evaluation": "good",
+      "marginEstimate": 11.5,
+      "comment": "합리적인 가격"
+    },
+    {
+      "category": "몰딩",
+      "item": "걸레받이",
+      "estimatePrice": 576000,
+      "marketAverage": 510000,
+      "differencePercent": 12.9,
+      "evaluation": "good",
+      "marginEstimate": 15.3,
+      "comment": "적정 가격"
+    },
+    {
+      "category": "몰딩",
+      "item": "천장 몰딩",
+      "estimatePrice": 704000,
+      "marketAverage": 620000,
+      "differencePercent": 13.5,
+      "evaluation": "good",
+      "marginEstimate": 16.0,
+      "comment": "적정 가격"
+    },
+    {
+      "category": "기타",
+      "item": "철거 및 폐기물 처리",
+      "estimatePrice": 1200000,
+      "marketAverage": 1100000,
+      "differencePercent": 9.1,
+      "evaluation": "good",
+      "marginEstimate": 12.0,
+      "comment": "합리적인 가격"
+    },
+    {
+      "category": "기타",
+      "item": "보양 및 청소",
+      "estimatePrice": 450000,
+      "marketAverage": 400000,
+      "differencePercent": 12.5,
+      "evaluation": "good",
+      "marginEstimate": 15.0,
+      "comment": "적정 가격"
+    }
+  ],
+  "criteriaScores": [
+    {
+      "criteria": "가격경쟁력",
+      "score": 72,
+      "market": 70,
+      "comment": "시장 평균보다 약간 높지만 프리미엄 자재 고려 시 합리적"
+    },
+    {
+      "criteria": "품질",
+      "score": 82,
+      "market": 75,
+      "comment": "독일산 마루, 엔지니어드스톤 등 고품질 자재 사용"
+    },
+    {
+      "criteria": "시공성",
+      "score": 78,
+      "market": 70,
+      "comment": "철거부터 마무리까지 일괄 시공으로 안정적"
+    },
+    {
+      "criteria": "내구성",
+      "score": 80,
+      "market": 72,
+      "comment": "고품질 자재로 장기 사용 적합"
+    },
+    {
+      "criteria": "디자인",
+      "score": 75,
+      "market": 68,
+      "comment": "중문, 몰딩 등 고급스러운 마감"
+    }
+  ],
+  "aiInsights": {
+    "summary": "전체적으로 적정한 수준의 견적입니다. 업체 마진은 약 18.5%로 정상 범위(10-20%) 내에 있으며, 프리미엄 자재를 사용하면서도 과도한 가격 책정은 없습니다. 욕실 공사 부분에서 소폭 협상 여지가 있으나, 전반적으로 합리적인 견적으로 판단됩니다.",
+    "warnings": [
+      "욕실2(공용) 항목이 마진 상한선(20.1%)에 근접합니다. 5-10% 가격 협상을 권장합니다.",
+      "욕실1(안방) 항목도 마진 19.5%로 다소 높은 편입니다. 욕조 선택사항 조정으로 비용 절감 가능합니다."
+    ],
+    "recommendations": [
+      "욕실 공사 항목(총 800만원)에 대해 재협상하여 5-10% 절감 시도를 권장합니다. 약 40-80만원 절감 가능합니다.",
+      "욕실1의 욕조를 샤워부스로 변경할 경우 약 50-70만원 추가 절감이 가능합니다.",
+      "전체 공사비의 약 2-3%(60-90만원) 추가 협상 여지가 있습니다.",
+      "현재 견적서의 자재 품질이 우수하므로, 무리한 가격 인하보다는 A/S 조건과 공사 일정 협의에 집중하시기 바랍니다."
+    ]
+  },
+  "priceBreakdown": {
+    "materialCost": 19800000,
+    "laborCost": 7200000,
+    "margin": 5230000,
+    "marginPercent": 18.5,
+    "normalRange": "10-20%",
+    "evaluation": "정상 범위"
+  }
+}
