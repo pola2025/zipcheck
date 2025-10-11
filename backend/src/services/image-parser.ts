@@ -149,12 +149,12 @@ ${extractedText}
 		})
 
 		if (!response.ok) {
-			const errorData = await response.json()
+			const errorData = (await response.json()) as { error?: { message?: string } }
 			console.error('Claude API Error:', errorData)
 			throw new Error(`Claude API 호출 실패: ${errorData.error?.message || 'Unknown error'}`)
 		}
 
-		const data = await response.json()
+		const data = (await response.json()) as { content?: Array<{ text: string }> }
 		const content = data.content?.[0]?.text
 
 		if (!content) {

@@ -200,7 +200,7 @@ router.post('/submit', async (req, res) => {
 
 		// Determine initial status based on validation
 		let initialStatus: 'pending' | 'rejected' = 'pending'
-		let validationStatus = validationResult.status
+		let validationStatus: string = validationResult.status
 		let validationNotes = validationResult.validationNotes
 
 		if (!validationResult.isValid) {
