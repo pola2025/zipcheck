@@ -1,0 +1,949 @@
+openapi: 3.1.0
+info:
+  title: Zipcheck API
+  version: 0.1.0
+  description: >
+    API specification for the Zipcheck AI+Expert hybrid interior estimate analysis platform.
+servers:
+  - url: https://api.zipcheck.local/v1
+    description: Development
+tags:
+  - name: Auth
+  - name: Estimates
+  - name: Expert
+  - name: SLA
+  - name: Reports
+  - name: Notifications
+  - name: Data
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: 사용자 로그인 (이메일/전화번호)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/LoginWithPasswordRequest'
+                - $ref: '#/components/schemas/LoginWithOtpRequest'
+      responses:
+        '200':
+          description: 로그인 성공 또는 OTP 필요
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /auth/verify-otp:
+    post:
+      tags: [Auth]
+      summary: OTP 검증
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyOtpRequest'
+      responses:
+        '200':
+          description: 토큰 발급
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokensResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: 액세스 토큰 재발급
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: 새 액세스 토큰
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokensResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /estimates:
+    post:
+      tags: [Estimates]
+      summary: 견적 업로드
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateEstimateRequest'
+      responses:
+        '201':
+          description: 업로드 생성
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstimateCreatedResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  /estimates/{estimateId}:
+    get:
+      tags: [Estimates]
+      summary: 견적 상태 조회
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EstimateId'
+      responses:
+        '200':
+          description: 견적 상세
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstimateDetail'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /estimates/{estimateId}/analysis:
+    get:
+      tags: [Estimates]
+      summary: AI 분석 결과 조회
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EstimateId'
+      responses:
+        '200':
+          description: 분석 결과
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResult'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /expert/queue:
+    get:
+      tags: [Expert]
+      summary: 전문가 작업 큐
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: tier
+          schema:
+            $ref: '#/components/schemas/SlaTier'
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [pending, reviewing, qa_pending]
+      responses:
+        '200':
+          description: 작업 큐 리스트
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExpertQueueItem'
+  /estimates/{estimateId}/expert-review:
+    post:
+      tags: [Expert]
+      summary: 전문가 리뷰 제출
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EstimateId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitExpertReviewRequest'
+      responses:
+        '201':
+          description: 리뷰 제출 완료
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpertReviewResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  /expert-reviews/{reviewId}:
+    patch:
+      tags: [Expert]
+      summary: 리뷰 수정/QA 승인
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: reviewId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateExpertReviewRequest'
+      responses:
+        '200':
+          description: 업데이트 완료
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpertReviewResponse'
+  /sla-orders:
+    post:
+      tags: [SLA]
+      summary: SLA 주문 생성
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSlaOrderRequest'
+      responses:
+        '201':
+          description: 주문 생성
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlaOrderResponse'
+  /payments/confirm:
+    post:
+      tags: [SLA]
+      summary: 결제 확인
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmPaymentRequest'
+      responses:
+        '200':
+          description: 결제 완료
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+  /sla-orders/{slaOrderId}/timeline:
+    get:
+      tags: [SLA]
+      summary: SLA 타임라인
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: slaOrderId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: SLA 진행 상황
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlaTimeline'
+  /reports/{reportId}:
+    get:
+      tags: [Reports]
+      summary: 리포트 상세
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReportId'
+      responses:
+        '200':
+          description: 리포트 데이터
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportDetail'
+  /reports/{reportId}/download:
+    get:
+      tags: [Reports]
+      summary: 리포트 다운로드 (PDF)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReportId'
+      responses:
+        '302':
+          description: Signed URL 리다이렉트
+          headers:
+            Location:
+              description: Signed URL
+              schema:
+                type: string
+                format: uri
+  /notifications/send:
+    post:
+      tags: [Notifications]
+      summary: 알림 발송 요청
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendNotificationRequest'
+      responses:
+        '202':
+          description: 큐잉 완료
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationQueuedResponse'
+  /materials:
+    get:
+      tags: [Data]
+      summary: 자재 단가 조회
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: region
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: size
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: 자재 리스트
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaterialListResponse'
+  /analytics/operations:
+    get:
+      tags: [Data]
+      summary: 운영 KPI 조회
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: group_by
+          schema:
+            type: string
+            enum: [day, week, month]
+      responses:
+        '200':
+          description: KPI 데이터
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsAnalyticsResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    EstimateId:
+      name: estimateId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ReportId:
+      name: reportId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    UnauthorizedError:
+      description: 인증 실패
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ValidationError:
+      description: 유효성 오류
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFoundError:
+      description: 리소스 없음
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    LoginWithPasswordRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        device_id:
+          type: string
+    LoginWithOtpRequest:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+        device_id:
+          type: string
+    LoginResponse:
+      type: object
+      required: [otp_required]
+      properties:
+        otp_required:
+          type: boolean
+        session_id:
+          type: string
+        user:
+          $ref: '#/components/schemas/UserSummary'
+    VerifyOtpRequest:
+      type: object
+      required: [session_id, otp_code]
+      properties:
+        session_id:
+          type: string
+        otp_code:
+          type: string
+    AuthTokensResponse:
+      type: object
+      required: [access_token, refresh_token, expires_in, user]
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          default: Bearer
+        expires_in:
+          type: integer
+        user:
+          $ref: '#/components/schemas/UserSummary'
+    RefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+    UserSummary:
+      type: object
+      required: [id, role, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        role:
+          $ref: '#/components/schemas/UserRole'
+        name:
+          type: string
+    UserRole:
+      type: string
+      enum: [customer, expert, qa, admin]
+    CreateEstimateRequest:
+      type: object
+      required: [file, space_type, housing_type, floor_area, project_scope, sla_tier]
+      properties:
+        file:
+          type: string
+          format: binary
+        space_type:
+          type: string
+          enum: [residential, commercial]
+        housing_type:
+          type: string
+        floor_area:
+          type: number
+        project_scope:
+          type: string
+        sla_tier:
+          $ref: '#/components/schemas/SlaTier'
+        notes:
+          type: string
+    EstimateCreatedResponse:
+      type: object
+      required: [estimate_id, status]
+      properties:
+        estimate_id:
+          type: string
+          format: uuid
+        sla_order_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, processing]
+    EstimateDetail:
+      type: object
+      required: [id, status, sla_order, progress]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, processing, ready, delivered, archived]
+        housing_type:
+          type: string
+        floor_area:
+          type: number
+        submitted_channel:
+          type: string
+        notes:
+          type: string
+        sla_order:
+          $ref: '#/components/schemas/SlaOrderSummary'
+        progress:
+          $ref: '#/components/schemas/EstimateProgress'
+        latest_report:
+          $ref: '#/components/schemas/ReportSummary'
+    EstimateProgress:
+      type: object
+      required: [stage, percent]
+      properties:
+        stage:
+          type: string
+          enum: [uploaded, ai_processing, expert_review, qa, ready]
+        percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        eta_minutes:
+          type: integer
+    AnalysisResult:
+      type: object
+      required: [ai_grade, cost_comparison, risk_flags, metrics]
+      properties:
+        ai_grade:
+          $ref: '#/components/schemas/AiGrade'
+        cost_comparison:
+          type: array
+          items:
+            $ref: '#/components/schemas/CostComparison'
+        risk_flags:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskFlag'
+        metrics:
+          $ref: '#/components/schemas/AnalysisMetrics'
+        last_run:
+          $ref: '#/components/schemas/AnalysisRunSummary'
+    AiGrade:
+      type: object
+      required: [level, score]
+      properties:
+        level:
+          type: string
+          enum: [risk, normal, premium]
+        score:
+          type: number
+          minimum: 0
+          maximum: 100
+        description:
+          type: string
+    CostComparison:
+      type: object
+      required: [category, estimate_value, market_value, delta_percent]
+      properties:
+        category:
+          type: string
+        estimate_value:
+          type: number
+        market_value:
+          type: number
+        delta_percent:
+          type: number
+        percentile_rank:
+          type: number
+    RiskFlag:
+      type: object
+      required: [id, type, severity, message]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [missing_item, underpriced, overpriced, risk_contract, risk_schedule]
+        severity:
+          type: integer
+          minimum: 0
+          maximum: 100
+        message:
+          type: string
+        evidence:
+          type: object
+    AnalysisMetrics:
+      type: object
+      properties:
+        avg_delta:
+          type: number
+        missing_items_count:
+          type: integer
+        overprice_ratio:
+          type: number
+        underprice_ratio:
+          type: number
+    AnalysisRunSummary:
+      type: object
+      required: [run_id, executed_at, model_version]
+      properties:
+        run_id:
+          type: string
+          format: uuid
+        executed_at:
+          type: string
+          format: date-time
+        model_version:
+          type: string
+    ExpertQueueItem:
+      type: object
+      required: [estimate_id, sla_tier, due_time, summary]
+      properties:
+        estimate_id:
+          type: string
+          format: uuid
+        sla_tier:
+          $ref: '#/components/schemas/SlaTier'
+        due_time:
+          type: string
+          format: date-time
+        summary:
+          type: string
+        risk_level:
+          type: string
+          enum: [low, medium, high]
+    SubmitExpertReviewRequest:
+      type: object
+      required: [summary, recommendations, checklist]
+      properties:
+        summary:
+          type: string
+        recommendations:
+          type: string
+        risk_summary:
+          type: string
+        contract_notes:
+          type: string
+        checklist:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChecklistItem'
+    ChecklistItem:
+      type: object
+      required: [category, status]
+      properties:
+        category:
+          type: string
+        status:
+          type: string
+          enum: [ok, attention, critical]
+        comment:
+          type: string
+    ExpertReviewResponse:
+      type: object
+      required: [review_id, status]
+      properties:
+        review_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [submitted, qa_pending, published]
+    UpdateExpertReviewRequest:
+      type: object
+      properties:
+        ready_for_publish:
+          type: boolean
+        qa_status:
+          type: string
+          enum: [approved, rejected, needs_revision]
+        qa_comment:
+          type: string
+    CreateSlaOrderRequest:
+      type: object
+      required: [estimate_id, tier, payment_method]
+      properties:
+        estimate_id:
+          type: string
+          format: uuid
+        tier:
+          $ref: '#/components/schemas/SlaTier'
+        payment_method:
+          type: string
+          enum: [card, account, easypay]
+        coupon_code:
+          type: string
+    SlaOrderSummary:
+      type: object
+      required: [id, tier, price, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        tier:
+          $ref: '#/components/schemas/SlaTier'
+        price:
+          type: number
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [pending, paid, processing, done, cancelled]
+        promised_time:
+          type: string
+          format: date-time
+    SlaOrderResponse:
+      allOf:
+        - $ref: '#/components/schemas/SlaOrderSummary'
+        - type: object
+          properties:
+            payment_intent_secret:
+              type: string
+    ConfirmPaymentRequest:
+      type: object
+      required: [payment_intent_id]
+      properties:
+        payment_intent_id:
+          type: string
+    PaymentResponse:
+      type: object
+      required: [payment_id, status]
+      properties:
+        payment_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [paid, failed, pending]
+        receipt_url:
+          type: string
+          format: uri
+    SlaTimeline:
+      type: object
+      required: [sla_order_id, tier, request_time, promised_time, checkpoints]
+      properties:
+        sla_order_id:
+          type: string
+          format: uuid
+        tier:
+          $ref: '#/components/schemas/SlaTier'
+        request_time:
+          type: string
+          format: date-time
+        promised_time:
+          type: string
+          format: date-time
+        completed_time:
+          type: string
+          format: date-time
+        checkpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/SlaCheckpoint'
+    SlaCheckpoint:
+      type: object
+      required: [stage, timestamp]
+      properties:
+        stage:
+          type: string
+          enum: [request_received, ai_started, ai_completed, expert_started, expert_completed, qa_completed, delivered]
+        timestamp:
+          type: string
+          format: date-time
+        actor:
+          type: string
+    ReportSummary:
+      type: object
+      required: [id, version, generated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+        generated_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [draft, published, expired]
+    ReportDetail:
+      allOf:
+        - $ref: '#/components/schemas/ReportSummary'
+        - type: object
+          properties:
+            sections:
+              type: array
+              items:
+                $ref: '#/components/schemas/ReportSection'
+            download_url:
+              type: string
+              format: uri
+            share_link:
+              type: string
+              format: uri
+    ReportSection:
+      type: object
+      required: [title, type]
+      properties:
+        title:
+          type: string
+        type:
+          type: string
+          enum: [overview, ai_analysis, expert_insight, pricing, contract]
+        content:
+          type: object
+    SendNotificationRequest:
+      type: object
+      required: [user_id, channel, template_id]
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        channel:
+          type: string
+          enum: [kakao, sms, email, inapp]
+        template_id:
+          type: string
+        params:
+          type: object
+    NotificationQueuedResponse:
+      type: object
+      required: [notification_id, status]
+      properties:
+        notification_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued, sent, failed]
+    MaterialListResponse:
+      type: object
+      required: [items, meta]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Material'
+        meta:
+          $ref: '#/components/schemas/PaginatedMeta'
+    Material:
+      type: object
+      required: [id, name, category, unit, avg_price, region]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        supplier:
+          type: string
+        unit:
+          type: string
+        avg_price:
+          type: number
+        region:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+    PaginatedMeta:
+      type: object
+      required: [page, size, total]
+      properties:
+        page:
+          type: integer
+        size:
+          type: integer
+        total:
+          type: integer
+    OperationsAnalyticsResponse:
+      type: object
+      required: [metrics]
+      properties:
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetricItem'
+    MetricItem:
+      type: object
+      required: [name, value]
+      properties:
+        name:
+          type: string
+        value:
+          type: number
+        dimension:
+          type: object
+    ErrorResponse:
+      type: object
+      required: [status, code, message]
+      properties:
+        status:
+          type: string
+          enum: [error]
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+    SlaTier:
+      type: string
+      enum:
+        - Standard
+        - Express
+        - Urgent
+        - LateNight
+        - Holiday

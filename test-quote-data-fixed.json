@@ -1,0 +1,281 @@
+{
+  "customer_name": "이재호",
+  "customer_phone": "010-9897-9834",
+  "customer_email": "mkt@polarad.co.kr",
+  "property_type": "아파트",
+  "property_size": 84,
+  "region": "서울 강남구",
+  "address": "서울특별시 강남구 삼성동 123-45",
+  "items": [
+    {
+      "category": "철거 및 폐기물 처리",
+      "itemName": "기존 바닥재 철거",
+      "specification": "강마루/장판 철거, 84㎡",
+      "quantity": 84,
+      "unit": "㎡",
+      "unit_price": 15000,
+      "total_price": 1260000
+    },
+    {
+      "category": "철거 및 폐기물 처리",
+      "itemName": "벽지 제거 및 도배 밑작업",
+      "specification": "기존 벽지 제거, 퍼티작업",
+      "quantity": 250,
+      "unit": "㎡",
+      "unit_price": 8000,
+      "total_price": 2000000
+    },
+    {
+      "category": "철거 및 폐기물 처리",
+      "itemName": "폐기물 처리",
+      "specification": "철거 폐기물 수거 및 처리",
+      "quantity": 1,
+      "unit": "식",
+      "unit_price": 800000,
+      "total_price": 800000
+    },
+    {
+      "category": "바닥재",
+      "itemName": "강화마루 시공",
+      "specification": "LG 하우시스 지아 8T, 전실",
+      "quantity": 84,
+      "unit": "㎡",
+      "unit_price": 45000,
+      "total_price": 3780000
+    },
+    {
+      "category": "바닥재",
+      "itemName": "걸레받이 시공",
+      "specification": "ABS 걸레받이",
+      "quantity": 80,
+      "unit": "m",
+      "unit_price": 8000,
+      "total_price": 640000
+    },
+    {
+      "category": "벽지/도배",
+      "itemName": "실크벽지 시공",
+      "specification": "LG 실크벽지 프리미엄급, 전실",
+      "quantity": 250,
+      "unit": "㎡",
+      "unit_price": 18000,
+      "total_price": 4500000
+    },
+    {
+      "category": "벽지/도배",
+      "itemName": "천정 도배",
+      "specification": "합지 도배",
+      "quantity": 84,
+      "unit": "㎡",
+      "unit_price": 12000,
+      "total_price": 1008000
+    },
+    {
+      "category": "도어",
+      "itemName": "방문 교체",
+      "specification": "중문 도어, 3개소",
+      "quantity": 3,
+      "unit": "개",
+      "unit_price": 450000,
+      "total_price": 1350000
+    },
+    {
+      "category": "도어",
+      "itemName": "욕실문 교체",
+      "specification": "PVC 욕실문, 2개소",
+      "quantity": 2,
+      "unit": "개",
+      "unit_price": 380000,
+      "total_price": 760000
+    },
+    {
+      "category": "주방",
+      "itemName": "주방 상판 교체",
+      "specification": "인조대리석 상판 2.4m",
+      "quantity": 2.4,
+      "unit": "m",
+      "unit_price": 180000,
+      "total_price": 432000
+    },
+    {
+      "category": "주방",
+      "itemName": "싱크볼 교체",
+      "specification": "스테인리스 언더싱크",
+      "quantity": 1,
+      "unit": "개",
+      "unit_price": 250000,
+      "total_price": 250000
+    },
+    {
+      "category": "주방",
+      "itemName": "주방수전",
+      "specification": "한샘 프리미엄 주방수전",
+      "quantity": 1,
+      "unit": "개",
+      "unit_price": 180000,
+      "total_price": 180000
+    },
+    {
+      "category": "주방",
+      "itemName": "가스레인지",
+      "specification": "린나이 3구 빌트인",
+      "quantity": 1,
+      "unit": "개",
+      "unit_price": 450000,
+      "total_price": 450000
+    },
+    {
+      "category": "욕실",
+      "itemName": "욕실 타일 시공",
+      "specification": "벽타일 300x600, 2개소",
+      "quantity": 40,
+      "unit": "㎡",
+      "unit_price": 55000,
+      "total_price": 2200000
+    },
+    {
+      "category": "욕실",
+      "itemName": "세면대 교체",
+      "specification": "세면기+수전+거울장, 2개소",
+      "quantity": 2,
+      "unit": "개",
+      "unit_price": 380000,
+      "total_price": 760000
+    },
+    {
+      "category": "욕실",
+      "itemName": "양변기 교체",
+      "specification": "코스타 투피스 양변기, 2개소",
+      "quantity": 2,
+      "unit": "개",
+      "unit_price": 280000,
+      "total_price": 560000
+    },
+    {
+      "category": "욕실",
+      "itemName": "샤워부스",
+      "specification": "3면 고정 샤워부스",
+      "quantity": 1,
+      "unit": "개",
+      "unit_price": 850000,
+      "total_price": 850000
+    },
+    {
+      "category": "조명",
+      "itemName": "거실 LED조명",
+      "specification": "150W 거실등",
+      "quantity": 2,
+      "unit": "개",
+      "unit_price": 180000,
+      "total_price": 360000
+    },
+    {
+      "category": "조명",
+      "itemName": "방 LED조명",
+      "specification": "80W 방등, 3개소",
+      "quantity": 3,
+      "unit": "개",
+      "unit_price": 120000,
+      "total_price": 360000
+    },
+    {
+      "category": "조명",
+      "itemName": "주방 LED조명",
+      "specification": "주방 직부등",
+      "quantity": 1,
+      "unit": "개",
+      "unit_price": 90000,
+      "total_price": 90000
+    },
+    {
+      "category": "전기",
+      "itemName": "스위치/콘센트 교체",
+      "specification": "시스템 스위치 전체 교체",
+      "quantity": 35,
+      "unit": "개",
+      "unit_price": 25000,
+      "total_price": 875000
+    },
+    {
+      "category": "전기",
+      "itemName": "전기 배선 정비",
+      "specification": "노후 배선 교체 및 정비",
+      "quantity": 1,
+      "unit": "식",
+      "unit_price": 600000,
+      "total_price": 600000
+    },
+    {
+      "category": "목공사",
+      "itemName": "붙박이장 제작",
+      "specification": "안방 붙박이장 2.4m",
+      "quantity": 2.4,
+      "unit": "m",
+      "unit_price": 450000,
+      "total_price": 1080000
+    },
+    {
+      "category": "목공사",
+      "itemName": "신발장 제작",
+      "specification": "현관 신발장 1.5m",
+      "quantity": 1.5,
+      "unit": "m",
+      "unit_price": 380000,
+      "total_price": 570000
+    },
+    {
+      "category": "샷시/창호",
+      "itemName": "베란다 샷시 교체",
+      "specification": "시스템 창호 3연동",
+      "quantity": 6,
+      "unit": "㎡",
+      "unit_price": 380000,
+      "total_price": 2280000
+    },
+    {
+      "category": "샷시/창호",
+      "itemName": "중문 설치",
+      "specification": "거실 알루미늄 중문",
+      "quantity": 1,
+      "unit": "개",
+      "unit_price": 950000,
+      "total_price": 950000
+    },
+    {
+      "category": "마감재",
+      "itemName": "몰딩 시공",
+      "specification": "천정 몰딩",
+      "quantity": 60,
+      "unit": "m",
+      "unit_price": 15000,
+      "total_price": 900000
+    },
+    {
+      "category": "기타",
+      "itemName": "청소 및 정리",
+      "specification": "준공청소",
+      "quantity": 1,
+      "unit": "식",
+      "unit_price": 300000,
+      "total_price": 300000
+    },
+    {
+      "category": "기타",
+      "itemName": "현장관리비",
+      "specification": "공사 관리 및 감리",
+      "quantity": 1,
+      "unit": "식",
+      "unit_price": 1500000,
+      "total_price": 1500000
+    },
+    {
+      "category": "기타",
+      "itemName": "부가세",
+      "specification": "VAT 10%",
+      "quantity": 1,
+      "unit": "식",
+      "unit_price": 3164500,
+      "total_price": 3164500
+    }
+  ]
+}

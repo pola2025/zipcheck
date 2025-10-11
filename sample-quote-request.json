@@ -1,0 +1,156 @@
+{
+  "customer_name": "이재호",
+  "customer_phone": "010-9897-9834",
+  "customer_email": "mkt@polarad.co.kr",
+  "property_type": "아파트",
+  "property_size": 32,
+  "region": "서울 강남구",
+  "address": "서울시 강남구 역삼동 123-45",
+  "items": [
+    {
+      "category": "주방",
+      "itemName": "씽크대",
+      "quantity": 1,
+      "unit": "식",
+      "unitPrice": 2800000,
+      "totalPrice": 2800000,
+      "notes": "상판 엔지니어드스톤, 하부장 6자, 상부장 포함"
+    },
+    {
+      "category": "주방",
+      "itemName": "주방 타일",
+      "quantity": 12,
+      "unit": "㎡",
+      "unitPrice": 85000,
+      "totalPrice": 1020000,
+      "notes": "300x600 포세린 타일, 시공비 포함"
+    },
+    {
+      "category": "바닥",
+      "itemName": "강화마루",
+      "quantity": 84,
+      "unit": "㎡",
+      "unitPrice": 95000,
+      "totalPrice": 7980000,
+      "notes": "12T 독일산 강화마루, 몰딩 및 시공비 포함"
+    },
+    {
+      "category": "바닥",
+      "itemName": "현관 포세린 타일",
+      "quantity": 6,
+      "unit": "㎡",
+      "unitPrice": 120000,
+      "totalPrice": 720000,
+      "notes": "600x600 포세린 타일, 시공비 포함"
+    },
+    {
+      "category": "욕실",
+      "itemName": "욕실1 (안방)",
+      "quantity": 1,
+      "unit": "식",
+      "unitPrice": 4200000,
+      "totalPrice": 4200000,
+      "notes": "세면대, 양변기, 욕조, 샤워부스, 타일 및 방수 포함"
+    },
+    {
+      "category": "욕실",
+      "itemName": "욕실2 (공용)",
+      "quantity": 1,
+      "unit": "식",
+      "unitPrice": 3800000,
+      "totalPrice": 3800000,
+      "notes": "세면대, 양변기, 샤워부스, 타일 및 방수 포함"
+    },
+    {
+      "category": "도배",
+      "itemName": "실크벽지",
+      "quantity": 32,
+      "unit": "평",
+      "unitPrice": 45000,
+      "totalPrice": 1440000,
+      "notes": "실크벽지, 기존벽지 제거, 초배지 포함"
+    },
+    {
+      "category": "도배",
+      "itemName": "천장 도배",
+      "quantity": 32,
+      "unit": "평",
+      "unitPrice": 35000,
+      "totalPrice": 1120000,
+      "notes": "백색 실크벽지"
+    },
+    {
+      "category": "중문",
+      "itemName": "거실 슬라이딩 중문",
+      "quantity": 1,
+      "unit": "식",
+      "unitPrice": 1850000,
+      "totalPrice": 1850000,
+      "notes": "3연동 슬라이딩, 강화유리, 설치비 포함"
+    },
+    {
+      "category": "조명",
+      "itemName": "LED 매입등",
+      "quantity": 18,
+      "unit": "개",
+      "unitPrice": 45000,
+      "totalPrice": 810000,
+      "notes": "거실, 침실, 주방 매입등 교체"
+    },
+    {
+      "category": "조명",
+      "itemName": "거실 펜던트",
+      "quantity": 1,
+      "unit": "식",
+      "unitPrice": 420000,
+      "totalPrice": 420000,
+      "notes": "3등 펜던트 조명"
+    },
+    {
+      "category": "도어",
+      "itemName": "방문 교체",
+      "quantity": 3,
+      "unit": "개",
+      "unitPrice": 380000,
+      "totalPrice": 1140000,
+      "notes": "ABS 도어, 하드웨어 포함"
+    },
+    {
+      "category": "몰딩",
+      "itemName": "걸레받이",
+      "quantity": 32,
+      "unit": "평",
+      "unitPrice": 18000,
+      "totalPrice": 576000,
+      "notes": "PVC 걸레받이, 시공비 포함"
+    },
+    {
+      "category": "몰딩",
+      "itemName": "천장 몰딩",
+      "quantity": 32,
+      "unit": "평",
+      "unitPrice": 22000,
+      "totalPrice": 704000,
+      "notes": "우레탄 몰딩, 시공비 포함"
+    },
+    {
+      "category": "기타",
+      "itemName": "철거 및 폐기물 처리",
+      "quantity": 1,
+      "unit": "식",
+      "unitPrice": 1200000,
+      "totalPrice": 1200000,
+      "notes": "기존 자재 철거 및 폐기물 반출"
+    },
+    {
+      "category": "기타",
+      "itemName": "보양 및 청소",
+      "quantity": 1,
+      "unit": "식",
+      "unitPrice": 450000,
+      "totalPrice": 450000,
+      "notes": "공사 중 보양, 마무리 청소"
+    }
+  ],
+  "status": "pending"
+}
