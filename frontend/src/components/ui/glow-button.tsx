@@ -51,91 +51,117 @@ export default function GlowButton({
 		}
 	}
 
+	const handlePointerLeave = () => {
+		if (buttonRef.current) {
+			buttonRef.current.style.setProperty('--mx', '50%')
+			buttonRef.current.style.setProperty('--my', '50%')
+		}
+	}
+
 	return (
-		<motion.button
-			ref={buttonRef}
-			onClick={onClick}
-			onPointerMove={handlePointerMove}
-			className={`
-				glow-button
-				relative overflow-hidden rounded-full font-bold text-white
-				${sizeConfig[size]}
-				${className}
-			`}
-			whileHover={{ scale: 1.02 }}
-			whileTap={{ scale: 0.98 }}
-			transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-			style={{
-				// @ts-ignore - CSS variables
-				'--mx': '50%',
-				'--my': '50%',
-				isolation: 'isolate',
-				boxShadow: `0 0 40px ${glowColor}60, 0 0 60px ${glowColor}30`,
-				background: glowColor
-			}}
+		<div
+			className={`relative inline-block overflow-visible ${className}`}
+			style={{ isolation: 'isolate' }}
 		>
-			{/* Mouse-following bright spotlight effect */}
-			<div
-				className="flash absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-200"
-				style={{
-					zIndex: 0,
-					// @ts-ignore - CSS variables
-					background: `radial-gradient(120px 120px at var(--mx) var(--my),
-						rgba(255, 196, 120, 0.95) 0%,
-						rgba(255, 166, 90, 0.65) 35%,
-						rgba(255, 140, 60, 0.28) 55%,
-						rgba(255, 120, 40, 0) 70%)`,
-					mixBlendMode: 'screen'
-				}}
-			/>
-
-			{/* Secondary glow layer for depth */}
-			<div
-				className="flash absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-200"
-				style={{
-					zIndex: 0,
-					// @ts-ignore - CSS variables
-					background: `radial-gradient(180px 180px at var(--mx) var(--my),
-						rgba(255, 255, 255, 0.4) 0%,
-						transparent 60%)`,
-					mixBlendMode: 'screen'
-				}}
-			/>
-
-			{/* Content */}
-			<span className="relative z-10 drop-shadow-lg">{children}</span>
-
-			{/* Outer glow on hover */}
+			{/* Outer glow - outside button to prevent clipping */}
 			<motion.div
-				className="absolute -inset-2 rounded-full blur-2xl -z-10"
+				aria-hidden
+				className="absolute -inset-3 rounded-full -z-10 pointer-events-none"
 				style={{
 					background: glowColor,
-					opacity: 0.4
+					opacity: 0.35,
+					filter: 'blur(20px)'
 				}}
-				whileHover={{ opacity: 0.8 }}
-				transition={{ duration: 0.3 }}
+				whileHover={{ opacity: 0.7 }}
+				transition={{ duration: 0.25 }}
 			/>
 
-			<style jsx>{`
-				.glow-button:hover .flash,
-				.glow-button:focus-visible .flash {
-					opacity: 1;
-				}
+			{/* Button with internal spotlight effects */}
+			<motion.button
+				ref={buttonRef}
+				onClick={onClick}
+				onPointerMove={handlePointerMove}
+				onPointerLeave={handlePointerLeave}
+				className={`
+					glow-button
+					relative overflow-hidden rounded-full font-bold text-white transform-gpu
+					${sizeConfig[size]}
+				`}
+				whileHover={{ scale: 1.02 }}
+				whileTap={{ scale: 0.98 }}
+				transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+				style={{
+					// @ts-ignore - CSS variables
+					'--mx': '50%',
+					'--my': '50%',
+					background: glowColor,
+					boxShadow: `0 2px 10px ${glowColor}55, inset 0 0 0 1px #00000010`,
+					willChange: 'transform'
+				}}
+			>
+				{/* Spotlight layer 1 - warm core */}
+				<div
+					aria-hidden
+					className="flash absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-200"
+					style={{
+						// @ts-ignore - CSS variables
+						background: `radial-gradient(110px 110px at var(--mx) var(--my),
+							rgba(255, 196, 120, 0.95) 0%,
+							rgba(255, 166, 90, 0.65) 35%,
+							rgba(255, 140, 60, 0.25) 55%,
+							rgba(255, 120, 40, 0) 70%)`,
+						mixBlendMode: 'screen'
+					}}
+				/>
 
-				@media (prefers-reduced-motion: reduce) {
-					.flash {
-						transition: none !important;
-					}
-				}
+				{/* Spotlight layer 2 - soft ring */}
+				<div
+					aria-hidden
+					className="flash absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-200"
+					style={{
+						// @ts-ignore - CSS variables
+						background: `radial-gradient(160px 160px at var(--mx) var(--my),
+							rgba(255, 255, 255, 0.35) 0%,
+							transparent 60%)`,
+						mixBlendMode: 'screen'
+					}}
+				/>
 
-				/* 모바일 터치: 중앙 고정 */
-				@media (hover: none) {
-					.glow-button {
-						--mx: 50%;
-						--my: 50%;
+				{/* Label */}
+				<span className="relative z-10 drop-shadow-[0_1px_1px_rgba(0,0,0,.3)]">
+					{children}
+				</span>
+
+				<style jsx>{`
+					.glow-button:hover .flash,
+					.glow-button:focus-visible .flash {
+						opacity: 1;
 					}
-				}
-			`}</style>
-		</motion.button>
+
+					.glow-button:focus-visible {
+						outline: 2px solid #fff;
+						outline-offset: 2px;
+					}
+
+					/* 모바일 터치: 기본적으로 약한 섬광 보이기 */
+					@media (hover: none) {
+						.glow-button {
+							--mx: 50%;
+							--my: 50%;
+						}
+						.glow-button .flash {
+							opacity: 0.7;
+						}
+					}
+
+					@media (prefers-reduced-motion: reduce) {
+						.glow-button,
+						.glow-button .flash {
+							transition: none !important;
+						}
+					}
+				`}</style>
+			</motion.button>
+		</div>
 	)
 }

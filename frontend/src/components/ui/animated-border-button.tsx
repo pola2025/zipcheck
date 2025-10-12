@@ -24,19 +24,27 @@ export default function AnimatedBorderButton({
 	...props
 }: AnimatedBorderButtonProps) {
 	return (
-		<div className="relative inline-block" style={{ zIndex: 0 }}>
-			{/* Rotating outline-only glow using mask */}
+		<div
+			className="animated-border-wrapper relative inline-block overflow-visible"
+			style={{ isolation: 'isolate' }}
+		>
+			{/* Rotating outline-only glow using padding-box mask */}
 			<motion.div
-				className="absolute pointer-events-none"
+				aria-hidden
+				className="absolute pointer-events-none -z-10"
 				style={{
 					inset: '-3px',
 					borderRadius: '9999px',
 					background: `conic-gradient(from 0deg, ${colors[0]}, ${colors[1]}, ${colors[2] || colors[0]}, ${colors[0]})`,
-					WebkitMask: 'radial-gradient(circle, transparent calc(100% - 3px), #000 calc(100% - 2px))',
-					mask: 'radial-gradient(circle, transparent calc(100% - 3px), #000 calc(100% - 2px))',
-					filter: 'blur(14px)',
-					opacity: 0.7,
-					zIndex: -1
+					// Padding-box mask for consistent ring thickness
+					WebkitMask:
+						'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+					mask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+					WebkitMaskComposite: 'xor',
+					maskComposite: 'exclude',
+					padding: '3px',
+					filter: 'blur(12px)',
+					opacity: 0.7
 				}}
 				animate={{
 					rotate: 360
@@ -72,6 +80,13 @@ export default function AnimatedBorderButton({
 				@media (prefers-reduced-motion: reduce) {
 					.motion-reduce\\:transition-none {
 						transition: none !important;
+					}
+				}
+
+				/* Safari blur optimization */
+				@supports (-webkit-touch-callout: none) {
+					.animated-border-wrapper div[aria-hidden='true'] {
+						filter: blur(9px);
 					}
 				}
 			`}</style>
