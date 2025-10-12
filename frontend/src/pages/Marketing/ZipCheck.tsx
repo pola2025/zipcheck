@@ -32,6 +32,7 @@ import ZipCheckHeader from 'components/marketing/ZipCheckHeader'
 import ZipCheckFooter from 'components/marketing/ZipCheckFooter'
 import QuoteExampleSection from 'components/marketing/QuoteExampleSection'
 import GlowButton from 'components/ui/glow-button'
+import AnimatedBorderButton from 'components/ui/animated-border-button'
 
 export default function ZipCheckPage() {
 	const navigate = useNavigate()
@@ -398,12 +399,14 @@ export default function ZipCheckPage() {
 											))}
 										</ul>
 
-										<button
+										<AnimatedBorderButton
 											onClick={() => navigate('/plan-selection')}
-											className="w-full py-4 rounded-full bg-[#0A9DAA] text-white font-bold text-lg hover:bg-[#0db5c4] hover:shadow-2xl hover:shadow-[#0A9DAA]/40 hover:translate-y-[-2px] transition-all duration-300 mt-auto"
+											className="w-full mt-auto"
+											colors={['#0DD4E4', '#C798D4', '#F4D89C']}
+											size="lg"
 										>
 											{plan.name} 신청하기
-										</button>
+										</AnimatedBorderButton>
 									</motion.div>
 								</ScrollSection>
 							))}
@@ -465,12 +468,14 @@ export default function ZipCheckPage() {
 											))}
 										</ul>
 
-										<button
+										<AnimatedBorderButton
 											onClick={() => navigate('/plan-selection')}
-											className="w-full py-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-500 hover:to-pink-500 hover:shadow-lg hover:shadow-purple-500/30 hover:translate-y-[-1px] transition-all duration-300 mt-auto"
+											className="w-full mt-auto"
+											colors={['#A855F7', '#EC4899']}
+											size="md"
 										>
 											긴급 신청하기
-										</button>
+										</AnimatedBorderButton>
 									</motion.div>
 								</ScrollSection>
 							))}
@@ -511,13 +516,13 @@ export default function ZipCheckPage() {
 							</p>
 
 							<div className="flex flex-col sm:flex-row gap-6 justify-center">
-								<GlowButton
+								<AnimatedBorderButton
 									onClick={() => navigate('/plan-selection')}
 									size="lg"
-									glowColor="#0DD4E4"
+									colors={['#0DD4E4', '#C798D4', '#F4D89C']}
 								>
 									견적 분석 신청하기
-								</GlowButton>
+								</AnimatedBorderButton>
 
 								<MagneticButton
 									className="px-14 py-6 glass-neon rounded-full font-bold text-2xl text-cyan-400 neon-border"
