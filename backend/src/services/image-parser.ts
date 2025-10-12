@@ -1,11 +1,12 @@
 /**
  * Image Parser Service
  *
- * Uses Google Cloud Vision API for OCR + Claude API for structuring
+ * Uses Google Cloud Vision API for OCR + GPT-5 for structuring
  * Includes image optimization to reduce storage costs
  */
 
 import vision from '@google-cloud/vision'
+import OpenAI from 'openai'
 import { optimizeImage } from './image-optimizer'
 
 interface ParsedQuoteItem {
@@ -32,12 +33,12 @@ interface ImageParseResult {
 }
 
 /**
- * Parse quote image using Google Vision (OCR) + Claude (structuring)
- * More cost-effective than using Claude Vision alone
+ * Parse quote image using Google Vision (OCR) + GPT-5 (structuring)
+ * More cost-effective than using vision-only models
  */
 export async function parseQuoteImage(imageBuffer: Buffer): Promise<ImageParseResult> {
 	try {
-		const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY
+		const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 		const GOOGLE_API_KEY = process.env.GOOGLE_CLOUD_API_KEY
 
 		if (!GOOGLE_API_KEY && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
@@ -49,14 +50,19 @@ export async function parseQuoteImage(imageBuffer: Buffer): Promise<ImageParseRe
 			}
 		}
 
-		if (!CLAUDE_API_KEY) {
-			console.error('⚠️  CLAUDE_API_KEY not found')
+		if (!OPENAI_API_KEY) {
+			console.error('⚠️  OPENAI_API_KEY not found')
 			return {
 				success: false,
 				items: [],
-				message: 'Claude API 키가 설정되지 않았습니다.'
+				message: 'OpenAI API 키가 설정되지 않았습니다.'
 			}
 		}
+
+		// Initialize OpenAI client
+		const openai = new OpenAI({
+			apiKey: OPENAI_API_KEY
+		})
 
 		// Step 1: Optimize image first (compress and resize)
 		console.log('📦 Optimizing image before OCR...')
@@ -99,24 +105,19 @@ export async function parseQuoteImage(imageBuffer: Buffer): Promise<ImageParseRe
 		console.log('📝 Extracted text length:', extractedText.length)
 		console.log('📄 Sample text:', extractedText.substring(0, 200))
 
-		// Step 3: Structure the extracted text using Claude API (much cheaper than Vision)
-		console.log('🤖 Structuring data with Claude API...')
+		// Step 3: Structure the extracted text using GPT-5 (cost-effective and accurate)
+		console.log('🤖 Structuring data with GPT-5...')
 
-		const response = await fetch('https://api.anthropic.com/v1/messages', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'x-api-key': CLAUDE_API_KEY,
-				'anthropic-version': '2023-06-01'
-			},
-			body: JSON.stringify({
-				model: 'claude-3-5-sonnet-20241022',
-				max_tokens: 4096,
-				messages: [
-					{
-						role: 'user',
-						content: `당신은 인테리어 시공 견적서를 분석하는 전문가입니다.
-다음은 견적서 이미지에서 OCR로 추출한 텍스트입니다.
+		const completion = await openai.chat.completions.create({
+			model: 'gpt-5',
+			messages: [
+				{
+					role: 'system',
+					content: '당신은 인테리어 시공 견적서를 분석하는 전문가입니다. 추출된 텍스트를 정확하게 구조화된 JSON 형식으로 변환합니다.'
+				},
+				{
+					role: 'user',
+					content: `다음은 견적서 이미지에서 OCR로 추출한 텍스트입니다.
 이 텍스트를 분석하여 시공 항목을 추출하고 JSON 형식으로만 반환하세요.
 
 추출된 텍스트:
@@ -143,25 +144,20 @@ ${extractedText}
 - 항목명은 구체적으로 작성
 - 없는 정보는 추정하지 말고 비워두거나 기본값 사용
 - JSON만 출력하고 다른 설명은 추가하지 마세요`
-					}
-				]
-			})
+				}
+			],
+			max_tokens: 4096,
+			temperature: 0.0, // 정확도 우선
+			response_format: { type: 'json_object' } // JSON 모드 활성화
 		})
 
-		if (!response.ok) {
-			const errorData = (await response.json()) as { error?: { message?: string } }
-			console.error('Claude API Error:', errorData)
-			throw new Error(`Claude API 호출 실패: ${errorData.error?.message || 'Unknown error'}`)
-		}
-
-		const data = (await response.json()) as { content?: Array<{ text: string }> }
-		const content = data.content?.[0]?.text
+		const content = completion.choices[0]?.message?.content
 
 		if (!content) {
-			throw new Error('Claude API 응답이 비어있습니다.')
+			throw new Error('GPT-5 API 응답이 비어있습니다.')
 		}
 
-		console.log('📝 Claude Response:', content)
+		console.log('📝 GPT-5 Response:', content)
 
 		// Parse JSON response
 		let jsonContent = content.trim()
