@@ -1,0 +1,92 @@
+# ZipCheck - 인테리어 견적 분석 서비스
+# 검색엔진 크롤러는 허용하되, AI 학습 크롤러는 차단
+
+# 구글 검색
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+# 네이버 검색
+User-agent: Yeti
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+# 다음 검색
+User-agent: Daumoa
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+# 빙 검색
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+# ================================================
+# AI 크롤러 차단 (학습 데이터 수집 방지)
+# ================================================
+
+# OpenAI (ChatGPT)
+User-agent: GPTBot
+Disallow: /
+
+# OpenAI (ChatGPT User)
+User-agent: ChatGPT-User
+Disallow: /
+
+# Google Bard/Gemini
+User-agent: Google-Extended
+Disallow: /
+
+# Common Crawl
+User-agent: CCBot
+Disallow: /
+
+# Anthropic Claude
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+# Cohere AI
+User-agent: cohere-ai
+Disallow: /
+
+# Facebook/Meta AI
+User-agent: FacebookBot
+Disallow: /
+
+# Bytedance/TikTok AI
+User-agent: Bytespider
+Disallow: /
+
+# Diffbot
+User-agent: Diffbot
+Disallow: /
+
+# Omgili (Content Aggregator)
+User-agent: omgili
+Disallow: /
+
+# ================================================
+# 기본 규칙 (모든 크롤러)
+# ================================================
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /quote-submission
+Disallow: /quote-status
+Disallow: /quote-result
+Disallow: /payment
+
+# 크롤 속도 제한 (1초당 1 요청)
+Crawl-delay: 1
+
+# Sitemap 위치
+Sitemap: https://zipcheck.kr/sitemap.xml
