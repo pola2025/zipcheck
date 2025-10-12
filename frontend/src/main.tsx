@@ -4,7 +4,6 @@ import 'lib/i18n'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import 'lenis/dist/lenis.css'
 
 const MAX_RETRIES = 1
 const queryClient = new QueryClient({
