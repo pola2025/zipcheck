@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <!-- 메인 페이지 (최고 우선순위) -->
+  <url>
+    <loc>https://zipcheck.kr/</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- 견적 분석 신청 (핵심 페이지) -->
+  <url>
+    <loc>https://zipcheck.kr/plan-selection</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- 견적 분석 페이지 -->
+  <url>
+    <loc>https://zipcheck.kr/quote-analysis</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- 견적 요청 페이지 -->
+  <url>
+    <loc>https://zipcheck.kr/quote-request</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+</urlset>
