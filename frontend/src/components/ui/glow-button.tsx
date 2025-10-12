@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { useState, useRef, type MouseEvent } from 'react'
+import { useState, type MouseEvent } from 'react'
 
 type GlowButtonProps = {
 	children: React.ReactNode
@@ -22,9 +22,19 @@ export default function GlowButton({
 	glowColor = '#0A9DAA',
 	size = 'md'
 }: GlowButtonProps) {
+	const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 })
+
+	const handleMouseMove = (e: MouseEvent<HTMLButtonElement>) => {
+		const rect = e.currentTarget.getBoundingClientRect()
+		const x = ((e.clientX - rect.left) / rect.width) * 100
+		const y = ((e.clientY - rect.top) / rect.height) * 100
+		setMousePosition({ x, y })
+	}
+
 	return (
 		<motion.button
 			onClick={onClick}
+			onMouseMove={handleMouseMove}
 			className={`
 				relative overflow-hidden rounded-full font-bold text-white
 				${sizeConfig[size]}
@@ -41,43 +51,25 @@ export default function GlowButton({
 			<div
 				className="absolute inset-0"
 				style={{
-					background: `linear-gradient(90deg, ${glowColor}e0 0%, ${glowColor} 50%, ${glowColor}e0 100%)`,
-					backgroundSize: '200% 100%'
+					background: glowColor
 				}}
 			/>
 
-			{/* Flowing shine effect - always animating */}
-			<motion.div
-				className="absolute inset-0"
+			{/* Mouse-following bright spotlight effect */}
+			<div
+				className="absolute inset-0 transition-opacity duration-300 opacity-0 hover:opacity-100"
 				style={{
-					background: `linear-gradient(90deg, transparent 0%, transparent 40%, rgba(255, 255, 255, 0.4) 50%, transparent 60%, transparent 100%)`,
-					backgroundSize: '200% 100%'
-				}}
-				animate={{
-					backgroundPosition: ['0% 0%', '200% 0%']
-				}}
-				transition={{
-					duration: 2,
-					repeat: Infinity,
-					ease: 'linear'
+					background: `radial-gradient(circle 200px at ${mousePosition.x}% ${mousePosition.y}%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 20%, transparent 70%)`,
+					pointerEvents: 'none'
 				}}
 			/>
 
-			{/* Secondary shimmer for extra depth */}
-			<motion.div
-				className="absolute inset-0"
+			{/* Secondary glow layer for depth */}
+			<div
+				className="absolute inset-0 transition-opacity duration-300 opacity-0 hover:opacity-100"
 				style={{
-					background: `linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%)`,
-					backgroundSize: '200% 100%'
-				}}
-				animate={{
-					backgroundPosition: ['-100% 0%', '200% 0%']
-				}}
-				transition={{
-					duration: 2.5,
-					repeat: Infinity,
-					ease: 'easeInOut',
-					repeatDelay: 0.5
+					background: `radial-gradient(circle 300px at ${mousePosition.x}% ${mousePosition.y}%, rgba(255, 255, 255, 0.3) 0%, transparent 60%)`,
+					pointerEvents: 'none'
 				}}
 			/>
 
