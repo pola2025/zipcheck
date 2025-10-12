@@ -516,13 +516,13 @@ export default function ZipCheckPage() {
 							</p>
 
 							<div className="flex flex-col sm:flex-row gap-6 justify-center">
-								<AnimatedBorderButton
+								<GlowButton
 									onClick={() => navigate('/plan-selection')}
 									size="lg"
-									colors={['#0DD4E4', '#C798D4', '#F4D89C']}
+									glowColor="#FF6B35"
 								>
 									견적 분석 신청하기
-								</AnimatedBorderButton>
+								</GlowButton>
 
 								<MagneticButton
 									className="px-14 py-6 glass-neon rounded-full font-bold text-2xl text-cyan-400 neon-border"

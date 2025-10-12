@@ -22,29 +22,9 @@ export default function GlowButton({
 	glowColor = '#0A9DAA',
 	size = 'md'
 }: GlowButtonProps) {
-	const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 })
-	const buttonRef = useRef<HTMLButtonElement>(null)
-
-	const handleMouseMove = (e: MouseEvent<HTMLButtonElement>) => {
-		if (!buttonRef.current) return
-
-		const rect = buttonRef.current.getBoundingClientRect()
-		const x = ((e.clientX - rect.left) / rect.width) * 100
-		const y = ((e.clientY - rect.top) / rect.height) * 100
-
-		setMousePosition({ x, y })
-	}
-
-	const handleMouseLeave = () => {
-		setMousePosition({ x: 50, y: 50 })
-	}
-
 	return (
 		<motion.button
-			ref={buttonRef}
 			onClick={onClick}
-			onMouseMove={handleMouseMove}
-			onMouseLeave={handleMouseLeave}
 			className={`
 				relative overflow-hidden rounded-full font-bold text-white
 				${sizeConfig[size]}
@@ -54,55 +34,50 @@ export default function GlowButton({
 			whileTap={{ scale: 0.98 }}
 			transition={{ type: 'spring', stiffness: 400, damping: 17 }}
 			style={{
-				boxShadow: `0 0 40px ${glowColor}40, 0 0 80px ${glowColor}20`
+				boxShadow: `0 0 40px ${glowColor}60, 0 0 60px ${glowColor}30`
 			}}
 		>
-			{/* Animated gradient background */}
+			{/* Base gradient background */}
+			<div
+				className="absolute inset-0"
+				style={{
+					background: `linear-gradient(90deg, ${glowColor}e0 0%, ${glowColor} 50%, ${glowColor}e0 100%)`,
+					backgroundSize: '200% 100%'
+				}}
+			/>
+
+			{/* Flowing shine effect - always animating */}
 			<motion.div
 				className="absolute inset-0"
 				style={{
-					background: `linear-gradient(135deg, ${glowColor} 0%, ${glowColor}dd 50%, ${glowColor} 100%)`
+					background: `linear-gradient(90deg, transparent 0%, transparent 40%, rgba(255, 255, 255, 0.4) 50%, transparent 60%, transparent 100%)`,
+					backgroundSize: '200% 100%'
 				}}
 				animate={{
-					backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
+					backgroundPosition: ['0% 0%', '200% 0%']
 				}}
 				transition={{
-					duration: 3,
+					duration: 2,
 					repeat: Infinity,
 					ease: 'linear'
 				}}
 			/>
 
-			{/* Shimmer effect */}
+			{/* Secondary shimmer for extra depth */}
 			<motion.div
 				className="absolute inset-0"
 				style={{
-					background: `linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.3) 50%, transparent 80%)`
+					background: `linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%)`,
+					backgroundSize: '200% 100%'
 				}}
 				animate={{
-					x: ['-100%', '200%']
+					backgroundPosition: ['-100% 0%', '200% 0%']
 				}}
 				transition={{
 					duration: 2.5,
 					repeat: Infinity,
 					ease: 'easeInOut',
-					repeatDelay: 1
-				}}
-			/>
-
-			{/* Cursor glow that follows mouse */}
-			<div
-				className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-				style={{
-					background: `radial-gradient(600px circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(255, 255, 255, 0.25), transparent 40%)`
-				}}
-			/>
-
-			{/* Border glow */}
-			<div
-				className="absolute inset-0 rounded-full opacity-75"
-				style={{
-					boxShadow: `inset 0 0 20px ${glowColor}60, inset 0 0 40px ${glowColor}40`
+					repeatDelay: 0.5
 				}}
 			/>
 
@@ -111,11 +86,12 @@ export default function GlowButton({
 
 			{/* Outer glow on hover */}
 			<motion.div
-				className="absolute -inset-2 rounded-full opacity-0 blur-2xl -z-10"
+				className="absolute -inset-2 rounded-full blur-2xl -z-10"
 				style={{
-					background: glowColor
+					background: glowColor,
+					opacity: 0.4
 				}}
-				whileHover={{ opacity: 0.6 }}
+				whileHover={{ opacity: 0.8 }}
 				transition={{ duration: 0.3 }}
 			/>
 		</motion.button>
