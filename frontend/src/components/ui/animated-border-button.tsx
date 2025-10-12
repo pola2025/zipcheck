@@ -23,55 +23,61 @@ export default function AnimatedBorderButton({
 	size = 'md',
 	...props
 }: AnimatedBorderButtonProps) {
-	const gradient = colors.length === 2
-		? `${colors[0]}, ${colors[1]}, ${colors[0]}`
-		: `${colors[0]}, ${colors[1]}, ${colors[2]}, ${colors[0]}`
-
 	return (
-		<div className="relative inline-block p-[2px] rounded-full group">
-			{/* Animated rotating gradient border */}
-			<div
-				className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+		<div className="relative inline-block rounded-full group">
+			{/* Animated rotating gradient border - always on */}
+			<motion.div
+				className="absolute inset-0 rounded-full opacity-60"
 				style={{
-					background: `conic-gradient(from 0deg, ${gradient})`,
-					animation: 'rotate 3s linear infinite'
+					background: `conic-gradient(from 0deg, ${colors[0]}, ${colors[1]}, ${colors[2] || colors[0]}, ${colors[0]})`,
+					padding: '2px',
+					filter: 'blur(8px)'
+				}}
+				animate={{
+					rotate: 360
+				}}
+				transition={{
+					duration: 4,
+					repeat: Infinity,
+					ease: 'linear'
 				}}
 			/>
 
-			{/* Static gradient border (visible when not hovering) */}
-			<div
-				className="absolute inset-0 rounded-full opacity-100 group-hover:opacity-0 transition-opacity duration-500"
+			{/* Sharper border layer */}
+			<motion.div
+				className="absolute inset-0 rounded-full opacity-80"
 				style={{
-					background: `linear-gradient(135deg, ${colors[0]}, ${colors[1]})`
+					background: `conic-gradient(from 0deg, ${colors[0]}, ${colors[1]}, ${colors[2] || colors[0]}, ${colors[0]})`,
+					padding: '2px'
+				}}
+				animate={{
+					rotate: 360
+				}}
+				transition={{
+					duration: 4,
+					repeat: Infinity,
+					ease: 'linear'
 				}}
 			/>
 
-			{/* Button content */}
+			{/* Button content with mask */}
 			<motion.button
 				onClick={onClick}
 				className={`
-					relative bg-black rounded-full font-semibold text-white
+					relative bg-black rounded-full font-semibold text-white z-10
 					transition-all duration-300
 					${sizeConfig[size]}
 					${className}
 				`}
+				style={{
+					margin: '2px'
+				}}
 				whileHover={{ scale: 1.02 }}
 				whileTap={{ scale: 0.98 }}
 				{...props}
 			>
 				<span className="relative z-10">{children}</span>
 			</motion.button>
-
-			<style>{`
-				@keyframes rotate {
-					from {
-						transform: rotate(0deg);
-					}
-					to {
-						transform: rotate(360deg);
-					}
-				}
-			`}</style>
 		</div>
 	)
 }
