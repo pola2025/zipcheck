@@ -20,11 +20,12 @@ import 'jotai-devtools/styles.css'
 
 // Const Index = lazy(async () => import('pages/Index'))
 const AI = lazy(async () => import('pages/AI'))
+const ZipCheck = lazy(async () => import('pages/Marketing/ZipCheck'))
 
 const router = createBrowserRouter(
 	createRoutesFromElements(
 		<>
-			<Route path='/' element={<Navigate replace to='/ai' />} />
+			<Route path='/' element={<ZipCheck />} />
 			<Route path='/ai' element={<AI />}>
 				<Route path=':id' element={<AI />} />
 			</Route>
