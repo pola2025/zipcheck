@@ -25,46 +25,44 @@ export default function AnimatedBorderButton({
 }: AnimatedBorderButtonProps) {
 	return (
 		<div className="relative inline-block rounded-full group">
-			{/* Outer glow with dual color edge lighting */}
+			{/* Rotating border glow - outer blur */}
 			<motion.div
 				className="absolute pointer-events-none"
 				style={{
 					inset: '-2px',
 					borderRadius: '9999px',
-					background: `linear-gradient(90deg, ${colors[0]}, ${colors[1]}, ${colors[2] || colors[0]})`,
-					backgroundSize: '200% 100%',
+					background: `conic-gradient(from 0deg, ${colors[0]}, ${colors[1]}, ${colors[2] || colors[0]}, ${colors[0]})`,
 					filter: 'blur(20px)',
 					zIndex: -1
 				}}
 				animate={{
-					backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
+					rotate: 360
 				}}
 				transition={{
 					duration: 4,
 					repeat: Infinity,
-					ease: 'easeInOut'
+					ease: 'linear'
 				}}
 			/>
 
-			{/* Sharper glow layer */}
+			{/* Rotating border - sharp edge */}
 			<motion.div
 				className="absolute pointer-events-none"
 				style={{
 					inset: '-1px',
 					borderRadius: '9999px',
-					background: `linear-gradient(90deg, ${colors[0]}, ${colors[1]}, ${colors[2] || colors[0]})`,
-					backgroundSize: '200% 100%',
+					background: `conic-gradient(from 0deg, ${colors[0]}, ${colors[1]}, ${colors[2] || colors[0]}, ${colors[0]})`,
 					filter: 'blur(8px)',
-					opacity: 0.8,
+					opacity: 0.9,
 					zIndex: -1
 				}}
 				animate={{
-					backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
+					rotate: 360
 				}}
 				transition={{
 					duration: 4,
 					repeat: Infinity,
-					ease: 'easeInOut'
+					ease: 'linear'
 				}}
 			/>
 
@@ -74,7 +72,7 @@ export default function AnimatedBorderButton({
 				className={`
 					relative bg-black rounded-full font-semibold text-white
 					transition-transform duration-200
-					hover:scale-105 active:scale-95
+					active:scale-95
 					${sizeConfig[size]}
 					${className}
 				`}
