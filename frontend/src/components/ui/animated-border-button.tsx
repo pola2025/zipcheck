@@ -25,9 +25,9 @@ export default function AnimatedBorderButton({
 }: AnimatedBorderButtonProps) {
 	return (
 		<div className="relative inline-block rounded-full group">
-			{/* Animated rotating gradient border - always on */}
+			{/* Animated rotating gradient border - only the gradient rotates */}
 			<motion.div
-				className="absolute inset-0 rounded-full opacity-60"
+				className="absolute inset-0 rounded-full opacity-60 pointer-events-none"
 				style={{
 					background: `conic-gradient(from 0deg, ${colors[0]}, ${colors[1]}, ${colors[2] || colors[0]}, ${colors[0]})`,
 					padding: '2px',
@@ -43,9 +43,9 @@ export default function AnimatedBorderButton({
 				}}
 			/>
 
-			{/* Sharper border layer */}
+			{/* Sharper border layer - only the gradient rotates */}
 			<motion.div
-				className="absolute inset-0 rounded-full opacity-80"
+				className="absolute inset-0 rounded-full opacity-80 pointer-events-none"
 				style={{
 					background: `conic-gradient(from 0deg, ${colors[0]}, ${colors[1]}, ${colors[2] || colors[0]}, ${colors[0]})`,
 					padding: '2px'
@@ -60,24 +60,24 @@ export default function AnimatedBorderButton({
 				}}
 			/>
 
-			{/* Button content with mask */}
-			<motion.button
+			{/* Button content - stays fixed, never rotates */}
+			<button
 				onClick={onClick}
 				className={`
 					relative bg-black rounded-full font-semibold text-white z-10
-					transition-all duration-300
+					transition-transform duration-200
+					hover:scale-105 active:scale-95
 					${sizeConfig[size]}
 					${className}
 				`}
 				style={{
-					margin: '2px'
+					margin: '2px',
+					transform: 'rotate(0deg)' // Explicitly prevent rotation
 				}}
-				whileHover={{ scale: 1.02 }}
-				whileTap={{ scale: 0.98 }}
 				{...props}
 			>
-				<span className="relative z-10">{children}</span>
-			</motion.button>
+				<span className="block">{children}</span>
+			</button>
 		</div>
 	)
 }
