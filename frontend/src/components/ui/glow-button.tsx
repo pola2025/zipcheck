@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { useState, type MouseEvent } from 'react'
+import { useRef, useEffect, type PointerEvent } from 'react'
 
 type GlowButtonProps = {
 	children: React.ReactNode
@@ -22,20 +22,42 @@ export default function GlowButton({
 	glowColor = '#0A9DAA',
 	size = 'md'
 }: GlowButtonProps) {
-	const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 })
+	const buttonRef = useRef<HTMLButtonElement>(null)
+	const rafRef = useRef<number>(0)
 
-	const handleMouseMove = (e: MouseEvent<HTMLButtonElement>) => {
-		const rect = e.currentTarget.getBoundingClientRect()
-		const x = ((e.clientX - rect.left) / rect.width) * 100
-		const y = ((e.clientY - rect.top) / rect.height) * 100
-		setMousePosition({ x, y })
+	useEffect(() => {
+		return () => {
+			if (rafRef.current) {
+				cancelAnimationFrame(rafRef.current)
+			}
+		}
+	}, [])
+
+	const handlePointerMove = (e: PointerEvent<HTMLButtonElement>) => {
+		if (!buttonRef.current) return
+
+		const rect = buttonRef.current.getBoundingClientRect()
+		const x = e.clientX - rect.left
+		const y = e.clientY - rect.top
+
+		if (!rafRef.current) {
+			rafRef.current = requestAnimationFrame(() => {
+				rafRef.current = 0
+				if (buttonRef.current) {
+					buttonRef.current.style.setProperty('--mx', `${x}px`)
+					buttonRef.current.style.setProperty('--my', `${y}px`)
+				}
+			})
+		}
 	}
 
 	return (
 		<motion.button
+			ref={buttonRef}
 			onClick={onClick}
-			onMouseMove={handleMouseMove}
+			onPointerMove={handlePointerMove}
 			className={`
+				glow-button
 				relative overflow-hidden rounded-full font-bold text-white
 				${sizeConfig[size]}
 				${className}
@@ -44,32 +66,39 @@ export default function GlowButton({
 			whileTap={{ scale: 0.98 }}
 			transition={{ type: 'spring', stiffness: 400, damping: 17 }}
 			style={{
-				boxShadow: `0 0 40px ${glowColor}60, 0 0 60px ${glowColor}30`
+				// @ts-ignore - CSS variables
+				'--mx': '50%',
+				'--my': '50%',
+				isolation: 'isolate',
+				boxShadow: `0 0 40px ${glowColor}60, 0 0 60px ${glowColor}30`,
+				background: glowColor
 			}}
 		>
-			{/* Base gradient background */}
-			<div
-				className="absolute inset-0"
-				style={{
-					background: glowColor
-				}}
-			/>
-
 			{/* Mouse-following bright spotlight effect */}
 			<div
-				className="absolute inset-0 transition-opacity duration-300 opacity-0 hover:opacity-100"
+				className="flash absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-200"
 				style={{
-					background: `radial-gradient(circle 200px at ${mousePosition.x}% ${mousePosition.y}%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 20%, transparent 70%)`,
-					pointerEvents: 'none'
+					zIndex: 0,
+					// @ts-ignore - CSS variables
+					background: `radial-gradient(120px 120px at var(--mx) var(--my),
+						rgba(255, 196, 120, 0.95) 0%,
+						rgba(255, 166, 90, 0.65) 35%,
+						rgba(255, 140, 60, 0.28) 55%,
+						rgba(255, 120, 40, 0) 70%)`,
+					mixBlendMode: 'screen'
 				}}
 			/>
 
 			{/* Secondary glow layer for depth */}
 			<div
-				className="absolute inset-0 transition-opacity duration-300 opacity-0 hover:opacity-100"
+				className="flash absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-200"
 				style={{
-					background: `radial-gradient(circle 300px at ${mousePosition.x}% ${mousePosition.y}%, rgba(255, 255, 255, 0.3) 0%, transparent 60%)`,
-					pointerEvents: 'none'
+					zIndex: 0,
+					// @ts-ignore - CSS variables
+					background: `radial-gradient(180px 180px at var(--mx) var(--my),
+						rgba(255, 255, 255, 0.4) 0%,
+						transparent 60%)`,
+					mixBlendMode: 'screen'
 				}}
 			/>
 
@@ -86,6 +115,27 @@ export default function GlowButton({
 				whileHover={{ opacity: 0.8 }}
 				transition={{ duration: 0.3 }}
 			/>
+
+			<style jsx>{`
+				.glow-button:hover .flash,
+				.glow-button:focus-visible .flash {
+					opacity: 1;
+				}
+
+				@media (prefers-reduced-motion: reduce) {
+					.flash {
+						transition: none !important;
+					}
+				}
+
+				/* 모바일 터치: 중앙 고정 */
+				@media (hover: none) {
+					.glow-button {
+						--mx: 50%;
+						--my: 50%;
+					}
+				}
+			`}</style>
 		</motion.button>
 	)
 }

@@ -367,8 +367,8 @@ export default function ZipCheckPage() {
 								>
 									<motion.div
 										className="relative flex flex-col glass-neon rounded-3xl p-10 h-full border-2 border-cyan-400/40 shadow-[0_0_50px_rgba(6,182,212,0.3)]"
+										style={{ zIndex: 0 }}
 										whileHover={{
-											scale: 1.03,
 											boxShadow: '0 0 60px rgba(6, 182, 212, 0.5)'
 										}}
 										transition={{ type: 'spring', stiffness: 300 }}
@@ -440,8 +440,8 @@ export default function ZipCheckPage() {
 								>
 									<motion.div
 										className="relative flex flex-col glass-strong rounded-2xl p-8 h-full border border-purple-500/30"
+										style={{ zIndex: 0 }}
 										whileHover={{
-											scale: 1.05,
 											boxShadow: '0 0 40px rgba(168, 85, 247, 0.4)'
 										}}
 										transition={{ type: 'spring', stiffness: 300 }}
