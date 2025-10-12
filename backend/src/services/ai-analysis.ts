@@ -1,9 +1,9 @@
-import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 import { supabase } from '../lib/supabase'
 
-// Anthropic 클라이언트 초기화
-const anthropic = new Anthropic({
-	apiKey: process.env.CLAUDE_API_KEY
+// OpenAI 클라이언트 초기화
+const openai = new OpenAI({
+	apiKey: process.env.OPENAI_API_KEY
 })
 
 interface QuoteItem {
@@ -414,8 +414,19 @@ async function generateAIInsightsNew(
 	}
 	recommendations.push('최소 2-3개 업체의 견적을 비교 검토하는 것을 권장합니다.')
 
-	// AI 요약 생성
-	const prompt = `당신은 인테리어 견적 분석 전문가입니다. 다음 견적 분석 결과를 2-3문장으로 요약해주세요.
+	// GPT-5로 AI 요약 생성
+	let summary: string
+	try {
+		const completion = await openai.chat.completions.create({
+			model: 'gpt-5',
+			messages: [
+				{
+					role: 'system',
+					content: '당신은 인테리어 견적 분석 전문가입니다. 견적 분석 결과를 2-3문장으로 간결하게 요약합니다.'
+				},
+				{
+					role: 'user',
+					content: `다음 견적 분석 결과를 전문가 입장에서 종합 평가해주세요.
 
 **견적 정보:**
 - 총 견적가: ${totalEstimate.toLocaleString()}원
@@ -428,20 +439,16 @@ async function generateAIInsightsNew(
 - 보통 항목: ${itemAnalysis.filter((i) => i.evaluation === 'fair').length}개
 - 고가 항목: ${itemAnalysis.filter((i) => i.evaluation === 'expensive').length}개
 
-전문가 입장에서 이 견적에 대한 종합 평가를 간결하게 제공해주세요.`
-
-	let summary: string
-	try {
-		const message = await anthropic.messages.create({
-			model: 'claude-3-5-sonnet-20241022',
+전문가 입장에서 이 견적에 대한 종합 평가를 2-3문장으로 간결하게 제공해주세요.`
+				}
+			],
 			max_tokens: 300,
-			messages: [{ role: 'user', content: prompt }]
+			temperature: 0.7 // 자연스러운 문장 생성
 		})
 
-		const textContent = message.content.find((block) => block.type === 'text')
-		summary = textContent && 'text' in textContent ? textContent.text : '이 견적은 전반적인 검토가 필요합니다.'
+		summary = completion.choices[0]?.message?.content || '이 견적은 전반적인 검토가 필요합니다.'
 	} catch (error) {
-		console.error('AI 요약 생성 실패:', error)
+		console.error('GPT-5 요약 생성 실패:', error)
 		summary = '이 견적은 전반적인 검토가 필요합니다.'
 	}
 
