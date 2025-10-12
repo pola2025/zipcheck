@@ -21,11 +21,17 @@ import 'jotai-devtools/styles.css'
 // Const Index = lazy(async () => import('pages/Index'))
 const AI = lazy(async () => import('pages/AI'))
 const ZipCheck = lazy(async () => import('pages/Marketing/ZipCheck'))
+const PlanSelection = lazy(async () => import('pages/PlanSelection'))
+const Community = lazy(async () => import('pages/Community'))
+const Payment = lazy(async () => import('pages/Payment'))
 
 const router = createBrowserRouter(
 	createRoutesFromElements(
 		<>
 			<Route path='/' element={<ZipCheck />} />
+			<Route path='/plan-selection' element={<PlanSelection />} />
+			<Route path='/community' element={<Community />} />
+			<Route path='/payment' element={<Payment />} />
 			<Route path='/ai' element={<AI />}>
 				<Route path=':id' element={<AI />} />
 			</Route>
