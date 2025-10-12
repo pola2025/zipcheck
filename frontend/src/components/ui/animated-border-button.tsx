@@ -25,54 +25,61 @@ export default function AnimatedBorderButton({
 }: AnimatedBorderButtonProps) {
 	return (
 		<div className="relative inline-block rounded-full group">
-			{/* Animated rotating gradient border - only the gradient rotates */}
+			{/* Outer glow with dual color edge lighting */}
 			<motion.div
-				className="absolute inset-0 rounded-full opacity-60 pointer-events-none"
+				className="absolute pointer-events-none"
 				style={{
-					background: `conic-gradient(from 0deg, ${colors[0]}, ${colors[1]}, ${colors[2] || colors[0]}, ${colors[0]})`,
-					padding: '2px',
-					filter: 'blur(8px)'
+					inset: '-2px',
+					borderRadius: '9999px',
+					background: `linear-gradient(90deg, ${colors[0]}, ${colors[1]}, ${colors[2] || colors[0]})`,
+					backgroundSize: '200% 100%',
+					filter: 'blur(20px)',
+					zIndex: -1
 				}}
 				animate={{
-					rotate: 360
+					backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
 				}}
 				transition={{
 					duration: 4,
 					repeat: Infinity,
-					ease: 'linear'
+					ease: 'easeInOut'
 				}}
 			/>
 
-			{/* Sharper border layer - only the gradient rotates */}
+			{/* Sharper glow layer */}
 			<motion.div
-				className="absolute inset-0 rounded-full opacity-80 pointer-events-none"
+				className="absolute pointer-events-none"
 				style={{
-					background: `conic-gradient(from 0deg, ${colors[0]}, ${colors[1]}, ${colors[2] || colors[0]}, ${colors[0]})`,
-					padding: '2px'
+					inset: '-1px',
+					borderRadius: '9999px',
+					background: `linear-gradient(90deg, ${colors[0]}, ${colors[1]}, ${colors[2] || colors[0]})`,
+					backgroundSize: '200% 100%',
+					filter: 'blur(8px)',
+					opacity: 0.8,
+					zIndex: -1
 				}}
 				animate={{
-					rotate: 360
+					backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
 				}}
 				transition={{
 					duration: 4,
 					repeat: Infinity,
-					ease: 'linear'
+					ease: 'easeInOut'
 				}}
 			/>
 
-			{/* Button content - stays fixed, never rotates */}
+			{/* Button content - stays fixed */}
 			<button
 				onClick={onClick}
 				className={`
-					relative bg-black rounded-full font-semibold text-white z-10
+					relative bg-black rounded-full font-semibold text-white
 					transition-transform duration-200
 					hover:scale-105 active:scale-95
 					${sizeConfig[size]}
 					${className}
 				`}
 				style={{
-					margin: '2px',
-					transform: 'rotate(0deg)' // Explicitly prevent rotation
+					border: `1px solid ${colors[0]}40`
 				}}
 				{...props}
 			>
