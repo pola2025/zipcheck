@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import multer from 'multer'
-import { supabase } from '../lib/supabase'
+import { query, findOne, insertOne } from '../lib/db'
 import { authenticateToken, optionalAuthenticateToken } from '../middleware/auth'
 import { uploadImages, ensureStorageBucket } from '../services/image-upload'
 
@@ -49,41 +49,49 @@ router.get('/', optionalAuthenticateToken, async (req, res) => {
 
 		console.log(`🔍 Fetching company reviews (page: ${page}, limit: ${limit})`)
 
-		// Base query
-		let query = supabase
-			.from('company_reviews')
-			.select('*', { count: 'exact' })
-			.eq('status', 'published')
-			.range(offset, offset + Number(limit) - 1)
+		// Build query dynamically
+		let queryText = 'SELECT * FROM company_reviews WHERE status = $1'
+		let countText = 'SELECT COUNT(*) FROM company_reviews WHERE status = $1'
+		const params: any[] = ['published']
 
 		// Filters
 		if (region) {
-			query = query.eq('region', region)
+			params.push(region)
+			queryText += ` AND region = $${params.length}`
+			countText += ` AND region = $${params.length}`
 		}
 		if (company_type) {
-			query = query.eq('company_type', company_type)
+			params.push(company_type)
+			queryText += ` AND company_type = $${params.length}`
+			countText += ` AND company_type = $${params.length}`
 		}
 		if (rating) {
-			query = query.eq('rating', Number(rating))
+			params.push(Number(rating))
+			queryText += ` AND rating = $${params.length}`
+			countText += ` AND rating = $${params.length}`
 		}
 
 		// Sorting
 		const validSortFields = ['created_at', 'rating', 'like_count', 'view_count']
 		const sortField = validSortFields.includes(sort_by as string) ? sort_by : 'created_at'
-		const sortOrder = order === 'asc'
-		query = query.order(sortField as string, { ascending: sortOrder })
+		const sortOrder = order === 'asc' ? 'ASC' : 'DESC'
+		queryText += ` ORDER BY ${sortField} ${sortOrder}`
 
-		const { data, error, count } = await query
+		// Pagination
+		queryText += ` LIMIT $${params.length + 1} OFFSET $${params.length + 2}`
 
-		if (error) {
-			console.error('Database query error:', error)
-			throw error
-		}
+		// Execute queries
+		const [dataResult, countResult] = await Promise.all([
+			query(queryText, [...params, Number(limit), offset]),
+			query(countText, params)
+		])
 
-		console.log(`✅ Found ${data.length} reviews (total: ${count})`)
+		const count = parseInt(countResult.rows[0].count)
+
+		console.log(`✅ Found ${dataResult.rows.length} reviews (total: ${count})`)
 
 		res.json({
-			data,
+			data: dataResult.rows,
 			pagination: {
 				page: Number(page),
 				limit: Number(limit),
@@ -108,25 +116,22 @@ router.get('/:id', optionalAuthenticateToken, async (req, res) => {
 
 		console.log(`🔍 Fetching review: ${id}`)
 
-		const { data, error } = await supabase
-			.from('company_reviews')
-			.select('*')
-			.eq('id', id)
-			.eq('status', 'published')
-			.single()
+		const result = await query(
+			'SELECT * FROM company_reviews WHERE id = $1 AND status = $2',
+			[id, 'published']
+		)
 
-		if (error) {
-			if (error.code === 'PGRST116') {
-				return res.status(404).json({ error: '후기를 찾을 수 없습니다.' })
-			}
-			throw error
+		if (result.rows.length === 0) {
+			return res.status(404).json({ error: '후기를 찾을 수 없습니다.' })
 		}
 
+		const data = result.rows[0]
+
 		// Increment view count
-		await supabase
-			.from('company_reviews')
-			.update({ view_count: (data.view_count || 0) + 1 })
-			.eq('id', id)
+		await query(
+			'UPDATE company_reviews SET view_count = $1 WHERE id = $2',
+			[(data.view_count || 0) + 1, id]
+		)
 
 		res.json(data)
 	} catch (error) {
@@ -171,19 +176,19 @@ router.post('/', authenticateToken, upload.array('images', 10), async (req, res)
 			is_recommended
 		} = req.body
 
-		// Validation
-		if (!company_name || !title || !content || !rating) {
-			return res.status(400).json({ error: '필수 정보가 누락되었습니다.' })
+		// Validation - 필수 항목: 업체명, 연락처, 사업자번호, 별점, 리뷰
+		const { company_phone, business_number } = req.body
+
+		if (!company_name || !company_phone || !business_number || !rating || !content) {
+			return res.status(400).json({
+				error: '필수 정보가 누락되었습니다. (업체명, 연락처, 사업자번호, 별점, 리뷰)'
+			})
 		}
 
 		// Get user info
-		const { data: userData, error: userError } = await supabase
-			.from('users')
-			.select('name, email')
-			.eq('id', userId)
-			.single()
+		const userData = await findOne<any>('users', { id: userId })
 
-		if (userError || !userData) {
+		if (!userData) {
 			return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' })
 		}
 
@@ -201,37 +206,24 @@ router.post('/', authenticateToken, upload.array('images', 10), async (req, res)
 		}
 
 		// Insert review
-		const { data, error } = await supabase
-			.from('company_reviews')
-			.insert({
-				user_id: userId,
-				author_name: userData.name,
-				author_email: userData.email,
-				company_name,
-				company_type,
-				region,
-				title,
-				content,
-				rating: Number(rating),
-				project_type,
-				project_size: project_size ? Number(project_size) : null,
-				project_cost: project_cost ? Number(project_cost) : null,
-				project_period: project_period ? Number(project_period) : null,
-				project_date,
-				quality_rating: quality_rating ? Number(quality_rating) : null,
-				price_rating: price_rating ? Number(price_rating) : null,
-				communication_rating: communication_rating ? Number(communication_rating) : null,
-				schedule_rating: schedule_rating ? Number(schedule_rating) : null,
-				is_recommended: is_recommended === 'true' || is_recommended === true,
-				images: imageUrls,
-				status: 'published'
-			})
-			.select()
-			.single()
+		const data = await insertOne<any>('company_reviews', {
+			user_id: userId,
+			company_name,
+			company_phone,
+			business_number,
+			rating: Number(rating),
+			review_text: content || '',
+			pros: req.body.pros,
+			cons: req.body.cons,
+			work_type: project_type,
+			work_date: project_date,
+			images: JSON.stringify(imageUrls),
+			verified: false,
+			status: 'published'
+		})
 
-		if (error) {
-			console.error('Database insert error:', error)
-			throw error
+		if (!data) {
+			throw new Error('Failed to insert review')
 		}
 
 		console.log(`✅ Review created: ${data.id}`)
@@ -264,14 +256,12 @@ router.patch('/:id', authenticateToken, upload.array('images', 20), async (req, 
 		console.log(`📝 Updating review ${id} by user ${userId}`)
 
 		// Check if user is the author
-		const { data: existingReview, error: fetchError } = await supabase
-			.from('company_reviews')
-			.select('*')
-			.eq('id', id)
-			.eq('user_id', userId)
-			.single()
+		const existingReview = await query(
+			'SELECT * FROM company_reviews WHERE id = $1 AND user_id = $2',
+			[id, userId]
+		)
 
-		if (fetchError || !existingReview) {
+		if (existingReview.rows.length === 0) {
 			return res.status(404).json({ error: '후기를 찾을 수 없거나 수정 권한이 없습니다.' })
 		}
 
@@ -281,7 +271,6 @@ router.patch('/:id', authenticateToken, upload.array('images', 20), async (req, 
 		// Get existing images from request body
 		const existingImages = req.body.existing_images
 		if (existingImages) {
-			// If existing_images is a string, convert to array
 			imageUrls = Array.isArray(existingImages) ? existingImages : [existingImages]
 		}
 
@@ -295,45 +284,56 @@ router.patch('/:id', authenticateToken, upload.array('images', 20), async (req, 
 			console.log(`✅ Total images: ${imageUrls.length}`)
 		}
 
-		// Update fields
-		const updateData: any = { updated_at: new Date().toISOString() }
-		const allowedFields = [
-			'title',
-			'content',
-			'rating',
-			'project_type',
-			'project_size',
-			'project_cost',
-			'project_period',
-			'quality_rating',
-			'price_rating',
-			'communication_rating',
-			'schedule_rating',
-			'is_recommended'
-		]
+		// Build update query dynamically
+		const updateFields: string[] = []
+		const updateValues: any[] = []
+		let paramIndex = 1
 
-		allowedFields.forEach((field) => {
-			if (req.body[field] !== undefined) {
-				updateData[field] = req.body[field]
+		const allowedFields: Record<string, string> = {
+			'rating': 'rating',
+			'review_text': 'review_text',
+			'pros': 'pros',
+			'cons': 'cons',
+			'work_type': 'work_type',
+			'work_date': 'work_date'
+		}
+
+		Object.entries(allowedFields).forEach(([bodyField, dbField]) => {
+			if (req.body[bodyField] !== undefined) {
+				updateFields.push(`${dbField} = $${paramIndex}`)
+				updateValues.push(req.body[bodyField])
+				paramIndex++
 			}
 		})
 
 		// Update images if there are any
 		if (imageUrls.length > 0) {
-			updateData.images = imageUrls
+			updateFields.push(`images = $${paramIndex}`)
+			updateValues.push(JSON.stringify(imageUrls))
+			paramIndex++
 		}
 
-		const { data, error } = await supabase
-			.from('company_reviews')
-			.update(updateData)
-			.eq('id', id)
-			.eq('user_id', userId)
-			.select()
-			.single()
+		// Add updated_at
+		updateFields.push(`updated_at = NOW()`)
 
-		if (error) {
-			console.error('Database update error:', error)
-			throw error
+		if (updateFields.length === 1) { // Only updated_at
+			return res.status(400).json({ error: '수정할 내용이 없습니다.' })
+		}
+
+		// Add id and user_id to params
+		updateValues.push(id, userId)
+
+		const updateQuery = `
+			UPDATE company_reviews
+			SET ${updateFields.join(', ')}
+			WHERE id = $${paramIndex} AND user_id = $${paramIndex + 1}
+			RETURNING *
+		`
+
+		const result = await query(updateQuery, updateValues)
+
+		if (result.rows.length === 0) {
+			throw new Error('Failed to update review')
 		}
 
 		console.log(`✅ Review updated: ${id}`)
@@ -341,7 +341,7 @@ router.patch('/:id', authenticateToken, upload.array('images', 20), async (req, 
 		res.json({
 			success: true,
 			message: '후기가 수정되었습니다.',
-			data
+			data: result.rows[0]
 		})
 	} catch (error) {
 		console.error('Update review error:', error)
@@ -366,15 +366,15 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 		console.log(`🗑️  Deleting review ${id} by user ${userId}`)
 
 		// Soft delete (change status to 'deleted')
-		const { data, error } = await supabase
-			.from('company_reviews')
-			.update({ status: 'deleted' })
-			.eq('id', id)
-			.eq('user_id', userId)
-			.select()
-			.single()
+		const result = await query(
+			`UPDATE company_reviews
+			SET status = 'deleted', updated_at = NOW()
+			WHERE id = $1 AND user_id = $2
+			RETURNING *`,
+			[id, userId]
+		)
 
-		if (error || !data) {
+		if (result.rows.length === 0) {
 			return res.status(404).json({ error: '후기를 찾을 수 없거나 삭제 권한이 없습니다.' })
 		}
 
@@ -405,21 +405,16 @@ router.get('/my/list', authenticateToken, async (req, res) => {
 
 		console.log(`🔍 Fetching reviews by user: ${userId}`)
 
-		const { data, error } = await supabase
-			.from('company_reviews')
-			.select('*')
-			.eq('user_id', userId)
-			.neq('status', 'deleted')
-			.order('created_at', { ascending: false })
+		const result = await query(
+			`SELECT * FROM company_reviews
+			WHERE user_id = $1 AND status != 'deleted'
+			ORDER BY created_at DESC`,
+			[userId]
+		)
 
-		if (error) {
-			console.error('Database query error:', error)
-			throw error
-		}
+		console.log(`✅ Found ${result.rows.length} reviews`)
 
-		console.log(`✅ Found ${data.length} reviews`)
-
-		res.json(data)
+		res.json(result.rows)
 	} catch (error) {
 		console.error('Get my reviews error:', error)
 		const message = error instanceof Error ? error.message : 'Unknown error'

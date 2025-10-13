@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { supabase } from '../lib/supabase'
+import { query } from '../lib/db'
 
 // OpenAI 클라이언트 초기화
 const openai = new OpenAI({
@@ -23,438 +23,541 @@ interface QuoteAnalysisRequest {
 	region?: string
 }
 
-interface MarketComparison {
-	itemName: string
-	quotedPrice: number
-	marketAverage: number
-	marketMin: number
-	marketMax: number
-	priceEvaluation: 'low' | 'fair' | 'high'
-	priceDifference: number
-	priceDifferencePercent: number
-}
-
-interface ItemAnalysis {
-	category: string
-	item: string
-	estimatePrice: number
-	marketAverage: number
-	difference: number
-	differencePercent: number
-	evaluation: 'good' | 'fair' | 'expensive'
-	marginEstimate?: number
-	comment?: string
-}
-
-interface CriteriaScore {
-	criteria: string
-	score: number
-	market: number
-	comment?: string
-}
-
-interface MarginAnalysis {
-	estimatedMargin: number
-	evaluation: string
-	isNormal: boolean
-	comment: string
-}
-
-interface QuoteAnalysisResult {
+// 새로운 분석 결과 구조 (집첵 권장사항)
+export interface AnalysisResult {
+	// 1. 종합 평가
 	overallScore: number // 0-100
-	priceLevel: 'low' | 'fair' | 'high' | 'very-high'
-	totalEstimate: number
-	marketAverage: number
-	recommendedPrice: number
-	savings: number
-	savingsPercent: number
+	totalAmount: number // 총 견적액
+	averageMarketPrice: number // 시장 평균가
+	priceRating: 'low' | 'reasonable' | 'high' | 'very_high' // 가격 수준
 
-	marginAnalysis: MarginAnalysis
-
-	itemAnalysis: ItemAnalysis[]
-
-	criteriaScores: CriteriaScore[]
-
-	aiInsights: {
-		summary: string
-		warnings: string[]
-		recommendations: string[]
+	// 2. 요약 (긍정/부정/경고)
+	summary: {
+		positive: string[] // 긍정적 평가
+		negative: string[] // 부정적 평가
+		warnings: string[] // 주의사항
 	}
+
+	// 3. 카테고리별 분석
+	categoryAnalysis: Array<{
+		category: string
+		totalCost: number
+		marketAverage: number
+		rating: 'good' | 'reasonable' | 'slightly_high' | 'high'
+		percentage: number
+		items: number
+		findings: string[]
+	}>
+
+	// 4. 집첵 권장사항
+	recommendations: Array<{
+		type: 'cost_reduction' | 'quality_improvement' | 'warning'
+		title: string
+		description: string
+		potentialSaving?: number
+	}>
+
+	// 5. 시장 비교
+	marketComparison: {
+		averagePriceRange: {
+			min: number
+			max: number
+		}
+		currentQuote: number
+		percentile: number
+		similarCases: Array<{
+			location: string
+			size: number // ㎡
+			cost: number
+			year: number
+		}>
+	}
+
+	// 6. 전문가 의견 (항목별)
+	expertNotes: Record<string, string>
+}
+
+interface MarketData {
+	itemName: string
+	category: string
+	avgCost: number
+	minCost: number
+	maxCost: number
+	hasData: boolean
 }
 
 /**
- * 견적서 분석 메인 함수
+ * 견적서 분석 메인 함수 (집첵 권장사항)
+ * - 모든 데이터는 DB에서 조회
+ * - 할루시네이션 방지: 데이터가 없으면 "데이터 부족"으로 표시
  */
 export async function analyzeQuote(
 	request: QuoteAnalysisRequest
-): Promise<QuoteAnalysisResult> {
-	console.log('🤖 Starting AI quote analysis...')
+): Promise<AnalysisResult> {
+	console.log('📊 Starting ZipCheck quote analysis...')
 
-	// 1. 시장 데이터 조회
-	const marketData = await fetchMarketData(request.items)
+	// 1. 시장 데이터 조회 (DB 기반)
+	const marketDataMap = await fetchMarketDataFromDB(request.items)
 
-	// 2. 가격 비교
-	const itemComparisons = compareWithMarket(request.items, marketData)
+	// 2. 카테고리별 집계
+	const categoryMap = new Map<string, {
+		totalCost: number
+		items: QuoteItem[]
+		marketData: MarketData[]
+	}>()
+
+	request.items.forEach(item => {
+		if (!categoryMap.has(item.category)) {
+			categoryMap.set(item.category, { totalCost: 0, items: [], marketData: [] })
+		}
+		const cat = categoryMap.get(item.category)!
+		cat.totalCost += item.totalPrice
+		cat.items.push(item)
+		const market = marketDataMap.get(item.itemName)
+		if (market) {
+			cat.marketData.push(market)
+		}
+	})
 
 	// 3. 총액 계산
-	const totalEstimate = request.items.reduce((sum, item) => sum + item.totalPrice, 0)
-	const marketAverage = itemComparisons.reduce((sum, comp) => sum + comp.marketAverage, 0)
-	const savings = totalEstimate - marketAverage
-	const savingsPercent = marketAverage > 0 ? (savings / marketAverage) * 100 : 0
+	const totalAmount = request.items.reduce((sum, item) => sum + item.totalPrice, 0)
 
-	// 4. 가격 수준 판단
-	const priceLevel = getPriceLevel(savingsPercent)
+	// 4. 시장 평균 계산 (실제 DB 데이터만 사용)
+	let averageMarketPrice = 0
+	let marketDataCount = 0
 
-	// 5. 권장가 계산 (시장 평균 + 정상 마진 15%)
-	const recommendedPrice = Math.round(marketAverage * 1.15)
+	request.items.forEach(item => {
+		const market = marketDataMap.get(item.itemName)
+		if (market && market.hasData && market.avgCost > 0) {
+			averageMarketPrice += market.avgCost * item.quantity
+			marketDataCount++
+		} else {
+			// 시장 데이터가 없는 경우 견적가를 기준으로 사용
+			averageMarketPrice += item.totalPrice
+		}
+	})
 
-	// 6. 마진 분석
-	const marginAnalysis = analyzeMargin(totalEstimate, marketAverage)
+	// 5. 가격 수준 판단
+	const priceDiff = totalAmount - averageMarketPrice
+	const priceDiffPercent = averageMarketPrice > 0 ? (priceDiff / averageMarketPrice) * 100 : 0
+	const priceRating = getPriceRating(priceDiffPercent)
 
-	// 7. 항목별 상세 분석
-	const itemAnalysis = itemComparisons.map((comp) => ({
-		category: request.items.find((item) => item.itemName === comp.itemName)?.category || '기타',
-		item: comp.itemName,
-		estimatePrice: comp.quotedPrice,
-		marketAverage: comp.marketAverage,
-		difference: comp.priceDifference,
-		differencePercent: comp.priceDifferencePercent,
-		evaluation: getItemEvaluation(comp.priceDifferencePercent),
-		marginEstimate: comp.marketAverage > 0 ? ((comp.quotedPrice - comp.marketAverage) / comp.marketAverage) * 100 : 0,
-		comment: getItemComment(comp)
-	}))
+	// 6. 카테고리별 분석
+	const categoryAnalysis = Array.from(categoryMap.entries()).map(([category, data]) => {
+		const marketAvg = data.marketData.reduce((sum, m) => sum + m.avgCost, 0)
+		const rating = getCategoryRating(data.totalCost, marketAvg)
+		const percentage = totalAmount > 0 ? (data.totalCost / totalAmount) * 100 : 0
 
-	// 8. 기준별 점수 (레이더 차트용)
-	const criteriaScores = generateCriteriaScores(itemAnalysis, savingsPercent)
+		// 카테고리별 발견사항 (데이터 기반)
+		const findings: string[] = []
+		data.items.forEach(item => {
+			const market = marketDataMap.get(item.itemName)
+			if (market && market.hasData) {
+				const itemDiff = ((item.totalPrice - market.avgCost) / market.avgCost) * 100
+				if (itemDiff > 15) {
+					findings.push(`${item.itemName}: 시장가 대비 ${itemDiff.toFixed(1)}% 높음`)
+				} else if (itemDiff < -15) {
+					findings.push(`${item.itemName}: 시장가 대비 ${Math.abs(itemDiff).toFixed(1)}% 저렴 (품질 확인 필요)`)
+				}
+			} else {
+				findings.push(`${item.itemName}: 시장 데이터 부족`)
+			}
+		})
 
-	// 9. 종합 점수 계산 (0-100)
-	const overallScore = calculateOverallScore(criteriaScores, marginAnalysis, savingsPercent)
+		return {
+			category,
+			totalCost: data.totalCost,
+			marketAverage: marketAvg,
+			rating,
+			percentage,
+			items: data.items.length,
+			findings: findings.slice(0, 3) // 최대 3개
+		}
+	})
 
-	// 10. AI 인사이트 생성
-	const aiInsights = await generateAIInsightsNew(
-		request,
-		itemAnalysis,
-		totalEstimate,
-		marketAverage,
-		savingsPercent,
-		marginAnalysis
+	// 7. 요약 생성 (데이터 기반)
+	const summary = generateSummary(
+		totalAmount,
+		averageMarketPrice,
+		priceDiffPercent,
+		categoryAnalysis,
+		marketDataCount,
+		request.items.length
 	)
+
+	// 8. 집첵 권장사항 생성 (데이터 기반)
+	const recommendations = generateRecommendations(
+		totalAmount,
+		averageMarketPrice,
+		priceDiffPercent,
+		categoryAnalysis,
+		request.items
+	)
+
+	// 9. 시장 비교 데이터 조회
+	const marketComparison = await fetchMarketComparison(
+		request.propertySize || 0,
+		request.propertyType || '',
+		totalAmount
+	)
+
+	// 10. 전문가 의견 (항목별)
+	const expertNotes: Record<string, string> = {}
+	request.items.forEach(item => {
+		const market = marketDataMap.get(item.itemName)
+		if (market && market.hasData) {
+			const key = `${item.category}-${item.itemName}`
+			expertNotes[key] = generateExpertNote(item, market)
+		}
+	})
+
+	// 11. 종합 점수 계산
+	const overallScore = calculateOverallScore(
+		priceDiffPercent,
+		categoryAnalysis,
+		marketDataCount,
+		request.items.length
+	)
+
+	console.log(`✅ ZipCheck analysis completed (Score: ${overallScore})`)
 
 	return {
 		overallScore,
-		priceLevel,
-		totalEstimate,
-		marketAverage,
-		recommendedPrice,
-		savings,
-		savingsPercent,
-		marginAnalysis,
-		itemAnalysis,
-		criteriaScores,
-		aiInsights
+		totalAmount,
+		averageMarketPrice,
+		priceRating,
+		summary,
+		categoryAnalysis,
+		recommendations,
+		marketComparison,
+		expertNotes
 	}
 }
 
 /**
- * 시장 데이터 조회
+ * 시장 데이터 조회 (PostgreSQL DB)
  */
-async function fetchMarketData(items: QuoteItem[]) {
-	const marketData: Record<string, any> = {}
+async function fetchMarketDataFromDB(items: QuoteItem[]): Promise<Map<string, MarketData>> {
+	const marketDataMap = new Map<string, MarketData>()
 
 	for (const item of items) {
-		// 항목명으로 아이템 찾기
-		const { data: dbItems } = await supabase
-			.from('items')
-			.select('id, name, category_id, categories(name)')
-			.ilike('name', `%${item.itemName}%`)
-			.limit(1)
+		try {
+			// 항목명으로 아이템 찾기
+			const itemResult = await query(
+				`SELECT i.id, i.name, c.name as category_name
+				FROM items i
+				LEFT JOIN categories c ON i.category_id = c.id
+				WHERE i.name ILIKE $1
+				LIMIT 1`,
+				[`%${item.itemName}%`]
+			)
 
-		if (dbItems && dbItems.length > 0) {
-			const dbItem = dbItems[0]
+			if (itemResult.rows.length > 0) {
+				const dbItem = itemResult.rows[0]
 
-			// 시장 평균 데이터 조회 (최근 분기)
-			const { data: avgData } = await supabase
-				.from('market_averages')
-				.select('*')
-				.eq('item_id', dbItem.id)
-				.order('year', { ascending: false })
-				.order('quarter', { ascending: false })
-				.limit(1)
-				.single()
+				// 시장 평균 데이터 조회 (최근 분기)
+				const avgResult = await query(
+					`SELECT avg_total_cost, min_cost, max_cost, year, quarter
+					FROM market_averages
+					WHERE item_id = $1
+					ORDER BY year DESC, quarter DESC
+					LIMIT 1`,
+					[dbItem.id]
+				)
 
-			// 유통사 가격 데이터 조회 (현재 가격)
-			const { data: distributorPrices } = await supabase
-				.from('distributor_prices')
-				.select('*')
-				.eq('item_id', dbItem.id)
-				.eq('is_current', true)
-
-			marketData[item.itemName] = {
-				item: dbItem,
-				average: avgData,
-				distributorPrices: distributorPrices || []
+				if (avgResult.rows.length > 0) {
+					const avg = avgResult.rows[0]
+					marketDataMap.set(item.itemName, {
+						itemName: item.itemName,
+						category: item.category,
+						avgCost: Number(avg.avg_total_cost) || 0,
+						minCost: Number(avg.min_cost) || 0,
+						maxCost: Number(avg.max_cost) || 0,
+						hasData: true
+					})
+					continue
+				}
 			}
+
+			// 데이터가 없는 경우
+			marketDataMap.set(item.itemName, {
+				itemName: item.itemName,
+				category: item.category,
+				avgCost: 0,
+				minCost: 0,
+				maxCost: 0,
+				hasData: false
+			})
+		} catch (error) {
+			console.error(`Market data fetch error for ${item.itemName}:`, error)
+			marketDataMap.set(item.itemName, {
+				itemName: item.itemName,
+				category: item.category,
+				avgCost: 0,
+				minCost: 0,
+				maxCost: 0,
+				hasData: false
+			})
 		}
 	}
 
-	return marketData
+	return marketDataMap
 }
 
 /**
- * 시장 가격과 비교
+ * 시장 비교 데이터 조회
  */
-function compareWithMarket(
-	items: QuoteItem[],
-	marketData: Record<string, any>
-): MarketComparison[] {
-	return items.map((item) => {
-		const market = marketData[item.itemName]
+async function fetchMarketComparison(
+	propertySize: number,
+	propertyType: string,
+	currentQuote: number
+): Promise<AnalysisResult['marketComparison']> {
+	// 유사 사례 조회 (실제 완료된 견적들)
+	try {
+		const casesResult = await query(
+			`SELECT
+				region as location,
+				property_size as size,
+				(SELECT SUM((item->>'totalPrice')::numeric) FROM jsonb_array_elements(items) as item) as cost,
+				EXTRACT(YEAR FROM created_at) as year
+			FROM quote_requests
+			WHERE status = 'completed'
+				AND property_size BETWEEN $1 AND $2
+				AND property_type = $3
+			ORDER BY created_at DESC
+			LIMIT 5`,
+			[propertySize * 0.8, propertySize * 1.2, propertyType]
+		)
 
-		if (!market || !market.average) {
-			// 시장 데이터가 없는 경우
+		const similarCases = casesResult.rows
+			.filter(row => row.cost && row.cost > 0)
+			.map(row => ({
+				location: row.location || '서울',
+				size: Number(row.size) || propertySize,
+				cost: Number(row.cost) || 0,
+				year: Number(row.year) || 2025
+			}))
+
+		// 가격 범위 계산
+		if (similarCases.length > 0) {
+			const costs = similarCases.map(c => c.cost)
+			const min = Math.min(...costs)
+			const max = Math.max(...costs)
+			const avg = costs.reduce((sum, c) => sum + c, 0) / costs.length
+
+			// 백분위 계산
+			const lowerCount = similarCases.filter(c => c.cost < currentQuote).length
+			const percentile = Math.round((lowerCount / similarCases.length) * 100)
+
 			return {
-				itemName: item.itemName,
-				quotedPrice: item.totalPrice,
-				marketAverage: item.totalPrice,
-				marketMin: item.totalPrice,
-				marketMax: item.totalPrice,
-				priceEvaluation: 'fair' as const,
-				priceDifference: 0,
-				priceDifferencePercent: 0
+				averagePriceRange: { min, max },
+				currentQuote,
+				percentile,
+				similarCases
 			}
 		}
+	} catch (error) {
+		console.error('Market comparison fetch error:', error)
+	}
 
-		const marketAvg = Number(market.average.avg_total_cost) || 0
-		const marketMin = Number(market.average.min_cost) || 0
-		const marketMax = Number(market.average.max_cost) || 0
+	// 데이터가 없는 경우 기본값 (평수 기반 추정)
+	const estimatedMin = propertySize * 300000 // ㎡당 30만원
+	const estimatedMax = propertySize * 500000 // ㎡당 50만원
 
-		const diff = item.totalPrice - marketAvg
-		const diffPercent = marketAvg > 0 ? (diff / marketAvg) * 100 : 0
-
-		// 가격 평가
-		let evaluation: 'low' | 'fair' | 'high' = 'fair'
-		if (diffPercent > 15) {
-			evaluation = 'high'
-		} else if (diffPercent < -15) {
-			evaluation = 'low'
-		}
-
-		return {
-			itemName: item.itemName,
-			quotedPrice: item.totalPrice,
-			marketAverage: marketAvg,
-			marketMin,
-			marketMax,
-			priceEvaluation: evaluation,
-			priceDifference: diff,
-			priceDifferencePercent: diffPercent
-		}
-	})
+	return {
+		averagePriceRange: {
+			min: estimatedMin,
+			max: estimatedMax
+		},
+		currentQuote,
+		percentile: 50, // 중간값
+		similarCases: []
+	}
 }
 
 /**
  * 가격 수준 판단
  */
-function getPriceLevel(savingsPercent: number): 'low' | 'fair' | 'high' | 'very-high' {
-	if (savingsPercent <= -10) return 'low' // 시장가보다 10% 이상 저렴
-	if (savingsPercent <= 5) return 'fair' // 시장가 대비 -10% ~ +5%
-	if (savingsPercent <= 15) return 'high' // 시장가보다 5-15% 높음
-	return 'very-high' // 시장가보다 15% 이상 높음
+function getPriceRating(diffPercent: number): AnalysisResult['priceRating'] {
+	if (diffPercent <= -10) return 'low' // 시장가보다 10% 이상 저렴
+	if (diffPercent <= 5) return 'reasonable' // 시장가 대비 -10% ~ +5%
+	if (diffPercent <= 15) return 'high' // 시장가보다 5-15% 높음
+	return 'very_high' // 시장가보다 15% 이상 높음
 }
 
 /**
- * 마진 분석
+ * 카테고리 평가
  */
-function analyzeMargin(totalEstimate: number, marketAverage: number): MarginAnalysis {
-	const estimatedMargin = marketAverage > 0 ? ((totalEstimate - marketAverage) / marketAverage) * 100 : 0
-	const isNormal = estimatedMargin >= 10 && estimatedMargin <= 20
+function getCategoryRating(
+	totalCost: number,
+	marketAvg: number
+): 'good' | 'reasonable' | 'slightly_high' | 'high' {
+	if (marketAvg === 0) return 'reasonable' // 데이터 없음
 
-	let evaluation: string
-	let comment: string
+	const diff = ((totalCost - marketAvg) / marketAvg) * 100
+	if (diff <= -5) return 'good'
+	if (diff <= 10) return 'reasonable'
+	if (diff <= 20) return 'slightly_high'
+	return 'high'
+}
 
-	if (estimatedMargin < 10) {
-		evaluation = '낮음'
-		comment = '업체 마진이 정상 범위(10-20%)보다 낮습니다. 품질이나 시공 보증을 꼼꼼히 확인하세요.'
-	} else if (estimatedMargin <= 20) {
-		evaluation = '적정'
-		comment = '업체 마진이 정상 범위(10-20%) 내에 있습니다.'
-	} else if (estimatedMargin <= 30) {
-		evaluation = '높음'
-		comment = '업체 마진이 정상 범위(10-20%)보다 높습니다. 가격 협상을 시도해보세요.'
+/**
+ * 요약 생성 (데이터 기반)
+ */
+function generateSummary(
+	totalAmount: number,
+	averageMarketPrice: number,
+	priceDiffPercent: number,
+	categoryAnalysis: AnalysisResult['categoryAnalysis'],
+	marketDataCount: number,
+	totalItemCount: number
+): AnalysisResult['summary'] {
+	const positive: string[] = []
+	const negative: string[] = []
+	const warnings: string[] = []
+
+	// 가격 평가
+	if (priceDiffPercent <= -5) {
+		positive.push(`전체 견적 금액이 시장 평균 대비 ${Math.abs(priceDiffPercent).toFixed(1)}% 저렴합니다`)
+	} else if (priceDiffPercent > 15) {
+		negative.push(`전체 견적 금액이 시장 평균 대비 ${priceDiffPercent.toFixed(1)}% 높습니다`)
+	}
+
+	// 카테고리 평가
+	const goodCategories = categoryAnalysis.filter(c => c.rating === 'good')
+	const highCategories = categoryAnalysis.filter(c => c.rating === 'high' || c.rating === 'slightly_high')
+
+	if (goodCategories.length > 0) {
+		positive.push(`${goodCategories.map(c => c.category).join(', ')} 항목의 가격이 합리적입니다`)
+	}
+
+	if (highCategories.length > 0) {
+		negative.push(`${highCategories.map(c => c.category).join(', ')} 항목이 시장 평균 대비 높게 책정되어 있습니다`)
+	}
+
+	// 데이터 커버리지 경고
+	if (marketDataCount < totalItemCount * 0.5) {
+		warnings.push(`시장 데이터가 부족합니다 (${marketDataCount}/${totalItemCount}개 항목). 추가 검증이 필요합니다`)
+	}
+
+	// 세부 항목 경고
+	categoryAnalysis.forEach(cat => {
+		if (cat.findings.length > 0 && cat.findings.some(f => f.includes('높음'))) {
+			warnings.push(`${cat.category} 카테고리의 일부 항목이 시장가보다 높습니다`)
+		}
+	})
+
+	return { positive, negative, warnings }
+}
+
+/**
+ * 집첵 권장사항 생성 (데이터 기반)
+ */
+function generateRecommendations(
+	totalAmount: number,
+	averageMarketPrice: number,
+	priceDiffPercent: number,
+	categoryAnalysis: AnalysisResult['categoryAnalysis'],
+	items: QuoteItem[]
+): AnalysisResult['recommendations'] {
+	const recommendations: AnalysisResult['recommendations'] = []
+
+	// 비용 절감 방안
+	if (priceDiffPercent > 10) {
+		const potentialSaving = Math.round((totalAmount - averageMarketPrice) * 0.7)
+		recommendations.push({
+			type: 'cost_reduction',
+			title: '가격 협상을 통한 비용 절감',
+			description: `현재 견적이 시장 평균보다 ${priceDiffPercent.toFixed(1)}% 높습니다. 업체와 협상을 통해 시장 평균 수준으로 조정할 수 있습니다.`,
+			potentialSaving
+		})
+	}
+
+	// 고가 카테고리 절감
+	const highCategories = categoryAnalysis.filter(c => c.rating === 'high')
+	if (highCategories.length > 0) {
+		const topCategory = highCategories.sort((a, b) => b.totalCost - a.totalCost)[0]
+		const saving = Math.round((topCategory.totalCost - topCategory.marketAverage) * 0.6)
+		recommendations.push({
+			type: 'cost_reduction',
+			title: `${topCategory.category} 비용 재검토`,
+			description: `${topCategory.category} 항목이 시장 평균보다 높게 책정되어 있습니다. 해당 항목의 자재 등급이나 시공 범위를 조정하여 비용을 절감할 수 있습니다.`,
+			potentialSaving: saving > 0 ? saving : undefined
+		})
+	}
+
+	// 품질 개선 사항
+	const lowCategories = categoryAnalysis.filter(c => c.rating === 'good')
+	if (lowCategories.length > 0 && priceDiffPercent < -10) {
+		recommendations.push({
+			type: 'quality_improvement',
+			title: '자재 및 시공 품질 확인',
+			description: '견적가가 시장 평균보다 낮습니다. 사용 자재의 등급, 브랜드, A/S 조건 등을 꼼꼼히 확인하세요.',
+			potentialSaving: undefined
+		})
+	}
+
+	// 일반 권장사항
+	recommendations.push({
+		type: 'warning',
+		title: '복수 견적 비교 필수',
+		description: '최소 2-3개 업체의 견적을 비교하여 가격과 품질을 종합적으로 판단하세요. 집첵을 통해 추가 견적을 받아보실 수 있습니다.',
+		potentialSaving: undefined
+	})
+
+	return recommendations
+}
+
+/**
+ * 전문가 의견 생성
+ */
+function generateExpertNote(item: QuoteItem, market: MarketData): string {
+	const diff = ((item.totalPrice - market.avgCost) / market.avgCost) * 100
+
+	if (diff > 20) {
+		return `시장 평균(${market.avgCost.toLocaleString()}원) 대비 ${diff.toFixed(1)}% 높습니다. 가격 협상을 권장합니다.`
+	} else if (diff > 10) {
+		return `시장 평균(${market.avgCost.toLocaleString()}원) 대비 다소 높은 편입니다. 자재 등급이나 브랜드를 확인하세요.`
+	} else if (diff < -15) {
+		return `시장 평균(${market.avgCost.toLocaleString()}원) 대비 저렴합니다. 자재 품질과 시공 보증을 확인하세요.`
 	} else {
-		evaluation = '매우 높음'
-		comment = '업체 마진이 정상 범위를 크게 벗어납니다. 다른 업체 견적과 비교 필수입니다.'
-	}
-
-	return {
-		estimatedMargin,
-		evaluation,
-		isNormal,
-		comment
+		return `적정 가격 범위입니다 (시장 평균: ${market.avgCost.toLocaleString()}원).`
 	}
 }
 
 /**
- * 항목 평가
- */
-function getItemEvaluation(diffPercent: number): 'good' | 'fair' | 'expensive' {
-	if (diffPercent <= -5) return 'good' // 시장가보다 5% 이상 저렴
-	if (diffPercent <= 10) return 'fair' // 시장가 대비 -5% ~ +10%
-	return 'expensive' // 시장가보다 10% 이상 높음
-}
-
-/**
- * 항목별 코멘트
- */
-function getItemComment(comp: MarketComparison): string {
-	if (comp.priceDifferencePercent > 20) {
-		return '시장 평균보다 상당히 높은 가격입니다. 다른 업체 견적과 비교를 권장합니다.'
-	} else if (comp.priceDifferencePercent > 10) {
-		return '시장 평균보다 다소 높습니다. 가격 협상 여지가 있습니다.'
-	} else if (comp.priceDifferencePercent < -10) {
-		return '시장 평균보다 저렴합니다. 자재 품질을 확인하세요.'
-	} else {
-		return '적정 가격 범위입니다.'
-	}
-}
-
-/**
- * 레이더 차트용 기준별 점수 생성
- */
-function generateCriteriaScores(itemAnalysis: ItemAnalysis[], savingsPercent: number): CriteriaScore[] {
-	// 가격경쟁력: 시장 평균 대비 얼마나 저렴한가 (낮을수록 좋음)
-	const priceCompetitiveness = Math.max(0, Math.min(100, 100 - savingsPercent * 2))
-
-	// 품질: 항목별 평가 기반 (적정가 항목이 많을수록 좋음)
-	const goodItems = itemAnalysis.filter((item) => item.evaluation === 'good').length
-	const quality = Math.min(100, (goodItems / itemAnalysis.length) * 100 + 50)
-
-	// 시공성: 중간값 기준 (실제 데이터 없으므로 평균치)
-	const workability = 70
-
-	// 내구성: 중간값 기준
-	const durability = 75
-
-	// 디자인: 중간값 기준
-	const design = 70
-
-	return [
-		{ criteria: '시공자재 퀄리티', score: Math.round(quality), market: 70, comment: '자재 및 시공 품질 평가' },
-		{
-			criteria: '가격경쟁력',
-			score: Math.round(priceCompetitiveness),
-			market: 70,
-			comment: '시장 대비 가격 경쟁력'
-		},
-		{ criteria: '시공성', score: Math.round(workability), market: 70, comment: '시공 난이도 및 기간' },
-		{ criteria: '예상 마감완성도', score: Math.round(durability), market: 70, comment: '자재 및 시공 내구성' },
-		{ criteria: '디자인', score: Math.round(design), market: 70, comment: '디자인 완성도' }
-	]
-}
-
-/**
- * 종합 점수 계산 (0-100)
+ * 종합 점수 계산
  */
 function calculateOverallScore(
-	criteriaScores: CriteriaScore[],
-	marginAnalysis: MarginAnalysis,
-	savingsPercent: number
+	priceDiffPercent: number,
+	categoryAnalysis: AnalysisResult['categoryAnalysis'],
+	marketDataCount: number,
+	totalItemCount: number
 ): number {
-	// 기준별 점수 평균
-	const avgCriteriaScore = criteriaScores.reduce((sum, c) => sum + c.score, 0) / criteriaScores.length
-
-	// 마진 점수 (10-20% 범위면 만점)
-	const marginScore = marginAnalysis.isNormal ? 100 : Math.max(0, 100 - Math.abs(marginAnalysis.estimatedMargin - 15) * 3)
-
-	// 가격 점수 (시장 평균 대비)
-	const priceScore = Math.max(0, Math.min(100, 100 - Math.abs(savingsPercent) * 2))
-
-	// 가중 평균 (기준 50%, 마진 30%, 가격 20%)
-	const overallScore = avgCriteriaScore * 0.5 + marginScore * 0.3 + priceScore * 0.2
-
-	return Math.round(overallScore)
-}
-
-/**
- * AI 인사이트 생성
- */
-async function generateAIInsightsNew(
-	request: QuoteAnalysisRequest,
-	itemAnalysis: ItemAnalysis[],
-	totalEstimate: number,
-	marketAverage: number,
-	savingsPercent: number,
-	marginAnalysis: MarginAnalysis
-): Promise<{ summary: string; warnings: string[]; recommendations: string[] }> {
-	const warnings: string[] = []
-	const recommendations: string[] = []
-
-	// 경고사항 생성
-	if (savingsPercent > 15) {
-		warnings.push('견적가가 시장 평균보다 15% 이상 높습니다.')
-	}
-	if (!marginAnalysis.isNormal && marginAnalysis.estimatedMargin > 20) {
-		warnings.push('업체 마진이 정상 범위(10-20%)를 초과합니다.')
-	}
-	const expensiveItems = itemAnalysis.filter((item) => item.evaluation === 'expensive')
-	if (expensiveItems.length > 0) {
-		warnings.push(`${expensiveItems.length}개 항목이 시장가보다 높게 책정되어 있습니다.`)
+	// 1. 가격 점수 (40%)
+	let priceScore = 100
+	if (priceDiffPercent > 15) {
+		priceScore = Math.max(0, 100 - (priceDiffPercent - 15) * 3)
+	} else if (priceDiffPercent > 5) {
+		priceScore = 80
+	} else if (priceDiffPercent < -15) {
+		priceScore = Math.max(60, 100 + priceDiffPercent * 2)
 	}
 
-	// 권장사항 생성
-	if (savingsPercent > 10) {
-		recommendations.push('가격 협상을 통해 시장 평균 수준으로 조정을 요청하세요.')
-	}
-	if (expensiveItems.length > 0) {
-		const topExpensive = expensiveItems.sort((a, b) => b.differencePercent - a.differencePercent)[0]
-		recommendations.push(`"${topExpensive.item}" 항목의 가격을 중점적으로 협상하세요.`)
-	}
-	if (marginAnalysis.isNormal && savingsPercent <= 5) {
-		recommendations.push('전반적으로 합리적인 견적입니다. 품질과 A/S 조건을 확인 후 진행하세요.')
-	}
-	recommendations.push('최소 2-3개 업체의 견적을 비교 검토하는 것을 권장합니다.')
+	// 2. 카테고리 품질 점수 (40%)
+	const goodCount = categoryAnalysis.filter(c => c.rating === 'good').length
+	const reasonableCount = categoryAnalysis.filter(c => c.rating === 'reasonable').length
+	const totalCategories = categoryAnalysis.length
+	const qualityScore = totalCategories > 0
+		? ((goodCount * 100 + reasonableCount * 70) / totalCategories)
+		: 70
 
-	// GPT-5로 AI 요약 생성
-	let summary: string
-	try {
-		const completion = await openai.chat.completions.create({
-			model: 'gpt-5',
-			messages: [
-				{
-					role: 'system',
-					content: '당신은 인테리어 견적 분석 전문가입니다. 견적 분석 결과를 2-3문장으로 간결하게 요약합니다.'
-				},
-				{
-					role: 'user',
-					content: `다음 견적 분석 결과를 전문가 입장에서 종합 평가해주세요.
+	// 3. 데이터 신뢰도 점수 (20%)
+	const dataCoverage = totalItemCount > 0 ? (marketDataCount / totalItemCount) : 0
+	const reliabilityScore = dataCoverage * 100
 
-**견적 정보:**
-- 총 견적가: ${totalEstimate.toLocaleString()}원
-- 시장 평균: ${marketAverage.toLocaleString()}원
-- 차이: ${savingsPercent > 0 ? '+' : ''}${savingsPercent.toFixed(1)}%
-- 업체 마진: ${marginAnalysis.estimatedMargin.toFixed(1)}% (정상 범위: 10-20%)
+	// 가중 평균
+	const overall = priceScore * 0.4 + qualityScore * 0.4 + reliabilityScore * 0.2
 
-**항목 분석:**
-- 적정가 항목: ${itemAnalysis.filter((i) => i.evaluation === 'good').length}개
-- 보통 항목: ${itemAnalysis.filter((i) => i.evaluation === 'fair').length}개
-- 고가 항목: ${itemAnalysis.filter((i) => i.evaluation === 'expensive').length}개
-
-전문가 입장에서 이 견적에 대한 종합 평가를 2-3문장으로 간결하게 제공해주세요.`
-				}
-			],
-			max_tokens: 300,
-			temperature: 0.7 // 자연스러운 문장 생성
-		})
-
-		summary = completion.choices[0]?.message?.content || '이 견적은 전반적인 검토가 필요합니다.'
-	} catch (error) {
-		console.error('GPT-5 요약 생성 실패:', error)
-		summary = '이 견적은 전반적인 검토가 필요합니다.'
-	}
-
-	return {
-		summary,
-		warnings,
-		recommendations
-	}
+	return Math.round(Math.max(0, Math.min(100, overall)))
 }

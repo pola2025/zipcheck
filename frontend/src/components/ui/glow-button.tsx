@@ -60,7 +60,7 @@ export default function GlowButton({
 
 	return (
 		<div
-			className={`relative inline-block overflow-visible ${className}`}
+			className={`relative ${className.includes('w-full') ? 'block' : 'inline-block'} overflow-visible ${className}`}
 			style={{ isolation: 'isolate' }}
 		>
 			{/* Outer glow - outside button to prevent clipping */}
@@ -86,6 +86,7 @@ export default function GlowButton({
 					glow-button
 					relative overflow-hidden rounded-full font-bold text-white transform-gpu
 					${sizeConfig[size]}
+					${className.includes('w-full') ? 'w-full' : ''}
 				`}
 				whileHover={{ scale: 1.02 }}
 				whileTap={{ scale: 0.98 }}

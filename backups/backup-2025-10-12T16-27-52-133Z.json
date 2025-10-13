@@ -1,0 +1,1076 @@
+{
+  "timestamp": "2025-10-12T16-27-52-133Z",
+  "tables": {
+    "quote_requests": [
+      {
+        "id": "3a95d989-35ce-44bb-9db5-3a3bc1772f61",
+        "customer_name": "박민준",
+        "customer_phone": "010-9876-5432",
+        "customer_email": "park@example.com",
+        "property_type": "빌라",
+        "property_size": 25,
+        "region": "서울 마포구",
+        "address": "서울특별시 마포구 합정동 456-78",
+        "items": [
+          {
+            "unit": "㎡",
+            "notes": "10T 국산 강화마루, 몰딩 포함",
+            "category": "바닥",
+            "itemName": "강화마루",
+            "quantity": 65,
+            "unitPrice": 85000,
+            "totalPrice": 5525000
+          },
+          {
+            "unit": "평",
+            "notes": "일반 실크벽지",
+            "category": "도배",
+            "itemName": "벽지 시공",
+            "quantity": 25,
+            "unitPrice": 40000,
+            "totalPrice": 1000000
+          },
+          {
+            "unit": "식",
+            "notes": "타일, 세면대, 양변기 포함",
+            "category": "욕실",
+            "itemName": "욕실 리모델링",
+            "quantity": 1,
+            "unitPrice": 3500000,
+            "totalPrice": 3500000
+          }
+        ],
+        "status": "analyzing",
+        "created_at": "2025-10-12T03:06:01.252524+00:00",
+        "updated_at": "2025-10-12T03:06:01.252524+00:00",
+        "analysis_result": null,
+        "analyzed_at": null,
+        "analyzed_by": null,
+        "admin_notes": null,
+        "group_id": null,
+        "sequence_in_group": null,
+        "validation_status": "pending",
+        "validation_notes": null
+      },
+      {
+        "id": "54731f1c-3cf4-4ad5-812d-4ee41cfd6c29",
+        "customer_name": "김서연",
+        "customer_phone": "010-1234-5678",
+        "customer_email": "kim@example.com",
+        "property_type": "아파트",
+        "property_size": 84,
+        "region": "서울 강남구",
+        "address": "서울특별시 강남구 삼성동 123-45",
+        "items": [
+          {
+            "unit": "㎡",
+            "category": "철거 및 폐기물 처리",
+            "itemName": "기존 바닥재 철거",
+            "quantity": 84,
+            "unitPrice": 15000,
+            "totalPrice": 1260000,
+            "specification": "강마루/장판 철거, 84㎡"
+          },
+          {
+            "unit": "㎡",
+            "category": "바닥재",
+            "itemName": "강화마루 시공",
+            "quantity": 84,
+            "unitPrice": 45000,
+            "totalPrice": 3780000,
+            "specification": "LG 하우시스 지아 8T, 전실"
+          },
+          {
+            "unit": "㎡",
+            "category": "벽지/도배",
+            "itemName": "실크벽지 시공",
+            "quantity": 250,
+            "unitPrice": 18000,
+            "totalPrice": 4500000,
+            "specification": "LG 실크벽지 프리미엄급, 전실"
+          },
+          {
+            "unit": "m",
+            "category": "주방",
+            "itemName": "주방 상판 교체",
+            "quantity": 2.4,
+            "unitPrice": 180000,
+            "totalPrice": 432000,
+            "specification": "인조대리석 상판 2.4m"
+          },
+          {
+            "unit": "㎡",
+            "category": "욕실",
+            "itemName": "욕실 타일 시공",
+            "quantity": 40,
+            "unitPrice": 55000,
+            "totalPrice": 2200000,
+            "specification": "벽타일 300x600, 2개소"
+          }
+        ],
+        "status": "completed",
+        "created_at": "2025-10-12T03:06:01.190831+00:00",
+        "updated_at": "2025-10-12T03:06:01.190831+00:00",
+        "analysis_result": null,
+        "analyzed_at": null,
+        "analyzed_by": null,
+        "admin_notes": null,
+        "group_id": null,
+        "sequence_in_group": null,
+        "validation_status": "pending",
+        "validation_notes": null
+      },
+      {
+        "id": "0b9562e8-f30b-423a-983f-324221e9f9eb",
+        "customer_name": "이재호",
+        "customer_phone": "010-9897-9834",
+        "customer_email": "mkt@polarad.co.kr",
+        "property_type": "아파트",
+        "property_size": 32,
+        "region": "서울 강남구",
+        "address": "서울시 강남구 역삼동 123-45",
+        "items": [
+          {
+            "unit": "식",
+            "notes": "상판 엔지니어드스톤, 하부장 6자, 상부장 포함",
+            "category": "주방",
+            "itemName": "씽크대",
+            "quantity": 1,
+            "unitPrice": 2800000,
+            "totalPrice": 2800000
+          },
+          {
+            "unit": "㎡",
+            "notes": "300x600 포세린 타일, 시공비 포함",
+            "category": "주방",
+            "itemName": "주방 타일",
+            "quantity": 12,
+            "unitPrice": 85000,
+            "totalPrice": 1020000
+          },
+          {
+            "unit": "㎡",
+            "notes": "12T 독일산 강화마루, 몰딩 및 시공비 포함",
+            "category": "바닥",
+            "itemName": "강화마루",
+            "quantity": 84,
+            "unitPrice": 95000,
+            "totalPrice": 7980000
+          },
+          {
+            "unit": "㎡",
+            "notes": "600x600 포세린 타일, 시공비 포함",
+            "category": "바닥",
+            "itemName": "현관 포세린 타일",
+            "quantity": 6,
+            "unitPrice": 120000,
+            "totalPrice": 720000
+          },
+          {
+            "unit": "식",
+            "notes": "세면대, 양변기, 욕조, 샤워부스, 타일 및 방수 포함",
+            "category": "욕실",
+            "itemName": "욕실1 (안방)",
+            "quantity": 1,
+            "unitPrice": 4200000,
+            "totalPrice": 4200000
+          },
+          {
+            "unit": "식",
+            "notes": "세면대, 양변기, 샤워부스, 타일 및 방수 포함",
+            "category": "욕실",
+            "itemName": "욕실2 (공용)",
+            "quantity": 1,
+            "unitPrice": 3800000,
+            "totalPrice": 3800000
+          },
+          {
+            "unit": "평",
+            "notes": "실크벽지, 기존벽지 제거, 초배지 포함",
+            "category": "도배",
+            "itemName": "실크벽지",
+            "quantity": 32,
+            "unitPrice": 45000,
+            "totalPrice": 1440000
+          },
+          {
+            "unit": "개",
+            "notes": "거실, 침실, 주방 매입등 교체",
+            "category": "조명",
+            "itemName": "LED 매입등",
+            "quantity": 18,
+            "unitPrice": 45000,
+            "totalPrice": 810000
+          }
+        ],
+        "status": "pending",
+        "created_at": "2025-10-12T03:06:00.95531+00:00",
+        "updated_at": "2025-10-12T03:06:00.95531+00:00",
+        "analysis_result": null,
+        "analyzed_at": null,
+        "analyzed_by": null,
+        "admin_notes": null,
+        "group_id": null,
+        "sequence_in_group": null,
+        "validation_status": "pending",
+        "validation_notes": null
+      },
+      {
+        "id": "e5612d54-2fd5-4d45-bc6a-842e1725bf84",
+        "customer_name": "�׽�Ʈ ����",
+        "customer_phone": "010-9999-8888",
+        "customer_email": "test@example.com",
+        "property_type": "����Ʈ",
+        "property_size": 32,
+        "region": "����",
+        "address": "������ ���ﵿ",
+        "items": [
+          {
+            "item": "���� ���� ö��",
+            "unit": "��",
+            "notes": "�Ž� �� ��",
+            "category": "ö��",
+            "quantity": 30,
+            "unit_price": 15000,
+            "total_price": 450000
+          },
+          {
+            "item": "���� ��ġ",
+            "unit": "m",
+            "notes": "õ�� ����",
+            "category": "���",
+            "quantity": 25,
+            "unit_price": 8000,
+            "total_price": 200000
+          },
+          {
+            "item": "��ũ ���� �ð�",
+            "unit": "��",
+            "notes": "�����̾� ��ũ",
+            "category": "����",
+            "quantity": 30,
+            "unit_price": 35000,
+            "total_price": 1050000
+          },
+          {
+            "item": "��� Ÿ�� �ð�",
+            "unit": "��",
+            "notes": "������ Ÿ��",
+            "category": "Ÿ��",
+            "quantity": 15,
+            "unit_price": 120000,
+            "total_price": 1800000
+          },
+          {
+            "item": "LED ���� ��ü",
+            "unit": "��",
+            "notes": "�Ž� ���Ե�",
+            "category": "����",
+            "quantity": 8,
+            "unit_price": 45000,
+            "total_price": 360000
+          }
+        ],
+        "status": "pending",
+        "created_at": "2025-10-10T12:13:48.617628+00:00",
+        "updated_at": "2025-10-10T12:13:48.617628+00:00",
+        "analysis_result": null,
+        "analyzed_at": null,
+        "analyzed_by": null,
+        "admin_notes": null,
+        "group_id": "08490e52-26f1-466b-b0cf-b9687bcc27f0",
+        "sequence_in_group": 1,
+        "validation_status": "pending",
+        "validation_notes": "항목 수가 적거나 평균 금액이 높아 관리자 검토가 필요합니다."
+      },
+      {
+        "id": "cf651e46-b416-4230-bbab-c2262765aa11",
+        "customer_name": "이재호",
+        "customer_phone": "010-9897-9834",
+        "customer_email": "mkt@polarad.co.kr",
+        "property_type": "아파트",
+        "property_size": 84,
+        "region": "서울 강남구",
+        "address": "서울특별시 강남구 삼성동 123-45",
+        "items": [
+          {
+            "unit": "㎡",
+            "category": "철거 및 폐기물 처리",
+            "itemName": "기존 바닥재 철거",
+            "quantity": 84,
+            "unitPrice": 15000,
+            "totalPrice": 1260000,
+            "specification": "강마루/장판 철거, 84㎡"
+          },
+          {
+            "unit": "㎡",
+            "category": "철거 및 폐기물 처리",
+            "itemName": "벽지 제거 및 도배 밑작업",
+            "quantity": 250,
+            "unitPrice": 8000,
+            "totalPrice": 2000000,
+            "specification": "기존 벽지 제거, 퍼티작업"
+          },
+          {
+            "unit": "식",
+            "category": "철거 및 폐기물 처리",
+            "itemName": "폐기물 처리",
+            "quantity": 1,
+            "unitPrice": 800000,
+            "totalPrice": 800000,
+            "specification": "철거 폐기물 수거 및 처리"
+          },
+          {
+            "unit": "㎡",
+            "category": "바닥재",
+            "itemName": "강화마루 시공",
+            "quantity": 84,
+            "unitPrice": 45000,
+            "totalPrice": 3780000,
+            "specification": "LG 하우시스 지아 8T, 전실"
+          },
+          {
+            "unit": "m",
+            "category": "바닥재",
+            "itemName": "걸레받이 시공",
+            "quantity": 80,
+            "unitPrice": 8000,
+            "totalPrice": 640000,
+            "specification": "ABS 걸레받이"
+          },
+          {
+            "unit": "㎡",
+            "category": "벽지/도배",
+            "itemName": "실크벽지 시공",
+            "quantity": 250,
+            "unitPrice": 18000,
+            "totalPrice": 4500000,
+            "specification": "LG 실크벽지 프리미엄급, 전실"
+          },
+          {
+            "unit": "㎡",
+            "category": "벽지/도배",
+            "itemName": "천정 도배",
+            "quantity": 84,
+            "unitPrice": 12000,
+            "totalPrice": 1008000,
+            "specification": "합지 도배"
+          },
+          {
+            "unit": "개",
+            "category": "도어",
+            "itemName": "방문 교체",
+            "quantity": 3,
+            "unitPrice": 450000,
+            "totalPrice": 1350000,
+            "specification": "중문 도어, 3개소"
+          },
+          {
+            "unit": "개",
+            "category": "도어",
+            "itemName": "욕실문 교체",
+            "quantity": 2,
+            "unitPrice": 380000,
+            "totalPrice": 760000,
+            "specification": "PVC 욕실문, 2개소"
+          },
+          {
+            "unit": "m",
+            "category": "주방",
+            "itemName": "주방 상판 교체",
+            "quantity": 2.4,
+            "unitPrice": 180000,
+            "totalPrice": 432000,
+            "specification": "인조대리석 상판 2.4m"
+          },
+          {
+            "unit": "개",
+            "category": "주방",
+            "itemName": "싱크볼 교체",
+            "quantity": 1,
+            "unitPrice": 250000,
+            "totalPrice": 250000,
+            "specification": "스테인리스 언더싱크"
+          },
+          {
+            "unit": "개",
+            "category": "주방",
+            "itemName": "주방수전",
+            "quantity": 1,
+            "unitPrice": 180000,
+            "totalPrice": 180000,
+            "specification": "한샘 프리미엄 주방수전"
+          },
+          {
+            "unit": "개",
+            "category": "주방",
+            "itemName": "가스레인지",
+            "quantity": 1,
+            "unitPrice": 450000,
+            "totalPrice": 450000,
+            "specification": "린나이 3구 빌트인"
+          },
+          {
+            "unit": "㎡",
+            "category": "욕실",
+            "itemName": "욕실 타일 시공",
+            "quantity": 40,
+            "unitPrice": 55000,
+            "totalPrice": 2200000,
+            "specification": "벽타일 300x600, 2개소"
+          },
+          {
+            "unit": "개",
+            "category": "욕실",
+            "itemName": "세면대 교체",
+            "quantity": 2,
+            "unitPrice": 380000,
+            "totalPrice": 760000,
+            "specification": "세면기+수전+거울장, 2개소"
+          },
+          {
+            "unit": "개",
+            "category": "욕실",
+            "itemName": "양변기 교체",
+            "quantity": 2,
+            "unitPrice": 280000,
+            "totalPrice": 560000,
+            "specification": "코스타 투피스 양변기, 2개소"
+          },
+          {
+            "unit": "개",
+            "category": "욕실",
+            "itemName": "샤워부스",
+            "quantity": 1,
+            "unitPrice": 850000,
+            "totalPrice": 850000,
+            "specification": "3면 고정 샤워부스"
+          },
+          {
+            "unit": "개",
+            "category": "조명",
+            "itemName": "거실 LED조명",
+            "quantity": 2,
+            "unitPrice": 180000,
+            "totalPrice": 360000,
+            "specification": "150W 거실등"
+          },
+          {
+            "unit": "개",
+            "category": "조명",
+            "itemName": "방 LED조명",
+            "quantity": 3,
+            "unitPrice": 120000,
+            "totalPrice": 360000,
+            "specification": "80W 방등, 3개소"
+          },
+          {
+            "unit": "개",
+            "category": "조명",
+            "itemName": "주방 LED조명",
+            "quantity": 1,
+            "unitPrice": 90000,
+            "totalPrice": 90000,
+            "specification": "주방 직부등"
+          },
+          {
+            "unit": "개",
+            "category": "전기",
+            "itemName": "스위치/콘센트 교체",
+            "quantity": 35,
+            "unitPrice": 25000,
+            "totalPrice": 875000,
+            "specification": "시스템 스위치 전체 교체"
+          },
+          {
+            "unit": "식",
+            "category": "전기",
+            "itemName": "전기 배선 정비",
+            "quantity": 1,
+            "unitPrice": 600000,
+            "totalPrice": 600000,
+            "specification": "노후 배선 교체 및 정비"
+          },
+          {
+            "unit": "m",
+            "category": "목공사",
+            "itemName": "붙박이장 제작",
+            "quantity": 2.4,
+            "unitPrice": 450000,
+            "totalPrice": 1080000,
+            "specification": "안방 붙박이장 2.4m"
+          },
+          {
+            "unit": "m",
+            "category": "목공사",
+            "itemName": "신발장 제작",
+            "quantity": 1.5,
+            "unitPrice": 380000,
+            "totalPrice": 570000,
+            "specification": "현관 신발장 1.5m"
+          },
+          {
+            "unit": "㎡",
+            "category": "샷시/창호",
+            "itemName": "베란다 샷시 교체",
+            "quantity": 6,
+            "unitPrice": 380000,
+            "totalPrice": 2280000,
+            "specification": "시스템 창호 3연동"
+          },
+          {
+            "unit": "개",
+            "category": "샷시/창호",
+            "itemName": "중문 설치",
+            "quantity": 1,
+            "unitPrice": 950000,
+            "totalPrice": 950000,
+            "specification": "거실 알루미늄 중문"
+          },
+          {
+            "unit": "m",
+            "category": "마감재",
+            "itemName": "몰딩 시공",
+            "quantity": 60,
+            "unitPrice": 15000,
+            "totalPrice": 900000,
+            "specification": "천정 몰딩"
+          },
+          {
+            "unit": "식",
+            "category": "기타",
+            "itemName": "청소 및 정리",
+            "quantity": 1,
+            "unitPrice": 300000,
+            "totalPrice": 300000,
+            "specification": "준공청소"
+          },
+          {
+            "unit": "식",
+            "category": "기타",
+            "itemName": "현장관리비",
+            "quantity": 1,
+            "unitPrice": 1500000,
+            "totalPrice": 1500000,
+            "specification": "공사 관리 및 감리"
+          },
+          {
+            "unit": "식",
+            "category": "기타",
+            "itemName": "부가세",
+            "quantity": 1,
+            "unitPrice": 3164500,
+            "totalPrice": 3164500,
+            "specification": "VAT 10%"
+          }
+        ],
+        "status": "pending",
+        "created_at": "2025-10-10T11:01:41.070005+00:00",
+        "updated_at": "2025-10-10T11:01:41.070005+00:00",
+        "analysis_result": null,
+        "analyzed_at": null,
+        "analyzed_by": null,
+        "admin_notes": null,
+        "group_id": "ad71a495-a170-4423-9688-7698b20ab170",
+        "sequence_in_group": 1,
+        "validation_status": "approved",
+        "validation_notes": null
+      },
+      {
+        "id": "c0d7866a-f0ce-47df-8dcd-bb8eb871a01c",
+        "customer_name": "이재호",
+        "customer_phone": "010-9897-9834",
+        "customer_email": "mkt@polarad.co.kr",
+        "property_type": "아파트",
+        "property_size": 32,
+        "region": "서울 강남구",
+        "address": "서울시 강남구 역삼동 123-45",
+        "items": [
+          {
+            "unit": "식",
+            "notes": "상판 엔지니어드스톤, 하부장 6자, 상부장 포함",
+            "category": "주방",
+            "itemName": "씽크대",
+            "quantity": 1,
+            "unitPrice": 2800000,
+            "totalPrice": 2800000
+          },
+          {
+            "unit": "㎡",
+            "notes": "300x600 포세린 타일, 시공비 포함",
+            "category": "주방",
+            "itemName": "주방 타일",
+            "quantity": 12,
+            "unitPrice": 85000,
+            "totalPrice": 1020000
+          },
+          {
+            "unit": "㎡",
+            "notes": "12T 독일산 강화마루, 몰딩 및 시공비 포함",
+            "category": "바닥",
+            "itemName": "강화마루",
+            "quantity": 84,
+            "unitPrice": 95000,
+            "totalPrice": 7980000
+          },
+          {
+            "unit": "㎡",
+            "notes": "600x600 포세린 타일, 시공비 포함",
+            "category": "바닥",
+            "itemName": "현관 포세린 타일",
+            "quantity": 6,
+            "unitPrice": 120000,
+            "totalPrice": 720000
+          },
+          {
+            "unit": "식",
+            "notes": "세면대, 양변기, 욕조, 샤워부스, 타일 및 방수 포함",
+            "category": "욕실",
+            "itemName": "욕실1 (안방)",
+            "quantity": 1,
+            "unitPrice": 4200000,
+            "totalPrice": 4200000
+          },
+          {
+            "unit": "식",
+            "notes": "세면대, 양변기, 샤워부스, 타일 및 방수 포함",
+            "category": "욕실",
+            "itemName": "욕실2 (공용)",
+            "quantity": 1,
+            "unitPrice": 3800000,
+            "totalPrice": 3800000
+          },
+          {
+            "unit": "평",
+            "notes": "실크벽지, 기존벽지 제거, 초배지 포함",
+            "category": "도배",
+            "itemName": "실크벽지",
+            "quantity": 32,
+            "unitPrice": 45000,
+            "totalPrice": 1440000
+          },
+          {
+            "unit": "평",
+            "notes": "백색 실크벽지",
+            "category": "도배",
+            "itemName": "천장 도배",
+            "quantity": 32,
+            "unitPrice": 35000,
+            "totalPrice": 1120000
+          },
+          {
+            "unit": "식",
+            "notes": "3연동 슬라이딩, 강화유리, 설치비 포함",
+            "category": "중문",
+            "itemName": "거실 슬라이딩 중문",
+            "quantity": 1,
+            "unitPrice": 1850000,
+            "totalPrice": 1850000
+          },
+          {
+            "unit": "개",
+            "notes": "거실, 침실, 주방 매입등 교체",
+            "category": "조명",
+            "itemName": "LED 매입등",
+            "quantity": 18,
+            "unitPrice": 45000,
+            "totalPrice": 810000
+          },
+          {
+            "unit": "식",
+            "notes": "3등 펜던트 조명",
+            "category": "조명",
+            "itemName": "거실 펜던트",
+            "quantity": 1,
+            "unitPrice": 420000,
+            "totalPrice": 420000
+          },
+          {
+            "unit": "개",
+            "notes": "ABS 도어, 하드웨어 포함",
+            "category": "도어",
+            "itemName": "방문 교체",
+            "quantity": 3,
+            "unitPrice": 380000,
+            "totalPrice": 1140000
+          },
+          {
+            "unit": "평",
+            "notes": "PVC 걸레받이, 시공비 포함",
+            "category": "몰딩",
+            "itemName": "걸레받이",
+            "quantity": 32,
+            "unitPrice": 18000,
+            "totalPrice": 576000
+          },
+          {
+            "unit": "평",
+            "notes": "우레탄 몰딩, 시공비 포함",
+            "category": "몰딩",
+            "itemName": "천장 몰딩",
+            "quantity": 32,
+            "unitPrice": 22000,
+            "totalPrice": 704000
+          },
+          {
+            "unit": "식",
+            "notes": "기존 자재 철거 및 폐기물 반출",
+            "category": "기타",
+            "itemName": "철거 및 폐기물 처리",
+            "quantity": 1,
+            "unitPrice": 1200000,
+            "totalPrice": 1200000
+          },
+          {
+            "unit": "식",
+            "notes": "공사 중 보양, 마무리 청소",
+            "category": "기타",
+            "itemName": "보양 및 청소",
+            "quantity": 1,
+            "unitPrice": 450000,
+            "totalPrice": 450000
+          }
+        ],
+        "status": "completed",
+        "created_at": "2025-10-10T07:24:21.469572+00:00",
+        "updated_at": "2025-10-10T07:46:03.258239+00:00",
+        "analysis_result": {
+          "savings": 7250000,
+          "aiInsights": {
+            "summary": "이 견적은 시장 평균 대비 31.5% 높은 가격으로, 업체 마진율이 일반적인 적정 범위(10-20%)를 크게 초과하고 있습니다. 대부분의 항목이 보통 수준이나 2개 항목이 고가로 책정되어 있어, 전반적인 가격 조정이 필요해 보입니다. 고객님께서는 업체와의 협상을 통해 마진율 조정을 요청하시거나, 추가 견적 비교를 통해 더 합리적인 가격을 제시하는 업체를 찾아보시는 것을 권장드립니다.",
+            "warnings": [
+              "견적가가 시장 평균보다 15% 이상 높습니다.",
+              "업체 마진이 정상 범위(10-20%)를 초과합니다.",
+              "2개 항목이 시장가보다 높게 책정되어 있습니다."
+            ],
+            "recommendations": [
+              "가격 협상을 통해 시장 평균 수준으로 조정을 요청하세요.",
+              "\"강화마루\" 항목의 가격을 중점적으로 협상하세요.",
+              "최소 2-3개 업체의 견적을 비교 검토하는 것을 권장합니다."
+            ]
+          },
+          "priceLevel": "very-high",
+          "itemAnalysis": [
+            {
+              "item": "씽크대",
+              "comment": "시장 평균보다 상당히 높은 가격입니다. 다른 업체 견적과 비교를 권장합니다.",
+              "category": "주방",
+              "difference": 1600000,
+              "evaluation": "expensive",
+              "estimatePrice": 2800000,
+              "marketAverage": 1200000,
+              "marginEstimate": 133.33333333333331,
+              "differencePercent": 133.33333333333331
+            },
+            {
+              "item": "주방 타일",
+              "comment": "적정 가격 범위입니다.",
+              "category": "주방",
+              "difference": 0,
+              "evaluation": "fair",
+              "estimatePrice": 1020000,
+              "marketAverage": 1020000,
+              "marginEstimate": 0,
+              "differencePercent": 0
+            },
+            {
+              "item": "강화마루",
+              "comment": "시장 평균보다 상당히 높은 가격입니다. 다른 업체 견적과 비교를 권장합니다.",
+              "category": "바닥",
+              "difference": 5650000,
+              "evaluation": "expensive",
+              "estimatePrice": 7980000,
+              "marketAverage": 2330000,
+              "marginEstimate": 242.4892703862661,
+              "differencePercent": 242.4892703862661
+            },
+            {
+              "item": "현관 포세린 타일",
+              "comment": "적정 가격 범위입니다.",
+              "category": "바닥",
+              "difference": 0,
+              "evaluation": "fair",
+              "estimatePrice": 720000,
+              "marketAverage": 720000,
+              "marginEstimate": 0,
+              "differencePercent": 0
+            },
+            {
+              "item": "욕실1 (안방)",
+              "comment": "적정 가격 범위입니다.",
+              "category": "욕실",
+              "difference": 0,
+              "evaluation": "fair",
+              "estimatePrice": 4200000,
+              "marketAverage": 4200000,
+              "marginEstimate": 0,
+              "differencePercent": 0
+            },
+            {
+              "item": "욕실2 (공용)",
+              "comment": "적정 가격 범위입니다.",
+              "category": "욕실",
+              "difference": 0,
+              "evaluation": "fair",
+              "estimatePrice": 3800000,
+              "marketAverage": 3800000,
+              "marginEstimate": 0,
+              "differencePercent": 0
+            },
+            {
+              "item": "실크벽지",
+              "comment": "적정 가격 범위입니다.",
+              "category": "도배",
+              "difference": 0,
+              "evaluation": "fair",
+              "estimatePrice": 1440000,
+              "marketAverage": 1440000,
+              "marginEstimate": 0,
+              "differencePercent": 0
+            },
+            {
+              "item": "천장 도배",
+              "comment": "적정 가격 범위입니다.",
+              "category": "도배",
+              "difference": 0,
+              "evaluation": "fair",
+              "estimatePrice": 1120000,
+              "marketAverage": 1120000,
+              "marginEstimate": 0,
+              "differencePercent": 0
+            },
+            {
+              "item": "거실 슬라이딩 중문",
+              "comment": "적정 가격 범위입니다.",
+              "category": "중문",
+              "difference": 0,
+              "evaluation": "fair",
+              "estimatePrice": 1850000,
+              "marketAverage": 1850000,
+              "marginEstimate": 0,
+              "differencePercent": 0
+            },
+            {
+              "item": "LED 매입등",
+              "comment": "적정 가격 범위입니다.",
+              "category": "조명",
+              "difference": 0,
+              "evaluation": "fair",
+              "estimatePrice": 810000,
+              "marketAverage": 810000,
+              "marginEstimate": 0,
+              "differencePercent": 0
+            },
+            {
+              "item": "거실 펜던트",
+              "comment": "적정 가격 범위입니다.",
+              "category": "조명",
+              "difference": 0,
+              "evaluation": "fair",
+              "estimatePrice": 420000,
+              "marketAverage": 420000,
+              "marginEstimate": 0,
+              "differencePercent": 0
+            },
+            {
+              "item": "방문 교체",
+              "comment": "적정 가격 범위입니다.",
+              "category": "도어",
+              "difference": 0,
+              "evaluation": "fair",
+              "estimatePrice": 1140000,
+              "marketAverage": 1140000,
+              "marginEstimate": 0,
+              "differencePercent": 0
+            },
+            {
+              "item": "걸레받이",
+              "comment": "적정 가격 범위입니다.",
+              "category": "몰딩",
+              "difference": 0,
+              "evaluation": "fair",
+              "estimatePrice": 576000,
+              "marketAverage": 576000,
+              "marginEstimate": 0,
+              "differencePercent": 0
+            },
+            {
+              "item": "천장 몰딩",
+              "comment": "적정 가격 범위입니다.",
+              "category": "몰딩",
+              "difference": 0,
+              "evaluation": "fair",
+              "estimatePrice": 704000,
+              "marketAverage": 704000,
+              "marginEstimate": 0,
+              "differencePercent": 0
+            },
+            {
+              "item": "철거 및 폐기물 처리",
+              "comment": "적정 가격 범위입니다.",
+              "category": "기타",
+              "difference": 0,
+              "evaluation": "fair",
+              "estimatePrice": 1200000,
+              "marketAverage": 1200000,
+              "marginEstimate": 0,
+              "differencePercent": 0
+            },
+            {
+              "item": "보양 및 청소",
+              "comment": "적정 가격 범위입니다.",
+              "category": "기타",
+              "difference": 0,
+              "evaluation": "fair",
+              "estimatePrice": 450000,
+              "marketAverage": 450000,
+              "marginEstimate": 0,
+              "differencePercent": 0
+            }
+          ],
+          "overallScore": 53,
+          "marketAverage": 22980000,
+          "totalEstimate": 30230000,
+          "criteriaScores": [
+            {
+              "score": 50,
+              "market": 70,
+              "comment": "자재 및 시공 품질 평가",
+              "criteria": "품질"
+            },
+            {
+              "score": 37,
+              "market": 70,
+              "comment": "시장 대비 가격 경쟁력",
+              "criteria": "가격경쟁력"
+            },
+            {
+              "score": 70,
+              "market": 70,
+              "comment": "시공 난이도 및 기간",
+              "criteria": "시공성"
+            },
+            {
+              "score": 75,
+              "market": 70,
+              "comment": "자재 및 시공 내구성",
+              "criteria": "내구성"
+            },
+            {
+              "score": 70,
+              "market": 70,
+              "comment": "디자인 완성도",
+              "criteria": "디자인"
+            }
+          ],
+          "marginAnalysis": {
+            "comment": "업체 마진이 정상 범위를 크게 벗어납니다. 다른 업체 견적과 비교 필수입니다.",
+            "isNormal": false,
+            "evaluation": "매우 높음",
+            "estimatedMargin": 31.54917319408181
+          },
+          "savingsPercent": 31.54917319408181,
+          "recommendedPrice": 26427000
+        },
+        "analyzed_at": "2025-10-10T07:46:03.922+00:00",
+        "analyzed_by": "admin",
+        "admin_notes": null,
+        "group_id": null,
+        "sequence_in_group": null,
+        "validation_status": "pending",
+        "validation_notes": null
+      }
+    ],
+    "quote_groups": [
+      {
+        "id": "08490e52-26f1-466b-b0cf-b9687bcc27f0",
+        "customer_name": "�׽�Ʈ ����",
+        "customer_phone": "010-9999-8888",
+        "customer_email": "test@example.com",
+        "group_name": "����Ʈ 32평 - ����",
+        "property_type": "����Ʈ",
+        "property_size": 32,
+        "region": "����",
+        "address": "������ ���ﵿ",
+        "status": "active",
+        "quote_count": 1,
+        "total_price": 30000,
+        "expires_at": "2025-10-12T12:13:48.659+00:00",
+        "created_at": "2025-10-10T12:13:48.410412+00:00",
+        "updated_at": "2025-10-10T12:13:48.410412+00:00"
+      },
+      {
+        "id": "ad71a495-a170-4423-9688-7698b20ab170",
+        "customer_name": "이재호",
+        "customer_phone": "010-9897-9834",
+        "customer_email": "mkt@polarad.co.kr",
+        "group_name": "아파트 84평 - 서울 강남구",
+        "property_type": "아파트",
+        "property_size": 84,
+        "region": "서울 강남구",
+        "address": "서울특별시 강남구 삼성동 123-45",
+        "status": "active",
+        "quote_count": 1,
+        "total_price": 30000,
+        "expires_at": "2025-10-12T11:01:41.256+00:00",
+        "created_at": "2025-10-10T11:01:40.944408+00:00",
+        "updated_at": "2025-10-10T11:01:40.944408+00:00"
+      },
+      {
+        "id": "37b7cf38-7b41-4d17-8ca0-32ee485ae072",
+        "customer_name": "이재호",
+        "customer_phone": "010-9897-9834",
+        "customer_email": "mkt@polarad.co.kr",
+        "group_name": "아파트 84평 - 서울 강남구",
+        "property_type": "아파트",
+        "property_size": 84,
+        "region": "서울 강남구",
+        "address": "서울특별시 강남구 삼성동 123-45",
+        "status": "active",
+        "quote_count": 1,
+        "total_price": 30000,
+        "expires_at": "2025-10-12T10:59:32.678+00:00",
+        "created_at": "2025-10-10T10:59:32.38268+00:00",
+        "updated_at": "2025-10-10T10:59:32.38268+00:00"
+      },
+      {
+        "id": "35ad2310-bbe1-4ca8-90d9-757d83396222",
+        "customer_name": "이재호",
+        "customer_phone": "010-9897-9834",
+        "customer_email": "mkt@polarad.co.kr",
+        "group_name": "아파트 84평 - 서울 강남구",
+        "property_type": "아파트",
+        "property_size": 84,
+        "region": "서울 강남구",
+        "address": "서울특별시 강남구 삼성동 123-45",
+        "status": "active",
+        "quote_count": 1,
+        "total_price": 30000,
+        "expires_at": "2025-10-12T10:49:44.817+00:00",
+        "created_at": "2025-10-10T10:49:44.46168+00:00",
+        "updated_at": "2025-10-10T10:49:44.46168+00:00"
+      },
+      {
+        "id": "0d3ae058-c4b5-4990-94e0-9a684265791b",
+        "customer_name": "이재호",
+        "customer_phone": "010-9897-9834",
+        "customer_email": "mkt@polarad.co.kr",
+        "group_name": "아파트 84평 - 서울 강남구",
+        "property_type": "아파트",
+        "property_size": 84,
+        "region": "서울 강남구",
+        "address": "서울특별시 강남구 삼성동 123-45",
+        "status": "active",
+        "quote_count": 1,
+        "total_price": 30000,
+        "expires_at": "2025-10-12T10:31:03.234+00:00",
+        "created_at": "2025-10-10T10:31:03.080272+00:00",
+        "updated_at": "2025-10-10T10:31:03.080272+00:00"
+      }
+    ]
+  },
+  "metadata": {
+    "totalRecords": 11,
+    "backupSize": ""
+  }
+}

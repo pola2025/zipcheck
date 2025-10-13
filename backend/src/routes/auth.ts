@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { generateToken } from '../utils/jwt'
 import crypto from 'crypto'
-import { supabase } from '../lib/supabase'
+import { query, insertOne, findOne } from '../lib/db'
 
 const router = Router()
 
@@ -227,57 +227,49 @@ router.get('/naver/callback', async (req: Request, res: Response) => {
 		const naverUser = profileData.response
 		console.log('✅ User profile received:', naverUser.email)
 
-		// Check if user exists in database
-		const { data: existingUser, error: findError } = await supabase
-			.from('users')
-			.select('*')
-			.eq('naver_id', naverUser.id)
-			.single()
+		// ✅ CONVERTED: Check if user exists in database
+		// OLD: const { data: existingUser, error: findError } = await supabase.from('users').select('*').eq('naver_id', naverUser.id).single()
+		const existingUser = await findOne<any>('users', { naver_id: naverUser.id })
 
 		let userId: string
 
 		if (existingUser) {
-			// Update existing user
+			// ✅ CONVERTED: Update existing user
+			// OLD: const { data: updatedUser, error: updateError } = await supabase.from('users').update({...}).eq('naver_id', naverUser.id).select().single()
 			console.log('📝 Updating existing user')
-			const { data: updatedUser, error: updateError } = await supabase
-				.from('users')
-				.update({
-					email: naverUser.email,
-					name: naverUser.name,
-					phone: naverUser.mobile,
-					profile_image: naverUser.profile_image,
-					updated_at: new Date().toISOString()
-				})
-				.eq('naver_id', naverUser.id)
-				.select()
-				.single()
+			const updateResult = await query(
+				`UPDATE users
+				SET email = $1, name = $2, phone = $3, profile_image = $4, updated_at = $5
+				WHERE naver_id = $6
+				RETURNING *`,
+				[naverUser.email, naverUser.name, naverUser.mobile, naverUser.profile_image, new Date().toISOString(), naverUser.id]
+			)
 
-			if (updateError) {
-				console.error('❌ Failed to update user:', updateError)
-				throw updateError
+			const updatedUser = updateResult.rows[0]
+
+			if (!updatedUser) {
+				console.error('❌ Failed to update user')
+				throw new Error('Failed to update user')
 			}
 
 			userId = updatedUser.id
 		} else {
-			// Create new user
+			// ✅ CONVERTED: Create new user
+			// OLD: const { data: newUser, error: createError } = await supabase.from('users').insert({...}).select().single()
 			console.log('🆕 Creating new user')
-			const { data: newUser, error: createError } = await supabase
-				.from('users')
-				.insert({
-					naver_id: naverUser.id,
-					email: naverUser.email,
-					name: naverUser.name,
-					phone: naverUser.mobile,
-					profile_image: naverUser.profile_image,
-					oauth_provider: 'naver',
-					joined_at: new Date().toISOString()
-				})
-				.select()
-				.single()
+			const newUser = await insertOne<any>('users', {
+				naver_id: naverUser.id,
+				email: naverUser.email,
+				name: naverUser.name,
+				phone: naverUser.mobile,
+				profile_image: naverUser.profile_image,
+				oauth_provider: 'naver',
+				joined_at: new Date().toISOString()
+			})
 
-			if (createError) {
-				console.error('❌ Failed to create user:', createError)
-				throw createError
+			if (!newUser) {
+				console.error('❌ Failed to create user')
+				throw new Error('Failed to create user')
 			}
 
 			userId = newUser.id
@@ -324,10 +316,11 @@ router.get('/me', async (req: Request, res: Response) => {
 
 		const decoded = jwt.verify(token, process.env.JWT_SECRET || 'REDACTED_JWT_SECRET')
 
-		// Get user from database
-		const { data: user, error } = await supabase.from('users').select('*').eq('id', decoded.userId).single()
+		// ✅ CONVERTED: Get user from database
+		// OLD: const { data: user, error } = await supabase.from('users').select('*').eq('id', decoded.userId).single()
+		const user = await findOne<any>('users', { id: decoded.userId })
 
-		if (error || !user) {
+		if (!user) {
 			return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' })
 		}
 

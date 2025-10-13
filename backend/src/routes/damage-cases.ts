@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import multer from 'multer'
-import { supabase } from '../lib/supabase'
+import { query, findOne, insertOne } from '../lib/db'
 import { authenticateToken, optionalAuthenticateToken } from '../middleware/auth'
 import { uploadImages, ensureStorageBucket } from '../services/image-upload'
 
@@ -49,41 +49,49 @@ router.get('/', optionalAuthenticateToken, async (req, res) => {
 
 		console.log(`🔍 Fetching damage cases (page: ${page}, limit: ${limit})`)
 
-		// Base query
-		let query = supabase
-			.from('damage_cases')
-			.select('*', { count: 'exact' })
-			.eq('status', 'published')
-			.range(offset, offset + Number(limit) - 1)
+		// Build query dynamically
+		let queryText = 'SELECT * FROM damage_cases WHERE status != $1'
+		let countText = 'SELECT COUNT(*) FROM damage_cases WHERE status != $1'
+		const params: any[] = ['deleted']
 
 		// Filters
 		if (region) {
-			query = query.eq('region', region)
+			params.push(region)
+			queryText += ` AND region = $${params.length}`
+			countText += ` AND region = $${params.length}`
 		}
 		if (damage_type) {
-			query = query.eq('damage_type', damage_type)
+			params.push(damage_type)
+			queryText += ` AND category = $${params.length}`
+			countText += ` AND category = $${params.length}`
 		}
 		if (resolution_status) {
-			query = query.eq('resolution_status', resolution_status)
+			params.push(resolution_status)
+			queryText += ` AND status = $${params.length}`
+			countText += ` AND status = $${params.length}`
 		}
 
 		// Sorting
-		const validSortFields = ['created_at', 'damage_amount', 'like_count', 'view_count']
+		const validSortFields = ['created_at', 'severity']
 		const sortField = validSortFields.includes(sort_by as string) ? sort_by : 'created_at'
-		const sortOrder = order === 'asc'
-		query = query.order(sortField as string, { ascending: sortOrder })
+		const sortOrder = order === 'asc' ? 'ASC' : 'DESC'
+		queryText += ` ORDER BY ${sortField} ${sortOrder}`
 
-		const { data, error, count } = await query
+		// Pagination
+		queryText += ` LIMIT $${params.length + 1} OFFSET $${params.length + 2}`
 
-		if (error) {
-			console.error('Database query error:', error)
-			throw error
-		}
+		// Execute queries
+		const [dataResult, countResult] = await Promise.all([
+			query(queryText, [...params, Number(limit), offset]),
+			query(countText, params)
+		])
 
-		console.log(`✅ Found ${data.length} damage cases (total: ${count})`)
+		const count = parseInt(countResult.rows[0].count)
+
+		console.log(`✅ Found ${dataResult.rows.length} damage cases (total: ${count})`)
 
 		res.json({
-			data,
+			data: dataResult.rows,
 			pagination: {
 				page: Number(page),
 				limit: Number(limit),
@@ -108,25 +116,16 @@ router.get('/:id', optionalAuthenticateToken, async (req, res) => {
 
 		console.log(`🔍 Fetching damage case: ${id}`)
 
-		const { data, error } = await supabase
-			.from('damage_cases')
-			.select('*')
-			.eq('id', id)
-			.eq('status', 'published')
-			.single()
+		const result = await query(
+			'SELECT * FROM damage_cases WHERE id = $1 AND status != $2',
+			[id, 'deleted']
+		)
 
-		if (error) {
-			if (error.code === 'PGRST116') {
-				return res.status(404).json({ error: '피해 사례를 찾을 수 없습니다.' })
-			}
-			throw error
+		if (result.rows.length === 0) {
+			return res.status(404).json({ error: '피해 사례를 찾을 수 없습니다.' })
 		}
 
-		// Increment view count
-		await supabase
-			.from('damage_cases')
-			.update({ view_count: (data.view_count || 0) + 1 })
-			.eq('id', id)
+		const data = result.rows[0]
 
 		res.json(data)
 	} catch (error) {
@@ -153,36 +152,21 @@ router.post('/', authenticateToken, upload.array('images', 20), async (req, res)
 		}
 
 		const {
-			company_name,
-			company_type,
-			region,
 			title,
-			content,
-			damage_type,
-			damage_amount,
-			project_type,
-			project_size,
-			contract_amount,
-			incident_date,
-			resolution_status,
-			resolution_details,
-			legal_action,
-			legal_details
+			description,
+			category,
+			severity
 		} = req.body
 
 		// Validation
-		if (!title || !content || !damage_type) {
+		if (!title || !description) {
 			return res.status(400).json({ error: '필수 정보가 누락되었습니다.' })
 		}
 
 		// Get user info
-		const { data: userData, error: userError } = await supabase
-			.from('users')
-			.select('name, email')
-			.eq('id', userId)
-			.single()
+		const userData = await findOne<any>('users', { id: userId })
 
-		if (userError || !userData) {
+		if (!userData) {
 			return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' })
 		}
 
@@ -200,37 +184,18 @@ router.post('/', authenticateToken, upload.array('images', 20), async (req, res)
 		}
 
 		// Insert damage case
-		const { data, error } = await supabase
-			.from('damage_cases')
-			.insert({
-				user_id: userId,
-				author_name: userData.name,
-				author_email: userData.email,
-				company_name: company_name || null,
-				company_type,
-				region,
-				title,
-				content,
-				damage_type,
-				damage_amount: damage_amount ? Number(damage_amount) : null,
-				project_type,
-				project_size: project_size ? Number(project_size) : null,
-				contract_amount: contract_amount ? Number(contract_amount) : null,
-				incident_date,
-				resolution_status: resolution_status || 'unresolved',
-				resolution_details,
-				legal_action: legal_action === 'true' || legal_action === true,
-				legal_details,
-				images: imageUrls,
-				documents: [], // Documents handled separately via URL input
-				status: 'published'
-			})
-			.select()
-			.single()
+		const data = await insertOne<any>('damage_cases', {
+			user_id: userId,
+			title,
+			description,
+			images: JSON.stringify(imageUrls),
+			category: category || null,
+			severity: severity || 'medium',
+			status: 'open'
+		})
 
-		if (error) {
-			console.error('Database insert error:', error)
-			throw error
+		if (!data) {
+			throw new Error('Failed to insert damage case')
 		}
 
 		console.log(`✅ Damage case created: ${data.id}`)
@@ -263,14 +228,12 @@ router.patch('/:id', authenticateToken, upload.array('images', 20), async (req, 
 		console.log(`📝 Updating damage case ${id} by user ${userId}`)
 
 		// Check if user is the author
-		const { data: existingCase, error: fetchError } = await supabase
-			.from('damage_cases')
-			.select('*')
-			.eq('id', id)
-			.eq('user_id', userId)
-			.single()
+		const existingCase = await query(
+			'SELECT * FROM damage_cases WHERE id = $1 AND user_id = $2',
+			[id, userId]
+		)
 
-		if (fetchError || !existingCase) {
+		if (existingCase.rows.length === 0) {
 			return res.status(404).json({ error: '피해 사례를 찾을 수 없거나 수정 권한이 없습니다.' })
 		}
 
@@ -280,7 +243,6 @@ router.patch('/:id', authenticateToken, upload.array('images', 20), async (req, 
 		// Get existing images from request body
 		const existingImages = req.body.existing_images
 		if (existingImages) {
-			// If existing_images is a string, convert to array
 			imageUrls = Array.isArray(existingImages) ? existingImages : [existingImages]
 		}
 
@@ -294,41 +256,55 @@ router.patch('/:id', authenticateToken, upload.array('images', 20), async (req, 
 			console.log(`✅ Total images: ${imageUrls.length}`)
 		}
 
-		// Update fields
-		const updateData: any = { updated_at: new Date().toISOString() }
-		const allowedFields = [
-			'title',
-			'content',
-			'damage_type',
-			'damage_amount',
-			'resolution_status',
-			'resolution_details',
-			'legal_action',
-			'legal_details'
-		]
+		// Build update query dynamically
+		const updateFields: string[] = []
+		const updateValues: any[] = []
+		let paramIndex = 1
 
-		allowedFields.forEach((field) => {
-			if (req.body[field] !== undefined) {
-				updateData[field] = req.body[field]
+		const allowedFields: Record<string, string> = {
+			'title': 'title',
+			'description': 'description',
+			'category': 'category',
+			'severity': 'severity',
+			'status': 'status'
+		}
+
+		Object.entries(allowedFields).forEach(([bodyField, dbField]) => {
+			if (req.body[bodyField] !== undefined) {
+				updateFields.push(`${dbField} = $${paramIndex}`)
+				updateValues.push(req.body[bodyField])
+				paramIndex++
 			}
 		})
 
 		// Update images if there are any
 		if (imageUrls.length > 0) {
-			updateData.images = imageUrls
+			updateFields.push(`images = $${paramIndex}`)
+			updateValues.push(JSON.stringify(imageUrls))
+			paramIndex++
 		}
 
-		const { data, error } = await supabase
-			.from('damage_cases')
-			.update(updateData)
-			.eq('id', id)
-			.eq('user_id', userId)
-			.select()
-			.single()
+		// Add updated_at
+		updateFields.push(`updated_at = NOW()`)
 
-		if (error) {
-			console.error('Database update error:', error)
-			throw error
+		if (updateFields.length === 1) { // Only updated_at
+			return res.status(400).json({ error: '수정할 내용이 없습니다.' })
+		}
+
+		// Add id and user_id to params
+		updateValues.push(id, userId)
+
+		const updateQuery = `
+			UPDATE damage_cases
+			SET ${updateFields.join(', ')}
+			WHERE id = $${paramIndex} AND user_id = $${paramIndex + 1}
+			RETURNING *
+		`
+
+		const result = await query(updateQuery, updateValues)
+
+		if (result.rows.length === 0) {
+			throw new Error('Failed to update damage case')
 		}
 
 		console.log(`✅ Damage case updated: ${id}`)
@@ -336,7 +312,7 @@ router.patch('/:id', authenticateToken, upload.array('images', 20), async (req, 
 		res.json({
 			success: true,
 			message: '피해 사례가 수정되었습니다.',
-			data
+			data: result.rows[0]
 		})
 	} catch (error) {
 		console.error('Update damage case error:', error)
@@ -361,15 +337,15 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 		console.log(`🗑️  Deleting damage case ${id} by user ${userId}`)
 
 		// Soft delete (change status to 'deleted')
-		const { data, error } = await supabase
-			.from('damage_cases')
-			.update({ status: 'deleted' })
-			.eq('id', id)
-			.eq('user_id', userId)
-			.select()
-			.single()
+		const result = await query(
+			`UPDATE damage_cases
+			SET status = 'closed', updated_at = NOW()
+			WHERE id = $1 AND user_id = $2
+			RETURNING *`,
+			[id, userId]
+		)
 
-		if (error || !data) {
+		if (result.rows.length === 0) {
 			return res.status(404).json({ error: '피해 사례를 찾을 수 없거나 삭제 권한이 없습니다.' })
 		}
 
@@ -400,21 +376,16 @@ router.get('/my/list', authenticateToken, async (req, res) => {
 
 		console.log(`🔍 Fetching damage cases by user: ${userId}`)
 
-		const { data, error } = await supabase
-			.from('damage_cases')
-			.select('*')
-			.eq('user_id', userId)
-			.neq('status', 'deleted')
-			.order('created_at', { ascending: false })
+		const result = await query(
+			`SELECT * FROM damage_cases
+			WHERE user_id = $1 AND status != 'closed'
+			ORDER BY created_at DESC`,
+			[userId]
+		)
 
-		if (error) {
-			console.error('Database query error:', error)
-			throw error
-		}
+		console.log(`✅ Found ${result.rows.length} damage cases`)
 
-		console.log(`✅ Found ${data.length} damage cases`)
-
-		res.json(data)
+		res.json(result.rows)
 	} catch (error) {
 		console.error('Get my damage cases error:', error)
 		const message = error instanceof Error ? error.message : 'Unknown error'
@@ -431,37 +402,39 @@ router.get('/stats/summary', async (req, res) => {
 		console.log('📊 Fetching damage case statistics')
 
 		// Total cases
-		const { count: totalCount } = await supabase
-			.from('damage_cases')
-			.select('*', { count: 'exact', head: true })
-			.eq('status', 'published')
+		const totalResult = await query(
+			`SELECT COUNT(*) as count FROM damage_cases WHERE status != 'closed'`
+		)
+		const totalCount = parseInt(totalResult.rows[0].count)
 
-		// By resolution status
-		const { data: byResolution } = await supabase
-			.from('damage_cases')
-			.select('resolution_status')
-			.eq('status', 'published')
-
-		const resolutionStats = byResolution?.reduce((acc: any, item) => {
-			acc[item.resolution_status] = (acc[item.resolution_status] || 0) + 1
+		// By status
+		const statusResult = await query(
+			`SELECT status, COUNT(*) as count
+			FROM damage_cases
+			WHERE status != 'closed'
+			GROUP BY status`
+		)
+		const byStatus = statusResult.rows.reduce((acc: any, row) => {
+			acc[row.status] = parseInt(row.count)
 			return acc
 		}, {})
 
-		// By damage type
-		const { data: byDamageType } = await supabase
-			.from('damage_cases')
-			.select('damage_type')
-			.eq('status', 'published')
-
-		const damageTypeStats = byDamageType?.reduce((acc: any, item) => {
-			acc[item.damage_type] = (acc[item.damage_type] || 0) + 1
+		// By severity
+		const severityResult = await query(
+			`SELECT severity, COUNT(*) as count
+			FROM damage_cases
+			WHERE status != 'closed'
+			GROUP BY severity`
+		)
+		const bySeverity = severityResult.rows.reduce((acc: any, row) => {
+			acc[row.severity] = parseInt(row.count)
 			return acc
 		}, {})
 
 		res.json({
-			total: totalCount || 0,
-			by_resolution: resolutionStats || {},
-			by_damage_type: damageTypeStats || {}
+			total: totalCount,
+			by_status: byStatus,
+			by_severity: bySeverity
 		})
 	} catch (error) {
 		console.error('Get stats error:', error)

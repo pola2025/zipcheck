@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase'
+import { query, insertOne } from '../lib/db'
 import {
 	parseExcelFile,
 	validateConstructionRow,
@@ -38,20 +38,20 @@ export async function uploadConstructionData(file: Express.Multer.File): Promise
 			console.log('🔍 First row data:', rows[0])
 		}
 
-		// 2. 업로드 이력 생성
-		const { data: uploadHistory, error: historyError } = await supabase
-			.from('upload_history')
-			.insert({
-				dataset_type: 'construction',
-				file_name: file.originalname,
-				file_size: file.size,
-				total_rows: rows.length,
-				status: 'processing'
-			})
-			.select()
-			.single()
+		// ✅ CONVERTED: Supabase INSERT → PostgreSQL insertOne
+		// OLD: const { data: uploadHistory, error: historyError } = await supabase.from('upload_history').insert({...}).select().single()
+		const uploadHistory = await insertOne<any>('upload_history', {
+			dataset_type: 'construction',
+			file_name: file.originalname,
+			file_size: file.size,
+			total_rows: rows.length,
+			status: 'processing'
+		})
 
-		if (historyError) throw historyError
+		if (!uploadHistory) {
+			throw new Error('Failed to create upload history')
+		}
+
 		result.uploadId = uploadHistory.id
 
 		// 3. 각 행 처리
@@ -76,8 +76,9 @@ export async function uploadConstructionData(file: Express.Multer.File): Promise
 				// 항목 찾기 또는 생성
 				const item = await findOrCreateItem(category.id, data.itemName)
 
-				// 시공 데이터 저장
-				const { error: insertError } = await supabase.from('construction_records').insert({
+				// ✅ CONVERTED: Supabase INSERT → PostgreSQL insertOne
+				// OLD: const { error: insertError } = await supabase.from('construction_records').insert({...})
+				const insertResult = await insertOne<any>('construction_records', {
 					item_id: item.id,
 					year: data.year,
 					quarter: data.quarter,
@@ -95,7 +96,9 @@ export async function uploadConstructionData(file: Express.Multer.File): Promise
 					raw_data: row
 				})
 
-				if (insertError) throw insertError
+				if (!insertResult) {
+					throw new Error('Failed to insert construction record')
+				}
 
 				result.successRows++
 
@@ -113,17 +116,19 @@ export async function uploadConstructionData(file: Express.Multer.File): Promise
 			}
 		}
 
-		// 4. 업로드 이력 업데이트
-		await supabase
-			.from('upload_history')
-			.update({
-				success_rows: result.successRows,
-				error_rows: result.errorRows,
-				errors: result.errors,
-				status: 'completed',
-				completed_at: new Date().toISOString()
-			})
-			.eq('id', uploadHistory.id)
+		// ✅ CONVERTED: Supabase UPDATE → PostgreSQL query
+		// OLD: await supabase.from('upload_history').update({...}).eq('id', uploadHistory.id)
+		await query(
+			`UPDATE upload_history
+			SET success_rows = $1,
+				error_rows = $2,
+				errors = $3,
+				status = $4,
+				completed_at = $5,
+				updated_at = NOW()
+			WHERE id = $6`,
+			[result.successRows, result.errorRows, JSON.stringify(result.errors), 'completed', new Date().toISOString(), uploadHistory.id]
+		)
 
 		console.log(`\n✅ Upload completed!`)
 		console.log(`   - Total: ${result.totalRows}`)
@@ -156,20 +161,20 @@ export async function uploadDistributorData(file: Express.Multer.File): Promise<
 
 		console.log(`📊 Found ${rows.length} rows`)
 
-		// 2. 업로드 이력 생성
-		const { data: uploadHistory, error: historyError } = await supabase
-			.from('upload_history')
-			.insert({
-				dataset_type: 'distributor',
-				file_name: file.originalname,
-				file_size: file.size,
-				total_rows: rows.length,
-				status: 'processing'
-			})
-			.select()
-			.single()
+		// ✅ CONVERTED: Supabase INSERT → PostgreSQL insertOne
+		// OLD: const { data: uploadHistory, error: historyError } = await supabase.from('upload_history').insert({...}).select().single()
+		const uploadHistory = await insertOne<any>('upload_history', {
+			dataset_type: 'distributor',
+			file_name: file.originalname,
+			file_size: file.size,
+			total_rows: rows.length,
+			status: 'processing'
+		})
 
-		if (historyError) throw historyError
+		if (!uploadHistory) {
+			throw new Error('Failed to create upload history')
+		}
+
 		result.uploadId = uploadHistory.id
 
 		// 3. 각 행 처리
@@ -194,16 +199,20 @@ export async function uploadDistributorData(file: Express.Multer.File): Promise<
 				// 항목 찾기 또는 생성
 				const item = await findOrCreateItem(category.id, data.itemName)
 
-				// 기존 데이터를 is_current = false로 업데이트
-				await supabase
-					.from('distributor_prices')
-					.update({ is_current: false })
-					.eq('item_id', item.id)
-					.eq('distributor_name', data.distributorName)
-					.eq('is_current', true)
+				// ✅ CONVERTED: Supabase UPDATE → PostgreSQL query
+				// OLD: await supabase.from('distributor_prices').update({ is_current: false }).eq('item_id', item.id).eq('distributor_name', data.distributorName).eq('is_current', true)
+				await query(
+					`UPDATE distributor_prices
+					SET is_current = false, updated_at = NOW()
+					WHERE item_id = $1
+					AND distributor_name = $2
+					AND is_current = true`,
+					[item.id, data.distributorName]
+				)
 
-				// 유통사 가격 데이터 저장
-				const { error: insertError } = await supabase.from('distributor_prices').insert({
+				// ✅ CONVERTED: Supabase INSERT → PostgreSQL insertOne
+				// OLD: const { error: insertError } = await supabase.from('distributor_prices').insert({...})
+				const insertResult = await insertOne<any>('distributor_prices', {
 					item_id: item.id,
 					distributor_name: data.distributorName,
 					brand: data.brand,
@@ -221,7 +230,9 @@ export async function uploadDistributorData(file: Express.Multer.File): Promise<
 					raw_data: row
 				})
 
-				if (insertError) throw insertError
+				if (!insertResult) {
+					throw new Error('Failed to insert distributor price')
+				}
 
 				result.successRows++
 
@@ -239,17 +250,19 @@ export async function uploadDistributorData(file: Express.Multer.File): Promise<
 			}
 		}
 
-		// 4. 업로드 이력 업데이트
-		await supabase
-			.from('upload_history')
-			.update({
-				success_rows: result.successRows,
-				error_rows: result.errorRows,
-				errors: result.errors,
-				status: 'completed',
-				completed_at: new Date().toISOString()
-			})
-			.eq('id', uploadHistory.id)
+		// ✅ CONVERTED: Supabase UPDATE → PostgreSQL query
+		// OLD: await supabase.from('upload_history').update({...}).eq('id', uploadHistory.id)
+		await query(
+			`UPDATE upload_history
+			SET success_rows = $1,
+				error_rows = $2,
+				errors = $3,
+				status = $4,
+				completed_at = $5,
+				updated_at = NOW()
+			WHERE id = $6`,
+			[result.successRows, result.errorRows, JSON.stringify(result.errors), 'completed', new Date().toISOString(), uploadHistory.id]
+		)
 
 		console.log(`\n✅ Upload completed!`)
 		console.log(`   - Total: ${result.totalRows}`)
@@ -267,23 +280,25 @@ export async function uploadDistributorData(file: Express.Multer.File): Promise<
  * 카테고리 찾기 또는 생성
  */
 async function findOrCreateCategory(name: string) {
-	// 먼저 찾기
-	const { data: existing } = await supabase
-		.from('categories')
-		.select('*')
-		.eq('name', name)
-		.single()
+	// ✅ CONVERTED: Supabase SELECT → PostgreSQL query
+	// OLD: const { data: existing } = await supabase.from('categories').select('*').eq('name', name).single()
+	const existingResult = await query(
+		'SELECT * FROM categories WHERE name = $1 LIMIT 1',
+		[name]
+	)
 
-	if (existing) return existing
+	if (existingResult.rows.length > 0) {
+		return existingResult.rows[0]
+	}
 
-	// 없으면 생성
-	const { data: created, error } = await supabase
-		.from('categories')
-		.insert({ name })
-		.select()
-		.single()
+	// ✅ CONVERTED: Supabase INSERT → PostgreSQL insertOne
+	// OLD: const { data: created, error } = await supabase.from('categories').insert({ name }).select().single()
+	const created = await insertOne<any>('categories', { name })
 
-	if (error) throw error
+	if (!created) {
+		throw new Error('Failed to create category')
+	}
+
 	return created
 }
 
@@ -291,48 +306,50 @@ async function findOrCreateCategory(name: string) {
  * 항목 찾기 또는 생성
  */
 async function findOrCreateItem(categoryId: string, name: string) {
-	// 먼저 완전 일치 찾기
-	const { data: existing } = await supabase
-		.from('items')
-		.select('*')
-		.eq('category_id', categoryId)
-		.eq('name', name)
-		.single()
+	// ✅ CONVERTED: Supabase SELECT → PostgreSQL query
+	// OLD: const { data: existing } = await supabase.from('items').select('*').eq('category_id', categoryId).eq('name', name).single()
+	const existingResult = await query(
+		'SELECT * FROM items WHERE category_id = $1 AND name = $2 LIMIT 1',
+		[categoryId, name]
+	)
 
-	if (existing) return existing
+	if (existingResult.rows.length > 0) {
+		return existingResult.rows[0]
+	}
 
-	// 유사한 이름 찾기 (첫 5글자로 검색)
+	// ✅ CONVERTED: Supabase SELECT with ILIKE → PostgreSQL query
+	// OLD: const { data: similar } = await supabase.from('items').select('*').eq('category_id', categoryId).ilike('name', `${namePrefix}%`).limit(1).single()
 	const namePrefix = name.substring(0, 5)
-	const { data: similar } = await supabase
-		.from('items')
-		.select('*')
-		.eq('category_id', categoryId)
-		.ilike('name', `${namePrefix}%`)
-		.limit(1)
-		.single()
+	const similarResult = await query(
+		'SELECT * FROM items WHERE category_id = $1 AND name ILIKE $2 LIMIT 1',
+		[categoryId, `${namePrefix}%`]
+	)
 
-	if (similar) {
+	if (similarResult.rows.length > 0) {
+		const similar = similarResult.rows[0]
 		// 유사한 항목이 있으면 aliases에 추가
 		const aliases = similar.aliases || []
 		if (!aliases.includes(name)) {
-			await supabase
-				.from('items')
-				.update({ aliases: [...aliases, name] })
-				.eq('id', similar.id)
+			// ✅ CONVERTED: Supabase UPDATE → PostgreSQL query
+			// OLD: await supabase.from('items').update({ aliases: [...aliases, name] }).eq('id', similar.id)
+			await query(
+				'UPDATE items SET aliases = $1, updated_at = NOW() WHERE id = $2',
+				[JSON.stringify([...aliases, name]), similar.id]
+			)
 		}
 		return similar
 	}
 
-	// 없으면 새로 생성
-	const { data: created, error } = await supabase
-		.from('items')
-		.insert({
-			category_id: categoryId,
-			name
-		})
-		.select()
-		.single()
+	// ✅ CONVERTED: Supabase INSERT → PostgreSQL insertOne
+	// OLD: const { data: created, error } = await supabase.from('items').insert({ category_id: categoryId, name }).select().single()
+	const created = await insertOne<any>('items', {
+		category_id: categoryId,
+		name
+	})
 
-	if (error) throw error
+	if (!created) {
+		throw new Error('Failed to create item')
+	}
+
 	return created
 }

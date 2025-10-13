@@ -2,6 +2,7 @@ import React, { useRef } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { cn } from 'lib/utils'
 import { ArrowDown } from 'lucide-react'
+import GlowButton from 'components/ui/glow-button'
 
 interface ImmersiveHeroProps {
 	title: string
@@ -121,17 +122,18 @@ const ImmersiveHero: React.FC<ImmersiveHeroProps> = ({
 						className="flex flex-col sm:flex-row gap-4 justify-center items-center"
 					>
 						{ctaPrimary && (
-							<button
+							<GlowButton
 								onClick={ctaPrimary.onClick}
-								className="px-8 py-3 bg-[#0A9DAA] rounded-full font-semibold text-base text-white transition-all duration-400 hover:bg-[#0db5c4] hover:shadow-xl hover:shadow-[#0A9DAA]/30 hover:translate-y-[-2px]"
+								size="md"
+								glowColor="#FF6B35"
 							>
 								{ctaPrimary.label}
-							</button>
+							</GlowButton>
 						)}
 						{ctaSecondary && (
 							<button
 								onClick={ctaSecondary.onClick}
-								className="px-8 py-3 bg-white/10 backdrop-blur-md rounded-full font-semibold text-base text-white border-2 border-white/30 hover:bg-white/15 hover:border-[#0A9DAA]/50 transition-all duration-400 hover:scale-102"
+								className="px-8 py-3 bg-white/10 backdrop-blur-md rounded-full font-semibold text-base text-white border-2 border-white/30 hover:bg-white/15 hover:border-[#11998e]/50 transition-all duration-400 hover:scale-102"
 							>
 								{ctaSecondary.label}
 							</button>

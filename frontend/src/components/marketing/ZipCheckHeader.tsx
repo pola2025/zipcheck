@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import Logo from 'components/Logo'
+import GlowButton from 'components/ui/glow-button'
 
 export default function ZipCheckHeader() {
 	return (
@@ -18,34 +18,32 @@ export default function ZipCheckHeader() {
 						whileHover={{ scale: 1.05 }}
 						transition={{ type: 'spring', stiffness: 400 }}
 					>
-						<Logo className="h-8 w-auto" />
-						<span className="text-2xl font-bold gradient-text-cyan-purple">
-							ZipCheck
-						</span>
+						<div className="bg-white rounded-lg px-3 py-1.5">
+							<img src="/logo.png" alt="ZipCheck" className="h-7 w-auto" />
+						</div>
 					</motion.a>
 
 					{/* Navigation */}
 					<nav className="hidden md:flex items-center gap-8">
 						<a
 							href="/"
-							className="text-gray-300 hover:text-cyan-400 transition-colors font-semibold"
+							className="text-gray-300 hover:text-[#38ef7d] transition-colors font-semibold"
 						>
 							홈
 						</a>
 						<a
 							href="/community"
-							className="text-gray-300 hover:text-cyan-400 transition-colors font-semibold"
+							className="text-gray-300 hover:text-[#38ef7d] transition-colors font-semibold"
 						>
 							커뮤니티
 						</a>
-						<motion.a
-							href="/plan-selection"
-							className="px-6 py-2 rounded-full bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-semibold glow-cyan shadow-lg"
-							whileHover={{ scale: 1.05 }}
-							whileTap={{ scale: 0.95 }}
+						<GlowButton
+							onClick={() => window.location.href = '/plan-selection'}
+							size="sm"
+							glowColor="#FF6B35"
 						>
 							견적 분석 신청
-						</motion.a>
+						</GlowButton>
 					</nav>
 
 					{/* Mobile Menu Button */}

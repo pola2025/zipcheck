@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from 'App'
+import { AuthProvider } from 'contexts/AuthContext'
 import 'lib/i18n'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
@@ -21,7 +22,9 @@ if (container) {
 	root.render(
 		<StrictMode>
 			<QueryClientProvider client={queryClient}>
-				<App />
+				<AuthProvider>
+					<App />
+				</AuthProvider>
 			</QueryClientProvider>
 		</StrictMode>
 	)

@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell:*)",
+      "Bash(neonctl:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npm run dev)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(curl:*)",
+      "Read(//f/GOI/frontend/**)",
+      "Read(//f/GOI/**)",
+      "Read(//f/GOI/.claude/**)",
+      "Bash(npm install:*)",
+      "Bash(vercel domains add:*)",
+      "Bash(vercel env add:*)",
+      "Bash(railway domain:*)",
+      "Bash(railway variables set:*)",
+      "Bash(railway variables:*)",
+      "Bash(vercel inspect:*)",
+      "Bash(vercel ls:*)",
+      "Bash(vercel:*)",
+      "WebSearch"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -106,11 +106,11 @@ export async function parseQuoteImage(imageBuffer: Buffer): Promise<ImageParseRe
 		console.log('📄 Sample text:', extractedText.substring(0, 200))
 
 		// Step 3: Structure the extracted text using GPT-5 (cost-effective and accurate)
-		console.log('🤖 Structuring data with GPT-5...')
+		console.log('🤖 Structuring data with GPT-5 Responses API...')
 
-		const completion = await openai.chat.completions.create({
+		const response = await openai.responses.create({
 			model: 'gpt-5',
-			messages: [
+			input: [
 				{
 					role: 'system',
 					content: '당신은 인테리어 시공 견적서를 분석하는 전문가입니다. 추출된 텍스트를 정확하게 구조화된 JSON 형식으로 변환합니다.'
@@ -146,12 +146,11 @@ ${extractedText}
 - JSON만 출력하고 다른 설명은 추가하지 마세요`
 				}
 			],
-			max_tokens: 4096,
-			temperature: 0.0, // 정확도 우선
-			response_format: { type: 'json_object' } // JSON 모드 활성화
+			reasoning: { effort: 'minimal' }, // 빠른 응답, 정확한 구조화
+			verbosity: 'low' // 간결한 출력
 		})
 
-		const content = completion.choices[0]?.message?.content
+		const content = response.output_text
 
 		if (!content) {
 			throw new Error('GPT-5 API 응답이 비어있습니다.')

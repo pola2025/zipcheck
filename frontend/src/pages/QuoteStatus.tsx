@@ -1,274 +1,380 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Search, Phone, FileText, Clock, CheckCircle2, AlertCircle, Eye } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { Search, Clock, CheckCircle2, AlertCircle, FileText, ArrowRight, RefreshCw } from 'lucide-react'
+import { AnimatedBackground } from 'components/immersive'
+import ZipCheckHeader from 'components/marketing/ZipCheckHeader'
+import ZipCheckFooter from 'components/marketing/ZipCheckFooter'
+import { getApiUrl } from '../lib/api-config'
 
 interface QuoteRequest {
 	id: string
-	customer_name: string
-	customer_phone: string
-	property_type: string
-	property_size: number
-	region: string
-	status: 'pending' | 'analyzing' | 'completed' | 'rejected'
-	validation_status?: string
-	validation_notes?: string
+	request_id: string
 	created_at: string
-	analyzed_at?: string
-	items: any[]
-}
-
-const statusConfig = {
-	pending: {
-		label: '대기중',
-		color: 'text-amber-400 bg-amber-500/20',
-		icon: Clock,
-		description: '관리자 검토 대기 중입니다.'
-	},
-	analyzing: {
-		label: '분석중',
-		color: 'text-blue-400 bg-blue-500/20',
-		icon: Clock,
-		description: 'AI가 견적을 분석하고 있습니다.'
-	},
-	completed: {
-		label: '완료',
-		color: 'text-green-400 bg-green-500/20',
-		icon: CheckCircle2,
-		description: '분석이 완료되었습니다!'
-	},
-	rejected: {
-		label: '거부',
-		color: 'text-red-400 bg-red-500/20',
-		icon: AlertCircle,
-		description: '검토 결과 거부되었습니다.'
-	}
+	status: 'pending' | 'analyzing' | 'completed' | 'failed'
+	plan_name: string
+	quantity: number
+	property_type: string
+	property_size?: number
+	region: string
+	analysis_progress?: number
 }
 
 export default function QuoteStatus() {
 	const navigate = useNavigate()
-	const [searchParams] = useSearchParams()
-	const [phoneNumber, setPhoneNumber] = useState(searchParams.get('phone') || '')
-	const [requests, setRequests] = useState<QuoteRequest[]>([])
+	const [searchParams, setSearchParams] = useSearchParams()
+	const phoneFromUrl = searchParams.get('phone') || ''
+
+	const [phone, setPhone] = useState(phoneFromUrl)
+	const [searchPhone, setSearchPhone] = useState(phoneFromUrl)
+	const [quotes, setQuotes] = useState<QuoteRequest[]>([])
 	const [loading, setLoading] = useState(false)
-	const [searched, setSearched] = useState(false)
+	const [error, setError] = useState('')
 
 	useEffect(() => {
-		if (searchParams.get('phone')) {
-			searchQuotes()
+		if (phoneFromUrl) {
+			fetchQuotes(phoneFromUrl)
 		}
-	}, [])
+	}, [phoneFromUrl])
 
-	const searchQuotes = async () => {
+	const fetchQuotes = async (phoneNumber: string) => {
 		if (!phoneNumber.trim()) {
-			alert('전화번호를 입력해주세요.')
+			setError('전화번호를 입력해주세요.')
 			return
 		}
 
 		setLoading(true)
-		setSearched(true)
+		setError('')
 
 		try {
 			const response = await fetch(
-				`http://localhost:3001/api/quote-requests/by-phone/${encodeURIComponent(phoneNumber)}`
+				getApiUrl(`/api/quote-requests/status?phone=${encodeURIComponent(phoneNumber)}`)
 			)
 
 			if (!response.ok) {
-				throw new Error('조회에 실패했습니다.')
+				throw new Error('견적 정보를 불러올 수 없습니다.')
 			}
 
 			const data = await response.json()
-			setRequests(data)
-		} catch (error) {
-			console.error('Search error:', error)
-			alert('견적 조회에 실패했습니다: ' + (error instanceof Error ? error.message : String(error)))
+			setQuotes(data.requests || [])
+
+			if (data.requests.length === 0) {
+				setError('해당 전화번호로 신청된 견적이 없습니다.')
+			}
+		} catch (err) {
+			console.error('Failed to fetch quotes:', err)
+			setError(err instanceof Error ? err.message : '견적 정보를 불러오는 중 오류가 발생했습니다.')
+			setQuotes([])
 		} finally {
 			setLoading(false)
 		}
 	}
 
-	const viewResult = async (request: QuoteRequest) => {
-		if (request.status !== 'completed') {
-			alert('분석이 아직 완료되지 않았습니다.')
-			return
-		}
+	const handleSearch = (e: React.FormEvent) => {
+		e.preventDefault()
+		setSearchParams({ phone: searchPhone })
+		setPhone(searchPhone)
+		fetchQuotes(searchPhone)
+	}
 
-		try {
-			const response = await fetch(`http://localhost:3001/api/quote-requests/result/${request.id}`)
-
-			if (!response.ok) {
-				const errorData = await response.json()
-				throw new Error(errorData.error || '결과 조회에 실패했습니다.')
-			}
-
-			const data = await response.json()
-
-			// Navigate to result page with analysis data
-			navigate('/quote-result', { state: { analysis: data.analysis_result, request: data } })
-		} catch (error) {
-			console.error('Result fetch error:', error)
-			alert('결과 조회에 실패했습니다: ' + (error instanceof Error ? error.message : String(error)))
+	const getStatusInfo = (status: string) => {
+		switch (status) {
+			case 'pending':
+				return {
+					label: '대기중',
+					color: 'text-amber-400',
+					bgColor: 'bg-amber-500/20',
+					borderColor: 'border-amber-500/30',
+					icon: Clock
+				}
+			case 'analyzing':
+				return {
+					label: '분석중',
+					color: 'text-blue-400',
+					bgColor: 'bg-blue-500/20',
+					borderColor: 'border-blue-500/30',
+					icon: RefreshCw
+				}
+			case 'completed':
+				return {
+					label: '완료',
+					color: 'text-cyan-400',
+					bgColor: 'bg-cyan-500/20',
+					borderColor: 'border-cyan-400/30',
+					icon: CheckCircle2
+				}
+			case 'failed':
+				return {
+					label: '실패',
+					color: 'text-red-400',
+					bgColor: 'bg-red-500/20',
+					borderColor: 'border-red-500/30',
+					icon: AlertCircle
+				}
+			default:
+				return {
+					label: '알 수 없음',
+					color: 'text-gray-400',
+					bgColor: 'bg-gray-500/20',
+					borderColor: 'border-gray-500/30',
+					icon: AlertCircle
+				}
 		}
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-8">
-			<div className="max-w-5xl mx-auto">
-				{/* Header */}
-				<div className="mb-8">
-					<h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
-						견적 신청 조회
-					</h1>
-					<p className="text-gray-400">전화번호로 신청하신 견적의 진행 상황을 확인하세요</p>
-				</div>
+		<div className="relative min-h-screen bg-black text-white">
+			{/* Header */}
+			<ZipCheckHeader />
 
-				{/* Search Box */}
-				<div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700 mb-8">
-					<div className="flex items-center gap-4">
-						<div className="flex-1 flex items-center gap-3 bg-gray-700/50 rounded-lg px-4 py-3 border border-gray-600 focus-within:border-cyan-500 transition-all">
-							<Phone className="w-5 h-5 text-gray-400" />
-							<input
-								type="tel"
-								value={phoneNumber}
-								onChange={(e) => setPhoneNumber(e.target.value)}
-								onKeyPress={(e) => e.key === 'Enter' && searchQuotes()}
-								placeholder="전화번호를 입력하세요 (예: 010-1234-5678)"
-								className="flex-1 bg-transparent text-white placeholder-gray-400 focus:outline-none"
-							/>
-						</div>
-						<button
-							onClick={searchQuotes}
-							disabled={loading}
-							className="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-semibold transition-all flex items-center gap-2"
+			{/* Animated neon background */}
+			<AnimatedBackground />
+
+			{/* Content */}
+			<div className="relative z-10 pt-32 pb-20 px-6">
+				<div className="container mx-auto max-w-4xl">
+					{/* Page Title */}
+					<motion.div
+						className="text-center mb-12"
+						initial={{ opacity: 0, y: -20 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.6 }}
+					>
+						<h1
+							className="text-5xl md:text-6xl font-bold mb-4"
+							style={{
+								background: 'linear-gradient(135deg, #06B6D4, #3B82F6)',
+								WebkitBackgroundClip: 'text',
+								WebkitTextFillColor: 'transparent',
+								filter: 'drop-shadow(0 0 30px rgba(6, 182, 212, 0.6))'
+							}}
 						>
-							<Search className="w-5 h-5" />
-							{loading ? '조회 중...' : '조회'}
-						</button>
-					</div>
-				</div>
+							견적 신청 현황
+						</h1>
+						<p className="text-lg text-gray-300">전화번호로 견적 분석 진행 상황을 확인하세요</p>
+					</motion.div>
 
-				{/* Results */}
-				{searched && (
-					<>
-						{requests.length === 0 ? (
-							<motion.div
-								initial={{ opacity: 0, y: 20 }}
-								animate={{ opacity: 1, y: 0 }}
-								className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-12 border border-gray-700 text-center"
-							>
-								<FileText className="w-16 h-16 mx-auto mb-4 text-gray-500" />
-								<h3 className="text-xl font-bold text-gray-300 mb-2">신청 내역이 없습니다</h3>
-								<p className="text-gray-400 mb-6">
-									입력하신 전화번호로 신청된 견적이 없습니다.<br />
-									전화번호를 확인하시거나 새로운 견적을 신청해보세요.
-								</p>
-								<button
-									onClick={() => navigate('/quote-submission')}
-									className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 rounded-lg font-semibold transition-all"
-								>
-									견적 신청하기
-								</button>
-							</motion.div>
-						) : (
-							<div className="space-y-4">
-								<h2 className="text-xl font-bold mb-4">
-									신청 내역 <span className="text-cyan-400">({requests.length}건)</span>
-								</h2>
-
-								{requests.map((request, index) => {
-									const config = statusConfig[request.status]
-									const StatusIcon = config.icon
-
-									return (
-										<motion.div
-											key={request.id}
-											initial={{ opacity: 0, y: 20 }}
-											animate={{ opacity: 1, y: 0 }}
-											transition={{ delay: index * 0.1 }}
-											className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700 hover:border-cyan-500/50 transition-all"
-										>
-											<div className="flex items-start justify-between">
-												<div className="flex-1">
-													<div className="flex items-center gap-3 mb-3">
-														<h3 className="text-xl font-bold">
-															{request.property_type} {request.property_size ? `${request.property_size}평` : ''} - {request.region}
-														</h3>
-														<span className={`px-3 py-1 rounded-full text-sm font-semibold ${config.color} flex items-center gap-2`}>
-															<StatusIcon className="w-4 h-4" />
-															{config.label}
-														</span>
-													</div>
-
-													<div className="grid grid-cols-2 gap-4 mb-4">
-														<div>
-															<div className="text-sm text-gray-400">신청 일시</div>
-															<div className="text-sm font-semibold">
-																{new Date(request.created_at).toLocaleString('ko-KR')}
-															</div>
-														</div>
-														{request.analyzed_at && (
-															<div>
-																<div className="text-sm text-gray-400">분석 완료</div>
-																<div className="text-sm font-semibold text-green-400">
-																	{new Date(request.analyzed_at).toLocaleString('ko-KR')}
-																</div>
-															</div>
-														)}
-													</div>
-
-													<div className="flex items-center gap-2 mb-4">
-														<span className="text-sm text-gray-400">견적 항목:</span>
-														<span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-sm font-semibold">
-															{request.items.length}개
-														</span>
-													</div>
-
-													<div className="bg-gray-700/30 rounded-lg p-4">
-														<div className="text-sm text-gray-300">
-															{config.description}
-															{request.validation_status === 'rejected_insufficient_detail' && (
-																<div className="mt-2 text-red-400">
-																	⚠️ {request.validation_notes}
-																</div>
-															)}
-															{request.validation_status === 'pending' && request.validation_notes && (
-																<div className="mt-2 text-amber-400">
-																	💡 {request.validation_notes}
-																</div>
-															)}
-														</div>
-													</div>
-												</div>
-
-												{request.status === 'completed' && (
-													<button
-														onClick={() => viewResult(request)}
-														className="ml-6 px-6 py-3 bg-cyan-500 hover:bg-cyan-600 rounded-lg font-semibold transition-all flex items-center gap-2"
-													>
-														<Eye className="w-5 h-5" />
-														결과 보기
-													</button>
-												)}
-											</div>
-										</motion.div>
-									)
-								})}
+					{/* Search Form */}
+					<motion.div
+						className="glass-neon rounded-3xl p-8 border-2 border-cyan-500/30 mb-8"
+						style={{
+							boxShadow: '0 0 40px rgba(6, 182, 212, 0.2), inset 0 0 60px rgba(6, 182, 212, 0.05)'
+						}}
+						initial={{ opacity: 0, scale: 0.95 }}
+						animate={{ opacity: 1, scale: 1 }}
+						transition={{ duration: 0.5, delay: 0.2 }}
+					>
+						<form onSubmit={handleSearch} className="flex gap-4">
+							<div className="flex-1 relative">
+								<input
+									type="tel"
+									value={searchPhone}
+									onChange={(e) => setSearchPhone(e.target.value)}
+									placeholder="전화번호를 입력하세요 (예: 010-1234-5678)"
+									className="w-full px-6 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
+									required
+								/>
+								<Search className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
 							</div>
-						)}
-					</>
-				)}
+							<motion.button
+								type="submit"
+								disabled={loading}
+								whileHover={{ scale: 1.05 }}
+								whileTap={{ scale: 0.95 }}
+								className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:from-gray-600 disabled:to-gray-700 rounded-xl font-bold shadow-lg transition-all flex items-center gap-2"
+								style={{
+									boxShadow: '0 4px 30px rgba(6, 182, 212, 0.5), 0 0 60px rgba(59, 130, 246, 0.3)'
+								}}
+							>
+								{loading ? (
+									<>
+										<RefreshCw className="w-5 h-5 animate-spin" />
+										조회 중...
+									</>
+								) : (
+									<>
+										<Search className="w-5 h-5" />
+										조회
+									</>
+								)}
+							</motion.button>
+						</form>
+					</motion.div>
 
-				{/* Help Section */}
-				<div className="mt-8 bg-blue-500/10 border border-blue-500/30 rounded-xl p-6">
-					<h3 className="text-lg font-bold text-blue-300 mb-3">💡 도움말</h3>
-					<ul className="text-sm text-gray-300 space-y-2">
-						<li>• 견적 신청 시 입력하신 전화번호로 조회할 수 있습니다.</li>
-						<li>• 관리자가 검토 후 AI 분석을 진행하며, 완료 시 결과를 확인하실 수 있습니다.</li>
-						<li>• 분석은 보통 1-2일 이내에 완료됩니다.</li>
-						<li>• 문의사항이 있으시면 고객센터로 연락주세요.</li>
-					</ul>
+					{/* Error Message */}
+					{error && (
+						<motion.div
+							initial={{ opacity: 0, y: 10 }}
+							animate={{ opacity: 1, y: 0 }}
+							className="glass-neon rounded-2xl p-6 border-2 border-red-500/50 bg-red-900/20 mb-8"
+						>
+							<div className="flex items-center gap-3">
+								<AlertCircle className="w-6 h-6 text-red-400 flex-shrink-0" />
+								<p className="text-red-300">{error}</p>
+							</div>
+						</motion.div>
+					)}
+
+					{/* Quotes List */}
+					{!loading && quotes.length > 0 && (
+						<motion.div
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ delay: 0.3 }}
+							className="space-y-6"
+						>
+							<h2 className="text-2xl font-bold mb-6" style={{
+								background: 'linear-gradient(135deg, #06B6D4, #3B82F6)',
+								WebkitBackgroundClip: 'text',
+								WebkitTextFillColor: 'transparent',
+								filter: 'drop-shadow(0 0 20px rgba(6, 182, 212, 0.5))'
+							}}>
+								신청 내역 ({quotes.length}건)
+							</h2>
+
+							{quotes.map((quote, index) => {
+								const statusInfo = getStatusInfo(quote.status)
+								const StatusIcon = statusInfo.icon
+
+								return (
+									<motion.div
+										key={quote.id}
+										initial={{ opacity: 0, x: -20 }}
+										animate={{ opacity: 1, x: 0 }}
+										transition={{ delay: 0.4 + index * 0.1 }}
+										className={`glass-neon rounded-2xl p-6 border-2 ${statusInfo.borderColor} hover:shadow-[0_0_40px_rgba(6,182,212,0.4)] transition-all`}
+										style={{
+											boxShadow: '0 0 30px rgba(6, 182, 212, 0.15)'
+										}}
+									>
+										<div className="flex items-start justify-between mb-4">
+											<div className="flex items-center gap-3">
+												<div className={`p-3 ${statusInfo.bgColor} rounded-xl`}>
+													<FileText className={`w-6 h-6 ${statusInfo.color}`} />
+												</div>
+												<div>
+													<h3 className="text-xl font-bold text-white">
+														{quote.plan_name} ({quote.quantity}건)
+													</h3>
+													<p className="text-sm text-gray-400 mt-1">
+														신청 ID: {quote.request_id}
+													</p>
+												</div>
+											</div>
+
+											<div className={`flex items-center gap-2 px-4 py-2 ${statusInfo.bgColor} ${statusInfo.borderColor} border rounded-full`}>
+												<StatusIcon className={`w-4 h-4 ${statusInfo.color} ${quote.status === 'analyzing' ? 'animate-spin' : ''}`} />
+												<span className={`text-sm font-semibold ${statusInfo.color}`}>
+													{statusInfo.label}
+												</span>
+											</div>
+										</div>
+
+										<div className="grid md:grid-cols-2 gap-4 mb-4">
+											<div>
+												<p className="text-sm text-gray-400 mb-1">건물 유형</p>
+												<p className="text-white font-semibold">{quote.property_type}</p>
+											</div>
+											<div>
+												<p className="text-sm text-gray-400 mb-1">지역</p>
+												<p className="text-white font-semibold">{quote.region}</p>
+											</div>
+											{quote.property_size && (
+												<div>
+													<p className="text-sm text-gray-400 mb-1">평수</p>
+													<p className="text-white font-semibold">{quote.property_size}평</p>
+												</div>
+											)}
+											<div>
+												<p className="text-sm text-gray-400 mb-1">신청일</p>
+												<p className="text-white font-semibold">
+													{new Date(quote.created_at).toLocaleString('ko-KR')}
+												</p>
+											</div>
+										</div>
+
+										{/* Progress Bar for Analyzing */}
+										{quote.status === 'analyzing' && quote.analysis_progress !== undefined && (
+											<div className="mb-4">
+												<div className="flex justify-between text-sm mb-2">
+													<span className="text-gray-400">분석 진행률</span>
+													<span className="text-blue-400 font-semibold">{quote.analysis_progress}%</span>
+												</div>
+												<div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+													<motion.div
+														className="h-full bg-gradient-to-r from-blue-500 to-cyan-400"
+														initial={{ width: 0 }}
+														animate={{ width: `${quote.analysis_progress}%` }}
+														transition={{ duration: 0.5 }}
+													/>
+												</div>
+											</div>
+										)}
+
+										{/* Action Buttons */}
+										<div className="flex gap-3">
+											{quote.status === 'completed' && (
+												<motion.button
+													onClick={() => navigate(`/admin/quote-requests/${quote.id}`)}
+													whileHover={{ scale: 1.02 }}
+													whileTap={{ scale: 0.98 }}
+													className="flex-1 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2"
+													style={{
+														boxShadow: '0 4px 30px rgba(6, 182, 212, 0.5), 0 0 50px rgba(59, 130, 246, 0.3)'
+													}}
+												>
+													<FileText className="w-5 h-5" />
+													분석 결과 보기
+													<ArrowRight className="w-5 h-5" />
+												</motion.button>
+											)}
+											{quote.status === 'pending' && (
+												<div className="flex-1 text-center py-3 text-amber-400 text-sm">
+													관리자가 검토 중입니다. 잠시만 기다려주세요.
+												</div>
+											)}
+											{quote.status === 'analyzing' && (
+												<div className="flex-1 text-center py-3 text-blue-400 text-sm flex items-center justify-center gap-2">
+													<RefreshCw className="w-4 h-4 animate-spin" />
+													AI가 견적을 분석하고 있습니다...
+												</div>
+											)}
+										</div>
+									</motion.div>
+								)
+							})}
+						</motion.div>
+					)}
+
+					{/* Empty State */}
+					{!loading && !error && quotes.length === 0 && phone && (
+						<motion.div
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							className="glass-neon rounded-2xl p-12 text-center border border-gray-700"
+						>
+							<FileText className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+							<p className="text-xl text-gray-400 mb-6">
+								해당 전화번호로 신청된 견적이 없습니다.
+							</p>
+							<motion.button
+								onClick={() => navigate('/plan-selection')}
+								whileHover={{ scale: 1.05 }}
+								whileTap={{ scale: 0.95 }}
+								className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 rounded-xl font-bold shadow-lg transition-all"
+								style={{
+									boxShadow: '0 4px 30px rgba(6, 182, 212, 0.5), 0 0 50px rgba(59, 130, 246, 0.3)'
+								}}
+							>
+								견적 신청하기
+							</motion.button>
+						</motion.div>
+					)}
 				</div>
 			</div>
+
+			{/* Footer */}
+			<ZipCheckFooter />
 		</div>
 	)
 }

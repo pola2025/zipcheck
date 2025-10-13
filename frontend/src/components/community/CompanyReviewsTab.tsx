@@ -4,6 +4,7 @@ import ReviewCard from './ReviewCard'
 import ReviewFilters from './ReviewFilters'
 import Pagination from 'components/common/Pagination'
 import { Review } from 'types/review'
+import { getApiUrl } from '../../lib/api-config'
 
 const CompanyReviewsTab: React.FC = () => {
 	const navigate = useNavigate()
@@ -42,7 +43,7 @@ const CompanyReviewsTab: React.FC = () => {
 			if (companyTypeFilter) params.append('company_type', companyTypeFilter)
 			if (ratingFilter) params.append('rating', ratingFilter)
 
-			const response = await fetch(`http://localhost:3001/api/company-reviews?${params.toString()}`)
+			const response = await fetch(getApiUrl(`/api/company-reviews?${params.toString()}`))
 
 			if (!response.ok) {
 				throw new Error('후기 목록을 불러올 수 없습니다.')
