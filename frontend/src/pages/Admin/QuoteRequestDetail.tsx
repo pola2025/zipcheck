@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Play, User, Home, FileText, Calendar, Phone, Mail, MapPin, MessageSquare, Save, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
+import { ArrowLeft, Play, User, Home, FileText, Calendar, Phone, Mail, MapPin, MessageSquare, Save, AlertTriangle, ChevronDown, ChevronUp, Edit, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import QuoteAnalysisVisual from 'components/QuoteAnalysis/QuoteAnalysisVisual'
 import QuoteAnalysisRealistic from 'components/QuoteAnalysis/QuoteAnalysisRealistic'
@@ -84,6 +84,8 @@ export default function QuoteRequestDetail() {
 	const [expertNotes, setExpertNotes] = useState<Record<string, string>>({})
 	const [savingNotes, setSavingNotes] = useState(false)
 	const [isExpertSectionExpanded, setIsExpertSectionExpanded] = useState(false)
+	const [isEditingAnalysis, setIsEditingAnalysis] = useState(false)
+	const [editedAnalysis, setEditedAnalysis] = useState<any>(null)
 
 	useEffect(() => {
 		if (id) {
@@ -142,7 +144,7 @@ export default function QuoteRequestDetail() {
 	}
 
 	const runAnalysis = async () => {
-		if (!confirm('이 견적에 대해 AI 분석을 실행하시겠습니까?')) return
+		if (!confirm('이 견적에 대해 집첵 견적 분석을 실행하시겠습니까?')) return
 
 		setAnalyzing(true)
 		try {
@@ -160,13 +162,55 @@ export default function QuoteRequestDetail() {
 
 			if (!response.ok) throw new Error('분석 실행 실패')
 
-			alert('✅ AI 분석이 완료되었습니다!')
+			alert('✅ 집첵 견적 분석이 완료되었습니다!')
 			await fetchRequest()
 		} catch (error) {
 			console.error('Analysis failed:', error)
-			alert('❌ AI 분석 실패: ' + (error instanceof Error ? error.message : String(error)))
+			alert('❌ 집첵 견적 분석 실패: ' + (error instanceof Error ? error.message : String(error)))
 		} finally {
 			setAnalyzing(false)
+		}
+	}
+
+	const startEditingAnalysis = () => {
+		if (request?.analysis_result) {
+			setEditedAnalysis(JSON.parse(JSON.stringify(request.analysis_result)))
+			setIsEditingAnalysis(true)
+		}
+	}
+
+	const cancelEditingAnalysis = () => {
+		setIsEditingAnalysis(false)
+		setEditedAnalysis(null)
+	}
+
+	const saveAnalysisChanges = async () => {
+		if (!id || !editedAnalysis) return
+
+		if (!confirm('분석 결과를 수정하시겠습니까?')) return
+
+		try {
+			const response = await fetch(
+				getApiUrl(`/api/quote-requests/admin/${id}/analysis-result`),
+				{
+					method: 'PATCH',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${token}`
+					},
+					body: JSON.stringify({ analysis_result: editedAnalysis })
+				}
+			)
+
+			if (!response.ok) throw new Error('분석 결과 수정 실패')
+
+			alert('✅ 분석 결과가 수정되었습니다!')
+			await fetchRequest()
+			setIsEditingAnalysis(false)
+			setEditedAnalysis(null)
+		} catch (error) {
+			console.error('Failed to update analysis:', error)
+			alert('❌ 분석 결과 수정 실패: ' + (error instanceof Error ? error.message : String(error)))
 		}
 	}
 
@@ -235,7 +279,7 @@ export default function QuoteRequestDetail() {
 									}`}
 								>
 									<Play className={`w-5 h-5 ${analyzing ? 'animate-spin' : ''}`} />
-									{analyzing ? 'AI 분석 중...' : 'AI 분석 실행'}
+									{analyzing ? '집첵 견적 분석 중...' : '집첵 견적 분석 실행'}
 								</button>
 							)}
 						</div>
@@ -348,8 +392,15 @@ export default function QuoteRequestDetail() {
 							</div>
 
 							<div>
-								<div className="text-sm text-gray-400 mb-1">평수</div>
-								<div className="text-lg font-semibold">{request.property_size}평</div>
+								<div className="text-sm text-gray-400 mb-1">시공 면적</div>
+								<div className="text-lg font-semibold">
+									{request.property_size}㎡
+									{request.property_size && (
+										<span className="text-gray-400 text-sm ml-2">
+											(약 {(request.property_size / 3.3058).toFixed(1)}평)
+										</span>
+									)}
+								</div>
 							</div>
 
 							<div className="flex items-center gap-2">
@@ -538,27 +589,85 @@ export default function QuoteRequestDetail() {
 					</motion.div>
 				)}
 
-				{/* AI 분석 결과 */}
+				{/* 집첵 견적 분석 결과 */}
 				{request.status === 'completed' && request.analysis_result && (
 					<motion.div
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.2 }}
 					>
-						<div className="mb-6">
-							<h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-green-400 to-cyan-500 bg-clip-text text-transparent">
-								AI 분석 결과
-							</h2>
-							<p className="text-gray-400">
-								분석 완료: {request.analyzed_at && new Date(request.analyzed_at).toLocaleString('ko-KR')}
-								{request.analyzed_by && ` • 분석자: ${request.analyzed_by}`}
-							</p>
+						<div className="mb-6 flex items-center justify-between">
+							<div>
+								<h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-green-400 to-cyan-500 bg-clip-text text-transparent">
+									집첵 견적 분석 결과
+								</h2>
+								<p className="text-gray-400">
+									분석 완료: {request.analyzed_at && new Date(request.analyzed_at).toLocaleString('ko-KR')}
+									{request.analyzed_by && ` • 분석자: ${request.analyzed_by}`}
+								</p>
+							</div>
+							{!isEditingAnalysis ? (
+								<button
+									onClick={startEditingAnalysis}
+									className="px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 bg-amber-500/20 hover:bg-amber-500/30 border-2 border-amber-500/50"
+								>
+									<Edit className="w-5 h-5" />
+									분석 결과 수정
+								</button>
+							) : (
+								<div className="flex gap-2">
+									<button
+										onClick={cancelEditingAnalysis}
+										className="px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 bg-gray-500/20 hover:bg-gray-500/30 border-2 border-gray-500/50"
+									>
+										<X className="w-5 h-5" />
+										취소
+									</button>
+									<button
+										onClick={saveAnalysisChanges}
+										className="px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 bg-green-500/20 hover:bg-green-500/30 border-2 border-green-500/50"
+									>
+										<Save className="w-5 h-5" />
+										저장
+									</button>
+								</div>
+							)}
 						</div>
 
-						<QuoteAnalysisRealistic
-						analysis={request.analysis_result}
-						propertySize={request.property_size}
-					/>
+						{!isEditingAnalysis ? (
+							<QuoteAnalysisRealistic
+								analysis={request.analysis_result}
+								propertySize={request.property_size}
+							/>
+						) : (
+							<div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-amber-500/30">
+								<div className="mb-4">
+									<h3 className="text-lg font-bold text-amber-300 mb-2">📝 분석 결과 편집</h3>
+									<p className="text-sm text-amber-400/70">
+										JSON 형식으로 분석 결과를 직접 수정할 수 있습니다. 올바른 형식을 유지해주세요.
+									</p>
+								</div>
+								<textarea
+									value={JSON.stringify(editedAnalysis, null, 2)}
+									onChange={(e) => {
+										try {
+											const parsed = JSON.parse(e.target.value)
+											setEditedAnalysis(parsed)
+										} catch (err) {
+											// Invalid JSON, just update the text
+										}
+									}}
+									className="w-full h-96 bg-gray-900/80 border border-amber-500/30 rounded-lg p-4 text-sm text-gray-200 font-mono focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none"
+									spellCheck={false}
+								/>
+								<div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+									<p className="text-xs text-amber-300">
+										<strong>주의:</strong> JSON 형식이 올바르지 않으면 저장할 수 없습니다.
+										수정 후 반드시 유효성을 확인하세요.
+									</p>
+								</div>
+							</div>
+						)}
 					</motion.div>
 				)}
 			</div>
