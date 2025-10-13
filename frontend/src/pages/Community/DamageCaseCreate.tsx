@@ -52,6 +52,12 @@ export default function DamageCaseCreate() {
 			return
 		}
 
+		// Validate: 업체명, 연락처, 사업자번호 중 최소 1개 필수
+		if (!companyName && !companyPhone && !businessNumber) {
+			alert('업체명, 연락처, 사업자번호 중 최소 1개는 입력해주세요.')
+			return
+		}
+
 		if (!damageType) {
 			alert('피해 유형을 선택해주세요.')
 			return
@@ -156,11 +162,18 @@ export default function DamageCaseCreate() {
 						animate={{ opacity: 1, scale: 1 }}
 						transition={{ duration: 0.5, delay: 0.2 }}
 					>
+						{/* Info: 3개 중 1개 필수 */}
+						<div className="mb-4 p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
+							<p className="text-sm text-cyan-300">
+								<span className="text-red-400">*</span> 업체명, 연락처, 사업자번호 중 <strong>최소 1개는 반드시 입력</strong>해주세요.
+							</p>
+						</div>
+
 						{/* Company Name */}
 						<div className="mb-6">
 							<label className="block text-sm font-semibold mb-3 text-cyan-400 flex items-center gap-2">
 								<Building className="w-4 h-4" />
-								업체명 <span className="text-red-400">*</span>
+								업체명
 							</label>
 							<input
 								type="text"
@@ -168,37 +181,36 @@ export default function DamageCaseCreate() {
 								onChange={(e) => setCompanyName(e.target.value)}
 								placeholder="예: OO인테리어"
 								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
-								required
 							/>
 						</div>
 
-						{/* Company Phone (Optional) */}
+						{/* Company Phone */}
 						<div className="mb-6">
-							<label className="block text-sm font-semibold mb-3 text-gray-300 flex items-center gap-2">
+							<label className="block text-sm font-semibold mb-3 text-cyan-400 flex items-center gap-2">
 								<Phone className="w-4 h-4" />
-								업체 전화번호 (선택)
+								업체 전화번호
 							</label>
 							<input
 								type="tel"
 								value={companyPhone}
 								onChange={(e) => setCompanyPhone(e.target.value)}
 								placeholder="02-1234-5678"
-								className="w-full px-5 py-4 bg-black/60 border border-gray-600/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all"
+								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
 							/>
 						</div>
 
-						{/* Business Number (Optional) */}
+						{/* Business Number */}
 						<div className="mb-6">
-							<label className="block text-sm font-semibold mb-3 text-gray-300 flex items-center gap-2">
+							<label className="block text-sm font-semibold mb-3 text-cyan-400 flex items-center gap-2">
 								<FileText className="w-4 h-4" />
-								사업자번호 (선택)
+								사업자번호
 							</label>
 							<input
 								type="text"
 								value={businessNumber}
 								onChange={(e) => setBusinessNumber(e.target.value)}
 								placeholder="123-45-67890"
-								className="w-full px-5 py-4 bg-black/60 border border-gray-600/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all"
+								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
 							/>
 						</div>
 
@@ -332,7 +344,7 @@ export default function DamageCaseCreate() {
 						{/* Submit Button */}
 						<motion.button
 							type="submit"
-							disabled={submitting || !companyName || !damageType || caseDescription.length < 20}
+							disabled={submitting || (!companyName && !companyPhone && !businessNumber) || !damageType || caseDescription.length < 20}
 							whileHover={{ scale: 1.02 }}
 							whileTap={{ scale: 0.98 }}
 							className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2"
