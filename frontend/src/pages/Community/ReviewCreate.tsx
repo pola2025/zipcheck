@@ -15,6 +15,10 @@ export default function ReviewCreate() {
 	const [companyName, setCompanyName] = useState('')
 	const [companyPhone, setCompanyPhone] = useState('')
 	const [businessNumber, setBusinessNumber] = useState('')
+	const [region, setRegion] = useState('')
+	const [projectType, setProjectType] = useState('')
+	const [projectSize, setProjectSize] = useState('')
+	const [projectCost, setProjectCost] = useState('')
 	const [rating, setRating] = useState(0)
 	const [reviewText, setReviewText] = useState('')
 
@@ -58,6 +62,10 @@ export default function ReviewCreate() {
 					company_name: companyName,
 					company_phone: companyPhone || undefined,
 					business_number: businessNumber || undefined,
+					region: region || undefined,
+					project_type: projectType || undefined,
+					project_size: projectSize ? Number(projectSize) : undefined,
+					project_cost: projectCost ? Number(projectCost) : undefined,
 					rating,
 					review_text: reviewText
 				})
@@ -179,6 +187,93 @@ export default function ReviewCreate() {
 								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
 								required
 							/>
+						</div>
+
+						{/* Region */}
+						<div className="mb-6">
+							<label className="block text-sm font-semibold mb-3 text-cyan-400">
+								지역
+							</label>
+							<select
+								value={region}
+								onChange={(e) => setRegion(e.target.value)}
+								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
+								style={{ colorScheme: 'dark' }}
+							>
+								<option value="">선택 안 함</option>
+								<option value="서울">서울</option>
+								<option value="경기">경기</option>
+								<option value="인천">인천</option>
+								<option value="부산">부산</option>
+								<option value="대구">대구</option>
+								<option value="대전">대전</option>
+								<option value="광주">광주</option>
+								<option value="울산">울산</option>
+								<option value="세종">세종</option>
+								<option value="강원">강원</option>
+								<option value="충북">충북</option>
+								<option value="충남">충남</option>
+								<option value="전북">전북</option>
+								<option value="전남">전남</option>
+								<option value="경북">경북</option>
+								<option value="경남">경남</option>
+								<option value="제주">제주</option>
+							</select>
+						</div>
+
+						{/* Project Type */}
+						<div className="mb-6">
+							<label className="block text-sm font-semibold mb-3 text-cyan-400">
+								시공유형
+							</label>
+							<select
+								value={projectType}
+								onChange={(e) => setProjectType(e.target.value)}
+								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
+								style={{ colorScheme: 'dark' }}
+							>
+								<option value="">선택 안 함</option>
+								<option value="주거공간">주거공간</option>
+								<option value="상업공간">상업공간</option>
+							</select>
+						</div>
+
+						{/* Project Size */}
+						<div className="mb-6">
+							<label className="block text-sm font-semibold mb-3 text-cyan-400">
+								시공 면적 (㎡)
+							</label>
+							<input
+								type="number"
+								value={projectSize}
+								onChange={(e) => setProjectSize(e.target.value)}
+								placeholder="예: 85"
+								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
+							/>
+							{projectSize && (
+								<p className="text-xs text-gray-400 mt-2">
+									약 {(Number(projectSize) / 3.3058).toFixed(1)}평
+								</p>
+							)}
+						</div>
+
+						{/* Project Cost */}
+						<div className="mb-6">
+							<label className="block text-sm font-semibold mb-3 text-cyan-400">
+								시공비용 (만원)
+							</label>
+							<input
+								type="number"
+								value={projectCost}
+								onChange={(e) => setProjectCost(e.target.value)}
+								placeholder="예: 3000"
+								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
+							/>
+							{projectCost && (
+								<p className="text-xs text-gray-400 mt-2">
+									{Number(projectCost).toLocaleString()}만원
+								</p>
+							)}
 						</div>
 
 						{/* Rating */}

@@ -38,14 +38,7 @@ router.get('/', optionalAuthenticateToken, async (req, res) => {
 		const {
 			page = 1,
 			limit = 20,
-			region,
-			company_type,
-			rating,
-			budget,
-			company_name,
-			phone,
-			construction_type,
-			area,
+			search,
 			sort_by = 'created_at',
 			order = 'desc'
 		} = req.query
@@ -59,46 +52,23 @@ router.get('/', optionalAuthenticateToken, async (req, res) => {
 		let countText = 'SELECT COUNT(*) FROM company_reviews WHERE status = $1'
 		const params: any[] = ['published']
 
-		// Filters
-		if (region) {
-			params.push(region)
-			queryText += ` AND region = $${params.length}`
-			countText += ` AND region = $${params.length}`
-		}
-		if (company_type) {
-			params.push(company_type)
-			queryText += ` AND company_type = $${params.length}`
-			countText += ` AND company_type = $${params.length}`
-		}
-		if (rating) {
-			params.push(Number(rating))
-			queryText += ` AND rating >= $${params.length}`
-			countText += ` AND rating >= $${params.length}`
-		}
-		if (budget) {
-			params.push(budget)
-			queryText += ` AND CAST(project_cost AS TEXT) ILIKE '%' || $${params.length} || '%'`
-			countText += ` AND CAST(project_cost AS TEXT) ILIKE '%' || $${params.length} || '%'`
-		}
-		if (company_name) {
-			params.push(company_name)
-			queryText += ` AND company_name ILIKE '%' || $${params.length} || '%'`
-			countText += ` AND company_name ILIKE '%' || $${params.length} || '%'`
-		}
-		if (phone) {
-			params.push(phone)
-			queryText += ` AND company_phone ILIKE '%' || $${params.length} || '%'`
-			countText += ` AND company_phone ILIKE '%' || $${params.length} || '%'`
-		}
-		if (construction_type) {
-			params.push(construction_type)
-			queryText += ` AND project_type = $${params.length}`
-			countText += ` AND project_type = $${params.length}`
-		}
-		if (area) {
-			params.push(Number(area))
-			queryText += ` AND project_size = $${params.length}`
-			countText += ` AND project_size = $${params.length}`
+		// Search filter - 업체명, 지역, 시공유형 등 검색
+		if (search) {
+			params.push(search)
+			queryText += ` AND (
+				company_name ILIKE '%' || $${params.length} || '%' OR
+				region ILIKE '%' || $${params.length} || '%' OR
+				project_type ILIKE '%' || $${params.length} || '%' OR
+				company_phone ILIKE '%' || $${params.length} || '%' OR
+				review_text ILIKE '%' || $${params.length} || '%'
+			)`
+			countText += ` AND (
+				company_name ILIKE '%' || $${params.length} || '%' OR
+				region ILIKE '%' || $${params.length} || '%' OR
+				project_type ILIKE '%' || $${params.length} || '%' OR
+				company_phone ILIKE '%' || $${params.length} || '%' OR
+				review_text ILIKE '%' || $${params.length} || '%'
+			)`
 		}
 
 		// Sorting
@@ -191,6 +161,10 @@ router.post('/', authenticateToken, upload.array('images', 10), async (req, res)
 			company_name,
 			company_phone,
 			business_number,
+			region,
+			project_type,
+			project_size,
+			project_cost,
 			rating,
 			review_text
 		} = req.body
@@ -228,23 +202,18 @@ router.post('/', authenticateToken, upload.array('images', 10), async (req, res)
 			console.log(`✅ Uploaded ${imageUrls.length} images`)
 		}
 
-		// 추가 정보를 후기에 포함
-		let fullReviewText = review_text
-		if (company_phone) {
-			fullReviewText += `\n\n**업체 연락처**: ${company_phone}`
-		}
-		if (business_number) {
-			fullReviewText += `\n**사업자번호**: ${business_number}`
-		}
-
 		// Insert review
 		const data = await insertOne<any>('company_reviews', {
 			user_id: userId,
 			company_name,
 			company_phone: company_phone || null,
 			business_number: business_number || null,
+			region: region || null,
+			project_type: project_type || null,
+			project_size: project_size ? Number(project_size) : null,
+			project_cost: project_cost ? Number(project_cost) : null,
 			rating: Number(rating),
-			review_text: fullReviewText,
+			review_text: review_text,
 			images: JSON.stringify(imageUrls),
 			verified: false,
 			status: 'pending' // 관리자 승인 대기

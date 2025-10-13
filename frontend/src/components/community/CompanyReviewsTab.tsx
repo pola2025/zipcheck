@@ -18,19 +18,13 @@ const CompanyReviewsTab: React.FC = () => {
 	const [currentPage, setCurrentPage] = useState(1)
 	const [totalPages, setTotalPages] = useState(1)
 
-	// Filters
-	const [regionFilter, setRegionFilter] = useState(searchParams.get('region') || '')
-	const [budgetFilter, setBudgetFilter] = useState(searchParams.get('budget') || '')
-	const [companyNameFilter, setCompanyNameFilter] = useState(searchParams.get('company_name') || '')
-	const [phoneFilter, setPhoneFilter] = useState(searchParams.get('phone') || '')
-	const [constructionTypeFilter, setConstructionTypeFilter] = useState(searchParams.get('construction_type') || '')
-	const [areaFilter, setAreaFilter] = useState(searchParams.get('area') || '')
-	const [ratingFilter, setRatingFilter] = useState(searchParams.get('rating') || '')
+	// Filters - 검색과 정렬만
+	const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
 	const [sortBy, setSortBy] = useState(searchParams.get('sort_by') || 'created_at')
 
 	useEffect(() => {
 		loadReviews()
-	}, [currentPage, regionFilter, budgetFilter, companyNameFilter, phoneFilter, constructionTypeFilter, areaFilter, ratingFilter, sortBy])
+	}, [currentPage, searchQuery, sortBy])
 
 	const loadReviews = async () => {
 		try {
@@ -43,13 +37,7 @@ const CompanyReviewsTab: React.FC = () => {
 				order: 'desc'
 			})
 
-			if (regionFilter) params.append('region', regionFilter)
-			if (budgetFilter) params.append('budget', budgetFilter)
-			if (companyNameFilter) params.append('company_name', companyNameFilter)
-			if (phoneFilter) params.append('phone', phoneFilter)
-			if (constructionTypeFilter) params.append('construction_type', constructionTypeFilter)
-			if (areaFilter) params.append('area', areaFilter)
-			if (ratingFilter) params.append('rating', ratingFilter)
+			if (searchQuery) params.append('search', searchQuery)
 
 			const response = await fetch(getApiUrl(`/api/company-reviews?${params.toString()}`))
 
@@ -80,26 +68,8 @@ const CompanyReviewsTab: React.FC = () => {
 		setSearchParams(newParams)
 
 		switch (filterType) {
-			case 'region':
-				setRegionFilter(value)
-				break
-			case 'budget':
-				setBudgetFilter(value)
-				break
-			case 'company_name':
-				setCompanyNameFilter(value)
-				break
-			case 'phone':
-				setPhoneFilter(value)
-				break
-			case 'construction_type':
-				setConstructionTypeFilter(value)
-				break
-			case 'area':
-				setAreaFilter(value)
-				break
-			case 'rating':
-				setRatingFilter(value)
+			case 'search':
+				setSearchQuery(value)
 				break
 			case 'sort_by':
 				setSortBy(value)
@@ -119,13 +89,7 @@ const CompanyReviewsTab: React.FC = () => {
 		<>
 			{/* Filters */}
 			<ReviewFilters
-				regionFilter={regionFilter}
-				budgetFilter={budgetFilter}
-				companyNameFilter={companyNameFilter}
-				phoneFilter={phoneFilter}
-				constructionTypeFilter={constructionTypeFilter}
-				areaFilter={areaFilter}
-				ratingFilter={ratingFilter}
+				searchQuery={searchQuery}
 				sortBy={sortBy}
 				onFilterChange={handleFilterChange}
 			/>

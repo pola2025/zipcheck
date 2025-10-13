@@ -3,25 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { useMousePosition } from '../../hooks/useMousePosition'
 
 interface ReviewFiltersProps {
-	regionFilter: string
-	budgetFilter: string
-	companyNameFilter: string
-	phoneFilter: string
-	constructionTypeFilter: string
-	areaFilter: string
-	ratingFilter: string
+	searchQuery: string
 	sortBy: string
 	onFilterChange: (filterType: string, value: string) => void
 }
 
 const ReviewFilters: React.FC<ReviewFiltersProps> = ({
-	regionFilter,
-	budgetFilter,
-	companyNameFilter,
-	phoneFilter,
-	constructionTypeFilter,
-	areaFilter,
-	ratingFilter,
+	searchQuery,
 	sortBy,
 	onFilterChange
 }) => {
@@ -29,19 +17,8 @@ const ReviewFilters: React.FC<ReviewFiltersProps> = ({
 	const containerRef = useRef<HTMLDivElement>(null)
 	const mousePosition = useMousePosition(containerRef)
 
-	// ㎡를 평으로 변환
-	const convertToSquareMeters = (area: string): string => {
-		const value = parseFloat(area)
-		if (isNaN(value)) return ''
-		return (value / 3.3058).toFixed(2)
-	}
-
-	const handleAreaChange = (value: string) => {
-		onFilterChange('area', value)
-	}
-
-	const selectClassName = 'w-full px-3 py-3 bg-black/60 border border-cyan-500/30 rounded-lg text-white focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all [&>option]:!bg-gray-900 [&>option]:!text-white'
 	const inputClassName = 'w-full px-3 py-3 bg-black/60 border border-cyan-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all'
+	const selectClassName = 'w-full px-3 py-3 bg-black/60 border border-cyan-500/30 rounded-lg text-white focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all [&>option]:!bg-gray-900 [&>option]:!text-white'
 	const selectStyle = { colorScheme: 'dark' as const, backgroundColor: '#000000', color: '#ffffff' }
 	const optionStyle = { backgroundColor: '#111827', color: '#ffffff' }
 
@@ -64,110 +41,20 @@ const ReviewFilters: React.FC<ReviewFiltersProps> = ({
 				}}
 			/>
 
-			<div className='grid grid-cols-1 md:grid-cols-4 gap-4 relative z-10'>
-				{/* 지역 Filter */}
-				<div>
-					<label className='block text-sm font-semibold text-cyan-300 mb-2'>지역</label>
-					<select
-						value={regionFilter}
-						onChange={(e) => onFilterChange('region', e.target.value)}
-						className={selectClassName}
-						style={selectStyle}
-					>
-						<option value='' style={optionStyle}>전체</option>
-						<option value='서울' style={optionStyle}>서울</option>
-						<option value='경기' style={optionStyle}>경기</option>
-						<option value='인천' style={optionStyle}>인천</option>
-						<option value='부산' style={optionStyle}>부산</option>
-						<option value='대구' style={optionStyle}>대구</option>
-						<option value='대전' style={optionStyle}>대전</option>
-						<option value='광주' style={optionStyle}>광주</option>
-						<option value='울산' style={optionStyle}>울산</option>
-					</select>
-				</div>
-
-				{/* 예산 Filter */}
-				<div>
-					<label className='block text-sm font-semibold text-cyan-300 mb-2'>예산</label>
+			<div className='grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10'>
+				{/* Search Query */}
+				<div className="md:col-span-2">
+					<label className='block text-sm font-semibold text-cyan-300 mb-2'>검색</label>
 					<input
 						type='text'
-						value={budgetFilter}
-						onChange={(e) => onFilterChange('budget', e.target.value)}
-						placeholder='예: 3000만원'
+						value={searchQuery}
+						onChange={(e) => onFilterChange('search', e.target.value)}
+						placeholder='업체명, 지역, 시공유형 등 검색'
 						className={inputClassName}
 					/>
 				</div>
 
-				{/* 업체명 Filter */}
-				<div>
-					<label className='block text-sm font-semibold text-cyan-300 mb-2'>업체명</label>
-					<input
-						type='text'
-						value={companyNameFilter}
-						onChange={(e) => onFilterChange('company_name', e.target.value)}
-						placeholder='업체명 검색'
-						className={inputClassName}
-					/>
-				</div>
-
-				{/* 연락처 Filter */}
-				<div>
-					<label className='block text-sm font-semibold text-cyan-300 mb-2'>연락처</label>
-					<input
-						type='text'
-						value={phoneFilter}
-						onChange={(e) => onFilterChange('phone', e.target.value)}
-						placeholder='010-1234-5678'
-						className={inputClassName}
-					/>
-				</div>
-
-				{/* 시공유형 Filter */}
-				<div>
-					<label className='block text-sm font-semibold text-cyan-300 mb-2'>시공유형</label>
-					<select
-						value={constructionTypeFilter}
-						onChange={(e) => onFilterChange('construction_type', e.target.value)}
-						className={selectClassName}
-						style={selectStyle}
-					>
-						<option value='' style={optionStyle}>전체</option>
-						<option value='주거공간' style={optionStyle}>주거공간</option>
-						<option value='상업공간' style={optionStyle}>상업공간</option>
-					</select>
-				</div>
-
-				{/* 면적 Filter */}
-				<div>
-					<label className='block text-sm font-semibold text-cyan-300 mb-2'>
-						면적 {areaFilter && `(${convertToSquareMeters(areaFilter)}평)`}
-					</label>
-					<input
-						type='number'
-						value={areaFilter}
-						onChange={(e) => handleAreaChange(e.target.value)}
-						placeholder='㎡ 입력'
-						className={inputClassName}
-					/>
-				</div>
-
-				{/* 평점 Filter */}
-				<div>
-					<label className='block text-sm font-semibold text-cyan-300 mb-2'>평점</label>
-					<select
-						value={ratingFilter}
-						onChange={(e) => onFilterChange('rating', e.target.value)}
-						className={selectClassName}
-						style={selectStyle}
-					>
-						<option value='' style={optionStyle}>전체</option>
-						<option value='5' style={optionStyle}>⭐ 5점</option>
-						<option value='4' style={optionStyle}>⭐ 4점 이상</option>
-						<option value='3' style={optionStyle}>⭐ 3점 이상</option>
-					</select>
-				</div>
-
-				{/* 정렬 */}
+				{/* Sort */}
 				<div>
 					<label className='block text-sm font-semibold text-cyan-300 mb-2'>정렬</label>
 					<select
