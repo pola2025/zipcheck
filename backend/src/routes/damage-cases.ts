@@ -160,10 +160,10 @@ router.post('/', authenticateToken, upload.array('evidence_images', 20), async (
 			case_description
 		} = req.body
 
-		// Validation - 업체명, 연락처, 사업자번호 중 최소 1개 필수
-		if (!company_name && !company_phone && !business_number) {
+		// Validation - 업체명, 연락처, 사업자번호 모두 필수
+		if (!company_name || !company_phone || !business_number) {
 			return res.status(400).json({
-				error: '업체명, 연락처, 사업자번호 중 최소 1개는 입력해주세요.'
+				error: '업체명, 연락처, 사업자번호를 모두 입력해주세요.'
 			})
 		}
 

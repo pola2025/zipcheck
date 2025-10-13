@@ -29,6 +29,12 @@ export default function ReviewCreate() {
 			return
 		}
 
+		// Validate: 업체명, 연락처, 사업자번호 모두 필수
+		if (!companyName || !companyPhone || !businessNumber) {
+			alert('업체명, 연락처, 사업자번호를 모두 입력해주세요.')
+			return
+		}
+
 		if (rating === 0) {
 			alert('별점을 선택해주세요.')
 			return
@@ -143,33 +149,35 @@ export default function ReviewCreate() {
 							/>
 						</div>
 
-						{/* Company Phone (Optional) */}
+						{/* Company Phone */}
 						<div className="mb-6">
-							<label className="block text-sm font-semibold mb-3 text-gray-300 flex items-center gap-2">
+							<label className="block text-sm font-semibold mb-3 text-cyan-400 flex items-center gap-2">
 								<Phone className="w-4 h-4" />
-								업체 전화번호 (선택)
+								업체 전화번호 <span className="text-red-400">*</span>
 							</label>
 							<input
 								type="tel"
 								value={companyPhone}
 								onChange={(e) => setCompanyPhone(e.target.value)}
 								placeholder="02-1234-5678"
-								className="w-full px-5 py-4 bg-black/60 border border-gray-600/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all"
+								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
+								required
 							/>
 						</div>
 
-						{/* Business Number (Optional) */}
+						{/* Business Number */}
 						<div className="mb-6">
-							<label className="block text-sm font-semibold mb-3 text-gray-300 flex items-center gap-2">
+							<label className="block text-sm font-semibold mb-3 text-cyan-400 flex items-center gap-2">
 								<FileText className="w-4 h-4" />
-								사업자번호 (선택)
+								사업자번호 <span className="text-red-400">*</span>
 							</label>
 							<input
 								type="text"
 								value={businessNumber}
 								onChange={(e) => setBusinessNumber(e.target.value)}
 								placeholder="123-45-67890"
-								className="w-full px-5 py-4 bg-black/60 border border-gray-600/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all"
+								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
+								required
 							/>
 						</div>
 
@@ -247,7 +255,7 @@ export default function ReviewCreate() {
 						{/* Submit Button */}
 						<motion.button
 							type="submit"
-							disabled={submitting || !companyName || rating === 0 || reviewText.length < 10}
+							disabled={submitting || !companyName || !companyPhone || !businessNumber || rating === 0 || reviewText.length < 10}
 							whileHover={{ scale: 1.02 }}
 							whileTap={{ scale: 0.98 }}
 							className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2"
