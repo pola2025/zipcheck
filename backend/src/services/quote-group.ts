@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase'
+import { query, insertOne, findOne } from '../lib/db'
 
 interface QuoteGroupData {
 	customer_name: string
@@ -39,25 +39,23 @@ export function calculateGroupPrice(quoteCount: number): number {
  * 48시간 내 활성 그룹 찾기
  */
 export async function findActiveGroup(customerPhone: string, propertyInfo: any) {
-	const { data, error } = await supabase
-		.from('quote_groups')
-		.select('*')
-		.eq('customer_phone', customerPhone)
-		.eq('status', 'active')
-		.gt('expires_at', new Date().toISOString())
-		.order('created_at', { ascending: false })
-		.limit(1)
+	// ✅ CONVERTED: Supabase SELECT with multiple conditions → PostgreSQL query
+	// OLD: await supabase.from('quote_groups').select('*').eq('customer_phone', customerPhone).eq('status', 'active').gt('expires_at', new Date().toISOString()).order('created_at', { ascending: false }).limit(1)
+	const result = await query(
+		`SELECT * FROM quote_groups
+		WHERE customer_phone = $1
+		AND status = $2
+		AND expires_at > $3
+		ORDER BY created_at DESC
+		LIMIT 1`,
+		[customerPhone, 'active', new Date().toISOString()]
+	)
 
-	if (error) {
-		console.error('Error finding active group:', error)
+	if (result.rows.length === 0) {
 		return null
 	}
 
-	if (!data || data.length === 0) {
-		return null
-	}
-
-	const group = data[0]
+	const group = result.rows[0]
 
 	// 같은 프로젝트인지 확인 (선택적)
 	const isSameProject =
@@ -81,21 +79,19 @@ export async function findActiveGroup(customerPhone: string, propertyInfo: any) 
  * 새 그룹 생성
  */
 export async function createQuoteGroup(data: QuoteGroupData) {
-	const { data: group, error } = await supabase
-		.from('quote_groups')
-		.insert({
-			...data,
-			status: 'active',
-			quote_count: 1,
-			total_price: 30000,
-			expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString() // 48시간 후
-		})
-		.select()
-		.single()
+	// ✅ CONVERTED: Supabase INSERT → PostgreSQL insertOne
+	// OLD: const { data: group, error } = await supabase.from('quote_groups').insert({...}).select().single()
+	const group = await insertOne<any>('quote_groups', {
+		...data,
+		status: 'active',
+		quote_count: 1,
+		total_price: 30000,
+		expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString() // 48시간 후
+	})
 
-	if (error) {
-		console.error('Error creating quote group:', error)
-		throw error
+	if (!group) {
+		console.error('Error creating quote group')
+		throw new Error('Failed to create quote group')
 	}
 
 	return group
@@ -105,14 +101,11 @@ export async function createQuoteGroup(data: QuoteGroupData) {
  * 그룹에 견적 추가
  */
 export async function addQuoteToGroup(groupId: string) {
-	// 현재 그룹 정보 조회
-	const { data: group, error: fetchError } = await supabase
-		.from('quote_groups')
-		.select('*')
-		.eq('id', groupId)
-		.single()
+	// ✅ CONVERTED: Supabase SELECT → PostgreSQL findOne
+	// OLD: const { data: group, error: fetchError } = await supabase.from('quote_groups').select('*').eq('id', groupId).single()
+	const group = await findOne<any>('quote_groups', { id: groupId })
 
-	if (fetchError || !group) {
+	if (!group) {
 		throw new Error('그룹을 찾을 수 없습니다.')
 	}
 
@@ -129,19 +122,20 @@ export async function addQuoteToGroup(groupId: string) {
 	const newCount = group.quote_count + 1
 	const newPrice = calculateGroupPrice(newCount)
 
-	// 그룹 업데이트
-	const { data: updated, error: updateError } = await supabase
-		.from('quote_groups')
-		.update({
-			quote_count: newCount,
-			total_price: newPrice
-		})
-		.eq('id', groupId)
-		.select()
-		.single()
+	// ✅ CONVERTED: Supabase UPDATE → PostgreSQL query
+	// OLD: const { data: updated, error: updateError } = await supabase.from('quote_groups').update({...}).eq('id', groupId).select().single()
+	const updateResult = await query(
+		`UPDATE quote_groups
+		SET quote_count = $1, total_price = $2, updated_at = NOW()
+		WHERE id = $3
+		RETURNING *`,
+		[newCount, newPrice, groupId]
+	)
 
-	if (updateError) {
-		throw updateError
+	const updated = updateResult.rows[0]
+
+	if (!updated) {
+		throw new Error('Failed to update quote group')
 	}
 
 	return {
@@ -155,13 +149,11 @@ export async function addQuoteToGroup(groupId: string) {
  * 그룹 가격 정보 조회
  */
 export async function getGroupPricing(groupId: string): Promise<PricingInfo> {
-	const { data: group, error } = await supabase
-		.from('quote_groups')
-		.select('*')
-		.eq('id', groupId)
-		.single()
+	// ✅ CONVERTED: Supabase SELECT → PostgreSQL findOne
+	// OLD: const { data: group, error } = await supabase.from('quote_groups').select('*').eq('id', groupId).single()
+	const group = await findOne<any>('quote_groups', { id: groupId })
 
-	if (error || !group) {
+	if (!group) {
 		throw new Error('그룹을 찾을 수 없습니다.')
 	}
 
@@ -182,33 +174,36 @@ export async function getGroupPricing(groupId: string): Promise<PricingInfo> {
  * 그룹의 모든 견적 조회
  */
 export async function getGroupQuotes(groupId: string) {
-	const { data, error } = await supabase
-		.from('quote_requests')
-		.select('*')
-		.eq('group_id', groupId)
-		.order('sequence_in_group', { ascending: true })
+	// ✅ CONVERTED: Supabase SELECT → PostgreSQL query
+	// OLD: const { data, error } = await supabase.from('quote_requests').select('*').eq('group_id', groupId).order('sequence_in_group', { ascending: true })
+	const result = await query(
+		`SELECT * FROM quote_requests
+		WHERE group_id = $1
+		ORDER BY sequence_in_group ASC`,
+		[groupId]
+	)
 
-	if (error) {
-		console.error('Error fetching group quotes:', error)
-		throw error
-	}
-
-	return data
+	return result.rows
 }
 
 /**
  * 그룹 상태 업데이트
  */
 export async function updateGroupStatus(groupId: string, status: 'active' | 'expired' | 'completed') {
-	const { data, error } = await supabase
-		.from('quote_groups')
-		.update({ status })
-		.eq('id', groupId)
-		.select()
-		.single()
+	// ✅ CONVERTED: Supabase UPDATE → PostgreSQL query
+	// OLD: const { data, error } = await supabase.from('quote_groups').update({ status }).eq('id', groupId).select().single()
+	const result = await query(
+		`UPDATE quote_groups
+		SET status = $1, updated_at = NOW()
+		WHERE id = $2
+		RETURNING *`,
+		[status, groupId]
+	)
 
-	if (error) {
-		throw error
+	const data = result.rows[0]
+
+	if (!data) {
+		throw new Error('Failed to update group status')
 	}
 
 	return data
@@ -218,18 +213,17 @@ export async function updateGroupStatus(groupId: string, status: 'active' | 'exp
  * 만료된 그룹 자동 처리 (크론 작업용)
  */
 export async function expireOldGroups() {
-	const { data, error } = await supabase
-		.from('quote_groups')
-		.update({ status: 'expired' })
-		.eq('status', 'active')
-		.lt('expires_at', new Date().toISOString())
-		.select()
+	// ✅ CONVERTED: Supabase UPDATE with multiple conditions → PostgreSQL query
+	// OLD: const { data, error } = await supabase.from('quote_groups').update({ status: 'expired' }).eq('status', 'active').lt('expires_at', new Date().toISOString()).select()
+	const result = await query(
+		`UPDATE quote_groups
+		SET status = $1, updated_at = NOW()
+		WHERE status = $2
+		AND expires_at < $3
+		RETURNING *`,
+		['expired', 'active', new Date().toISOString()]
+	)
 
-	if (error) {
-		console.error('Error expiring old groups:', error)
-		throw error
-	}
-
-	console.log(`✅ Expired ${data.length} old quote groups`)
-	return data
+	console.log(`✅ Expired ${result.rows.length} old quote groups`)
+	return result.rows
 }

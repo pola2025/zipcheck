@@ -24,6 +24,18 @@ const ZipCheck = lazy(async () => import('pages/Marketing/ZipCheck'))
 const PlanSelection = lazy(async () => import('pages/PlanSelection'))
 const Community = lazy(async () => import('pages/Community'))
 const Payment = lazy(async () => import('pages/Payment'))
+const QuoteSubmission = lazy(async () => import('pages/QuoteSubmission'))
+const QuoteStatus = lazy(async () => import('pages/QuoteStatus'))
+const ReviewCreate = lazy(async () => import('pages/Community/ReviewCreate'))
+const ReviewDetail = lazy(async () => import('pages/Community/ReviewDetail'))
+const DamageCaseCreate = lazy(async () => import('pages/Community/DamageCaseCreate'))
+const DamageCaseDetail = lazy(async () => import('pages/Community/DamageCaseDetail'))
+const AdminLogin = lazy(async () => import('pages/Admin/Login'))
+const AdminDashboard = lazy(async () => import('pages/Admin/Dashboard'))
+const AdminQuoteRequests = lazy(async () => import('pages/Admin/QuoteRequests'))
+const AdminQuoteRequestDetail = lazy(async () => import('pages/Admin/QuoteRequestDetail'))
+const AdminDataManagement = lazy(async () => import('pages/Admin/DataManagement'))
+const AdminCommunityManagement = lazy(async () => import('pages/Admin/CommunityManagement'))
 
 const router = createBrowserRouter(
 	createRoutesFromElements(
@@ -31,11 +43,23 @@ const router = createBrowserRouter(
 			<Route path='/' element={<ZipCheck />} />
 			<Route path='/plan-selection' element={<PlanSelection />} />
 			<Route path='/community' element={<Community />} />
+			<Route path='/community/reviews/create' element={<ReviewCreate />} />
+			<Route path='/community/reviews/:id' element={<ReviewDetail />} />
+			<Route path='/community/damage-cases/create' element={<DamageCaseCreate />} />
+			<Route path='/community/damage-cases/:id' element={<DamageCaseDetail />} />
 			<Route path='/payment' element={<Payment />} />
+			<Route path='/quote-submission' element={<QuoteSubmission />} />
+			<Route path='/quote-status' element={<QuoteStatus />} />
 			<Route path='/ai' element={<AI />}>
 				<Route path=':id' element={<AI />} />
 			</Route>
 			<Route path='/ai/shared/:id' element={<AI isShared />} />
+			<Route path='/admin/login' element={<AdminLogin />} />
+			<Route path='/admin' element={<AdminDashboard />} />
+			<Route path='/admin/quote-requests' element={<AdminQuoteRequests />} />
+			<Route path='/admin/quote-requests/:id' element={<AdminQuoteRequestDetail />} />
+			<Route path='/admin/data' element={<AdminDataManagement />} />
+			<Route path='/admin/community' element={<AdminCommunityManagement />} />
 		</>
 	)
 )

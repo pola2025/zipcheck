@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Play, User, Home, FileText, Calendar, Phone, Mail, MapPin, MessageSquare, Save, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import QuoteAnalysisVisual from 'components/QuoteAnalysis/QuoteAnalysisVisual'
+import QuoteAnalysisRealistic from 'components/QuoteAnalysis/QuoteAnalysisRealistic'
 import { useAuth } from '../../contexts/AuthContext'
 import { getApiUrl } from '../../lib/api-config'
 
@@ -414,7 +415,7 @@ export default function QuoteRequestDetail() {
 								</tr>
 							</thead>
 							<tbody>
-								{request.items.map((item, index) => (
+								{(request.items || []).map((item, index) => (
 									<tr key={index} className="border-b border-gray-700/50">
 										<td className="py-3 px-4">
 											<span className={`px-3 py-1 ${getCategoryColor(item.category)} rounded-full text-xs font-semibold`}>
@@ -423,15 +424,15 @@ export default function QuoteRequestDetail() {
 										</td>
 										<td className="py-3 px-4 font-semibold">{item.itemName}</td>
 										<td className="py-3 px-4 text-right text-sm text-gray-300">
-											{item.quantity} {item.unit}
+											{item.quantity || 0} {item.unit || ''}
 										</td>
 										<td className="py-3 px-4 text-right text-sm text-gray-300">
-											{item.unitPrice.toLocaleString()}원
+											{(item.unitPrice || 0).toLocaleString()}원
 										</td>
 										<td className="py-3 px-4 text-right font-semibold text-purple-400">
-											{item.totalPrice.toLocaleString()}원
+											{(item.totalPrice || 0).toLocaleString()}원
 										</td>
-										<td className="py-3 px-4 text-sm text-gray-400">{item.notes}</td>
+										<td className="py-3 px-4 text-sm text-gray-400">{item.notes || ''}</td>
 									</tr>
 								))}
 							</tbody>
@@ -485,7 +486,7 @@ export default function QuoteRequestDetail() {
 									className="overflow-hidden"
 								>
 									<div className="space-y-4 mt-6">
-										{request.items.map((item, index) => {
+										{(request.items || []).map((item, index) => {
 											const itemKey = `${item.category}-${item.itemName}`
 											return (
 												<div
@@ -500,7 +501,7 @@ export default function QuoteRequestDetail() {
 															<span className="font-semibold text-white">{item.itemName}</span>
 														</div>
 														<div className="text-sm text-gray-400">
-															{item.totalPrice.toLocaleString()}원
+															{(item.totalPrice || 0).toLocaleString()}원
 														</div>
 													</div>
 													<textarea
@@ -554,7 +555,10 @@ export default function QuoteRequestDetail() {
 							</p>
 						</div>
 
-						<QuoteAnalysisVisual analysis={request.analysis_result} />
+						<QuoteAnalysisRealistic
+						analysis={request.analysis_result}
+						propertySize={request.property_size}
+					/>
 					</motion.div>
 				)}
 			</div>

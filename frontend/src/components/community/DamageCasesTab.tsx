@@ -5,6 +5,7 @@ import DamageCaseCard from './DamageCaseCard'
 import DamageCaseFilters from './DamageCaseFilters'
 import Pagination from 'components/common/Pagination'
 import { DamageCase } from 'types/damageCase'
+import { getApiUrl } from 'lib/api-config'
 
 const DamageCasesTab: React.FC = () => {
 	const navigate = useNavigate()
@@ -43,7 +44,7 @@ const DamageCasesTab: React.FC = () => {
 			if (damageTypeFilter) params.append('damage_type', damageTypeFilter)
 			if (resolutionFilter) params.append('resolution_status', resolutionFilter)
 
-			const response = await fetch(`http://localhost:3001/api/damage-cases?${params.toString()}`)
+			const response = await fetch(getApiUrl(`/api/damage-cases?${params.toString()}`))
 
 			if (!response.ok) {
 				throw new Error('피해사례 목록을 불러올 수 없습니다.')

@@ -11,7 +11,10 @@ import authRouter from './routes/auth'
 import companyReviewsRouter from './routes/company-reviews'
 import damageCasesRouter from './routes/damage-cases'
 import communityRouter from './routes/community'
+import companyReviewsAdminRouter from './routes/admin/company-reviews-admin'
+import damageCasesAdminRouter from './routes/admin/damage-cases-admin'
 import { authenticateToken, requireAdmin } from './middleware/auth'
+import { pool } from './lib/db' // Import database pool to initialize connection
 
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../.env') })
@@ -143,17 +146,29 @@ app.use('/api/company-reviews', companyReviewsRouter)
 app.use('/api/damage-cases', damageCasesRouter)
 app.use('/api/community', communityRouter)
 
+// 관리자 API
+app.use('/api/company-reviews/admin', companyReviewsAdminRouter)
+app.use('/api/damage-cases/admin', damageCasesAdminRouter)
+
 // ============================================
 // 서버 시작
 // ============================================
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
 	console.log(`
 🚀 ZipCheck Backend Server Started!
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📡 Server running on: http://localhost:${PORT}
-🗄️  Database: Supabase
-🔍 Environment: ${process.env.NODE_ENV}
+🗄️  Database: Neon DB (PostgreSQL)
+🔍 Environment: ${process.env.NODE_ENV || 'development'}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 	`)
+
+	// Test database connection
+	try {
+		await pool.query('SELECT NOW()')
+		console.log('✅ Database connection verified')
+	} catch (error) {
+		console.error('❌ Database connection failed:', error)
+	}
 })

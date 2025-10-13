@@ -43,6 +43,7 @@ export default function QuoteRequests() {
 	const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
 	const [searchTerm, setSearchTerm] = useState('')
 	const [analyzingId, setAnalyzingId] = useState<string | null>(null)
+	const [expandedId, setExpandedId] = useState<string | null>(null)
 	const navigate = useNavigate()
 	const { token } = useAuth()
 
@@ -240,103 +241,168 @@ export default function QuoteRequests() {
 								</thead>
 								<tbody>
 									{filteredRequests.map((request, index) => (
-										<motion.tr
-											key={request.id}
-											initial={{ opacity: 0, y: 20 }}
-											animate={{ opacity: 1, y: 0 }}
-											transition={{ delay: index * 0.05 }}
-											className="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors"
-										>
-											<td className="py-4 px-4 text-sm text-gray-300">
-												{new Date(request.created_at).toLocaleString('ko-KR', {
-													year: 'numeric',
-													month: '2-digit',
-													day: '2-digit',
-													hour: '2-digit',
-													minute: '2-digit'
-												})}
-											</td>
-											<td className="py-4 px-4">
-												<div className="text-sm">
-													<div className="font-semibold">{request.customer_name}</div>
-													<div className="text-gray-400 text-xs">
-														{request.customer_phone}
-													</div>
-												</div>
-											</td>
-											<td className="py-4 px-4">
-												<div className="text-sm">
-													<div>
-														{request.property_type} {request.property_size}평
-													</div>
-													<div className="text-gray-400 text-xs">{request.region}</div>
-												</div>
-											</td>
-											<td className="py-4 px-4">
-												<div className="flex flex-col gap-1">
-													<span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-sm font-semibold inline-block w-fit">
-														{request.items.length}개
-													</span>
-													{request.validation_status === 'rejected_insufficient_detail' && (
-														<div className="flex items-center gap-1 text-xs text-red-400">
-															<AlertTriangle className="w-3 h-3" />
-															<span>세부항목 부족</span>
+										<>
+											<motion.tr
+												key={request.id}
+												initial={{ opacity: 0, y: 20 }}
+												animate={{ opacity: 1, y: 0 }}
+												transition={{ delay: index * 0.05 }}
+												className="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors cursor-pointer"
+												onClick={() => setExpandedId(expandedId === request.id ? null : request.id)}
+											>
+												<td className="py-4 px-4 text-sm text-gray-300">
+													{new Date(request.created_at).toLocaleString('ko-KR', {
+														year: 'numeric',
+														month: '2-digit',
+														day: '2-digit',
+														hour: '2-digit',
+														minute: '2-digit'
+													})}
+												</td>
+												<td className="py-4 px-4">
+													<div className="text-sm">
+														<div className="font-semibold">{request.customer_name}</div>
+														<div className="text-gray-400 text-xs">
+															{request.customer_phone}
 														</div>
-													)}
-													{request.validation_status === 'pending' && request.validation_notes && (
-														<div className="flex items-center gap-1 text-xs text-amber-400">
-															<AlertTriangle className="w-3 h-3" />
-															<span>검토필요</span>
+													</div>
+												</td>
+												<td className="py-4 px-4">
+													<div className="text-sm">
+														<div>
+															{request.property_type} {request.property_size}평
 														</div>
-													)}
-												</div>
-											</td>
-											<td className="py-4 px-4">
-												<span
-													className={`px-3 py-1 rounded-full text-xs font-semibold ${
-														statusColors[request.status]
-													}`}
-												>
-													{statusLabels[request.status]}
-												</span>
-											</td>
-											<td className="py-4 px-4">
-												<div className="flex gap-2">
-													<button
-														onClick={() => viewDetail(request.id)}
-														className="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/50 rounded-lg text-sm font-semibold transition-all flex items-center gap-1"
-														title="상세보기"
+														<div className="text-gray-400 text-xs">{request.region}</div>
+													</div>
+												</td>
+												<td className="py-4 px-4">
+													<div className="flex flex-col gap-1">
+														<span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-sm font-semibold inline-block w-fit">
+															{request.items.length}개
+														</span>
+														{request.validation_status === 'rejected_insufficient_detail' && (
+															<div className="flex items-center gap-1 text-xs text-red-400">
+																<AlertTriangle className="w-3 h-3" />
+																<span>세부항목 부족</span>
+															</div>
+														)}
+														{request.validation_status === 'pending' && request.validation_notes && (
+															<div className="flex items-center gap-1 text-xs text-amber-400">
+																<AlertTriangle className="w-3 h-3" />
+																<span>검토필요</span>
+															</div>
+														)}
+													</div>
+												</td>
+												<td className="py-4 px-4">
+													<span
+														className={`px-3 py-1 rounded-full text-xs font-semibold ${
+															statusColors[request.status]
+														}`}
 													>
-														<Eye className="w-4 h-4" />
-														상세
-													</button>
-													{request.status === 'pending' && (
+														{statusLabels[request.status]}
+													</span>
+												</td>
+												<td className="py-4 px-4" onClick={(e) => e.stopPropagation()}>
+													<div className="flex gap-2">
 														<button
-															onClick={() => runAnalysis(request.id)}
-															disabled={analyzingId === request.id}
-															className={`px-3 py-1.5 border rounded-lg text-sm font-semibold transition-all flex items-center gap-1 ${
-																analyzingId === request.id
-																	? 'bg-blue-500/20 border-blue-500/50 text-blue-300 cursor-not-allowed'
-																	: 'bg-green-500/20 hover:bg-green-500/30 border-green-500/50'
-															}`}
-															title="AI 분석 실행"
+															onClick={() => viewDetail(request.id)}
+															className="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/50 rounded-lg text-sm font-semibold transition-all flex items-center gap-1"
+															title="상세보기"
 														>
-															{analyzingId === request.id ? (
-																<>
-																	<RefreshCw className="w-4 h-4 animate-spin" />
-																	분석중
-																</>
-															) : (
-																<>
-																	<Play className="w-4 h-4" />
-																	분석
-																</>
-															)}
+															<Eye className="w-4 h-4" />
+															상세
 														</button>
-													)}
-												</div>
-											</td>
-										</motion.tr>
+														{request.status === 'pending' && (
+															<button
+																onClick={() => runAnalysis(request.id)}
+																disabled={analyzingId === request.id}
+																className={`px-3 py-1.5 border rounded-lg text-sm font-semibold transition-all flex items-center gap-1 ${
+																	analyzingId === request.id
+																		? 'bg-blue-500/20 border-blue-500/50 text-blue-300 cursor-not-allowed'
+																		: 'bg-green-500/20 hover:bg-green-500/30 border-green-500/50'
+																}`}
+																title="AI 분석 실행"
+															>
+																{analyzingId === request.id ? (
+																	<>
+																		<RefreshCw className="w-4 h-4 animate-spin" />
+																		분석중
+																	</>
+																) : (
+																	<>
+																		<Play className="w-4 h-4" />
+																		분석
+																	</>
+																)}
+															</button>
+														)}
+													</div>
+												</td>
+											</motion.tr>
+											{expandedId === request.id && (
+												<tr className="bg-gray-800/80">
+													<td colSpan={6} className="p-6">
+														<motion.div
+															initial={{ opacity: 0, height: 0 }}
+															animate={{ opacity: 1, height: 'auto' }}
+															exit={{ opacity: 0, height: 0 }}
+															className="space-y-4"
+														>
+															<div className="grid grid-cols-2 gap-4">
+																<div className="bg-gray-700/30 rounded-lg p-4">
+																	<h4 className="text-sm font-semibold text-gray-400 mb-2">고객 정보</h4>
+																	<div className="space-y-1 text-sm">
+																		<div><span className="text-gray-400">이름:</span> <span className="text-white font-medium">{request.customer_name}</span></div>
+																		<div><span className="text-gray-400">전화:</span> <span className="text-white">{request.customer_phone}</span></div>
+																	</div>
+																</div>
+																<div className="bg-gray-700/30 rounded-lg p-4">
+																	<h4 className="text-sm font-semibold text-gray-400 mb-2">매물 정보</h4>
+																	<div className="space-y-1 text-sm">
+																		<div><span className="text-gray-400">유형:</span> <span className="text-white">{request.property_type}</span></div>
+																		<div><span className="text-gray-400">평수:</span> <span className="text-white">{request.property_size}평</span></div>
+																		<div><span className="text-gray-400">지역:</span> <span className="text-white">{request.region}</span></div>
+																	</div>
+																</div>
+															</div>
+
+															<div className="bg-gray-700/30 rounded-lg p-4">
+																<h4 className="text-sm font-semibold text-gray-400 mb-3">견적 항목 ({request.items.length}개)</h4>
+																<div className="space-y-2 max-h-96 overflow-y-auto">
+																	{request.items.map((item, idx) => (
+																		<div key={idx} className="bg-gray-800/50 rounded-lg p-3 text-sm">
+																			<div className="flex justify-between items-start mb-2">
+																				<span className="font-semibold text-cyan-400">{item.category || '카테고리 없음'}</span>
+																				<span className="text-purple-400 font-bold">{item.quoted_price?.toLocaleString()}원</span>
+																			</div>
+																			{item.item_name && (
+																				<div className="text-gray-300">{item.item_name}</div>
+																			)}
+																			{item.specification && (
+																				<div className="text-gray-400 text-xs mt-1">{item.specification}</div>
+																			)}
+																			<div className="grid grid-cols-3 gap-2 mt-2 text-xs">
+																				{item.quantity && <div className="text-gray-400">수량: <span className="text-white">{item.quantity} {item.unit || ''}</span></div>}
+																				{item.unit_price && <div className="text-gray-400">단가: <span className="text-white">{item.unit_price.toLocaleString()}원</span></div>}
+																				{item.material_cost && <div className="text-gray-400">자재비: <span className="text-white">{item.material_cost.toLocaleString()}원</span></div>}
+																			</div>
+																		</div>
+																	))}
+																</div>
+															</div>
+
+															{request.validation_notes && (
+																<div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+																	<h4 className="text-sm font-semibold text-amber-400 mb-2">검증 노트</h4>
+																	<p className="text-sm text-amber-200/80">{request.validation_notes}</p>
+																</div>
+															)}
+														</motion.div>
+													</td>
+												</tr>
+											)}
+										</>
 									))}
 								</tbody>
 							</table>

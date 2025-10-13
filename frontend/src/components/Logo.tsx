@@ -29,8 +29,8 @@ export default function Logo({ className = '' }: { className: string }) {
 					y2='400'
 					gradientUnits='userSpaceOnUse'
 				>
-					<stop stopColor='#FFCF4D' />
-					<stop offset='1' stopColor='#FCBA48' />
+					<stop stopColor='#38ef7d' />
+					<stop offset='1' stopColor='#2dd4bf' />
 				</linearGradient>
 				<linearGradient
 					id='paint1_linear_12_2877'
@@ -40,8 +40,8 @@ export default function Logo({ className = '' }: { className: string }) {
 					y2='400'
 					gradientUnits='userSpaceOnUse'
 				>
-					<stop stopColor='#E180FF' />
-					<stop offset='1' stopColor='#C264F2' />
+					<stop stopColor='#0f766e' />
+					<stop offset='1' stopColor='#0d9488' />
 				</linearGradient>
 				<linearGradient
 					id='paint2_linear_12_2877'
@@ -51,8 +51,8 @@ export default function Logo({ className = '' }: { className: string }) {
 					y2='400'
 					gradientUnits='userSpaceOnUse'
 				>
-					<stop stopColor='#11C1D5' />
-					<stop offset='1' stopColor='#13A9BA' />
+					<stop stopColor='#11998e' />
+					<stop offset='1' stopColor='#14b8a6' />
 				</linearGradient>
 			</defs>
 		</svg>

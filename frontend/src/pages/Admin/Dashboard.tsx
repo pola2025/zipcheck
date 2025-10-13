@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { LayoutDashboard, FileText, Database, TrendingUp, LogOut, ArrowRight } from 'lucide-react'
+import { LayoutDashboard, FileText, Database, TrendingUp, LogOut, ArrowRight, MessageSquare, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { getApiUrl } from '../../lib/api-config'
 
@@ -16,6 +16,8 @@ interface DashboardStats {
 	pendingQuoteRequests: number
 	totalUsers: number
 	recentQuoteRequests: number
+	totalReviews: number
+	totalDamageCases: number
 }
 
 const Dashboard: React.FC = () => {
@@ -24,7 +26,9 @@ const Dashboard: React.FC = () => {
 		totalQuoteRequests: 0,
 		pendingQuoteRequests: 0,
 		totalUsers: 0,
-		recentQuoteRequests: 0
+		recentQuoteRequests: 0,
+		totalReviews: 0,
+		totalDamageCases: 0
 	})
 	const [loading, setLoading] = useState(true)
 
@@ -37,31 +41,58 @@ const Dashboard: React.FC = () => {
 			const token = localStorage.getItem('admin_token')
 			if (!token) return
 
-			// Fetch quote requests count
-			const quoteResponse = await fetch(getApiUrl('/api/admin/quote-requests'), {
-				headers: {
-					Authorization: `Bearer ${token}`
-				}
-			})
+			// Fetch quote requests, reviews, and damage cases in parallel
+			const [quoteResponse, reviewsResponse, damagesResponse] = await Promise.all([
+				fetch(getApiUrl('/api/admin/quote-requests'), {
+					headers: { Authorization: `Bearer ${token}` }
+				}),
+				fetch(getApiUrl('/api/company-reviews/admin/all'), {
+					headers: { Authorization: `Bearer ${token}` }
+				}),
+				fetch(getApiUrl('/api/damage-cases/admin/all'), {
+					headers: { Authorization: `Bearer ${token}` }
+				})
+			])
 
+			let totalQuoteRequests = 0
+			let pendingQuoteRequests = 0
+			let recentQuoteRequests = 0
+			let totalReviews = 0
+			let totalDamageCases = 0
+
+			// Process quote requests
 			if (quoteResponse.ok) {
 				const quoteData: QuoteRequest[] = await quoteResponse.json()
-				const total = quoteData.length || 0
-				const pending = quoteData.filter((q) => q.status === 'pending').length || 0
-				const recent = quoteData.filter((q) => {
+				totalQuoteRequests = quoteData.length || 0
+				pendingQuoteRequests = quoteData.filter((q) => q.status === 'pending').length || 0
+				recentQuoteRequests = quoteData.filter((q) => {
 					const createdAt = new Date(q.created_at)
 					const weekAgo = new Date()
 					weekAgo.setDate(weekAgo.getDate() - 7)
 					return createdAt > weekAgo
 				}).length || 0
-
-				setStats({
-					totalQuoteRequests: total,
-					pendingQuoteRequests: pending,
-					totalUsers: 0,
-					recentQuoteRequests: recent
-				})
 			}
+
+			// Process reviews
+			if (reviewsResponse.ok) {
+				const reviewsData = await reviewsResponse.json()
+				totalReviews = reviewsData.data?.length || 0
+			}
+
+			// Process damage cases
+			if (damagesResponse.ok) {
+				const damagesData = await damagesResponse.json()
+				totalDamageCases = damagesData.data?.length || 0
+			}
+
+			setStats({
+				totalQuoteRequests,
+				pendingQuoteRequests,
+				totalUsers: 0,
+				recentQuoteRequests,
+				totalReviews,
+				totalDamageCases
+			})
 		} catch (error) {
 			console.error('Failed to fetch dashboard stats:', error)
 		} finally {
@@ -105,6 +136,14 @@ const Dashboard: React.FC = () => {
 			icon: FileText,
 			link: '/admin/quote-requests',
 			color: 'from-blue-500 to-blue-600'
+		},
+		{
+			title: '커뮤니티 관리',
+			description: '업체 후기 및 피해사례를 관리합니다',
+			icon: MessageSquare,
+			link: '/admin/community',
+			color: 'from-green-500 to-green-600',
+			badge: (stats.totalReviews + stats.totalDamageCases).toString()
 		},
 		{
 			title: '데이터 관리',

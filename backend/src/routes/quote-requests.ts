@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import multer from 'multer'
-import { supabase } from '../lib/supabase'
+import { query, insertOne, updateOne, findOne, findMany, deleteOne } from '../lib/db'
 import { analyzeQuote } from '../services/ai-analysis'
 import {
 	findActiveGroup,
@@ -241,30 +241,26 @@ router.post('/submit', async (req, res) => {
 			sequence = 1
 		}
 
-		// Insert quote request
-		const { data, error } = await supabase
-			.from('quote_requests')
-			.insert({
-				customer_name,
-				customer_phone,
-				customer_email,
-				property_type,
-				property_size,
-				region,
-				address,
-				items,
-				status: initialStatus,
-				validation_status: validationStatus,
-				validation_notes: validationNotes,
-				group_id: finalGroupId,
-				sequence_in_group: sequence
-			})
-			.select()
-			.single()
+		// ✅ CONVERTED: Supabase INSERT → PostgreSQL insertOne
+		// OLD: const { data, error } = await supabase.from('quote_requests').insert({...}).select().single()
+		const data = await insertOne<any>('quote_requests', {
+			customer_name,
+			customer_phone,
+			customer_email,
+			property_type,
+			property_size,
+			region,
+			address,
+			items,
+			status: initialStatus,
+			validation_status: validationStatus,
+			validation_notes: validationNotes,
+			group_id: finalGroupId,
+			sequence_in_group: sequence
+		})
 
-		if (error) {
-			console.error('Database insert error:', error)
-			throw error
+		if (!data) {
+			throw new Error('Failed to insert quote request')
 		}
 
 		console.log(`✅ Quote request created: ${data.id} (Group: ${finalGroupId}, Sequence: ${sequence})`)
@@ -301,20 +297,16 @@ router.get('/by-phone/:phone', async (req, res) => {
 
 		console.log(`🔍 Looking up quote requests for phone: ${phone}`)
 
-		const { data, error } = await supabase
-			.from('quote_requests')
-			.select('*')
-			.eq('customer_phone', phone)
-			.order('created_at', { ascending: false })
+		// ✅ CONVERTED: Supabase SELECT → PostgreSQL query
+		// OLD: const { data, error } = await supabase.from('quote_requests').select('*').eq('customer_phone', phone).order('created_at', { ascending: false })
+		const result = await query(
+			'SELECT * FROM quote_requests WHERE customer_phone = $1 ORDER BY created_at DESC',
+			[phone]
+		)
 
-		if (error) {
-			console.error('Database query error:', error)
-			throw error
-		}
+		console.log(`✅ Found ${result.rows.length} quote requests`)
 
-		console.log(`✅ Found ${data.length} quote requests`)
-
-		res.json(data)
+		res.json(result.rows)
 	} catch (error) {
 		console.error('Quote lookup error:', error)
 		const message = error instanceof Error ? error.message : 'Unknown error'
@@ -329,39 +321,32 @@ router.get('/user/:userId', async (req, res) => {
 
 		console.log(`🔍 Looking up quote requests for user: ${userId}`)
 
-		// First, get the user's phone number
-		const { data: userData, error: userError } = await supabase
-			.from('users')
-			.select('phone, email')
-			.eq('id', userId)
-			.single()
+		// ✅ CONVERTED: Supabase SELECT user → PostgreSQL findOne
+		// OLD: const { data: userData, error: userError } = await supabase.from('users').select('phone, email').eq('id', userId).single()
+		const userData = await findOne<any>('users', { id: userId })
 
-		if (userError || !userData) {
+		if (!userData) {
 			return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' })
 		}
 
-		// Find quote requests matching user's phone or email
-		let query = supabase
-			.from('quote_requests')
-			.select('*')
-			.order('created_at', { ascending: false })
-
+		// ✅ CONVERTED: Supabase OR query → PostgreSQL query with OR
+		// OLD: Complex Supabase OR query
+		let result
 		if (userData.phone) {
-			query = query.or(`customer_phone.eq.${userData.phone},customer_email.eq.${userData.email}`)
+			result = await query(
+				'SELECT * FROM quote_requests WHERE customer_phone = $1 OR customer_email = $2 ORDER BY created_at DESC',
+				[userData.phone, userData.email]
+			)
 		} else {
-			query = query.eq('customer_email', userData.email)
+			result = await query(
+				'SELECT * FROM quote_requests WHERE customer_email = $1 ORDER BY created_at DESC',
+				[userData.email]
+			)
 		}
 
-		const { data, error } = await query
+		console.log(`✅ Found ${result.rows.length} quote requests for user`)
 
-		if (error) {
-			console.error('Database query error:', error)
-			throw error
-		}
-
-		console.log(`✅ Found ${data.length} quote requests for user`)
-
-		res.json(data)
+		res.json(result.rows)
 	} catch (error) {
 		console.error('User quote lookup error:', error)
 		const message = error instanceof Error ? error.message : 'Unknown error'
@@ -374,15 +359,12 @@ router.get('/result/:id', async (req, res) => {
 	try {
 		const { id } = req.params
 
-		const { data, error } = await supabase
-			.from('quote_requests')
-			.select('*')
-			.eq('id', id)
-			.single()
+		// ✅ CONVERTED: Supabase SELECT by id → PostgreSQL findOne
+		// OLD: const { data, error } = await supabase.from('quote_requests').select('*').eq('id', id).single()
+		const data = await findOne<any>('quote_requests', { id })
 
-		if (error) {
-			console.error('Database query error:', error)
-			throw error
+		if (!data) {
+			return res.status(404).json({ error: '견적을 찾을 수 없습니다.' })
 		}
 
 		// Only return analysis if status is completed
@@ -412,28 +394,32 @@ router.get('/admin/all', authenticateToken, requireAdmin, async (req, res) => {
 
 		console.log(`🔍 Admin: Fetching quote requests (status: ${status || 'all'})`)
 
-		let query = supabase
-			.from('quote_requests')
-			.select('*', { count: 'exact' })
-			.order('created_at', { ascending: false })
-			.range(Number(offset), Number(offset) + Number(limit) - 1)
+		// ✅ CONVERTED: Supabase SELECT with pagination → PostgreSQL query + COUNT
+		// OLD: Complex Supabase query with count
+		let queryText = 'SELECT * FROM quote_requests'
+		let countText = 'SELECT COUNT(*) FROM quote_requests'
+		const params: any[] = []
 
 		// Filter by status if provided
 		if (status && status !== 'all') {
-			query = query.eq('status', status)
+			queryText += ' WHERE status = $1'
+			countText += ' WHERE status = $1'
+			params.push(status)
 		}
 
-		const { data, error, count } = await query
+		queryText += ' ORDER BY created_at DESC LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2)
 
-		if (error) {
-			console.error('Database query error:', error)
-			throw error
-		}
+		const [dataResult, countResult] = await Promise.all([
+			query(queryText, [...params, Number(limit), Number(offset)]),
+			query(countText, params)
+		])
 
-		console.log(`✅ Found ${data.length} quote requests (total: ${count})`)
+		const count = parseInt(countResult.rows[0].count)
+
+		console.log(`✅ Found ${dataResult.rows.length} quote requests (total: ${count})`)
 
 		res.json({
-			data,
+			data: dataResult.rows,
 			count,
 			limit: Number(limit),
 			offset: Number(offset)
@@ -452,15 +438,12 @@ router.get('/admin/:id', authenticateToken, requireAdmin, async (req, res) => {
 
 		console.log(`🔍 Admin: Fetching quote request ${id}`)
 
-		const { data, error } = await supabase
-			.from('quote_requests')
-			.select('*')
-			.eq('id', id)
-			.single()
+		// ✅ CONVERTED: Supabase SELECT by id → PostgreSQL findOne
+		// OLD: const { data, error } = await supabase.from('quote_requests').select('*').eq('id', id).single()
+		const data = await findOne<any>('quote_requests', { id })
 
-		if (error) {
-			console.error('Database query error:', error)
-			throw error
+		if (!data) {
+			return res.status(404).json({ error: '견적을 찾을 수 없습니다.' })
 		}
 
 		res.json(data)
@@ -479,23 +462,20 @@ router.post('/admin/:id/analyze', authenticateToken, requireAdmin, async (req, r
 
 		console.log(`🤖 Admin: Starting AI analysis for quote request ${id}`)
 
-		// Fetch the quote request
-		const { data: quoteRequest, error: fetchError } = await supabase
-			.from('quote_requests')
-			.select('*')
-			.eq('id', id)
-			.single()
+		// ✅ CONVERTED: Supabase SELECT by id → PostgreSQL findOne
+		// OLD: const { data: quoteRequest, error: fetchError } = await supabase.from('quote_requests').select('*').eq('id', id).single()
+		const quoteRequest = await findOne<any>('quote_requests', { id })
 
-		if (fetchError) {
-			console.error('Database query error:', fetchError)
-			throw fetchError
+		if (!quoteRequest) {
+			return res.status(404).json({ error: '견적을 찾을 수 없습니다.' })
 		}
 
-		// Update status to 'analyzing'
-		await supabase
-			.from('quote_requests')
-			.update({ status: 'analyzing' })
-			.eq('id', id)
+		// ✅ CONVERTED: Supabase UPDATE → PostgreSQL query
+		// OLD: await supabase.from('quote_requests').update({ status: 'analyzing' }).eq('id', id)
+		await query(
+			'UPDATE quote_requests SET status = $1, updated_at = NOW() WHERE id = $2',
+			['analyzing', id]
+		)
 
 		console.log(`📊 Running AI analysis...`)
 
@@ -509,22 +489,24 @@ router.post('/admin/:id/analyze', authenticateToken, requireAdmin, async (req, r
 
 		console.log(`✅ AI analysis completed`)
 
-		// Update with analysis result
-		const { data: updatedRequest, error: updateError } = await supabase
-			.from('quote_requests')
-			.update({
-				analysis_result: analysisResult,
-				analyzed_at: new Date().toISOString(),
-				analyzed_by,
-				status: 'completed'
-			})
-			.eq('id', id)
-			.select()
-			.single()
+		// ✅ CONVERTED: Supabase UPDATE with multiple fields → PostgreSQL query
+		// OLD: const { data: updatedRequest, error: updateError } = await supabase.from('quote_requests').update({...}).eq('id', id).select().single()
+		const updateResult = await query(
+			`UPDATE quote_requests
+			SET analysis_result = $1,
+				analyzed_at = $2,
+				analyzed_by = $3,
+				status = $4,
+				updated_at = NOW()
+			WHERE id = $5
+			RETURNING *`,
+			[analysisResult, new Date().toISOString(), analyzed_by, 'completed', id]
+		)
 
-		if (updateError) {
-			console.error('Database update error:', updateError)
-			throw updateError
+		const updatedRequest = updateResult.rows[0]
+
+		if (!updatedRequest) {
+			throw new Error('Failed to update quote request')
 		}
 
 		console.log(`✅ Quote request updated with analysis result`)
@@ -537,11 +519,12 @@ router.post('/admin/:id/analyze', authenticateToken, requireAdmin, async (req, r
 	} catch (error) {
 		console.error('AI analysis error:', error)
 
-		// Revert status to pending on error
-		await supabase
-			.from('quote_requests')
-			.update({ status: 'pending' })
-			.eq('id', req.params.id)
+		// ✅ CONVERTED: Supabase UPDATE → PostgreSQL query
+		// OLD: await supabase.from('quote_requests').update({ status: 'pending' }).eq('id', req.params.id)
+		await query(
+			'UPDATE quote_requests SET status = $1, updated_at = NOW() WHERE id = $2',
+			['pending', req.params.id]
+		)
 
 		const message = error instanceof Error ? error.message : 'Unknown error'
 		res.status(500).json({ error: message })
@@ -556,21 +539,24 @@ router.patch('/admin/:id/status', authenticateToken, requireAdmin, async (req, r
 
 		console.log(`📝 Admin: Updating status for quote request ${id} to ${status}`)
 
-		const updateData: any = { status }
+		// ✅ CONVERTED: Supabase UPDATE → PostgreSQL query with conditional fields
+		// OLD: const { data, error } = await supabase.from('quote_requests').update(updateData).eq('id', id).select().single()
+		let updateQuery = 'UPDATE quote_requests SET status = $1, updated_at = NOW()'
+		const params: any[] = [status]
+
 		if (admin_notes !== undefined) {
-			updateData.admin_notes = admin_notes
+			updateQuery += ', admin_notes = $2 WHERE id = $3 RETURNING *'
+			params.push(admin_notes, id)
+		} else {
+			updateQuery += ' WHERE id = $2 RETURNING *'
+			params.push(id)
 		}
 
-		const { data, error } = await supabase
-			.from('quote_requests')
-			.update(updateData)
-			.eq('id', id)
-			.select()
-			.single()
+		const result = await query(updateQuery, params)
+		const data = result.rows[0]
 
-		if (error) {
-			console.error('Database update error:', error)
-			throw error
+		if (!data) {
+			return res.status(404).json({ error: '견적을 찾을 수 없습니다.' })
 		}
 
 		console.log(`✅ Quote request status updated`)
@@ -595,16 +581,17 @@ router.patch('/admin/:id/expert-notes', authenticateToken, requireAdmin, async (
 
 		console.log(`📝 Admin: Updating expert notes for quote request ${id}`)
 
-		const { data, error } = await supabase
-			.from('quote_requests')
-			.update({ expert_item_notes })
-			.eq('id', id)
-			.select()
-			.single()
+		// ✅ CONVERTED: Supabase UPDATE → PostgreSQL query
+		// OLD: const { data, error } = await supabase.from('quote_requests').update({ expert_item_notes }).eq('id', id).select().single()
+		const result = await query(
+			'UPDATE quote_requests SET expert_item_notes = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+			[expert_item_notes, id]
+		)
 
-		if (error) {
-			console.error('Database update error:', error)
-			throw error
+		const data = result.rows[0]
+
+		if (!data) {
+			return res.status(404).json({ error: '견적을 찾을 수 없습니다.' })
 		}
 
 		console.log(`✅ Expert notes updated`)
@@ -621,6 +608,54 @@ router.patch('/admin/:id/expert-notes', authenticateToken, requireAdmin, async (
 	}
 })
 
+// Update analysis result manually (admin only)
+router.patch('/admin/:id/analysis-result', authenticateToken, requireAdmin, async (req, res) => {
+	try {
+		const { id } = req.params
+		const { analysis_result } = req.body
+
+		console.log(`📝 Admin: Manually updating analysis result for quote request ${id}`)
+
+		if (!analysis_result) {
+			return res.status(400).json({ error: '분석 결과 데이터가 필요합니다.' })
+		}
+
+		// Validate analysis_result structure
+		const requiredFields = ['overallScore', 'totalAmount', 'averageMarketPrice', 'priceRating', 'summary', 'categoryAnalysis', 'recommendations', 'marketComparison', 'expertNotes']
+		const missingFields = requiredFields.filter(field => !(field in analysis_result))
+
+		if (missingFields.length > 0) {
+			return res.status(400).json({
+				error: `분석 결과에 필수 필드가 누락되었습니다: ${missingFields.join(', ')}`
+			})
+		}
+
+		// Update analysis result
+		const result = await query(
+			'UPDATE quote_requests SET analysis_result = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+			[analysis_result, id]
+		)
+
+		const data = result.rows[0]
+
+		if (!data) {
+			return res.status(404).json({ error: '견적을 찾을 수 없습니다.' })
+		}
+
+		console.log(`✅ Analysis result manually updated`)
+
+		res.json({
+			success: true,
+			message: '분석 결과가 수정되었습니다.',
+			data
+		})
+	} catch (error) {
+		console.error('Analysis result update error:', error)
+		const message = error instanceof Error ? error.message : 'Unknown error'
+		res.status(500).json({ error: message })
+	}
+})
+
 // Delete quote request (admin only)
 router.delete('/admin/:id', authenticateToken, requireAdmin, async (req, res) => {
 	try {
@@ -628,14 +663,12 @@ router.delete('/admin/:id', authenticateToken, requireAdmin, async (req, res) =>
 
 		console.log(`🗑️  Admin: Deleting quote request ${id}`)
 
-		const { error } = await supabase
-			.from('quote_requests')
-			.delete()
-			.eq('id', id)
+		// ✅ CONVERTED: Supabase DELETE → PostgreSQL deleteOne
+		// OLD: const { error } = await supabase.from('quote_requests').delete().eq('id', id)
+		const deletedRow = await deleteOne('quote_requests', id)
 
-		if (error) {
-			console.error('Database delete error:', error)
-			throw error
+		if (!deletedRow) {
+			return res.status(404).json({ error: '견적을 찾을 수 없습니다.' })
 		}
 
 		console.log(`✅ Quote request deleted`)
