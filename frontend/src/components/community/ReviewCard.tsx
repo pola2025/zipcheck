@@ -52,7 +52,11 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, onClick }) => {
 					<span className='px-3 py-1 glass-dark border border-cyan-500/30 rounded-full'>
 						{review.project_type}
 					</span>
-					{review.project_size && <span>{review.project_size}평</span>}
+					{review.project_size && (
+						<span>
+							{review.project_size}㎡ (약 {(review.project_size / 3.3058).toFixed(1)}평)
+						</span>
+					)}
 					{review.project_cost && <span>{review.project_cost.toLocaleString()}만원</span>}
 				</div>
 			)}
