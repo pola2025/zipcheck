@@ -14,7 +14,7 @@ const upload = multer({
 	storage: multer.memoryStorage(),
 	limits: {
 		fileSize: 2 * 1024 * 1024, // 2MB limit per file
-		files: 20 // Max 20 files
+		files: 10 // Max 10 files per review
 	},
 	fileFilter: (req, file, cb) => {
 		if (file.mimetype.startsWith('image/')) {
@@ -241,7 +241,7 @@ router.post('/', authenticateToken, upload.array('images', 10), async (req, res)
  * PATCH /api/company-reviews/:id
  * Update a review (only by author)
  */
-router.patch('/:id', authenticateToken, upload.array('images', 20), async (req, res) => {
+router.patch('/:id', authenticateToken, upload.array('images', 10), async (req, res) => {
 	try {
 		const userId = (req as any).user?.userId
 		const { id } = req.params
