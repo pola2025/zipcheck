@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import GlowButton from 'components/ui/glow-button'
+import ZipCheckLogo from 'components/ZipCheckLogo'
 
 export default function ZipCheckHeader() {
 	return (
@@ -18,9 +19,10 @@ export default function ZipCheckHeader() {
 						whileHover={{ scale: 1.05 }}
 						transition={{ type: 'spring', stiffness: 400 }}
 					>
-						<div className="bg-white rounded-lg px-3 py-1.5">
-							<img src="/logo.png" alt="ZipCheck" className="h-7 w-auto" />
-						</div>
+						<ZipCheckLogo className="h-10 w-10" />
+						<span className="text-2xl font-bold gradient-text-cyan-purple">
+							집첵
+						</span>
 					</motion.a>
 
 					{/* Navigation */}
