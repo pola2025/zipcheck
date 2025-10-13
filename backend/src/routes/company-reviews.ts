@@ -41,6 +41,11 @@ router.get('/', optionalAuthenticateToken, async (req, res) => {
 			region,
 			company_type,
 			rating,
+			budget,
+			company_name,
+			phone,
+			construction_type,
+			area,
 			sort_by = 'created_at',
 			order = 'desc'
 		} = req.query
@@ -67,8 +72,33 @@ router.get('/', optionalAuthenticateToken, async (req, res) => {
 		}
 		if (rating) {
 			params.push(Number(rating))
-			queryText += ` AND rating = $${params.length}`
-			countText += ` AND rating = $${params.length}`
+			queryText += ` AND rating >= $${params.length}`
+			countText += ` AND rating >= $${params.length}`
+		}
+		if (budget) {
+			params.push(budget)
+			queryText += ` AND CAST(project_cost AS TEXT) ILIKE '%' || $${params.length} || '%'`
+			countText += ` AND CAST(project_cost AS TEXT) ILIKE '%' || $${params.length} || '%'`
+		}
+		if (company_name) {
+			params.push(company_name)
+			queryText += ` AND company_name ILIKE '%' || $${params.length} || '%'`
+			countText += ` AND company_name ILIKE '%' || $${params.length} || '%'`
+		}
+		if (phone) {
+			params.push(phone)
+			queryText += ` AND company_phone ILIKE '%' || $${params.length} || '%'`
+			countText += ` AND company_phone ILIKE '%' || $${params.length} || '%'`
+		}
+		if (construction_type) {
+			params.push(construction_type)
+			queryText += ` AND project_type = $${params.length}`
+			countText += ` AND project_type = $${params.length}`
+		}
+		if (area) {
+			params.push(Number(area))
+			queryText += ` AND project_size = $${params.length}`
+			countText += ` AND project_size = $${params.length}`
 		}
 
 		// Sorting
