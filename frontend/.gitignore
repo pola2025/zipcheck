@@ -17,4 +17,5 @@ coverage
 .env.*
 !.env.example
 
-.vercel
+# .vercel 디렉토리는 GitHub Actions 자동 배포를 위해 포함
+# (프로젝트 ID만 포함되어 있어 안전함)
