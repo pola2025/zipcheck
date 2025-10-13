@@ -38,9 +38,7 @@ router.get('/', optionalAuthenticateToken, async (req, res) => {
 		const {
 			page = 1,
 			limit = 20,
-			region,
-			damage_type,
-			resolution_status,
+			search,
 			sort_by = 'created_at',
 			order = 'desc'
 		} = req.query
@@ -54,21 +52,21 @@ router.get('/', optionalAuthenticateToken, async (req, res) => {
 		let countText = 'SELECT COUNT(*) FROM damage_cases WHERE status != $1'
 		const params: any[] = ['deleted']
 
-		// Filters
-		if (region) {
-			params.push(region)
-			queryText += ` AND region = $${params.length}`
-			countText += ` AND region = $${params.length}`
-		}
-		if (damage_type) {
-			params.push(damage_type)
-			queryText += ` AND category = $${params.length}`
-			countText += ` AND category = $${params.length}`
-		}
-		if (resolution_status) {
-			params.push(resolution_status)
-			queryText += ` AND status = $${params.length}`
-			countText += ` AND status = $${params.length}`
+		// Unified search - 업체명, 제목, 설명, 카테고리 등 검색
+		if (search) {
+			params.push(search)
+			queryText += ` AND (
+				title ILIKE '%' || $${params.length} || '%' OR
+				description ILIKE '%' || $${params.length} || '%' OR
+				category ILIKE '%' || $${params.length} || '%' OR
+				region ILIKE '%' || $${params.length} || '%'
+			)`
+			countText += ` AND (
+				title ILIKE '%' || $${params.length} || '%' OR
+				description ILIKE '%' || $${params.length} || '%' OR
+				category ILIKE '%' || $${params.length} || '%' OR
+				region ILIKE '%' || $${params.length} || '%'
+			)`
 		}
 
 		// Sorting

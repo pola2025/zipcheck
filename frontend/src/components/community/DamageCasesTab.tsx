@@ -20,14 +20,12 @@ const DamageCasesTab: React.FC = () => {
 	const [totalPages, setTotalPages] = useState(1)
 
 	// Filters
-	const [regionFilter, setRegionFilter] = useState(searchParams.get('region') || '')
-	const [damageTypeFilter, setDamageTypeFilter] = useState(searchParams.get('damage_type') || '')
-	const [resolutionFilter, setResolutionFilter] = useState(searchParams.get('resolution_status') || '')
+	const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
 	const [sortBy, setSortBy] = useState(searchParams.get('sort_by') || 'created_at')
 
 	useEffect(() => {
 		loadCases()
-	}, [currentPage, regionFilter, damageTypeFilter, resolutionFilter, sortBy])
+	}, [currentPage, searchQuery, sortBy])
 
 	const loadCases = async () => {
 		try {
@@ -40,9 +38,7 @@ const DamageCasesTab: React.FC = () => {
 				order: 'desc'
 			})
 
-			if (regionFilter) params.append('region', regionFilter)
-			if (damageTypeFilter) params.append('damage_type', damageTypeFilter)
-			if (resolutionFilter) params.append('resolution_status', resolutionFilter)
+			if (searchQuery) params.append('search', searchQuery)
 
 			const response = await fetch(getApiUrl(`/api/damage-cases?${params.toString()}`))
 
@@ -73,14 +69,8 @@ const DamageCasesTab: React.FC = () => {
 		setSearchParams(newParams)
 
 		switch (filterType) {
-			case 'region':
-				setRegionFilter(value)
-				break
-			case 'damage_type':
-				setDamageTypeFilter(value)
-				break
-			case 'resolution_status':
-				setResolutionFilter(value)
+			case 'search':
+				setSearchQuery(value)
 				break
 			case 'sort_by':
 				setSortBy(value)
@@ -100,9 +90,7 @@ const DamageCasesTab: React.FC = () => {
 		<>
 			{/* Filters */}
 			<DamageCaseFilters
-				regionFilter={regionFilter}
-				damageTypeFilter={damageTypeFilter}
-				resolutionFilter={resolutionFilter}
+				searchQuery={searchQuery}
 				sortBy={sortBy}
 				onFilterChange={handleFilterChange}
 			/>
