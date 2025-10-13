@@ -1,4 +1,4 @@
-import Logo from 'components/Logo'
+import ZipCheckLogo from 'components/ZipCheckLogo'
 import { Mail, Phone, MapPin } from 'lucide-react'
 
 export default function ZipCheckFooter() {
@@ -9,9 +9,9 @@ export default function ZipCheckFooter() {
 					{/* Company Info */}
 					<div>
 						<div className="flex items-center gap-3 mb-6">
-							<Logo className="h-8 w-auto" />
+							<ZipCheckLogo className="h-10 w-10 text-cyan-400" />
 							<span className="text-2xl font-bold gradient-text-cyan-purple">
-								ZipCheck
+								집첵
 							</span>
 						</div>
 						<p className="text-gray-400 leading-relaxed mb-4">
