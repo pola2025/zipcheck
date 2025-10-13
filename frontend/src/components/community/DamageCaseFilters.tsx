@@ -18,8 +18,8 @@ const DamageCaseFilters: React.FC<DamageCaseFiltersProps> = ({
 }) => {
 	const navigate = useNavigate()
 
-	const selectClassName = 'w-full px-3 py-3 glass-dark border border-red-500/30 rounded-lg text-white focus:outline-none focus:border-red-400 focus:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all [&>option]:bg-gray-900 [&>option]:text-white'
-	const selectStyle = { colorScheme: 'dark', backgroundColor: 'rgba(0, 0, 0, 0.6)', color: '#ffffff' }
+	const selectClassName = 'w-full px-3 py-3 bg-black/60 border border-red-500/30 rounded-lg text-white focus:outline-none focus:border-red-400 focus:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all [&>option]:!bg-gray-900 [&>option]:!text-white'
+	const selectStyle = { colorScheme: 'dark' as const, backgroundColor: '#000000', color: '#ffffff' }
 	const optionStyle = { backgroundColor: '#111827', color: '#ffffff' }
 
 	return (
