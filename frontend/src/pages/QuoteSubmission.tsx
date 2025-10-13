@@ -297,6 +297,8 @@ export default function QuoteSubmission() {
 
 		setUploading(true)
 		try {
+			console.log('📤 Submitting quote request to:', getApiUrl('/api/quote-requests/submit-multiple'))
+
 			const response = await fetch(getApiUrl('/api/quote-requests/submit-multiple'), {
 				method: 'POST',
 				headers: {
@@ -336,6 +338,21 @@ export default function QuoteSubmission() {
 					}))
 				})
 			})
+
+			console.log('📥 Response status:', response.status, response.statusText)
+			console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()))
+
+			// Check Content-Type before parsing
+			const contentType = response.headers.get('content-type')
+			if (!contentType || !contentType.includes('application/json')) {
+				const textResponse = await response.text()
+				console.error('❌ Non-JSON response:', textResponse.substring(0, 500))
+				throw new Error(
+					`서버가 올바른 응답을 반환하지 않았습니다 (${response.status} ${response.statusText}). ` +
+					`응답 타입: ${contentType || '없음'}. ` +
+					`백엔드 서버가 실행 중인지 확인해주세요.`
+				)
+			}
 
 			const result = await response.json()
 

@@ -21,16 +21,37 @@ interface DatasetInfo {
 	status: 'active' | 'archived'
 }
 
+interface DataStats {
+	overview: {
+		categories_count: number
+		items_count: number
+		records_count: number
+		total_amount: string
+	}
+	byCategory: Array<{
+		category: string
+		record_count: number
+		total_cost: string
+	}>
+	byRegion: Array<{
+		region: string
+		count: number
+		total_cost: string
+	}>
+}
+
 export default function DataManagement() {
 	const { token } = useAuth()
 	const [uploadType, setUploadType] = useState<'construction' | 'distributor'>('construction')
 	const [uploading, setUploading] = useState(false)
 	const [uploadStats, setUploadStats] = useState<UploadStats | null>(null)
 	const [datasets, setDatasets] = useState<DatasetInfo[]>([])
+	const [dataStats, setDataStats] = useState<DataStats | null>(null)
 
-	// 페이지 로드 시 업로드 이력 가져오기
+	// 페이지 로드 시 업로드 이력 및 통계 가져오기
 	useEffect(() => {
 		fetchDatasets()
+		fetchDataStats()
 	}, [])
 
 	const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,6 +118,20 @@ export default function DataManagement() {
 			setDatasets(formatted)
 		} catch (error) {
 			console.error('Failed to fetch datasets:', error)
+		}
+	}
+
+	const fetchDataStats = async () => {
+		try {
+			const response = await fetch(getApiUrl('/api/admin/data-stats'), {
+				headers: {
+					'Authorization': `Bearer ${token}`
+				}
+			})
+			const data = await response.json()
+			setDataStats(data)
+		} catch (error) {
+			console.error('Failed to fetch data stats:', error)
 		}
 	}
 
@@ -224,6 +259,75 @@ export default function DataManagement() {
 						</div>
 					</motion.div>
 				</div>
+
+				{/* 데이터 통계 */}
+				{dataStats && (
+					<motion.div
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700 mb-8"
+					>
+						<h3 className="text-xl font-bold mb-6">업로드된 데이터 통계</h3>
+
+						{/* 개요 */}
+						<div className="grid grid-cols-4 gap-4 mb-6">
+							<div className="bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 rounded-xl p-4 border border-cyan-500/30">
+								<div className="text-sm text-gray-300 mb-1">카테고리</div>
+								<div className="text-3xl font-bold text-cyan-400">{dataStats.overview.categories_count}</div>
+							</div>
+							<div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-xl p-4 border border-purple-500/30">
+								<div className="text-sm text-gray-300 mb-1">항목</div>
+								<div className="text-3xl font-bold text-purple-400">{dataStats.overview.items_count}</div>
+							</div>
+							<div className="bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl p-4 border border-green-500/30">
+								<div className="text-sm text-gray-300 mb-1">시공 기록</div>
+								<div className="text-3xl font-bold text-green-400">{dataStats.overview.records_count}</div>
+							</div>
+							<div className="bg-gradient-to-br from-amber-500/20 to-amber-600/20 rounded-xl p-4 border border-amber-500/30">
+								<div className="text-sm text-gray-300 mb-1">총 금액</div>
+								<div className="text-2xl font-bold text-amber-400">₩{parseInt(dataStats.overview.total_amount || '0').toLocaleString()}</div>
+							</div>
+						</div>
+
+						<div className="grid md:grid-cols-2 gap-6">
+							{/* 카테고리별 통계 */}
+							<div>
+								<h4 className="text-lg font-semibold mb-3 text-gray-200">카테고리별 통계 (Top 10)</h4>
+								<div className="space-y-2 max-h-64 overflow-y-auto">
+									{dataStats.byCategory.slice(0, 10).map((item, idx) => (
+										<div key={idx} className="bg-gray-700/30 rounded-lg p-3 flex items-center justify-between">
+											<div>
+												<div className="font-semibold text-gray-200">{item.category}</div>
+												<div className="text-xs text-gray-400">{item.record_count}개 기록</div>
+											</div>
+											<div className="text-right">
+												<div className="font-bold text-cyan-400">₩{parseInt(item.total_cost).toLocaleString()}</div>
+											</div>
+										</div>
+									))}
+								</div>
+							</div>
+
+							{/* 지역별 통계 */}
+							<div>
+								<h4 className="text-lg font-semibold mb-3 text-gray-200">지역별 통계 (Top 10)</h4>
+								<div className="space-y-2 max-h-64 overflow-y-auto">
+									{dataStats.byRegion.map((item, idx) => (
+										<div key={idx} className="bg-gray-700/30 rounded-lg p-3 flex items-center justify-between">
+											<div>
+												<div className="font-semibold text-gray-200">{item.region}</div>
+												<div className="text-xs text-gray-400">{item.count}개 기록</div>
+											</div>
+											<div className="text-right">
+												<div className="font-bold text-purple-400">₩{parseInt(item.total_cost).toLocaleString()}</div>
+											</div>
+										</div>
+									))}
+								</div>
+							</div>
+						</div>
+					</motion.div>
+				)}
 
 				{/* 업로드 결과 */}
 				{uploadStats && (
