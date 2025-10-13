@@ -1,6 +1,8 @@
 export interface Review {
 	id: string
 	company_name: string
+	company_phone?: string
+	business_number?: string
 	company_type: string
 	region: string
 	title: string
