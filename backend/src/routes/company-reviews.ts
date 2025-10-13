@@ -165,10 +165,16 @@ router.post('/', authenticateToken, upload.array('images', 10), async (req, res)
 			review_text
 		} = req.body
 
-		// Validation - 필수 항목: 업체명, 별점, 후기 내용
-		if (!company_name || !rating || !review_text) {
+		// Validation - 필수 항목: 업체명, 연락처, 사업자번호
+		if (!company_name || !company_phone || !business_number) {
 			return res.status(400).json({
-				error: '필수 정보가 누락되었습니다. (업체명, 별점, 후기 내용)'
+				error: '업체명, 연락처, 사업자번호를 모두 입력해주세요.'
+			})
+		}
+
+		if (!rating || !review_text) {
+			return res.status(400).json({
+				error: '별점과 후기 내용을 입력해주세요.'
 			})
 		}
 
