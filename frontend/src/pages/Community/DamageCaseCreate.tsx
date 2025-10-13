@@ -219,13 +219,17 @@ export default function DamageCaseCreate() {
 							<select
 								value={damageType}
 								onChange={(e) => setDamageType(e.target.value)}
-								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
-								style={{ colorScheme: 'dark' }}
+								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all [&>option]:bg-gray-900 [&>option]:text-white"
+								style={{
+									colorScheme: 'dark',
+									backgroundColor: 'rgba(0, 0, 0, 0.6)',
+									color: '#ffffff'
+								}}
 								required
 							>
-								<option value="" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>선택해주세요</option>
+								<option value="" style={{ backgroundColor: '#111827', color: '#ffffff' }}>선택해주세요</option>
 								{damageTypes.map((type) => (
-									<option key={type} value={type} style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>
+									<option key={type} value={type} style={{ backgroundColor: '#111827', color: '#ffffff' }}>
 										{type}
 									</option>
 								))}
