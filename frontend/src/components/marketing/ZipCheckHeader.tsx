@@ -20,9 +20,6 @@ export default function ZipCheckHeader() {
 						transition={{ type: 'spring', stiffness: 400 }}
 					>
 						<ZipCheckLogo className="h-8" />
-						<span className="text-2xl font-bold gradient-text-cyan-purple">
-							집첵
-						</span>
 					</motion.a>
 
 					{/* Navigation */}

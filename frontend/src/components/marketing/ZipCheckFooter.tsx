@@ -12,14 +12,9 @@ export default function ZipCheckFooter() {
 						<div className="flex items-center gap-3 mb-6">
 							<ZipCheckLogo className="h-8" />
 							<NeonZ size={32} />
-							<span className="text-2xl font-bold gradient-text-cyan-purple">
-								집첵
-							</span>
 						</div>
 						<p className="text-gray-400 leading-relaxed mb-4">
-							AI와 전문가가 함께하는
-							<br />
-							정확한 견적 분석 서비스
+							집첵전문가의<br />정확한 견적 분석서비스
 						</p>
 					</div>
 
