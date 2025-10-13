@@ -18,6 +18,10 @@ const DamageCaseFilters: React.FC<DamageCaseFiltersProps> = ({
 }) => {
 	const navigate = useNavigate()
 
+	const selectClassName = 'w-full px-3 py-3 glass-dark border border-red-500/30 rounded-lg text-white focus:outline-none focus:border-red-400 focus:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all [&>option]:bg-gray-900 [&>option]:text-white'
+	const selectStyle = { colorScheme: 'dark', backgroundColor: 'rgba(0, 0, 0, 0.6)', color: '#ffffff' }
+	const optionStyle = { backgroundColor: '#111827', color: '#ffffff' }
+
 	return (
 		<div className='glass-neon rounded-2xl p-6 mb-6 border border-red-500/30'>
 			<div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
@@ -27,17 +31,18 @@ const DamageCaseFilters: React.FC<DamageCaseFiltersProps> = ({
 					<select
 						value={regionFilter}
 						onChange={(e) => onFilterChange('region', e.target.value)}
-						className='w-full px-3 py-3 glass-dark border border-red-500/30 rounded-lg text-white focus:outline-none focus:border-red-400 focus:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all'
+						className={selectClassName}
+						style={selectStyle}
 					>
-						<option value=''>전체</option>
-						<option value='서울'>서울</option>
-						<option value='경기'>경기</option>
-						<option value='인천'>인천</option>
-						<option value='부산'>부산</option>
-						<option value='대구'>대구</option>
-						<option value='대전'>대전</option>
-						<option value='광주'>광주</option>
-						<option value='울산'>울산</option>
+						<option value='' style={optionStyle}>전체</option>
+						<option value='서울' style={optionStyle}>서울</option>
+						<option value='경기' style={optionStyle}>경기</option>
+						<option value='인천' style={optionStyle}>인천</option>
+						<option value='부산' style={optionStyle}>부산</option>
+						<option value='대구' style={optionStyle}>대구</option>
+						<option value='대전' style={optionStyle}>대전</option>
+						<option value='광주' style={optionStyle}>광주</option>
+						<option value='울산' style={optionStyle}>울산</option>
 					</select>
 				</div>
 
@@ -47,14 +52,15 @@ const DamageCaseFilters: React.FC<DamageCaseFiltersProps> = ({
 					<select
 						value={damageTypeFilter}
 						onChange={(e) => onFilterChange('damage_type', e.target.value)}
-						className='w-full px-3 py-3 glass-dark border border-red-500/30 rounded-lg text-white focus:outline-none focus:border-red-400 focus:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all'
+						className={selectClassName}
+						style={selectStyle}
 					>
-						<option value=''>전체</option>
-						<option value='사기'>사기</option>
-						<option value='부실시공'>부실시공</option>
-						<option value='계약위반'>계약위반</option>
-						<option value='추가비용'>추가비용</option>
-						<option value='기타'>기타</option>
+						<option value='' style={optionStyle}>전체</option>
+						<option value='사기' style={optionStyle}>사기</option>
+						<option value='부실시공' style={optionStyle}>부실시공</option>
+						<option value='계약위반' style={optionStyle}>계약위반</option>
+						<option value='추가비용' style={optionStyle}>추가비용</option>
+						<option value='기타' style={optionStyle}>기타</option>
 					</select>
 				</div>
 
@@ -64,12 +70,13 @@ const DamageCaseFilters: React.FC<DamageCaseFiltersProps> = ({
 					<select
 						value={resolutionFilter}
 						onChange={(e) => onFilterChange('resolution_status', e.target.value)}
-						className='w-full px-3 py-3 glass-dark border border-red-500/30 rounded-lg text-white focus:outline-none focus:border-red-400 focus:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all'
+						className={selectClassName}
+						style={selectStyle}
 					>
-						<option value=''>전체</option>
-						<option value='unresolved'>미해결</option>
-						<option value='in_progress'>진행중</option>
-						<option value='resolved'>해결됨</option>
+						<option value='' style={optionStyle}>전체</option>
+						<option value='unresolved' style={optionStyle}>미해결</option>
+						<option value='in_progress' style={optionStyle}>진행중</option>
+						<option value='resolved' style={optionStyle}>해결됨</option>
 					</select>
 				</div>
 
@@ -79,12 +86,13 @@ const DamageCaseFilters: React.FC<DamageCaseFiltersProps> = ({
 					<select
 						value={sortBy}
 						onChange={(e) => onFilterChange('sort_by', e.target.value)}
-						className='w-full px-3 py-3 glass-dark border border-red-500/30 rounded-lg text-white focus:outline-none focus:border-red-400 focus:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all'
+						className={selectClassName}
+						style={selectStyle}
 					>
-						<option value='created_at'>최신순</option>
-						<option value='damage_amount'>피해 금액순</option>
-						<option value='like_count'>좋아요순</option>
-						<option value='view_count'>조회순</option>
+						<option value='created_at' style={optionStyle}>최신순</option>
+						<option value='damage_amount' style={optionStyle}>피해 금액순</option>
+						<option value='like_count' style={optionStyle}>좋아요순</option>
+						<option value='view_count' style={optionStyle}>조회순</option>
 					</select>
 				</div>
 			</div>
