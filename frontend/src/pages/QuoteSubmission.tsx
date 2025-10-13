@@ -625,15 +625,20 @@ export default function QuoteSubmission() {
 
 								<div>
 									<label className="block text-sm font-semibold mb-2 text-[#38ef7d]">
-										평수 (선택)
+										시공 면적 (㎡)
 									</label>
 									<input
 										type="number"
 										value={propertySize}
 										onChange={(e) => setPropertySize(e.target.value)}
-										placeholder="32"
+										placeholder="예: 85"
 										className="w-full px-4 py-3 bg-black/60 border border-[#11998e]/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#38ef7d] focus:shadow-[0_0_20px_rgba(56,239,125,0.3)] transition-all"
 									/>
+									{propertySize && (
+										<p className="text-xs text-gray-400 mt-2">
+											약 {(Number(propertySize) / 3.3058).toFixed(1)}평
+										</p>
+									)}
 								</div>
 							</div>
 
