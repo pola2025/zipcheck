@@ -233,7 +233,8 @@ export default function QuoteSubmission() {
 			}
 		} catch (error) {
 			console.error('Image parsing error:', error)
-			alert('❌ 이미지 분석에 실패했습니다: ' + (error instanceof Error ? error.message : String(error)))
+			// 이미지는 이미 업로드되었으므로, 에러 메시지 표시하지 않음
+			// 사용자가 직접 항목을 입력할 수 있음
 		} finally {
 			setUploading(false)
 			event.target.value = '' // Reset input for next upload
