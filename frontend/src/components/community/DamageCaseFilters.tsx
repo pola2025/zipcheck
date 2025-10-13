@@ -1,98 +1,58 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Search, SortDesc } from 'lucide-react'
 
 interface DamageCaseFiltersProps {
-	regionFilter: string
-	damageTypeFilter: string
-	resolutionFilter: string
+	searchQuery: string
 	sortBy: string
 	onFilterChange: (filterType: string, value: string) => void
 }
 
 const DamageCaseFilters: React.FC<DamageCaseFiltersProps> = ({
-	regionFilter,
-	damageTypeFilter,
-	resolutionFilter,
+	searchQuery,
 	sortBy,
 	onFilterChange
 }) => {
 	const navigate = useNavigate()
 
-	const selectClassName = 'w-full px-3 py-3 bg-black/60 border border-red-500/30 rounded-lg text-white focus:outline-none focus:border-red-400 focus:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all [&>option]:!bg-gray-900 [&>option]:!text-white'
-	const selectStyle = { colorScheme: 'dark' as const, backgroundColor: '#000000', color: '#ffffff' }
-	const optionStyle = { backgroundColor: '#111827', color: '#ffffff' }
+	const inputClassName = 'w-full px-4 py-3 bg-black/60 border border-red-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-red-400 focus:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all'
+	const selectClassName = 'w-full px-4 py-3 bg-black/60 border border-red-500/30 rounded-lg text-white focus:outline-none focus:border-red-400 focus:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all'
+	const selectStyle = { colorScheme: 'dark' as const }
 
 	return (
 		<div className='glass-neon rounded-2xl p-6 mb-6 border border-red-500/30'>
-			<div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
-				{/* Region Filter */}
+			<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+				{/* Search Input */}
 				<div>
-					<label className='block text-sm font-semibold text-red-300 mb-2'>지역</label>
-					<select
-						value={regionFilter}
-						onChange={(e) => onFilterChange('region', e.target.value)}
-						className={selectClassName}
-						style={selectStyle}
-					>
-						<option value='' style={optionStyle}>전체</option>
-						<option value='서울' style={optionStyle}>서울</option>
-						<option value='경기' style={optionStyle}>경기</option>
-						<option value='인천' style={optionStyle}>인천</option>
-						<option value='부산' style={optionStyle}>부산</option>
-						<option value='대구' style={optionStyle}>대구</option>
-						<option value='대전' style={optionStyle}>대전</option>
-						<option value='광주' style={optionStyle}>광주</option>
-						<option value='울산' style={optionStyle}>울산</option>
-					</select>
-				</div>
-
-				{/* Damage Type Filter */}
-				<div>
-					<label className='block text-sm font-semibold text-red-300 mb-2'>피해 유형</label>
-					<select
-						value={damageTypeFilter}
-						onChange={(e) => onFilterChange('damage_type', e.target.value)}
-						className={selectClassName}
-						style={selectStyle}
-					>
-						<option value='' style={optionStyle}>전체</option>
-						<option value='사기' style={optionStyle}>사기</option>
-						<option value='부실시공' style={optionStyle}>부실시공</option>
-						<option value='계약위반' style={optionStyle}>계약위반</option>
-						<option value='추가비용' style={optionStyle}>추가비용</option>
-						<option value='기타' style={optionStyle}>기타</option>
-					</select>
-				</div>
-
-				{/* Resolution Status Filter */}
-				<div>
-					<label className='block text-sm font-semibold text-red-300 mb-2'>해결 상태</label>
-					<select
-						value={resolutionFilter}
-						onChange={(e) => onFilterChange('resolution_status', e.target.value)}
-						className={selectClassName}
-						style={selectStyle}
-					>
-						<option value='' style={optionStyle}>전체</option>
-						<option value='unresolved' style={optionStyle}>미해결</option>
-						<option value='in_progress' style={optionStyle}>진행중</option>
-						<option value='resolved' style={optionStyle}>해결됨</option>
-					</select>
+					<label className='block text-sm font-semibold text-red-300 mb-2 flex items-center gap-2'>
+						<Search className='w-4 h-4' />
+						통합 검색
+					</label>
+					<input
+						type='text'
+						value={searchQuery}
+						onChange={(e) => onFilterChange('search', e.target.value)}
+						placeholder='업체명, 지역, 피해유형 등 검색'
+						className={inputClassName}
+					/>
 				</div>
 
 				{/* Sort By */}
 				<div>
-					<label className='block text-sm font-semibold text-red-300 mb-2'>정렬</label>
+					<label className='block text-sm font-semibold text-red-300 mb-2 flex items-center gap-2'>
+						<SortDesc className='w-4 h-4' />
+						정렬
+					</label>
 					<select
 						value={sortBy}
 						onChange={(e) => onFilterChange('sort_by', e.target.value)}
 						className={selectClassName}
 						style={selectStyle}
 					>
-						<option value='created_at' style={optionStyle}>최신순</option>
-						<option value='damage_amount' style={optionStyle}>피해 금액순</option>
-						<option value='like_count' style={optionStyle}>좋아요순</option>
-						<option value='view_count' style={optionStyle}>조회순</option>
+						<option value='created_at'>최신순</option>
+						<option value='damage_amount'>피해 금액순</option>
+						<option value='like_count'>좋아요순</option>
+						<option value='view_count'>조회순</option>
 					</select>
 				</div>
 			</div>
