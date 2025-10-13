@@ -19,7 +19,7 @@ export default function ZipCheckHeader() {
 						whileHover={{ scale: 1.05 }}
 						transition={{ type: 'spring', stiffness: 400 }}
 					>
-						<ZipCheckLogo className="h-10 w-10" />
+						<ZipCheckLogo className="h-8" />
 						<span className="text-2xl font-bold gradient-text-cyan-purple">
 							집첵
 						</span>
