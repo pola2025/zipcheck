@@ -143,34 +143,38 @@ router.get('/:id', optionalAuthenticateToken, async (req, res) => {
  * POST /api/damage-cases
  * Create a new damage case (requires authentication)
  */
-router.post('/', authenticateToken, upload.array('images', 20), async (req, res) => {
+router.post('/', authenticateToken, upload.array('evidence_images', 20), async (req, res) => {
 	try {
 		const userId = (req as any).user?.userId
 
 		if (!userId) {
-			return res.status(401).json({ error: '인증이 필요합니다.' })
+			return res.status(401).json({ error: '로그인이 필요합니다.' })
 		}
 
 		const {
-			title,
-			description,
-			category,
-			severity
+			company_name,
+			company_phone,
+			business_number,
+			damage_type,
+			damage_amount,
+			case_description
 		} = req.body
 
-		// Validation
-		if (!title || !description) {
-			return res.status(400).json({ error: '필수 정보가 누락되었습니다.' })
+		// Validation - 필수 항목: 업체명, 피해 유형, 피해 내용
+		if (!company_name || !damage_type || !case_description) {
+			return res.status(400).json({
+				error: '필수 정보가 누락되었습니다. (업체명, 피해 유형, 피해 내용)'
+			})
 		}
 
-		// Get user info
-		const userData = await findOne<any>('users', { id: userId })
-
-		if (!userData) {
-			return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' })
+		// 피해 내용 최소 길이 체크
+		if (case_description.trim().length < 20) {
+			return res.status(400).json({
+				error: '피해 내용은 최소 20자 이상 작성해주세요.'
+			})
 		}
 
-		console.log(`📝 Creating new damage case: ${title} by ${userData.name}`)
+		console.log(`📝 Creating new damage case: ${company_name} (${damage_type}) by user ${userId}`)
 
 		// Handle image uploads
 		let imageUrls: string[] = []
@@ -183,15 +187,27 @@ router.post('/', authenticateToken, upload.array('images', 20), async (req, res)
 			console.log(`✅ Uploaded ${imageUrls.length} images`)
 		}
 
+		// 추가 정보를 설명에 포함
+		let fullDescription = case_description
+		if (company_phone) {
+			fullDescription += `\n\n**업체 연락처**: ${company_phone}`
+		}
+		if (business_number) {
+			fullDescription += `\n**사업자번호**: ${business_number}`
+		}
+		if (damage_amount) {
+			fullDescription += `\n**피해 금액**: ${damage_amount}`
+		}
+
 		// Insert damage case
 		const data = await insertOne<any>('damage_cases', {
 			user_id: userId,
-			title,
-			description,
+			title: `${company_name} - ${damage_type}`,
+			description: fullDescription,
 			images: JSON.stringify(imageUrls),
-			category: category || null,
-			severity: severity || 'medium',
-			status: 'open'
+			category: damage_type,
+			severity: 'medium',
+			status: 'pending' // 관리자 승인 대기
 		})
 
 		if (!data) {
@@ -202,7 +218,7 @@ router.post('/', authenticateToken, upload.array('images', 20), async (req, res)
 
 		res.json({
 			success: true,
-			message: '피해 사례가 등록되었습니다.',
+			message: '피해사례가 등록되었습니다! 관리자 승인 후 게시됩니다.',
 			data
 		})
 	} catch (error) {

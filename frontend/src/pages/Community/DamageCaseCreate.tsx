@@ -44,6 +44,14 @@ export default function DamageCaseCreate() {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 
+		// Check authentication
+		const token = localStorage.getItem('auth_token')
+		if (!token) {
+			alert('로그인이 필요합니다. 로그인 후 이용해주세요.')
+			navigate('/login')
+			return
+		}
+
 		if (!damageType) {
 			alert('피해 유형을 선택해주세요.')
 			return
@@ -72,6 +80,9 @@ export default function DamageCaseCreate() {
 
 			const response = await fetch(getApiUrl('/api/damage-cases'), {
 				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${token}`
+				},
 				body: formData
 			})
 
@@ -203,9 +214,9 @@ export default function DamageCaseCreate() {
 								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
 								required
 							>
-								<option value="">선택해주세요</option>
+								<option value="" className="bg-gray-900 text-white">선택해주세요</option>
 								{damageTypes.map((type) => (
-									<option key={type} value={type} className="bg-gray-900">
+									<option key={type} value={type} className="bg-gray-900 text-white">
 										{type}
 									</option>
 								))}

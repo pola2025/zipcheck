@@ -154,45 +154,32 @@ router.post('/', authenticateToken, upload.array('images', 10), async (req, res)
 		const userId = (req as any).user?.userId
 
 		if (!userId) {
-			return res.status(401).json({ error: '인증이 필요합니다.' })
+			return res.status(401).json({ error: '로그인이 필요합니다.' })
 		}
 
 		const {
 			company_name,
-			company_type,
-			region,
-			title,
-			content,
+			company_phone,
+			business_number,
 			rating,
-			project_type,
-			project_size,
-			project_cost,
-			project_period,
-			project_date,
-			quality_rating,
-			price_rating,
-			communication_rating,
-			schedule_rating,
-			is_recommended
+			review_text
 		} = req.body
 
-		// Validation - 필수 항목: 업체명, 연락처, 사업자번호, 별점, 리뷰
-		const { company_phone, business_number } = req.body
-
-		if (!company_name || !company_phone || !business_number || !rating || !content) {
+		// Validation - 필수 항목: 업체명, 별점, 후기 내용
+		if (!company_name || !rating || !review_text) {
 			return res.status(400).json({
-				error: '필수 정보가 누락되었습니다. (업체명, 연락처, 사업자번호, 별점, 리뷰)'
+				error: '필수 정보가 누락되었습니다. (업체명, 별점, 후기 내용)'
 			})
 		}
 
-		// Get user info
-		const userData = await findOne<any>('users', { id: userId })
-
-		if (!userData) {
-			return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' })
+		// 후기 내용 최소 길이 체크
+		if (review_text.trim().length < 10) {
+			return res.status(400).json({
+				error: '후기는 최소 10자 이상 작성해주세요.'
+			})
 		}
 
-		console.log(`📝 Creating new company review: ${company_name} by ${userData.name}`)
+		console.log(`📝 Creating new company review: ${company_name} by user ${userId}`)
 
 		// Handle image uploads
 		let imageUrls: string[] = []
@@ -205,21 +192,26 @@ router.post('/', authenticateToken, upload.array('images', 10), async (req, res)
 			console.log(`✅ Uploaded ${imageUrls.length} images`)
 		}
 
+		// 추가 정보를 후기에 포함
+		let fullReviewText = review_text
+		if (company_phone) {
+			fullReviewText += `\n\n**업체 연락처**: ${company_phone}`
+		}
+		if (business_number) {
+			fullReviewText += `\n**사업자번호**: ${business_number}`
+		}
+
 		// Insert review
 		const data = await insertOne<any>('company_reviews', {
 			user_id: userId,
 			company_name,
-			company_phone,
-			business_number,
+			company_phone: company_phone || null,
+			business_number: business_number || null,
 			rating: Number(rating),
-			review_text: content || '',
-			pros: req.body.pros,
-			cons: req.body.cons,
-			work_type: project_type,
-			work_date: project_date,
+			review_text: fullReviewText,
 			images: JSON.stringify(imageUrls),
 			verified: false,
-			status: 'published'
+			status: 'pending' // 관리자 승인 대기
 		})
 
 		if (!data) {
@@ -230,7 +222,7 @@ router.post('/', authenticateToken, upload.array('images', 10), async (req, res)
 
 		res.json({
 			success: true,
-			message: '후기가 등록되었습니다.',
+			message: '후기가 등록되었습니다! 관리자 승인 후 게시됩니다.',
 			data
 		})
 	} catch (error) {
