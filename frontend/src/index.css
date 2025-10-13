@@ -64,6 +64,16 @@
 	body {
 		@apply bg-background text-foreground;
 	}
+
+	/* Force dark theme for select and option elements */
+	select {
+		color-scheme: dark;
+	}
+
+	select option {
+		background-color: #111827 !important;
+		color: #ffffff !important;
+	}
 }
 
 .prose h3 {
