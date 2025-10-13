@@ -71,7 +71,7 @@ export default function QuoteRequests() {
 	}
 
 	const runAnalysis = async (id: string) => {
-		if (!confirm('이 견적에 대해 AI 분석을 실행하시겠습니까?')) return
+		if (!confirm('이 견적에 대해 집첵 견적 분석을 실행하시겠습니까?')) return
 
 		setAnalyzingId(id)
 		try {
@@ -89,11 +89,11 @@ export default function QuoteRequests() {
 
 			if (!response.ok) throw new Error('분석 실행 실패')
 
-			alert('✅ AI 분석이 완료되었습니다!')
+			alert('✅ 집첵 견적 분석이 완료되었습니다!')
 			await fetchRequests()
 		} catch (error) {
 			console.error('Analysis failed:', error)
-			alert('❌ AI 분석 실패: ' + (error instanceof Error ? error.message : String(error)))
+			alert('❌ 집첵 견적 분석 실패: ' + (error instanceof Error ? error.message : String(error)))
 		} finally {
 			setAnalyzingId(null)
 		}
@@ -270,7 +270,12 @@ export default function QuoteRequests() {
 												<td className="py-4 px-4">
 													<div className="text-sm">
 														<div>
-															{request.property_type} {request.property_size}평
+															{request.property_type} {request.property_size}㎡
+															{request.property_size && (
+																<span className="text-gray-400 text-xs ml-1">
+																	(약 {(request.property_size / 3.3058).toFixed(1)}평)
+																</span>
+															)}
 														</div>
 														<div className="text-gray-400 text-xs">{request.region}</div>
 													</div>
@@ -322,7 +327,7 @@ export default function QuoteRequests() {
 																		? 'bg-blue-500/20 border-blue-500/50 text-blue-300 cursor-not-allowed'
 																		: 'bg-green-500/20 hover:bg-green-500/30 border-green-500/50'
 																}`}
-																title="AI 분석 실행"
+																title="집첵 견적 분석 실행"
 															>
 																{analyzingId === request.id ? (
 																	<>
@@ -361,7 +366,14 @@ export default function QuoteRequests() {
 																	<h4 className="text-sm font-semibold text-gray-400 mb-2">매물 정보</h4>
 																	<div className="space-y-1 text-sm">
 																		<div><span className="text-gray-400">유형:</span> <span className="text-white">{request.property_type}</span></div>
-																		<div><span className="text-gray-400">평수:</span> <span className="text-white">{request.property_size}평</span></div>
+																		<div>
+																			<span className="text-gray-400">면적:</span> <span className="text-white">{request.property_size}㎡</span>
+																			{request.property_size && (
+																				<span className="text-gray-400 text-xs ml-1">
+																					(약 {(request.property_size / 3.3058).toFixed(1)}평)
+																				</span>
+																			)}
+																		</div>
 																		<div><span className="text-gray-400">지역:</span> <span className="text-white">{request.region}</span></div>
 																	</div>
 																</div>
@@ -421,7 +433,7 @@ export default function QuoteRequests() {
 						<div className="text-sm text-amber-200">
 							<p className="font-semibold mb-1">대기중인 견적 신청</p>
 							<p className="text-amber-300/80">
-								각 견적에 대해 'AI 분석' 버튼을 클릭하여 분석을 실행하면, 사용자가 결과를
+								각 견적에 대해 '분석' 버튼을 클릭하여 집첵 견적 분석을 실행하면, 사용자가 결과를
 								확인할 수 있습니다.
 							</p>
 						</div>
