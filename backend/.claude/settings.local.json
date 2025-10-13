@@ -21,7 +21,11 @@
       "Bash(vercel inspect:*)",
       "Bash(vercel ls:*)",
       "Bash(vercel:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(git commit -m \"$(cat <<''EOF''\nUpdate AI analysis to data-driven ZipCheck system\n\n- Restructure AI analysis service to return new AnalysisResult format\n- Change from database-agnostic to PostgreSQL-specific queries\n- Add fact-based analysis with market data validation\n- Replace \"AI 권장사항\" with \"집첵 권장사항\" branding\n- Add admin endpoint for manual analysis editing (PATCH /admin/:id/analysis-result)\n- Update QuoteAnalysisRealistic component with ZipCheck branding\n- Implement data coverage warnings when market data is insufficient\n- Add expert notes generation based on actual market comparison\n\nChanges address:\n- Prevent AI hallucination by enforcing database-backed responses\n- Allow admin manual correction of analysis results\n- Maintain brand consistency (ZipCheck vs AI)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nHide urgent analysis plans (준비 중)\n\n- Hide urgent analysis section in PlanSelection page with {false &&}\n- Add TODO comment for future activation\n- Create comprehensive documentation: .claude/docs/features/urgent-analysis-plan.md\n\nDocumentation includes:\n- Feature specifications and pricing structure\n- Technical implementation requirements (SLA tracker, queue system, notifications)\n- Business considerations (resources, profitability, risks)\n- Launch checklist and activation guide\n\nThe feature is ready for future launch when:\n1. SLA tracking system is implemented\n2. Dedicated analysts are hired\n3. 24/7 operation schedule is established\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
