@@ -160,10 +160,17 @@ router.post('/', authenticateToken, upload.array('evidence_images', 20), async (
 			case_description
 		} = req.body
 
-		// Validation - 필수 항목: 업체명, 피해 유형, 피해 내용
-		if (!company_name || !damage_type || !case_description) {
+		// Validation - 업체명, 연락처, 사업자번호 중 최소 1개 필수
+		if (!company_name && !company_phone && !business_number) {
 			return res.status(400).json({
-				error: '필수 정보가 누락되었습니다. (업체명, 피해 유형, 피해 내용)'
+				error: '업체명, 연락처, 사업자번호 중 최소 1개는 입력해주세요.'
+			})
+		}
+
+		// Validation - 피해 유형, 피해 내용 필수
+		if (!damage_type || !case_description) {
+			return res.status(400).json({
+				error: '피해 유형과 피해 내용은 필수입니다.'
 			})
 		}
 
@@ -199,10 +206,13 @@ router.post('/', authenticateToken, upload.array('evidence_images', 20), async (
 			fullDescription += `\n**피해 금액**: ${damage_amount}`
 		}
 
+		// Generate title from available info
+		const titlePrefix = company_name || company_phone || business_number || '업체 정보 미상'
+
 		// Insert damage case
 		const data = await insertOne<any>('damage_cases', {
 			user_id: userId,
-			title: `${company_name} - ${damage_type}`,
+			title: `${titlePrefix} - ${damage_type}`,
 			description: fullDescription,
 			images: JSON.stringify(imageUrls),
 			category: damage_type,
