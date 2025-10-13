@@ -13,7 +13,7 @@ import { optimizeImage } from './image-optimizer'
 import crypto from 'crypto'
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB in bytes
-const MAX_IMAGE_COUNT = 20
+const MAX_IMAGE_COUNT = 10 // Max 10 images per review
 const STORAGE_BUCKET = 'community-images'
 
 export interface ImageUploadResult {

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Star, Building, Phone, FileText, Send, ArrowLeft } from 'lucide-react'
+import { Star, Building, Phone, FileText, Send, ArrowLeft, Image as ImageIcon, X } from 'lucide-react'
 import { AnimatedBackground } from 'components/immersive'
 import ZipCheckHeader from 'components/marketing/ZipCheckHeader'
 import ZipCheckFooter from 'components/marketing/ZipCheckFooter'
@@ -21,6 +21,49 @@ export default function ReviewCreate() {
 	const [projectCost, setProjectCost] = useState('')
 	const [rating, setRating] = useState(0)
 	const [reviewText, setReviewText] = useState('')
+	const [images, setImages] = useState<File[]>([])
+	const [imagePreviews, setImagePreviews] = useState<string[]>([])
+
+	// Handle image file selection (max 10 images)
+	const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const files = e.target.files
+		if (!files) return
+
+		const fileArray = Array.from(files)
+		const remainingSlots = 10 - images.length
+
+		if (fileArray.length > remainingSlots) {
+			alert(`최대 10장까지 업로드할 수 있습니다. (현재: ${images.length}장, 추가 가능: ${remainingSlots}장)`)
+			return
+		}
+
+		// Validate file types
+		const invalidFiles = fileArray.filter(file => !file.type.startsWith('image/'))
+		if (invalidFiles.length > 0) {
+			alert('이미지 파일만 업로드할 수 있습니다.')
+			return
+		}
+
+		// Add new images
+		const newImages = [...images, ...fileArray]
+		setImages(newImages)
+
+		// Create preview URLs
+		const newPreviews = fileArray.map(file => URL.createObjectURL(file))
+		setImagePreviews([...imagePreviews, ...newPreviews])
+	}
+
+	// Remove image by index
+	const handleRemoveImage = (index: number) => {
+		const newImages = images.filter((_, i) => i !== index)
+		const newPreviews = imagePreviews.filter((_, i) => i !== index)
+
+		// Revoke the URL to free memory
+		URL.revokeObjectURL(imagePreviews[index])
+
+		setImages(newImages)
+		setImagePreviews(newPreviews)
+	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -52,23 +95,30 @@ export default function ReviewCreate() {
 		setSubmitting(true)
 
 		try {
+			// Use FormData to send images + text data
+			const formData = new FormData()
+			formData.append('company_name', companyName)
+			formData.append('company_phone', companyPhone || '')
+			formData.append('business_number', businessNumber || '')
+			formData.append('region', region || '')
+			formData.append('project_type', projectType || '')
+			formData.append('project_size', projectSize || '')
+			formData.append('project_cost', projectCost || '')
+			formData.append('rating', rating.toString())
+			formData.append('review_text', reviewText)
+
+			// Append all images
+			images.forEach((image) => {
+				formData.append('images', image)
+			})
+
 			const response = await fetch(getApiUrl('/api/company-reviews'), {
 				method: 'POST',
 				headers: {
-					'Content-Type': 'application/json',
 					'Authorization': `Bearer ${token}`
+					// Note: Don't set Content-Type for FormData, browser will set it automatically with boundary
 				},
-				body: JSON.stringify({
-					company_name: companyName,
-					company_phone: companyPhone || undefined,
-					business_number: businessNumber || undefined,
-					region: region || undefined,
-					project_type: projectType || undefined,
-					project_size: projectSize ? Number(projectSize) : undefined,
-					project_cost: projectCost ? Number(projectCost) : undefined,
-					rating,
-					review_text: reviewText
-				})
+				body: formData
 			})
 
 			if (!response.ok) {
@@ -333,6 +383,73 @@ export default function ReviewCreate() {
 								<p className="text-xs text-gray-400">최소 10자 이상 작성해주세요</p>
 								<p className="text-xs text-gray-400">{reviewText.length}자</p>
 							</div>
+						</div>
+
+						{/* Image Upload */}
+						<div className="mb-8">
+							<label className="block text-sm font-semibold mb-3 text-cyan-400 flex items-center gap-2">
+								<ImageIcon className="w-4 h-4" />
+								시공 사진 업로드 (선택, 최대 10장)
+							</label>
+							<p className="text-xs text-gray-400 mb-3">
+								• 이미지는 자동으로 WebP 형식으로 압축됩니다<br />
+								• 최대 10장까지 업로드 가능 (파일당 2MB 이하)<br />
+								• JPG, PNG, WebP 형식 지원
+							</p>
+
+							{/* File Input */}
+							<input
+								type="file"
+								id="image-upload"
+								accept="image/*"
+								multiple
+								onChange={handleImageChange}
+								className="hidden"
+								disabled={images.length >= 10}
+							/>
+							<label
+								htmlFor="image-upload"
+								className={`flex items-center justify-center gap-2 w-full py-4 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+									images.length >= 10
+										? 'border-gray-600 bg-gray-800/50 cursor-not-allowed text-gray-500'
+										: 'border-cyan-500/50 bg-black/40 hover:bg-cyan-500/10 hover:border-cyan-400 text-cyan-300'
+								}`}
+							>
+								<ImageIcon className="w-5 h-5" />
+								<span className="font-medium">
+									{images.length >= 10 ? '최대 10장까지 업로드 가능' : `사진 추가 (${images.length}/10)`}
+								</span>
+							</label>
+
+							{/* Image Previews */}
+							{imagePreviews.length > 0 && (
+								<div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 mt-4">
+									{imagePreviews.map((preview, index) => (
+										<motion.div
+											key={index}
+											initial={{ opacity: 0, scale: 0.8 }}
+											animate={{ opacity: 1, scale: 1 }}
+											className="relative group aspect-square"
+										>
+											<img
+												src={preview}
+												alt={`Preview ${index + 1}`}
+												className="w-full h-full object-cover rounded-lg border border-cyan-500/30"
+											/>
+											<button
+												type="button"
+												onClick={() => handleRemoveImage(index)}
+												className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+											>
+												<X className="w-4 h-4" />
+											</button>
+											<div className="absolute bottom-1 left-1 bg-black/60 text-xs text-white px-2 py-0.5 rounded">
+												{index + 1}
+											</div>
+										</motion.div>
+									))}
+								</div>
+							)}
 						</div>
 
 						{/* Notice */}
