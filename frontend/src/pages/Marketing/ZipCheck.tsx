@@ -431,86 +431,91 @@ export default function ZipCheckPage() {
 					</div>
 				</ScrollSection>
 
+				{/* TODO: 긴급 분석 신청 섹션 - 추후 오픈 예정
+				     현재는 숨김 처리. 자세한 내용은 .claude/docs/features/urgent-analysis-plan.md 참조
+				*/}
 				{/* Urgent Pricing Section */}
-				<ScrollSection className="py-32 px-6 bg-gradient-to-b from-transparent via-teal-900/5 to-transparent">
-					<div className="container mx-auto max-w-7xl">
-						<motion.h2
-							className="text-5xl md:text-7xl font-bold text-center mb-8"
-							style={{
-								background: 'linear-gradient(135deg, #38ef7d, #11998e)',
-								WebkitBackgroundClip: 'text',
-								WebkitTextFillColor: 'transparent'
-							}}
-						>
-							긴급 분석 신청
-						</motion.h2>
-						<p className="text-2xl text-gray-400 text-center max-w-3xl mx-auto mb-24 leading-relaxed">
-							시간이 급할 때 빠른 대응이 필요하다면
-						</p>
+				{false && (
+					<ScrollSection className="py-32 px-6 bg-gradient-to-b from-transparent via-teal-900/5 to-transparent">
+						<div className="container mx-auto max-w-7xl">
+							<motion.h2
+								className="text-5xl md:text-7xl font-bold text-center mb-8"
+								style={{
+									background: 'linear-gradient(135deg, #38ef7d, #11998e)',
+									WebkitBackgroundClip: 'text',
+									WebkitTextFillColor: 'transparent'
+								}}
+							>
+								긴급 분석 신청
+							</motion.h2>
+							<p className="text-2xl text-gray-400 text-center max-w-3xl mx-auto mb-24 leading-relaxed">
+								시간이 급할 때 빠른 대응이 필요하다면
+							</p>
 
-						<div className="grid md:grid-cols-3 gap-8">
-							{urgentPlans.map((plan, index) => (
-								<ScrollSection
-									key={index}
-									animation="slide-up"
-									delay={index * 0.15}
-								>
-									<motion.div
-										className="relative flex flex-col glass-strong rounded-2xl p-8 h-full border border-[#11998e]/30"
-										animate={{
-											boxShadow: [
-												'-20px -20px 50px rgba(17, 153, 142, 0.4), 20px 20px 50px rgba(56, 239, 125, 0.4)',
-												'20px 20px 50px rgba(17, 153, 142, 0.4), -20px -20px 50px rgba(56, 239, 125, 0.4)',
-												'-20px -20px 50px rgba(17, 153, 142, 0.4), 20px 20px 50px rgba(56, 239, 125, 0.4)'
-											]
-										}}
-										whileHover={{
-											boxShadow: '0 0 100px rgba(17, 153, 142, 1), 0 0 60px rgba(56, 239, 125, 0.8), 0 0 30px rgba(56, 239, 125, 0.6)'
-										}}
-										transition={{
-											boxShadow: {
-												duration: 4,
-												repeat: Infinity,
-												ease: 'easeInOut'
-											}
-										}}
+							<div className="grid md:grid-cols-3 gap-8">
+								{urgentPlans.map((plan, index) => (
+									<ScrollSection
+										key={index}
+										animation="slide-up"
+										delay={index * 0.15}
 									>
-										<h3 className="text-3xl font-bold mb-3 text-[#38ef7d]">
-											{plan.name}
-										</h3>
-										<div className="mb-4">
-											<span className="text-4xl font-bold text-white">{plan.price}</span>
-										</div>
-										<p className="text-gray-400 text-sm mb-2">
-											{plan.period}
-										</p>
-										<p className="text-gray-300 text-base mb-6 font-medium">
-											{plan.description}
-										</p>
-
-										<ul className="space-y-3 mb-6 flex-grow">
-											{plan.features.map((feature, i) => (
-												<li key={i} className="flex items-start gap-2 text-sm">
-													<CheckCircle2 className="w-5 h-5 text-[#38ef7d] mt-0.5 flex-shrink-0" />
-													<span className="text-gray-300">{feature}</span>
-												</li>
-											))}
-										</ul>
-
-										<GlowButton
-											onClick={() => navigate('/plan-selection')}
-											size="sm"
-											glowColor="#38ef7d"
-											className="w-full mt-auto"
+										<motion.div
+											className="relative flex flex-col glass-strong rounded-2xl p-8 h-full border border-[#11998e]/30"
+											animate={{
+												boxShadow: [
+													'-20px -20px 50px rgba(17, 153, 142, 0.4), 20px 20px 50px rgba(56, 239, 125, 0.4)',
+													'20px 20px 50px rgba(17, 153, 142, 0.4), -20px -20px 50px rgba(56, 239, 125, 0.4)',
+													'-20px -20px 50px rgba(17, 153, 142, 0.4), 20px 20px 50px rgba(56, 239, 125, 0.4)'
+												]
+											}}
+											whileHover={{
+												boxShadow: '0 0 100px rgba(17, 153, 142, 1), 0 0 60px rgba(56, 239, 125, 0.8), 0 0 30px rgba(56, 239, 125, 0.6)'
+											}}
+											transition={{
+												boxShadow: {
+													duration: 4,
+													repeat: Infinity,
+													ease: 'easeInOut'
+												}
+											}}
 										>
-											긴급 신청하기
-										</GlowButton>
-									</motion.div>
-								</ScrollSection>
-							))}
+											<h3 className="text-3xl font-bold mb-3 text-[#38ef7d]">
+												{plan.name}
+											</h3>
+											<div className="mb-4">
+												<span className="text-4xl font-bold text-white">{plan.price}</span>
+											</div>
+											<p className="text-gray-400 text-sm mb-2">
+												{plan.period}
+											</p>
+											<p className="text-gray-300 text-base mb-6 font-medium">
+												{plan.description}
+											</p>
+
+											<ul className="space-y-3 mb-6 flex-grow">
+												{plan.features.map((feature, i) => (
+													<li key={i} className="flex items-start gap-2 text-sm">
+														<CheckCircle2 className="w-5 h-5 text-[#38ef7d] mt-0.5 flex-shrink-0" />
+														<span className="text-gray-300">{feature}</span>
+													</li>
+												))}
+											</ul>
+
+											<GlowButton
+												onClick={() => navigate('/plan-selection')}
+												size="sm"
+												glowColor="#38ef7d"
+												className="w-full mt-auto"
+											>
+												긴급 신청하기
+											</GlowButton>
+										</motion.div>
+									</ScrollSection>
+								))}
+							</div>
 						</div>
-					</div>
-				</ScrollSection>
+					</ScrollSection>
+				)}
 
 				{/* Final CTA */}
 				<ScrollSection className="py-32 px-6">
