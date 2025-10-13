@@ -91,7 +91,7 @@ export default function Payment() {
 
 			{/* Content */}
 			<div className="relative z-10 pt-32 pb-20 px-6">
-				<div className="container mx-auto max-w-4xl">
+				<div className="container mx-auto max-w-6xl">
 					{/* Page Title */}
 					<motion.div
 						className="text-center mb-12"
@@ -161,7 +161,7 @@ export default function Payment() {
 													}`}>
 														{qty}건
 													</div>
-													<div className={`text-lg font-semibold ${
+													<div className={`text-lg font-semibold whitespace-nowrap ${
 														isSelected ? 'text-white' : 'text-gray-500'
 													}`}>
 														{calc.totalAmount.toLocaleString()}원
@@ -342,7 +342,7 @@ export default function Payment() {
 													{quantity}건 견적 비교 분석
 												</p>
 											</div>
-											<span className="text-xl font-bold text-[#38ef7d]">
+											<span className="text-xl font-bold text-[#38ef7d] whitespace-nowrap">
 												{priceCalculation.basePrice.toLocaleString()}원<span className="text-sm text-gray-400">/건</span>
 											</span>
 										</div>
@@ -372,7 +372,7 @@ export default function Payment() {
 
 								<div className="flex justify-between items-center mt-6 mb-4">
 									<span className="text-lg font-semibold text-gray-300">최종 결제 금액</span>
-									<span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#11998e] to-[#38ef7d]">
+									<span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#11998e] to-[#38ef7d] whitespace-nowrap">
 										{totalAmount.toLocaleString()}원
 									</span>
 								</div>

@@ -21,6 +21,14 @@ export default function ReviewCreate() {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 
+		// Check authentication
+		const token = localStorage.getItem('auth_token')
+		if (!token) {
+			alert('로그인이 필요합니다. 로그인 후 이용해주세요.')
+			navigate('/login')
+			return
+		}
+
 		if (rating === 0) {
 			alert('별점을 선택해주세요.')
 			return
@@ -37,7 +45,8 @@ export default function ReviewCreate() {
 			const response = await fetch(getApiUrl('/api/company-reviews'), {
 				method: 'POST',
 				headers: {
-					'Content-Type': 'application/json'
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`
 				},
 				body: JSON.stringify({
 					company_name: companyName,
