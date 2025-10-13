@@ -1,4 +1,5 @@
 import ZipCheckLogo from 'components/ZipCheckLogo'
+import NeonZ from 'components/NeonZ'
 import { Mail, Phone, MapPin } from 'lucide-react'
 
 export default function ZipCheckFooter() {
@@ -9,7 +10,8 @@ export default function ZipCheckFooter() {
 					{/* Company Info */}
 					<div>
 						<div className="flex items-center gap-3 mb-6">
-							<ZipCheckLogo className="h-10 w-10 text-cyan-400" />
+							<ZipCheckLogo className="h-8" />
+							<NeonZ size={32} />
 							<span className="text-2xl font-bold gradient-text-cyan-purple">
 								집첵
 							</span>
