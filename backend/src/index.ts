@@ -3,7 +3,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import multer from 'multer'
 import path from 'path'
-import { uploadConstructionData, uploadDistributorData } from './services/data-upload'
+import { uploadConstructionData, uploadDistributorData, uploadConstructionSheets } from './services/data-upload'
 import { recalculateMarketAverages, getUploadHistory } from './services/data-management'
 import { analyzeQuote } from './services/ai-analysis'
 import quoteRequestsRouter from './routes/quote-requests'
@@ -48,7 +48,7 @@ app.use('/api/auth', authRouter)
 // Protected Admin Routes (인증 필요)
 // ============================================
 
-// 시공 데이터 업로드
+// 시공 데이터 업로드 (테이블 형식)
 app.post('/api/admin/upload-construction', authenticateToken, requireAdmin, upload.single('file'), async (req, res) => {
 	try {
 		if (!req.file) {
@@ -57,6 +57,24 @@ app.post('/api/admin/upload-construction', authenticateToken, requireAdmin, uplo
 
 		console.log(`📤 Uploading construction data: ${req.file.originalname}`)
 		const result = await uploadConstructionData(req.file)
+
+		res.json(result)
+	} catch (error) {
+		console.error('Upload error:', error)
+		const message = error instanceof Error ? error.message : 'Unknown error'
+		res.status(500).json({ error: message })
+	}
+})
+
+// 현장별 실행내역서 업로드 (173개 시트 형식)
+app.post('/api/admin/upload-construction-sheets', authenticateToken, requireAdmin, upload.single('file'), async (req, res) => {
+	try {
+		if (!req.file) {
+			return res.status(400).json({ error: 'No file uploaded' })
+		}
+
+		console.log(`📤 Uploading construction sheets: ${req.file.originalname}`)
+		const result = await uploadConstructionSheets(req.file)
 
 		res.json(result)
 	} catch (error) {
@@ -104,6 +122,54 @@ app.get('/api/admin/upload-history', authenticateToken, requireAdmin, async (req
 		res.json(history)
 	} catch (error) {
 		console.error('History fetch error:', error)
+		const message = error instanceof Error ? error.message : 'Unknown error'
+		res.status(500).json({ error: message })
+	}
+})
+
+// 데이터 통계 조회
+app.get('/api/admin/data-stats', authenticateToken, requireAdmin, async (req, res) => {
+	try {
+		const stats = await pool.query(`
+			SELECT
+				(SELECT COUNT(*) FROM categories) as categories_count,
+				(SELECT COUNT(*) FROM items) as items_count,
+				(SELECT COUNT(*) FROM construction_records) as records_count,
+				(SELECT SUM(total_cost) FROM construction_records) as total_amount
+		`)
+
+		const categoryStats = await pool.query(`
+			SELECT
+				c.name as category,
+				COUNT(cr.id) as record_count,
+				SUM(cr.total_cost) as total_cost
+			FROM categories c
+			LEFT JOIN items i ON i.category_id = c.id
+			LEFT JOIN construction_records cr ON cr.item_id = i.id
+			GROUP BY c.name
+			HAVING COUNT(cr.id) > 0
+			ORDER BY SUM(cr.total_cost) DESC
+		`)
+
+		const regionStats = await pool.query(`
+			SELECT
+				region,
+				COUNT(*) as count,
+				SUM(total_cost) as total_cost
+			FROM construction_records
+			WHERE region IS NOT NULL
+			GROUP BY region
+			ORDER BY SUM(total_cost) DESC
+			LIMIT 10
+		`)
+
+		res.json({
+			overview: stats.rows[0],
+			byCategory: categoryStats.rows,
+			byRegion: regionStats.rows
+		})
+	} catch (error) {
+		console.error('Stats fetch error:', error)
 		const message = error instanceof Error ? error.message : 'Unknown error'
 		res.status(500).json({ error: message })
 	}

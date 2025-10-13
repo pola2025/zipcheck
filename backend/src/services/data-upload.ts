@@ -6,6 +6,11 @@ import {
 	type ConstructionRow,
 	type DistributorRow
 } from './excel-parser'
+import {
+	parseConstructionSheets,
+	type ConstructionProject,
+	type ConstructionItem
+} from './construction-sheet-parser'
 
 interface UploadResult {
 	totalRows: number
@@ -331,10 +336,11 @@ async function findOrCreateItem(categoryId: string, name: string) {
 		const aliases = similar.aliases || []
 		if (!aliases.includes(name)) {
 			// ✅ CONVERTED: Supabase UPDATE → PostgreSQL query
-			// OLD: await supabase.from('items').update({ aliases: [...aliases, name] }).eq('id', similar.id)
+			// PostgreSQL 배열 형식 사용
+			const newAliases = [...aliases, name]
 			await query(
 				'UPDATE items SET aliases = $1, updated_at = NOW() WHERE id = $2',
-				[JSON.stringify([...aliases, name]), similar.id]
+				[newAliases, similar.id] // PostgreSQL이 자동으로 배열로 변환
 			)
 		}
 		return similar
@@ -352,4 +358,137 @@ async function findOrCreateItem(categoryId: string, name: string) {
 	}
 
 	return created
+}
+
+/**
+ * 현장별 실행내역서 업로드 (173개 시트 형식)
+ */
+export async function uploadConstructionSheets(file: Express.Multer.File): Promise<UploadResult> {
+	const result: UploadResult = {
+		totalRows: 0,
+		successRows: 0,
+		errorRows: 0,
+		errors: []
+	}
+
+	try {
+		// 1. Excel 파일 파싱 (현장별 실행내역서 형식)
+		console.log('📄 Parsing Construction Sheets...')
+		const projects = parseConstructionSheets(file.buffer)
+
+		// 전체 항목 수 계산
+		const totalItems = projects.reduce((sum, p) => sum + p.items.length, 0)
+		result.totalRows = totalItems
+
+		console.log(`📊 Found ${projects.length} projects with ${totalItems} total items`)
+
+		// 2. 업로드 히스토리 생성
+		const uploadHistory = await insertOne<any>('upload_history', {
+			dataset_type: 'construction',
+			file_name: file.originalname,
+			file_size: file.size,
+			total_rows: totalItems,
+			status: 'processing'
+		})
+
+		if (!uploadHistory) {
+			throw new Error('Failed to create upload history')
+		}
+
+		result.uploadId = uploadHistory.id
+
+		// 3. 각 프로젝트의 항목 처리
+		let processedCount = 0
+
+		for (const project of projects) {
+			for (const item of project.items) {
+				processedCount++
+
+				try {
+					// 카테고리 찾기 또는 생성
+					const category = await findOrCreateCategory(item.category)
+
+					// 항목 찾기 또는 생성
+					const dbItem = await findOrCreateItem(category.id, item.itemName)
+
+					// construction_records에 삽입
+					const insertResult = await insertOne<any>('construction_records', {
+						item_id: dbItem.id,
+						year: project.year,
+						quarter: project.quarter,
+						month: project.month,
+						region: project.region,
+						material_cost: null, // 현장별 실행내역서에는 세부 비용 구분 없음
+						labor_cost: null,
+						overhead_cost: null,
+						total_cost: item.amount,
+						property_size: null,
+						property_type: null,
+						contractor_id: item.vendor,
+						notes: item.notes,
+						source_file: file.originalname,
+						raw_data: {
+							projectName: project.projectName,
+							projectPeriod: project.projectPeriod,
+							itemNumber: item.number,
+							category: item.category,
+							itemName: item.itemName,
+							vendor: item.vendor,
+							amount: item.amount,
+							notes: item.notes
+						}
+					})
+
+					if (!insertResult) {
+						throw new Error('Failed to insert construction record')
+					}
+
+					result.successRows++
+
+					if (result.successRows % 50 === 0) {
+						console.log(`✅ Processed ${result.successRows}/${totalItems} items`)
+					}
+				} catch (error) {
+					console.error(`❌ Error processing item ${item.itemName}:`, error)
+					const message = error instanceof Error ? error.message : '알 수 없는 오류'
+					result.errors.push({
+						row: processedCount,
+						message: `[${project.projectName}] ${item.itemName}: ${message}`
+					})
+					result.errorRows++
+				}
+			}
+		}
+
+		// 4. 업로드 히스토리 업데이트
+		await query(
+			`UPDATE upload_history
+			SET success_rows = $1,
+				error_rows = $2,
+				errors = $3,
+				status = $4,
+				completed_at = $5,
+				updated_at = NOW()
+			WHERE id = $6`,
+			[
+				result.successRows,
+				result.errorRows,
+				JSON.stringify(result.errors),
+				'completed',
+				new Date().toISOString(),
+				uploadHistory.id
+			]
+		)
+
+		console.log(`\n✅ Upload completed!`)
+		console.log(`   - Total projects: ${projects.length}`)
+		console.log(`   - Total items: ${result.totalRows}`)
+		console.log(`   - Success: ${result.successRows}`)
+		console.log(`   - Errors: ${result.errorRows}`)
+
+		return result
+	} catch (error) {
+		console.error('💥 Upload failed:', error)
+		throw error
+	}
 }
