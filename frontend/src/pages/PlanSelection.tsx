@@ -198,74 +198,79 @@ export default function PlanSelection() {
 						</div>
 					</div>
 
+					{/* TODO: 긴급 요금제 - 추후 오픈 예정
+					     현재는 숨김 처리. 자세한 내용은 .claude/docs/features/urgent-analysis-plan.md 참조
+					*/}
 					{/* Urgent Plans */}
-					<div className="mb-16">
-						<motion.h2
-							className="text-3xl md:text-4xl font-bold mb-8 text-orange-400"
-							initial={{ opacity: 0, x: -20 }}
-							animate={{ opacity: 1, x: 0 }}
-							transition={{ delay: 0.4 }}
-						>
-							긴급 요금제
-						</motion.h2>
-						<div className="grid md:grid-cols-3 gap-6">
-							{allPlans.slice(2).map((plan, index) => {
-								const Icon = plan.icon
-								const isSelected = selectedPlan === plan.id
+					{false && (
+						<div className="mb-16">
+							<motion.h2
+								className="text-3xl md:text-4xl font-bold mb-8 text-orange-400"
+								initial={{ opacity: 0, x: -20 }}
+								animate={{ opacity: 1, x: 0 }}
+								transition={{ delay: 0.4 }}
+							>
+								긴급 요금제
+							</motion.h2>
+							<div className="grid md:grid-cols-3 gap-6">
+								{allPlans.slice(2).map((plan, index) => {
+									const Icon = plan.icon
+									const isSelected = selectedPlan === plan.id
 
-								return (
-									<motion.div
-										key={plan.id}
-										initial={{ opacity: 0, y: 20 }}
-										animate={{ opacity: 1, y: 0 }}
-										transition={{ delay: 0.5 + 0.1 * index }}
-										whileHover={{ scale: 1.02 }}
-										onClick={() => handleSelectPlan(plan.id)}
-										className={`cursor-pointer glass-strong rounded-2xl p-6 border transition-all ${
-											isSelected
-												? `border-${plan.color}-500 shadow-[0_0_30px_${plan.glowColor}]`
-												: `border-${plan.color}-500/30 hover:border-${plan.color}-500/60`
-										}`}
-									>
-										{/* Selected Badge */}
-										{isSelected && (
-											<div className="absolute top-3 right-3">
-												<motion.div
-													initial={{ scale: 0 }}
-													animate={{ scale: 1 }}
-													className={`w-7 h-7 rounded-full bg-${plan.color}-500 flex items-center justify-center`}
-												>
-													<CheckCircle2 className="w-4 h-4 text-white" />
-												</motion.div>
+									return (
+										<motion.div
+											key={plan.id}
+											initial={{ opacity: 0, y: 20 }}
+											animate={{ opacity: 1, y: 0 }}
+											transition={{ delay: 0.5 + 0.1 * index }}
+											whileHover={{ scale: 1.02 }}
+											onClick={() => handleSelectPlan(plan.id)}
+											className={`cursor-pointer glass-strong rounded-2xl p-6 border transition-all ${
+												isSelected
+													? `border-${plan.color}-500 shadow-[0_0_30px_${plan.glowColor}]`
+													: `border-${plan.color}-500/30 hover:border-${plan.color}-500/60`
+											}`}
+										>
+											{/* Selected Badge */}
+											{isSelected && (
+												<div className="absolute top-3 right-3">
+													<motion.div
+														initial={{ scale: 0 }}
+														animate={{ scale: 1 }}
+														className={`w-7 h-7 rounded-full bg-${plan.color}-500 flex items-center justify-center`}
+													>
+														<CheckCircle2 className="w-4 h-4 text-white" />
+													</motion.div>
+												</div>
+											)}
+
+											<div className="flex items-center gap-3 mb-4">
+												<div className={`w-12 h-12 rounded-full bg-${plan.color}-500/20 flex items-center justify-center`}>
+													<Icon className={`w-6 h-6 text-${plan.color}-400`} />
+												</div>
+												<h3 className={`text-2xl font-bold text-${plan.color}-400`}>{plan.name}</h3>
 											</div>
-										)}
 
-										<div className="flex items-center gap-3 mb-4">
-											<div className={`w-12 h-12 rounded-full bg-${plan.color}-500/20 flex items-center justify-center`}>
-												<Icon className={`w-6 h-6 text-${plan.color}-400`} />
+											<div className="mb-4">
+												<span className="text-4xl font-bold text-white">{plan.price}</span>
+												<p className="text-xs text-gray-400 mt-1">{plan.period}</p>
+												<p className="text-sm text-gray-300 mt-2 font-medium">{plan.description}</p>
 											</div>
-											<h3 className={`text-2xl font-bold text-${plan.color}-400`}>{plan.name}</h3>
-										</div>
 
-										<div className="mb-4">
-											<span className="text-4xl font-bold text-white">{plan.price}</span>
-											<p className="text-xs text-gray-400 mt-1">{plan.period}</p>
-											<p className="text-sm text-gray-300 mt-2 font-medium">{plan.description}</p>
-										</div>
-
-										<ul className="space-y-2">
-											{plan.features.map((feature, i) => (
-												<li key={i} className="flex items-start gap-2 text-xs">
-													<CheckCircle2 className={`w-4 h-4 text-${plan.color}-400 mt-0.5 flex-shrink-0`} />
-													<span className="text-gray-300">{feature}</span>
-												</li>
-											))}
-										</ul>
-									</motion.div>
-								)
-							})}
+											<ul className="space-y-2">
+												{plan.features.map((feature, i) => (
+													<li key={i} className="flex items-start gap-2 text-xs">
+														<CheckCircle2 className={`w-4 h-4 text-${plan.color}-400 mt-0.5 flex-shrink-0`} />
+														<span className="text-gray-300">{feature}</span>
+													</li>
+												))}
+											</ul>
+										</motion.div>
+									)
+								})}
+							</div>
 						</div>
-					</div>
+					)}
 
 					{/* CTA Button */}
 					<motion.div
