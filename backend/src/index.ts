@@ -24,7 +24,8 @@ const PORT = process.env.PORT || 3001
 
 // 미들웨어
 app.use(cors())
-app.use(express.json())
+app.use(express.json({ limit: '50mb' })) // Increase limit for base64 images
+app.use(express.urlencoded({ limit: '50mb', extended: true }))
 
 // 파일 업로드 설정 (메모리에 저장)
 const upload = multer({
