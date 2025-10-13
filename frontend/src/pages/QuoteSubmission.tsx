@@ -198,55 +198,13 @@ export default function QuoteSubmission() {
 				newPreviews.push(preview)
 			}
 
-			// Update quote set with new images
+			// Update quote set with new images (미리보기만 표시, API 호출 없음)
 			updateQuoteSet(currentSetIndex, {
 				images: [...currentSet.images, ...newPreviews],
 				imageFileNames: [...currentSet.imageFileNames, ...newFileNames]
 			})
 
-			// Upload to server for OCR/Vision API processing
-			const formData = new FormData()
-			filesToUpload.forEach(file => {
-				formData.append('images', file)
-			})
-
-			const response = await fetch(getApiUrl('/api/quote-requests/parse-image'), {
-				method: 'POST',
-				body: formData
-			})
-
-			if (!response.ok) {
-				const errorData = await response.json()
-				throw new Error(errorData.error || '이미지 분석에 실패했습니다.')
-			}
-
-			const result = await response.json()
-
-			if (result.items && result.items.length > 0) {
-				// Add new items to existing items in current set
-				updateQuoteSet(currentSetIndex, {
-					items: [...currentSet.items, ...result.items]
-				})
-				alert(`✅ ${filesToUpload.length}장의 이미지에서 ${result.items.length}개 항목을 추출했습니다! 확인 후 수정하실 수 있습니다.`)
-			} else {
-				// 항목 추출 실패 시 수동 입력을 위한 빈 항목 추가
-				if (currentSet.items.length === 0) {
-					const newItem: QuoteItem = {
-						category: '',
-						item: '',
-						quantity: 1,
-						unit: '개',
-						unit_price: 0,
-						total_price: 0,
-						notes: ''
-					}
-					updateQuoteSet(currentSetIndex, { items: [newItem] })
-				}
-				alert('⚠️ 이미지를 확인하고 아래 표에 항목을 직접 입력해주세요.')
-			}
-		} catch (error) {
-			console.error('Image parsing error:', error)
-			// 에러 발생 시에도 수동 입력을 위한 빈 항목 추가
+			// 수동 입력을 위한 빈 항목 자동 추가
 			if (currentSet.items.length === 0) {
 				const newItem: QuoteItem = {
 					category: '',
@@ -259,7 +217,11 @@ export default function QuoteSubmission() {
 				}
 				updateQuoteSet(currentSetIndex, { items: [newItem] })
 			}
-			alert('⚠️ 이미지 분석에 실패했습니다. 업로드된 이미지를 확인하고 아래 표에 항목을 직접 입력해주세요.')
+
+			alert(`✅ ${filesToUpload.length}장의 이미지가 업로드되었습니다. 아래 표에 견적 항목을 입력해주세요.`)
+		} catch (error) {
+			console.error('Image upload error:', error)
+			alert('❌ 이미지 업로드에 실패했습니다: ' + (error instanceof Error ? error.message : String(error)))
 		} finally {
 			setUploading(false)
 			event.target.value = '' // Reset input for next upload
@@ -426,7 +388,7 @@ export default function QuoteSubmission() {
 						>
 							견적 분석 신청
 						</h1>
-						<p className="text-xl md:text-2xl text-gray-300">Excel 파일 또는 견적서 사진을 업로드하여 AI 견적 분석을 신청하세요</p>
+						<p className="text-xl md:text-2xl text-gray-300">Excel 파일 또는 견적서 사진을 업로드하여 집첵 견적 분석을 신청하세요</p>
 					</motion.div>
 
 					{/* Payment Info Display */}
@@ -975,11 +937,11 @@ export default function QuoteSubmission() {
 								)}
 
 								<div className="bg-[#11998e]/10 border border-[#11998e]/30 rounded-lg p-4 mt-4">
-									<h3 className="text-sm font-semibold text-[#38ef7d] mb-2">🤖 AI 자동 추출</h3>
+									<h3 className="text-sm font-semibold text-[#38ef7d] mb-2">📋 견적서 업로드 안내</h3>
 									<p className="text-xs text-gray-300">
-										견적서 사진을 업로드하면 AI가 자동으로 항목을 추출합니다.<br />
-										최대 3장까지 업로드 가능하며, 모든 항목을 통합하여 추출합니다.<br />
-										추출 후 확인 및 수정이 가능하고, 항목을 추가하거나 삭제할 수 있습니다.
+										견적서 사진을 업로드하고 아래 표에 항목을 직접 입력해주세요.<br />
+										최대 3장까지 업로드 가능합니다.<br />
+										신청 후 관리자가 이미지를 확인하여 집첵 시스템 분석을 진행합니다.
 									</p>
 								</div>
 							</div>
@@ -1110,7 +1072,7 @@ export default function QuoteSubmission() {
 
 								<div className="mt-4 bg-[#11998e]/10 border border-[#11998e]/30 rounded-lg p-4">
 									<p className="text-xs text-[#38ef7d]">
-										💡 <strong>팁:</strong> AI가 추출한 항목을 확인하고 수정하세요. 항목을 추가하거나 삭제할 수도 있습니다.
+										💡 <strong>팁:</strong> 업로드한 이미지를 참고하여 견적 항목을 입력하세요. 항목을 추가하거나 삭제할 수 있습니다.
 									</p>
 								</div>
 							</div>
@@ -1141,7 +1103,7 @@ export default function QuoteSubmission() {
 				<div className="mt-8 bg-amber-500/10 border border-amber-500/30 rounded-xl p-6">
 					<h3 className="text-lg font-bold text-amber-300 mb-2">📋 서비스 안내</h3>
 					<ul className="text-sm text-gray-300 space-y-2">
-						<li>• 신청 후 관리자가 검토하여 AI 분석을 진행합니다.</li>
+						<li>• 신청 후 관리자가 검토하여 집첵 시스템 분석을 진행합니다.</li>
 						<li>• 분석 완료 시 전화번호로 결과를 확인하실 수 있습니다.</li>
 						<li>• 본 분석은 시장 데이터 기반 참고 자료이며, 업체 평가가 아닙니다.</li>
 					</ul>
