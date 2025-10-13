@@ -36,6 +36,7 @@ const AdminQuoteRequests = lazy(async () => import('pages/Admin/QuoteRequests'))
 const AdminQuoteRequestDetail = lazy(async () => import('pages/Admin/QuoteRequestDetail'))
 const AdminDataManagement = lazy(async () => import('pages/Admin/DataManagement'))
 const AdminCommunityManagement = lazy(async () => import('pages/Admin/CommunityManagement'))
+const NotFound = lazy(async () => import('pages/NotFound'))
 
 const router = createBrowserRouter(
 	createRoutesFromElements(
@@ -60,6 +61,7 @@ const router = createBrowserRouter(
 			<Route path='/admin/quote-requests/:id' element={<AdminQuoteRequestDetail />} />
 			<Route path='/admin/data' element={<AdminDataManagement />} />
 			<Route path='/admin/community' element={<AdminCommunityManagement />} />
+			<Route path='*' element={<NotFound />} />
 		</>
 	)
 )
