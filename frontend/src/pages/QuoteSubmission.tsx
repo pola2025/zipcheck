@@ -229,12 +229,37 @@ export default function QuoteSubmission() {
 				})
 				alert(`✅ ${filesToUpload.length}장의 이미지에서 ${result.items.length}개 항목을 추출했습니다! 확인 후 수정하실 수 있습니다.`)
 			} else {
-				alert('⚠️ 견적 항목을 추출하지 못했습니다. 수동으로 입력해주세요.')
+				// 항목 추출 실패 시 수동 입력을 위한 빈 항목 추가
+				if (currentSet.items.length === 0) {
+					const newItem: QuoteItem = {
+						category: '',
+						item: '',
+						quantity: 1,
+						unit: '개',
+						unit_price: 0,
+						total_price: 0,
+						notes: ''
+					}
+					updateQuoteSet(currentSetIndex, { items: [newItem] })
+				}
+				alert('⚠️ 이미지를 확인하고 아래 표에 항목을 직접 입력해주세요.')
 			}
 		} catch (error) {
 			console.error('Image parsing error:', error)
-			// 이미지는 이미 업로드되었으므로, 에러 메시지 표시하지 않음
-			// 사용자가 직접 항목을 입력할 수 있음
+			// 에러 발생 시에도 수동 입력을 위한 빈 항목 추가
+			if (currentSet.items.length === 0) {
+				const newItem: QuoteItem = {
+					category: '',
+					item: '',
+					quantity: 1,
+					unit: '개',
+					unit_price: 0,
+					total_price: 0,
+					notes: ''
+				}
+				updateQuoteSet(currentSetIndex, { items: [newItem] })
+			}
+			alert('⚠️ 이미지 분석에 실패했습니다. 업로드된 이미지를 확인하고 아래 표에 항목을 직접 입력해주세요.')
 		} finally {
 			setUploading(false)
 			event.target.value = '' // Reset input for next upload
