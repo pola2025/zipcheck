@@ -13,6 +13,8 @@ import { parseQuoteImage } from '../services/image-parser'
 import { analyzeFloorPlan, analyzeMultipleFloorPlans } from '../services/floor-plan-analysis'
 import { uploadImages } from '../services/image-upload'
 import { authenticateToken, requireAdmin } from '../middleware/auth'
+import { comprehensiveAnalysis, cancelAnalysisJob } from '../services/comprehensive-analysis'
+import { logQuoteRequest, logPaymentComplete, logAnalysisComplete, logQuoteDelivery } from '../services/notion-customer-log'
 
 const router = Router()
 
@@ -33,8 +35,8 @@ const upload = multer({
 // User Endpoints
 // ============================================
 
-// Parse floor plan images and extract room areas (public endpoint)
-router.post('/parse-floor-plan', upload.array('images', 10), async (req, res) => {
+// Upload floor plan images only (public endpoint - no analysis)
+router.post('/upload-floor-plan', upload.array('images', 10), async (req, res) => {
 	try {
 		const files = req.files as Express.Multer.File[]
 
@@ -42,37 +44,21 @@ router.post('/parse-floor-plan', upload.array('images', 10), async (req, res) =>
 			return res.status(400).json({ error: '도면 이미지가 필요합니다.' })
 		}
 
-		console.log(`🏠 Parsing ${files.length} floor plan image(s)`)
+		console.log(`📐 Uploading ${files.length} floor plan image(s)`)
 
-		// Upload images to storage first
+		// Upload images to storage (no analysis yet)
 		const uploadResults = await uploadImages(files, 'floor-plans')
 		const imageUrls = uploadResults.map(r => r.url)
 
-		console.log(`✅ ${imageUrls.length} images uploaded`)
-
-		// Analyze floor plans
-		let analysisResult
-		if (imageUrls.length === 1) {
-			analysisResult = await analyzeFloorPlan(imageUrls[0])
-		} else {
-			analysisResult = await analyzeMultipleFloorPlans(imageUrls)
-		}
-
-		console.log(`✅ Floor plan analysis complete`)
-		console.log(`   Total area: ${analysisResult.totalArea.toFixed(1)}평`)
-		console.log(`   Rooms: ${Object.keys(analysisResult.roomAreas).length}`)
+		console.log(`✅ ${imageUrls.length} images uploaded to storage`)
 
 		res.json({
 			success: true,
-			message: `${files.length}장의 도면에서 ${Object.keys(analysisResult.roomAreas).length}개 공간을 분석했습니다.`,
-			imageUrls,
-			roomAreas: analysisResult.roomAreas,
-			totalArea: analysisResult.totalArea,
-			confidence: analysisResult.confidence,
-			rawText: analysisResult.rawText
+			message: `${files.length}장의 도면 이미지가 업로드되었습니다.`,
+			imageUrls
 		})
 	} catch (error) {
-		console.error('Floor plan parse endpoint error:', error)
+		console.error('Floor plan upload endpoint error:', error)
 		const message = error instanceof Error ? error.message : 'Unknown error'
 		res.status(500).json({ error: message })
 	}
@@ -332,6 +318,23 @@ router.post('/submit', async (req, res) => {
 
 		console.log(`✅ Quote request created: ${data.id} (Group: ${finalGroupId}, Sequence: ${sequence})`)
 
+		// Log to Notion
+		try {
+			const totalAmount = items.reduce((sum: number, item: any) => sum + (item.total_price || 0), 0)
+			await logQuoteRequest({
+				requestId: data.id,
+				customerName: customer_name,
+				customerPhone: customer_phone,
+				propertyType: property_type,
+				propertySize: property_size,
+				region: region,
+				itemCount: items.length,
+				totalAmount: totalAmount
+			})
+		} catch (notionError) {
+			console.error('Failed to log to Notion:', notionError)
+		}
+
 		// Return appropriate message based on validation status
 		let responseMessage = '견적 신청이 접수되었습니다.'
 		if (initialStatus === 'rejected') {
@@ -442,6 +445,23 @@ router.get('/result/:id', async (req, res) => {
 			})
 		}
 
+		// Log quote delivery to Notion (web view)
+		try {
+			const totalAmount = data.analysis_result?.totalAmount || 0
+			const overallScore = data.analysis_result?.overallScore || 0
+
+			await logQuoteDelivery({
+				quoteRequestId: parseInt(id),
+				customerName: data.customer_name,
+				customerPhone: data.customer_phone,
+				deliveryMethod: 'web',
+				overallScore: overallScore,
+				totalAmount: totalAmount
+			})
+		} catch (notionError) {
+			console.error('Failed to log quote delivery to Notion:', notionError)
+		}
+
 		res.json(data)
 	} catch (error) {
 		console.error('Quote result error:', error)
@@ -537,6 +557,92 @@ router.post('/admin/:id/analyze', authenticateToken, requireAdmin, async (req, r
 			return res.status(404).json({ error: '견적을 찾을 수 없습니다.' })
 		}
 
+		// ============================================
+		// Floor Plan Analysis (if floor plan images exist)
+		// ============================================
+		if (quoteRequest.floor_plan_images && Array.isArray(quoteRequest.floor_plan_images) && quoteRequest.floor_plan_images.length > 0) {
+			// Only analyze if not already analyzed
+			if (!quoteRequest.room_areas || Object.keys(quoteRequest.room_areas).length === 0) {
+				console.log(`🏠 Analyzing ${quoteRequest.floor_plan_images.length} floor plan image(s)...`)
+
+				try {
+					let floorPlanAnalysis
+
+					if (quoteRequest.floor_plan_images.length === 1) {
+						// Single floor plan image
+						floorPlanAnalysis = await analyzeFloorPlan(quoteRequest.floor_plan_images[0])
+					} else {
+						// Multiple floor plan images - merge results
+						floorPlanAnalysis = await analyzeMultipleFloorPlans(quoteRequest.floor_plan_images)
+					}
+
+					console.log(`✅ Floor plan analysis completed:`)
+					console.log(`   - Total area: ${floorPlanAnalysis.totalArea.toFixed(1)}평`)
+					console.log(`   - Rooms found: ${Object.keys(floorPlanAnalysis.roomAreas).length}`)
+					console.log(`   - Confidence: ${(floorPlanAnalysis.confidence * 100).toFixed(1)}%`)
+
+					// Display extracted room areas
+					Object.entries(floorPlanAnalysis.roomAreas).forEach(([room, area]) => {
+						console.log(`     • ${room}: ${(area as number).toFixed(1)}평`)
+					})
+
+					// Store floor plan analysis results in database
+					await query(
+						`UPDATE quote_requests
+						SET room_areas = $1,
+							floor_plan_analysis_result = $2,
+							updated_at = NOW()
+						WHERE id = $3`,
+						[
+							floorPlanAnalysis.roomAreas,
+							{
+								totalArea: floorPlanAnalysis.totalArea,
+								confidence: floorPlanAnalysis.confidence,
+								rawText: floorPlanAnalysis.rawText
+							},
+							id
+						]
+					)
+
+					console.log(`✅ Floor plan analysis results saved to database`)
+
+					// Log floor plan analysis to Notion
+					try {
+						const quoteData = await query('SELECT customer_name FROM quote_requests WHERE id = $1', [id])
+						const customerName = quoteData.rows[0]?.customer_name || `견적 #${id}`
+
+						await logAnalysisComplete({
+							quoteRequestId: parseInt(id),
+							customerName: customerName,
+							analysisType: '도면분석',
+							status: 'succeeded'
+						})
+					} catch (notionError) {
+						console.error('Failed to log floor plan analysis to Notion:', notionError)
+					}
+
+					// Update quoteRequest object with new data for use in quote analysis
+					quoteRequest.room_areas = floorPlanAnalysis.roomAreas
+					quoteRequest.floor_plan_analysis_result = {
+						totalArea: floorPlanAnalysis.totalArea,
+						confidence: floorPlanAnalysis.confidence,
+						rawText: floorPlanAnalysis.rawText
+					}
+				} catch (floorPlanError) {
+					console.error(`⚠️  Floor plan analysis failed:`, floorPlanError)
+					console.log(`   Continuing with quote analysis without floor plan data...`)
+					// Don't fail the entire analysis - just continue without floor plan data
+				}
+			} else {
+				console.log(`✅ Floor plan already analyzed - using existing room areas`)
+				const roomCount = Object.keys(quoteRequest.room_areas).length
+				const totalArea = Object.values(quoteRequest.room_areas).reduce((sum: number, area: any) => sum + area, 0)
+				console.log(`   - Rooms: ${roomCount}, Total: ${totalArea.toFixed(1)}평`)
+			}
+		} else {
+			console.log(`ℹ️  No floor plan images attached`)
+		}
+
 		// Check if this quote has quote_sets with stored images
 		const quoteSetsResult = await query(
 			'SELECT * FROM quote_sets WHERE request_id = $1 ORDER BY set_id',
@@ -607,18 +713,19 @@ router.post('/admin/:id/analyze', authenticateToken, requireAdmin, async (req, r
 			throw new Error('분석할 견적 항목이 없습니다.')
 		}
 
-		// Run AI analysis on collected items
+		// Run AI analysis on collected items (with floor plan data if available)
 		const analysisResult = await analyzeQuote({
 			items: allItems,
 			propertyType: quoteRequest.property_type,
 			propertySize: quoteRequest.property_size,
-			region: quoteRequest.region
+			region: quoteRequest.region,
+			roomAreas: quoteRequest.room_areas // Pass floor plan analysis results if available
 		})
 
 		console.log(`✅ 집첵 시스템 analysis completed`)
 
 		// ✅ CONVERTED: Supabase UPDATE with multiple fields → PostgreSQL query
-		// OLD: const { data: updatedRequest, error: updateError } = await supabase.from('quote_requests').update({...}).eq('id', id).select().single()
+		// OLD: const { data: updatedRequest, error: updateError} = await supabase.from('quote_requests').update({...}).eq('id', id).select().single()
 		const updateResult = await query(
 			`UPDATE quote_requests
 			SET analysis_result = $1,
@@ -638,6 +745,21 @@ router.post('/admin/:id/analyze', authenticateToken, requireAdmin, async (req, r
 		}
 
 		console.log(`✅ Quote request updated with analysis result`)
+
+		// Log GPT quote analysis to Notion
+		try {
+			const totalAmount = allItems.reduce((sum: number, item: any) => sum + (item.total_price || 0), 0)
+			await logAnalysisComplete({
+				quoteRequestId: parseInt(id),
+				customerName: quoteRequest.customer_name,
+				analysisType: 'GPT분석',
+				totalAmount: totalAmount,
+				overallScore: analysisResult.overallScore,
+				status: 'succeeded'
+			})
+		} catch (notionError) {
+			console.error('Failed to log GPT analysis to Notion:', notionError)
+		}
 
 		res.json({
 			success: true,
@@ -949,6 +1071,7 @@ router.post('/submit-multiple', async (req, res) => {
 
 		// Create quote sets with images and items
 		const createdSets = []
+		let totalAmountAllSets = 0
 		for (const set of quote_sets) {
 			// Calculate total amount from items
 			const totalAmount = set.items.reduce((sum: number, item: any) => {
@@ -982,6 +1105,37 @@ router.post('/submit-multiple', async (req, res) => {
 
 			console.log(`✅ Quote set created: ${set.set_id} (${set.vendor_name}, ${totalAmount}원)`)
 			createdSets.push(quoteSet)
+			totalAmountAllSets += totalAmount
+		}
+
+		// Log to Notion
+		try {
+			// Payment log
+			if (paid_amount && plan_name) {
+				await logPaymentComplete({
+					orderId: payment_id || quoteRequest.id.toString(),
+					customerName: customer_name,
+					customerPhone: customer_phone,
+					planName: plan_name,
+					amount: paid_amount,
+					paymentMethod: 'unknown'
+				})
+			}
+
+			// Quote request log
+			const totalItemCount = quote_sets.reduce((sum, set) => sum + set.items.length, 0)
+			await logQuoteRequest({
+				requestId: quoteRequest.id,
+				customerName: customer_name,
+				customerPhone: customer_phone,
+				propertyType: property_type,
+				propertySize: property_size,
+				region: region,
+				itemCount: totalItemCount,
+				totalAmount: totalAmountAllSets
+			})
+		} catch (notionError) {
+			console.error('Failed to log to Notion:', notionError)
 		}
 
 		res.json({
@@ -1000,6 +1154,361 @@ router.post('/submit-multiple', async (req, res) => {
 		})
 	} catch (error) {
 		console.error('Multiple quote submission error:', error)
+		const message = error instanceof Error ? error.message : 'Unknown error'
+		res.status(500).json({ error: message })
+	}
+})
+
+// ============================================
+// GPT-5 Pro Comprehensive Analysis (Admin Only)
+// ============================================
+
+/**
+ * GPT-5 Pro를 사용한 종합 견적 분석
+ *
+ * 특징:
+ * - 무한루프 방지 (max_steps=6, 중복 출력 차단)
+ * - 토큰 낭비 방지 (50k 예산, 출력 상한 2~4k)
+ * - 타임아웃 중복 호출 방지 (idempotency key)
+ * - 기존 AnalysisResult 구조와 동일한 응답
+ */
+router.post(
+	'/admin/:id/analyze-comprehensive',
+	authenticateToken,
+	requireAdmin,
+	async (req, res) => {
+		try {
+			const { id } = req.params
+			const { analyzed_by = 'admin', user_id } = req.body
+
+			console.log(
+				`🎯 Admin: Starting GPT-5 Pro comprehensive analysis for quote request ${id}`
+			)
+
+			// 견적 요청 조회
+			const quoteRequest = await findOne<any>('quote_requests', { id })
+
+			if (!quoteRequest) {
+				return res.status(404).json({ error: '견적을 찾을 수 없습니다.' })
+			}
+
+			// 도면 분석 먼저 수행 (기존 /analyze 엔드포인트와 동일)
+			if (
+				quoteRequest.floor_plan_images &&
+				Array.isArray(quoteRequest.floor_plan_images) &&
+				quoteRequest.floor_plan_images.length > 0
+			) {
+				if (
+					!quoteRequest.room_areas ||
+					Object.keys(quoteRequest.room_areas).length === 0
+				) {
+					console.log(
+						`🏠 Analyzing ${quoteRequest.floor_plan_images.length} floor plan image(s)...`
+					)
+
+					try {
+						let floorPlanAnalysis
+						if (quoteRequest.floor_plan_images.length === 1) {
+							floorPlanAnalysis = await analyzeFloorPlan(
+								quoteRequest.floor_plan_images[0]
+							)
+						} else {
+							floorPlanAnalysis = await analyzeMultipleFloorPlans(
+								quoteRequest.floor_plan_images
+							)
+						}
+
+						await query(
+							`UPDATE quote_requests
+							SET room_areas = $1,
+								floor_plan_analysis_result = $2,
+								updated_at = NOW()
+							WHERE id = $3`,
+							[
+								floorPlanAnalysis.roomAreas,
+								{
+									totalArea: floorPlanAnalysis.totalArea,
+									confidence: floorPlanAnalysis.confidence,
+									rawText: floorPlanAnalysis.rawText
+								},
+								id
+							]
+						)
+
+						// Log floor plan analysis to Notion
+						try {
+							await logAnalysisComplete({
+								quoteRequestId: parseInt(id),
+								customerName: quoteRequest.customer_name,
+								analysisType: '도면분석',
+								status: 'succeeded'
+							})
+						} catch (notionError) {
+							console.error('Failed to log floor plan analysis to Notion:', notionError)
+						}
+
+						quoteRequest.room_areas = floorPlanAnalysis.roomAreas
+					} catch (floorPlanError) {
+						console.error(`⚠️  Floor plan analysis failed:`, floorPlanError)
+					}
+				}
+			}
+
+			// quote_sets 처리
+			const quoteSetsResult = await query(
+				'SELECT * FROM quote_sets WHERE request_id = $1 ORDER BY set_id',
+				[id]
+			)
+
+			const quoteSets = quoteSetsResult.rows
+			let allItems = []
+
+			if (quoteSets.length > 0) {
+				console.log(`📦 Found ${quoteSets.length} quote sets`)
+
+				for (const quoteSet of quoteSets) {
+					// Parse images if needed
+					if (
+						quoteSet.images &&
+						Array.isArray(quoteSet.images) &&
+						quoteSet.images.length > 0 &&
+						quoteSet.upload_type === 'image'
+					) {
+						for (const base64Image of quoteSet.images) {
+							const base64Data = base64Image.replace(
+								/^data:image\/\w+;base64,/,
+								''
+							)
+							const imageBuffer = Buffer.from(base64Data, 'base64')
+							const parseResult = await parseQuoteImage(imageBuffer)
+
+							if (parseResult.success && parseResult.items) {
+								allItems.push(...parseResult.items)
+							}
+						}
+					}
+
+					// Add manual items
+					if (quoteSet.items && Array.isArray(quoteSet.items)) {
+						allItems.push(...quoteSet.items)
+					}
+				}
+			} else {
+				allItems = quoteRequest.items || []
+			}
+
+			if (allItems.length === 0) {
+				throw new Error('분석할 견적 항목이 없습니다.')
+			}
+
+			console.log(`✅ Total items collected: ${allItems.length}`)
+
+			// 상태 업데이트: analyzing
+			await query(
+				'UPDATE quote_requests SET status = $1, updated_at = NOW() WHERE id = $2',
+				['analyzing', id]
+			)
+
+			// GPT-5 Pro 종합 분석 실행
+			const analysisResult = await comprehensiveAnalysis(
+				{
+					quoteRequestId: parseInt(id),
+					items: allItems,
+					propertyType: quoteRequest.property_type,
+					propertySize: quoteRequest.property_size,
+					region: quoteRequest.region,
+					roomAreas: quoteRequest.room_areas,
+					userId: user_id || analyzed_by
+				},
+				{
+					// abortSignal: req.signal, // TODO: Request AbortController support
+					tokenBudget: 50000,
+					maxOutputTokens: 3000,
+					userId: user_id || analyzed_by
+				}
+			)
+
+			console.log(`✅ GPT-5 Pro comprehensive analysis completed`)
+			console.log(
+				`   Token Usage: ${analysisResult._meta?.tokenUsage.total_tokens.toLocaleString()}`
+			)
+			console.log(`   Cost: $${analysisResult._meta?.costUsd.toFixed(4)}`)
+
+			// 결과 저장 (AnalysisResult 부분만)
+			const { _meta, ...analysisData } = analysisResult
+
+			const updateResult = await query(
+				`UPDATE quote_requests
+				SET analysis_result = $1,
+					analyzed_at = $2,
+					analyzed_by = $3,
+					status = $4,
+					updated_at = NOW()
+				WHERE id = $5
+				RETURNING *`,
+				[analysisData, new Date().toISOString(), analyzed_by, 'completed', id]
+			)
+
+			const updatedRequest = updateResult.rows[0]
+
+			if (!updatedRequest) {
+				throw new Error('Failed to update quote request')
+			}
+
+			console.log(`✅ Quote request updated with GPT-5 Pro analysis result`)
+
+			// Log GPT-5 Pro analysis to Notion
+			try {
+				const totalAmount = allItems.reduce((sum: number, item: any) => sum + (item.total_price || 0), 0)
+				await logAnalysisComplete({
+					quoteRequestId: parseInt(id),
+					customerName: quoteRequest.customer_name,
+					analysisType: 'GPT분석',
+					totalAmount: totalAmount,
+					overallScore: analysisData.overallScore,
+					status: 'succeeded'
+				})
+			} catch (notionError) {
+				console.error('Failed to log GPT-5 Pro analysis to Notion:', notionError)
+			}
+
+			res.json({
+				success: true,
+				message: 'GPT-5 Pro 종합 분석이 완료되었습니다.',
+				data: updatedRequest,
+				meta: _meta // 메타 정보 (토큰 사용량, 비용 등)
+			})
+		} catch (error) {
+			console.error('GPT-5 Pro comprehensive analysis error:', error)
+
+			// 상태 원복
+			await query(
+				'UPDATE quote_requests SET status = $1, updated_at = NOW() WHERE id = $2',
+				['pending', req.params.id]
+			)
+
+			const message = error instanceof Error ? error.message : 'Unknown error'
+			res.status(500).json({ error: message })
+		}
+	}
+)
+
+/**
+ * GPT-5 Pro 분석 작업 취소
+ */
+router.post(
+	'/admin/analysis-job/:jobId/cancel',
+	authenticateToken,
+	requireAdmin,
+	async (req, res) => {
+		try {
+			const { jobId } = req.params
+
+			console.log(`🚫 Admin: Canceling analysis job ${jobId}`)
+
+			await cancelAnalysisJob(jobId)
+
+			res.json({
+				success: true,
+				message: '분석 작업이 취소되었습니다.'
+			})
+		} catch (error) {
+			console.error('Job cancel error:', error)
+			const message = error instanceof Error ? error.message : 'Unknown error'
+			res.status(500).json({ error: message })
+		}
+	}
+)
+
+/**
+ * GPT-5 Pro 분석 작업 상태 조회
+ */
+router.get(
+	'/admin/analysis-job/:jobId',
+	authenticateToken,
+	requireAdmin,
+	async (req, res) => {
+		try {
+			const { jobId } = req.params
+
+			const jobResult = await query(
+				`SELECT
+					aj.*,
+					(SELECT json_agg(ajo.* ORDER BY ajo.step)
+					FROM analysis_job_outputs ajo
+					WHERE ajo.job_id = aj.id) as outputs,
+					(SELECT json_agg(aju.* ORDER BY aju.step)
+					FROM analysis_job_usage aju
+					WHERE aju.job_id = aj.id) as usage_logs
+				FROM analysis_jobs aj
+				WHERE aj.id = $1`,
+				[jobId]
+			)
+
+			if (jobResult.rows.length === 0) {
+				return res.status(404).json({ error: '분석 작업을 찾을 수 없습니다.' })
+			}
+
+			res.json({
+				success: true,
+				data: jobResult.rows[0]
+			})
+		} catch (error) {
+			console.error('Job status query error:', error)
+			const message = error instanceof Error ? error.message : 'Unknown error'
+			res.status(500).json({ error: message })
+		}
+	}
+)
+
+/**
+ * GPT-5 Pro 분석 작업 목록 조회 (모니터링용)
+ */
+router.get('/admin/analysis-jobs', authenticateToken, requireAdmin, async (req, res) => {
+	try {
+		const { status, limit = 20, offset = 0 } = req.query
+
+		let queryText = `
+			SELECT
+				aj.*,
+				qr.customer_name,
+				qr.property_type,
+				qr.region
+			FROM analysis_jobs aj
+			LEFT JOIN quote_requests qr ON aj.quote_request_id = qr.id
+		`
+		const params: any[] = []
+
+		if (status && status !== 'all') {
+			queryText += ' WHERE aj.status = $1'
+			params.push(status)
+		}
+
+		queryText += ` ORDER BY aj.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`
+		params.push(Number(limit), Number(offset))
+
+		const result = await query(queryText, params)
+
+		// 통계 정보
+		const statsResult = await query(
+			`SELECT status, COUNT(*) as count, AVG(actual_tokens_used) as avg_tokens, SUM(actual_cost_usd) as total_cost
+			FROM analysis_jobs
+			WHERE created_at > NOW() - INTERVAL '7 days'
+			GROUP BY status`
+		)
+
+		res.json({
+			success: true,
+			data: result.rows,
+			stats: statsResult.rows,
+			pagination: {
+				limit: Number(limit),
+				offset: Number(offset),
+				total: result.rows.length
+			}
+		})
+	} catch (error) {
+		console.error('Jobs list query error:', error)
 		const message = error instanceof Error ? error.message : 'Unknown error'
 		res.status(500).json({ error: message })
 	}
