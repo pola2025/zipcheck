@@ -14,12 +14,13 @@ import companyReviewsAdminRouter from './routes/admin/company-reviews-admin'
 import damageCasesAdminRouter from './routes/admin/damage-cases-admin'
 import { authenticateToken, requireAdmin } from './middleware/auth'
 import { pool } from './lib/db' // Import database pool to initialize connection
+import { startStatsCronJobs } from './services/stats-cron'
 
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../.env') })
 
 const app = express()
-const PORT = process.env.PORT || 3001
+const PORT = Number(process.env.PORT) || 3001
 
 // 미들웨어
 app.use(cors())
@@ -305,11 +306,11 @@ app.use('/api/damage-cases/admin', damageCasesAdminRouter)
 // 서버 시작
 // ============================================
 
-app.listen(PORT, async () => {
+app.listen(PORT, '0.0.0.0', async () => {
 	console.log(`
 🚀 ZipCheck Backend Server Started!
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📡 Server running on: http://localhost:${PORT}
+📡 Server running on port: ${PORT}
 🗄️  Database: Neon DB (PostgreSQL)
 🔍 Environment: ${process.env.NODE_ENV || 'development'}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -318,8 +319,13 @@ app.listen(PORT, async () => {
 	// Test database connection
 	try {
 		await pool.query('SELECT NOW()')
+		console.log('✅ Connected to Neon DB (PostgreSQL)')
 		console.log('✅ Database connection verified')
+
+		// Start statistics cron jobs
+		startStatsCronJobs()
 	} catch (error) {
 		console.error('❌ Database connection failed:', error)
+		console.log('⚠️  Statistics cron jobs not started due to database connection failure')
 	}
 })
