@@ -39,11 +39,11 @@ router.get('/comments/:targetType/:targetId', optionalAuthenticateToken, async (
 		const commentsMap = new Map()
 		const rootComments: any[] = []
 
-		data.forEach((comment) => {
+		data.forEach((comment: any) => {
 			commentsMap.set(comment.id, { ...comment, replies: [] })
 		})
 
-		data.forEach((comment) => {
+		data.forEach((comment: any) => {
 			const commentWithReplies = commentsMap.get(comment.id)
 			if (comment.parent_comment_id) {
 				const parent = commentsMap.get(comment.parent_comment_id)

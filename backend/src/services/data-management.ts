@@ -59,8 +59,8 @@ export async function getDataStats() {
 			.select('year')
 			.gte('year', new Date().getFullYear() - 1)
 
-		const records2024 = yearlyData?.filter((r) => r.year === 2024).length || 0
-		const records2025 = yearlyData?.filter((r) => r.year === 2025).length || 0
+		const records2024 = yearlyData?.filter((r: any) => r.year === 2024).length || 0
+		const records2025 = yearlyData?.filter((r: any) => r.year === 2025).length || 0
 
 		// 데이터 누락 항목 찾기
 		const { data: itemsWithoutData } = await supabase

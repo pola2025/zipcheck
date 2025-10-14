@@ -23,7 +23,7 @@ async function resetQuoteAnalysis() {
 
 		console.log(`✅ Reset ${data?.length || 0} quote request(s) to pending status`)
 		if (data && data.length > 0) {
-			data.forEach((req) => {
+			data.forEach((req: any) => {
 				console.log(`  - ${req.customer_name} (${req.id})`)
 			})
 		}

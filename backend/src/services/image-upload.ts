@@ -168,7 +168,7 @@ export async function ensureStorageBucket(): Promise<void> {
 			return
 		}
 
-		const bucketExists = buckets?.some(bucket => bucket.name === STORAGE_BUCKET)
+		const bucketExists = buckets?.some((bucket: any) => bucket.name === STORAGE_BUCKET)
 
 		if (!bucketExists) {
 			console.log(`📦 Creating storage bucket: ${STORAGE_BUCKET}`)
