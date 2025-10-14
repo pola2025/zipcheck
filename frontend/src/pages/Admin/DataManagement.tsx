@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Upload, FileSpreadsheet, Database, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Upload, FileSpreadsheet, Database, CheckCircle2, AlertCircle, Search, TrendingUp } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuth } from '../../contexts/AuthContext'
 import { getApiUrl } from '../../lib/api-config'
@@ -40,6 +40,20 @@ interface DataStats {
 	}>
 }
 
+interface ItemStat {
+	id: string
+	item_name: string
+	category_name: string
+	record_count: number
+	avg_total_cost: number
+	avg_material_cost: number
+	avg_labor_cost: number
+	avg_overhead_cost: number
+	min_cost: number
+	max_cost: number
+	median_cost: number
+}
+
 export default function DataManagement() {
 	const { token } = useAuth()
 	const [uploadType, setUploadType] = useState<'construction' | 'distributor'>('construction')
@@ -48,11 +62,26 @@ export default function DataManagement() {
 	const [datasets, setDatasets] = useState<DatasetInfo[]>([])
 	const [dataStats, setDataStats] = useState<DataStats | null>(null)
 
+	// 항목별 통계
+	const [itemStats, setItemStats] = useState<ItemStat[]>([])
+	const [searchTerm, setSearchTerm] = useState('')
+	const [selectedCategory, setSelectedCategory] = useState<string>('')
+	const [loadingItems, setLoadingItems] = useState(false)
+
 	// 페이지 로드 시 업로드 이력 및 통계 가져오기
 	useEffect(() => {
 		fetchDatasets()
 		fetchDataStats()
+		fetchItemStats()
 	}, [])
+
+	// 검색/필터 변경 시 항목 통계 재조회
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			fetchItemStats()
+		}, 500)
+		return () => clearTimeout(timer)
+	}, [searchTerm, selectedCategory])
 
 	const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0]
@@ -132,6 +161,35 @@ export default function DataManagement() {
 			setDataStats(data)
 		} catch (error) {
 			console.error('Failed to fetch data stats:', error)
+		}
+	}
+
+	const fetchItemStats = async () => {
+		try {
+			setLoadingItems(true)
+			const params = new URLSearchParams({
+				limit: '100',
+				offset: '0'
+			})
+
+			if (selectedCategory) {
+				params.append('category', selectedCategory)
+			}
+			if (searchTerm) {
+				params.append('search', searchTerm)
+			}
+
+			const response = await fetch(getApiUrl(`/api/admin/item-stats?${params}`), {
+				headers: {
+					'Authorization': `Bearer ${token}`
+				}
+			})
+			const data = await response.json()
+			setItemStats(data.items || [])
+		} catch (error) {
+			console.error('Failed to fetch item stats:', error)
+		} finally {
+			setLoadingItems(false)
 		}
 	}
 
@@ -448,6 +506,113 @@ export default function DataManagement() {
 							</tbody>
 						</table>
 					</div>
+				</div>
+
+				{/* 항목별 가격 통계 */}
+				<div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700 mt-8">
+					<div className="flex items-center justify-between mb-6">
+						<div className="flex items-center gap-3">
+							<TrendingUp className="w-6 h-6 text-green-400" />
+							<h3 className="text-xl font-bold">항목별 가격 통계</h3>
+						</div>
+					</div>
+
+					{/* 검색 및 필터 */}
+					<div className="grid md:grid-cols-2 gap-4 mb-6">
+						<div className="relative">
+							<Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+							<input
+								type="text"
+								placeholder="항목명 검색..."
+								value={searchTerm}
+								onChange={(e) => setSearchTerm(e.target.value)}
+								className="w-full pl-10 pr-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500"
+							/>
+						</div>
+						<select
+							value={selectedCategory}
+							onChange={(e) => setSelectedCategory(e.target.value)}
+							className="px-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+						>
+							<option value="">전체 카테고리</option>
+							{dataStats?.byCategory.map((cat) => (
+								<option key={cat.category} value={cat.category}>
+									{cat.category}
+								</option>
+							))}
+						</select>
+					</div>
+
+					{/* 항목 테이블 */}
+					<div className="overflow-x-auto">
+						<table className="w-full">
+							<thead>
+								<tr className="border-b border-gray-700">
+									<th className="text-left py-3 px-4 text-sm font-semibold text-gray-400">항목명</th>
+									<th className="text-left py-3 px-4 text-sm font-semibold text-gray-400">카테고리</th>
+									<th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">평균 가격</th>
+									<th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">자재비</th>
+									<th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">인건비</th>
+									<th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">간접비</th>
+									<th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">최저~최고</th>
+									<th className="text-center py-3 px-4 text-sm font-semibold text-gray-400">기록수</th>
+								</tr>
+							</thead>
+							<tbody>
+								{loadingItems ? (
+									<tr>
+										<td colSpan={8} className="text-center py-8 text-gray-500">
+											로딩 중...
+										</td>
+									</tr>
+								) : itemStats.length === 0 ? (
+									<tr>
+										<td colSpan={8} className="text-center py-8 text-gray-500">
+											검색 결과가 없습니다
+										</td>
+									</tr>
+								) : (
+									itemStats.map((item) => (
+										<tr key={item.id} className="border-b border-gray-700/50 hover:bg-gray-700/20">
+											<td className="py-3 px-4 font-medium">{item.item_name}</td>
+											<td className="py-3 px-4">
+												<span className="px-2 py-1 rounded-full text-xs bg-cyan-500/20 text-cyan-400">
+													{item.category_name}
+												</span>
+											</td>
+											<td className="py-3 px-4 text-right font-bold text-green-400">
+												₩{item.avg_total_cost?.toLocaleString() || '-'}
+											</td>
+											<td className="py-3 px-4 text-right text-sm text-gray-300">
+												₩{item.avg_material_cost?.toLocaleString() || '-'}
+											</td>
+											<td className="py-3 px-4 text-right text-sm text-orange-400 font-semibold">
+												₩{item.avg_labor_cost?.toLocaleString() || '-'}
+											</td>
+											<td className="py-3 px-4 text-right text-sm text-gray-400">
+												₩{item.avg_overhead_cost?.toLocaleString() || '-'}
+											</td>
+											<td className="py-3 px-4 text-right text-xs text-gray-400">
+												₩{item.min_cost?.toLocaleString()} ~<br />
+												₩{item.max_cost?.toLocaleString()}
+											</td>
+											<td className="py-3 px-4 text-center text-sm">
+												<span className="px-2 py-1 rounded bg-purple-500/20 text-purple-300">
+													{item.record_count}건
+												</span>
+											</td>
+										</tr>
+									))
+								)}
+							</tbody>
+						</table>
+					</div>
+
+					{itemStats.length > 0 && (
+						<div className="mt-4 text-sm text-gray-400 text-center">
+							총 {itemStats.length}개 항목 표시 중
+						</div>
+					)}
 				</div>
 			</div>
 		</div>
