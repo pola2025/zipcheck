@@ -82,8 +82,141 @@ fetch(`${API_URL}/api/auth/admin/login`)
 - 환경 변수는 Railway 대시보드에서 설정
 
 ### Vercel (Frontend)
-- URL: `https://frontend-omega-ten-49.vercel.app`
+- Production URL: `https://zcheck.co.kr` (커스텀 도메인)
+- Preview URL: Vercel이 자동 생성 (각 커밋마다)
 - 환경 변수는 Vercel 대시보드에서 설정
+
+---
+
+## 🔍 배포 확인 및 검증 절차
+
+**사용자에게 스크린샷을 요청하기 전에 반드시 다음 단계를 수행:**
+
+### 1. Vercel 배포 상태 확인
+
+```bash
+cd frontend
+npx vercel ls
+```
+
+**확인 사항:**
+- 최근 Production 배포 시간
+- 최근 Preview 배포 시간
+- Production vs Preview 배포 간격
+- 배포 상태 (● Ready, ⚠️ Error 등)
+
+**예시 출력:**
+```
+Age     Deployment                                                       Status      Environment
+27m     https://zipcheck-g85k5c8za-mkt9834-4301s-projects.vercel.app     ● Ready     Preview
+3h      https://zipcheck-dyzelkzz0-mkt9834-4301s-projects.vercel.app     ● Ready     Production
+```
+
+**문제 판단:**
+- ❌ Production이 3시간 전인데 Preview는 27분 전 → Preview가 Production으로 승격 안됨
+- ✅ Production과 Preview 시간이 비슷 → 정상 배포됨
+
+### 2. Git 커밋 이력 확인
+
+```bash
+git log --oneline -10
+```
+
+**확인 사항:**
+- 최근 커밋 해시와 메시지
+- 변경사항이 포함된 커밋이 언제 푸시되었는지
+
+### 3. 배포된 커밋 확인
+
+```bash
+# 특정 배포의 커밋 해시 확인
+npx vercel inspect <deployment-url>
+```
+
+또는 Vercel 대시보드에서:
+- Deployments 탭 → 최근 배포 클릭
+- "Source" 섹션에서 Git 커밋 해시 확인
+- 해당 커밋과 로컬 커밋 비교
+
+### 4. Production 배포 강제 실행 (필요 시)
+
+**Preview가 Production으로 승격되지 않았을 경우:**
+
+```bash
+# 특정 배포를 Production으로 승격
+npx vercel promote <preview-url>
+
+# 또는 Vercel 대시보드에서:
+# Deployments → Preview 배포 → "Promote to Production" 버튼 클릭
+```
+
+### 5. 빌드 로그 확인
+
+```bash
+# 최근 배포의 빌드 로그 확인
+npx vercel logs <deployment-url>
+```
+
+**확인 사항:**
+- 빌드 성공/실패 여부
+- TypeScript 에러
+- 의존성 문제
+- 빌드 경고
+
+### 6. 변경사항 직접 확인
+
+**Preview URL로 확인:**
+1. 최근 Preview 배포 URL 복사
+2. 해당 URL에서 변경사항 확인 (JavaScript 실행 필요)
+3. 변경사항이 Preview에는 있지만 Production에는 없는 경우 → Promote 필요
+
+**로컬에서 빌드 테스트:**
+```bash
+cd frontend
+npm run build
+npx vite preview
+```
+- 빌드 에러가 있는지 확인
+- 로컬에서 변경사항이 보이는지 확인
+
+### 7. 문제 해결 워크플로우
+
+```
+변경사항이 안 보인다고 보고 받음
+    ↓
+1. Vercel 배포 상태 확인 (npx vercel ls)
+    ↓
+2. Production vs Preview 배포 시간 비교
+    ↓
+3a. Production이 오래됨              3b. 최근 배포가 Failed
+    ↓                                    ↓
+  Preview URL로 변경사항 확인         빌드 로그 확인
+    ↓                                    ↓
+  있으면 Promote 실행               에러 수정 후 재배포
+    ↓
+4. Production 배포 완료
+    ↓
+5. 사용자에게 하드 리프레시 안내
+   (Ctrl+Shift+R / Cmd+Shift+R)
+    ↓
+6. 여전히 안 보이면 사용자에게 스크린샷 요청
+```
+
+### 8. 캐시 관련 이슈
+
+**사용자가 변경사항을 못 볼 때:**
+
+1. **하드 리프레시 안내:**
+   - Windows/Linux: `Ctrl + Shift + R`
+   - Mac: `Cmd + Shift + R`
+
+2. **브라우저 캐시 확인:**
+   - DevTools → Network 탭 → "Disable cache" 체크
+   - 시크릿 모드로 테스트
+
+3. **CDN 캐시 확인:**
+   - Vercel은 보통 자동으로 캐시를 무효화
+   - 필요시 Vercel 대시보드에서 "Redeploy" 실행
 
 ---
 
