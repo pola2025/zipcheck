@@ -4,7 +4,7 @@ import dotenv from 'dotenv'
 import multer from 'multer'
 import path from 'path'
 import { uploadConstructionData, uploadDistributorData, uploadConstructionSheets } from './services/data-upload'
-import { recalculateMarketAverages, getUploadHistory } from './services/data-management'
+import { recalculateMarketAverages } from './services/data-management'
 import { analyzeQuote } from './services/ai-analysis'
 import quoteRequestsRouter from './routes/quote-requests'
 import authRouter from './routes/auth'
@@ -119,8 +119,21 @@ app.post('/api/admin/recalculate-averages', authenticateToken, requireAdmin, asy
 // 업로드 이력 조회
 app.get('/api/admin/upload-history', authenticateToken, requireAdmin, async (req, res) => {
 	try {
-		const history = await getUploadHistory()
-		res.json(history)
+		const history = await pool.query(`
+			SELECT
+				id,
+				dataset_type,
+				file_name,
+				status,
+				total_rows,
+				success_rows,
+				error_rows,
+				created_at as uploaded_at
+			FROM upload_history
+			ORDER BY created_at DESC
+			LIMIT 50
+		`)
+		res.json(history.rows)
 	} catch (error) {
 		console.error('History fetch error:', error)
 		const message = error instanceof Error ? error.message : 'Unknown error'
