@@ -508,7 +508,7 @@ export async function logQuoteDelivery(data: QuoteDeliveryLog) {
 			icon: {
 				type: 'emoji',
 				emoji: methodEmoji[data.deliveryMethod]
-			},
+			} as any,
 			properties: {
 				'제목': {
 					title: [{

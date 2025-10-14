@@ -151,7 +151,7 @@ export async function logToNotion(data: NotionLogData) {
 			icon: {
 				type: 'emoji',
 				emoji: emoji
-			},
+			} as any,
 			properties: {
 				'제목': {
 					title: [{
@@ -177,7 +177,8 @@ export async function logToNotion(data: NotionLogData) {
 			children: children
 		})
 
-		console.log('✅ Notion 로그 저장 완료:', response.url)
+		const pageUrl = `https://www.notion.so/${response.id.replace(/-/g, '')}`
+		console.log('✅ Notion 로그 저장 완료:', pageUrl)
 		return response
 	} catch (error: any) {
 		console.error('❌ Notion 로그 저장 실패:', error.message)
