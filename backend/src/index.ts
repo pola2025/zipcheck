@@ -175,7 +175,7 @@ app.get('/api/admin/data-stats', authenticateToken, requireAdmin, async (req, re
 	}
 })
 
-// 항목별 가격 통계 조회
+// 항목별 가격 통계 조회 (위치별로 구분)
 app.get('/api/admin/item-stats', authenticateToken, requireAdmin, async (req, res) => {
 	try {
 		const { category, search, limit = 100, offset = 0 } = req.query
@@ -191,7 +191,12 @@ app.get('/api/admin/item-stats', authenticateToken, requireAdmin, async (req, re
 		}
 
 		if (search) {
-			whereConditions.push(`i.name ILIKE $${paramIndex}`)
+			// 검색 시 base_name, location, 원래 이름 모두 검색
+			whereConditions.push(`(
+				i.name ILIKE $${paramIndex} OR
+				i.base_name ILIKE $${paramIndex} OR
+				cr.location ILIKE $${paramIndex}
+			)`)
 			params.push(`%${search}%`)
 			paramIndex++
 		}
@@ -201,10 +206,16 @@ app.get('/api/admin/item-stats', authenticateToken, requireAdmin, async (req, re
 		params.push(offset)
 		const offsetParam = paramIndex
 
+		// 업무(base_name) - 위치(location) 조합으로 그룹화
 		const itemStats = await pool.query(`
 			SELECT
 				i.id,
-				i.name as item_name,
+				COALESCE(i.base_name, i.name) as base_name,
+				cr.location,
+				CASE
+					WHEN cr.location IS NOT NULL THEN COALESCE(i.base_name, i.name) || ' - ' || cr.location
+					ELSE i.name
+				END as item_name,
 				c.name as category_name,
 				COUNT(cr.id) as record_count,
 				ROUND(AVG(cr.total_cost)) as avg_total_cost,
@@ -218,19 +229,22 @@ app.get('/api/admin/item-stats', authenticateToken, requireAdmin, async (req, re
 			INNER JOIN categories c ON i.category_id = c.id
 			INNER JOIN construction_records cr ON cr.item_id = i.id
 			WHERE ${whereConditions.join(' AND ')}
-			GROUP BY i.id, i.name, c.name
+			GROUP BY i.id, i.name, i.base_name, c.name, cr.location
 			HAVING COUNT(cr.id) > 0
 			ORDER BY COUNT(cr.id) DESC, AVG(cr.total_cost) DESC
 			LIMIT $${limitParam} OFFSET $${offsetParam}
 		`, params)
 
-		// 전체 개수 조회
+		// 전체 개수 조회 (base_name + location 조합 개수)
 		const countResult = await pool.query(`
-			SELECT COUNT(DISTINCT i.id) as total
-			FROM items i
-			INNER JOIN categories c ON i.category_id = c.id
-			INNER JOIN construction_records cr ON cr.item_id = i.id
-			WHERE ${whereConditions.join(' AND ')}
+			SELECT COUNT(*) as total
+			FROM (
+				SELECT DISTINCT i.id, cr.location
+				FROM items i
+				INNER JOIN categories c ON i.category_id = c.id
+				INNER JOIN construction_records cr ON cr.item_id = i.id
+				WHERE ${whereConditions.join(' AND ')}
+			) subquery
 		`, params.slice(0, -2)) // limit, offset 제외
 
 		res.json({
