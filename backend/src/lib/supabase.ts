@@ -25,10 +25,8 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
 		)
 		console.log('✅ Supabase client initialized')
 	} catch (error) {
-		console.warn('⚠️  Supabase package not installed. Supabase features will be disabled.')
+		// Silently skip if package not installed
 	}
-} else {
-	console.warn('⚠️  Supabase credentials not found. Supabase features will be disabled.')
 }
 
 export const supabase = supabaseInstance
