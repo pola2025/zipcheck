@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Upload, FileSpreadsheet, Database, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react'
+import { Upload, FileSpreadsheet, Database, CheckCircle2, AlertCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuth } from '../../contexts/AuthContext'
 import { getApiUrl } from '../../lib/api-config'
@@ -135,22 +135,6 @@ export default function DataManagement() {
 		}
 	}
 
-	const recalculateMarketAverages = async () => {
-		if (!confirm('시장 평균을 재계산하시겠습니까?')) return
-
-		try {
-			const response = await fetch(getApiUrl('/api/admin/recalculate-averages'), {
-				method: 'POST',
-				headers: {
-					'Authorization': `Bearer ${token}`
-				}
-			})
-			if (!response.ok) throw new Error('Failed to recalculate')
-			alert('✅ 시장 평균이 재계산되었습니다!')
-		} catch (error) {
-			alert('❌ 재계산 실패: ' + (error instanceof Error ? error.message : String(error)))
-		}
-	}
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-8">
@@ -388,13 +372,6 @@ export default function DataManagement() {
 				<div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
 					<div className="flex items-center justify-between mb-6">
 						<h3 className="text-xl font-bold">업로드된 데이터셋</h3>
-						<button
-							onClick={recalculateMarketAverages}
-							className="px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/50 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
-						>
-							<RefreshCw className="w-4 h-4" />
-							시장 평균 재계산
-						</button>
 					</div>
 
 					<div className="overflow-x-auto">

@@ -4,7 +4,6 @@ import dotenv from 'dotenv'
 import multer from 'multer'
 import path from 'path'
 import { uploadConstructionData, uploadDistributorData, uploadConstructionSheets } from './services/data-upload'
-import { recalculateMarketAverages } from './services/data-management'
 import { analyzeQuote } from './services/ai-analysis'
 import quoteRequestsRouter from './routes/quote-requests'
 import authRouter from './routes/auth'
@@ -98,19 +97,6 @@ app.post('/api/admin/upload-distributor', authenticateToken, requireAdmin, uploa
 		res.json(result)
 	} catch (error) {
 		console.error('Upload error:', error)
-		const message = error instanceof Error ? error.message : 'Unknown error'
-		res.status(500).json({ error: message })
-	}
-})
-
-// 시장 평균 재계산
-app.post('/api/admin/recalculate-averages', authenticateToken, requireAdmin, async (req, res) => {
-	try {
-		console.log('🔄 Recalculating market averages...')
-		await recalculateMarketAverages()
-		res.json({ message: 'Market averages recalculated successfully' })
-	} catch (error) {
-		console.error('Recalculation error:', error)
 		const message = error instanceof Error ? error.message : 'Unknown error'
 		res.status(500).json({ error: message })
 	}
