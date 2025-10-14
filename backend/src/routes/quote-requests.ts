@@ -10,6 +10,8 @@ import {
 } from '../services/quote-group'
 import { validateQuoteDetail, needsAdminReview } from '../services/quote-validation'
 import { parseQuoteImage } from '../services/image-parser'
+import { analyzeFloorPlan, analyzeMultipleFloorPlans } from '../services/floor-plan-analysis'
+import { uploadImages } from '../services/image-upload'
 import { authenticateToken, requireAdmin } from '../middleware/auth'
 
 const router = Router()
@@ -30,6 +32,51 @@ const upload = multer({
 // ============================================
 // User Endpoints
 // ============================================
+
+// Parse floor plan images and extract room areas (public endpoint)
+router.post('/parse-floor-plan', upload.array('images', 10), async (req, res) => {
+	try {
+		const files = req.files as Express.Multer.File[]
+
+		if (!files || files.length === 0) {
+			return res.status(400).json({ error: '도면 이미지가 필요합니다.' })
+		}
+
+		console.log(`🏠 Parsing ${files.length} floor plan image(s)`)
+
+		// Upload images to storage first
+		const uploadResults = await uploadImages(files, 'floor-plans')
+		const imageUrls = uploadResults.map(r => r.url)
+
+		console.log(`✅ ${imageUrls.length} images uploaded`)
+
+		// Analyze floor plans
+		let analysisResult
+		if (imageUrls.length === 1) {
+			analysisResult = await analyzeFloorPlan(imageUrls[0])
+		} else {
+			analysisResult = await analyzeMultipleFloorPlans(imageUrls)
+		}
+
+		console.log(`✅ Floor plan analysis complete`)
+		console.log(`   Total area: ${analysisResult.totalArea.toFixed(1)}평`)
+		console.log(`   Rooms: ${Object.keys(analysisResult.roomAreas).length}`)
+
+		res.json({
+			success: true,
+			message: `${files.length}장의 도면에서 ${Object.keys(analysisResult.roomAreas).length}개 공간을 분석했습니다.`,
+			imageUrls,
+			roomAreas: analysisResult.roomAreas,
+			totalArea: analysisResult.totalArea,
+			confidence: analysisResult.confidence,
+			rawText: analysisResult.rawText
+		})
+	} catch (error) {
+		console.error('Floor plan parse endpoint error:', error)
+		const message = error instanceof Error ? error.message : 'Unknown error'
+		res.status(500).json({ error: message })
+	}
+})
 
 // Parse quote image with AI Vision (public endpoint) - supports multiple images
 router.post('/parse-image', upload.array('images', 5), async (req, res) => {
@@ -172,7 +219,10 @@ router.post('/submit', async (req, res) => {
 			address,
 			items,
 			group_id, // Optional: 기존 그룹에 추가할 경우
-			group_name // Optional: 새 그룹 이름
+			group_name, // Optional: 새 그룹 이름
+			floor_plan_images, // Optional: 도면 이미지 URL 배열
+			room_areas, // Optional: 공간별 면적 { "주방": 5.5, "거실": 15.3 }
+			floor_plan_analysis_result // Optional: 전체 분석 결과
 		} = req.body
 
 		// Validation
@@ -243,7 +293,7 @@ router.post('/submit', async (req, res) => {
 
 		// ✅ CONVERTED: Supabase INSERT → PostgreSQL insertOne
 		// OLD: const { data, error } = await supabase.from('quote_requests').insert({...}).select().single()
-		const data = await insertOne<any>('quote_requests', {
+		const insertData: any = {
 			customer_name,
 			customer_phone,
 			customer_email,
@@ -257,7 +307,24 @@ router.post('/submit', async (req, res) => {
 			validation_notes: validationNotes,
 			group_id: finalGroupId,
 			sequence_in_group: sequence
-		})
+		}
+
+		// Add floor plan data if provided
+		if (floor_plan_images && Array.isArray(floor_plan_images)) {
+			insertData.floor_plan_images = floor_plan_images
+			console.log(`📐 Floor plan images attached: ${floor_plan_images.length}`)
+		}
+		if (room_areas) {
+			insertData.room_areas = room_areas
+			const roomCount = Object.keys(room_areas).length
+			const totalArea = Object.values(room_areas).reduce((sum: number, area: any) => sum + area, 0)
+			console.log(`🏠 Room areas attached: ${roomCount} rooms, ${totalArea.toFixed(1)}평`)
+		}
+		if (floor_plan_analysis_result) {
+			insertData.floor_plan_analysis_result = floor_plan_analysis_result
+		}
+
+		const data = await insertOne<any>('quote_requests', insertData)
 
 		if (!data) {
 			throw new Error('Failed to insert quote request')

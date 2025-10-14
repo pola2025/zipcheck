@@ -70,7 +70,7 @@ export function validateImages(files: Express.Multer.File[]): ImageValidationErr
  */
 export async function uploadImages(
 	files: Express.Multer.File[],
-	folder: 'reviews' | 'damage-cases' = 'reviews'
+	folder: 'reviews' | 'damage-cases' | 'floor-plans' = 'reviews'
 ): Promise<ImageUploadResult[]> {
 	// Check if Supabase is available
 	if (!supabase) {
