@@ -175,6 +175,77 @@ app.get('/api/admin/data-stats', authenticateToken, requireAdmin, async (req, re
 	}
 })
 
+// 항목별 가격 통계 조회
+app.get('/api/admin/item-stats', authenticateToken, requireAdmin, async (req, res) => {
+	try {
+		const { category, search, limit = 100, offset = 0 } = req.query
+
+		let whereConditions = ['cr.total_cost IS NOT NULL']
+		const params: any[] = []
+		let paramIndex = 1
+
+		if (category) {
+			whereConditions.push(`c.name = $${paramIndex}`)
+			params.push(category)
+			paramIndex++
+		}
+
+		if (search) {
+			whereConditions.push(`i.name ILIKE $${paramIndex}`)
+			params.push(`%${search}%`)
+			paramIndex++
+		}
+
+		params.push(limit)
+		const limitParam = paramIndex++
+		params.push(offset)
+		const offsetParam = paramIndex
+
+		const itemStats = await pool.query(`
+			SELECT
+				i.id,
+				i.name as item_name,
+				c.name as category_name,
+				COUNT(cr.id) as record_count,
+				ROUND(AVG(cr.total_cost)) as avg_total_cost,
+				ROUND(AVG(cr.material_cost)) as avg_material_cost,
+				ROUND(AVG(cr.labor_cost)) as avg_labor_cost,
+				ROUND(AVG(cr.overhead_cost)) as avg_overhead_cost,
+				MIN(cr.total_cost) as min_cost,
+				MAX(cr.total_cost) as max_cost,
+				PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY cr.total_cost) as median_cost
+			FROM items i
+			INNER JOIN categories c ON i.category_id = c.id
+			INNER JOIN construction_records cr ON cr.item_id = i.id
+			WHERE ${whereConditions.join(' AND ')}
+			GROUP BY i.id, i.name, c.name
+			HAVING COUNT(cr.id) > 0
+			ORDER BY COUNT(cr.id) DESC, AVG(cr.total_cost) DESC
+			LIMIT $${limitParam} OFFSET $${offsetParam}
+		`, params)
+
+		// 전체 개수 조회
+		const countResult = await pool.query(`
+			SELECT COUNT(DISTINCT i.id) as total
+			FROM items i
+			INNER JOIN categories c ON i.category_id = c.id
+			INNER JOIN construction_records cr ON cr.item_id = i.id
+			WHERE ${whereConditions.join(' AND ')}
+		`, params.slice(0, -2)) // limit, offset 제외
+
+		res.json({
+			items: itemStats.rows,
+			total: parseInt(countResult.rows[0].total),
+			limit: parseInt(limit as string),
+			offset: parseInt(offset as string)
+		})
+	} catch (error) {
+		console.error('Item stats fetch error:', error)
+		const message = error instanceof Error ? error.message : 'Unknown error'
+		res.status(500).json({ error: message })
+	}
+})
+
 // 견적 분석 API (deprecated - use /api/quote-requests instead)
 app.post('/api/analyze-quote', async (req, res) => {
 	try {
