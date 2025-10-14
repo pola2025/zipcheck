@@ -72,6 +72,11 @@ export async function uploadImages(
 	files: Express.Multer.File[],
 	folder: 'reviews' | 'damage-cases' = 'reviews'
 ): Promise<ImageUploadResult[]> {
+	// Check if Supabase is available
+	if (!supabase) {
+		throw new Error('이미지 업로드 기능을 사용할 수 없습니다: Supabase가 설정되지 않았습니다.')
+	}
+
 	// Validate images first
 	const validationErrors = validateImages(files)
 	if (validationErrors.length > 0) {
@@ -142,6 +147,11 @@ export async function uploadImages(
 export async function deleteImages(filenames: string[]): Promise<void> {
 	if (filenames.length === 0) return
 
+	// Check if Supabase is available
+	if (!supabase) {
+		throw new Error('이미지 삭제 기능을 사용할 수 없습니다: Supabase가 설정되지 않았습니다.')
+	}
+
 	console.log(`🗑️  Deleting ${filenames.length} images...`)
 
 	const { error } = await supabase.storage
@@ -160,6 +170,12 @@ export async function deleteImages(filenames: string[]): Promise<void> {
  * Check if storage bucket exists, create if not
  */
 export async function ensureStorageBucket(): Promise<void> {
+	// Skip if Supabase is not available
+	if (!supabase) {
+		console.log('⚠️  Skipping storage bucket check: Supabase not configured')
+		return
+	}
+
 	try {
 		const { data: buckets, error: listError } = await supabase.storage.listBuckets()
 
