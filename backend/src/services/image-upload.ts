@@ -172,7 +172,6 @@ export async function deleteImages(filenames: string[]): Promise<void> {
 export async function ensureStorageBucket(): Promise<void> {
 	// Skip if Supabase is not available
 	if (!supabase) {
-		console.log('⚠️  Skipping storage bucket check: Supabase not configured')
 		return
 	}
 
