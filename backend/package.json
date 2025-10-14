@@ -7,6 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "postinstall": "npm rebuild sharp",
     "backup": "tsx src/scripts/backup-database.ts",
     "migrate:multiple-quote": "tsx src/scripts/run-multiple-quote-migration.ts",
     "migrate:safe": "npm run backup && npm run migrate:multiple-quote",
