@@ -21,6 +21,7 @@ interface QuoteAnalysisRequest {
 	propertyType?: string
 	propertySize?: number
 	region?: string
+	roomAreas?: Record<string, number> // 도면 분석으로 추출된 공간별 면적 (예: { "주방": 5.5, "거실": 15.3 })
 }
 
 // 새로운 분석 결과 구조 (집첵 권장사항)
