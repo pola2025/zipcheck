@@ -5,20 +5,27 @@ import path from 'path'
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
-	throw new Error('Missing Supabase environment variables')
+// Create Supabase client only if credentials are available
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let supabaseInstance: any = null
+
+if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
+	supabaseInstance = createClient(
+		process.env.SUPABASE_URL,
+		process.env.SUPABASE_SERVICE_KEY,
+		{
+			auth: {
+				autoRefreshToken: false,
+				persistSession: false
+			}
+		}
+	)
+	console.log('✅ Supabase client initialized')
+} else {
+	console.warn('⚠️  Supabase credentials not found. Supabase features will be disabled.')
 }
 
-export const supabase = createClient(
-	process.env.SUPABASE_URL,
-	process.env.SUPABASE_SERVICE_KEY,
-	{
-		auth: {
-			autoRefreshToken: false,
-			persistSession: false
-		}
-	}
-)
+export const supabase = supabaseInstance
 
 // 타입 정의
 export interface Category {
