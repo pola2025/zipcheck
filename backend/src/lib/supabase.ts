@@ -1,4 +1,3 @@
-import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import path from 'path'
 
@@ -9,18 +8,25 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let supabaseInstance: any = null
 
+// Supabase is optional - only initialize if package is installed and credentials exist
 if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
-	supabaseInstance = createClient(
-		process.env.SUPABASE_URL,
-		process.env.SUPABASE_SERVICE_KEY,
-		{
-			auth: {
-				autoRefreshToken: false,
-				persistSession: false
+	try {
+		// Dynamic import to avoid errors if @supabase/supabase-js is not installed
+		const { createClient } = require('@supabase/supabase-js')
+		supabaseInstance = createClient(
+			process.env.SUPABASE_URL,
+			process.env.SUPABASE_SERVICE_KEY,
+			{
+				auth: {
+					autoRefreshToken: false,
+					persistSession: false
+				}
 			}
-		}
-	)
-	console.log('✅ Supabase client initialized')
+		)
+		console.log('✅ Supabase client initialized')
+	} catch (error) {
+		console.warn('⚠️  Supabase package not installed. Supabase features will be disabled.')
+	}
 } else {
 	console.warn('⚠️  Supabase credentials not found. Supabase features will be disabled.')
 }
