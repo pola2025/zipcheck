@@ -146,8 +146,7 @@ ${extractedText}
 - JSON만 출력하고 다른 설명은 추가하지 마세요`
 				}
 			],
-			reasoning: { effort: 'minimal' }, // 빠른 응답, 정확한 구조화
-			verbosity: 'low' // 간결한 출력
+			reasoning: { effort: 'minimal' } // 빠른 응답, 정확한 구조화
 		})
 
 		const content = response.output_text
