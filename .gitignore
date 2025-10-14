@@ -5,6 +5,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# Backend package-lock (Railway에서 Linux용으로 재생성)
+backend/package-lock.json
+
 # Environment variables - 절대 커밋하지 말 것!
 .env
 .env.*
