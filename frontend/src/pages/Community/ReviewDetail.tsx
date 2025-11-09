@@ -210,12 +210,12 @@ export default function ReviewDetail() {
 									</p>
 								</div>
 							</div>
-							{review.author_name && (
+							{"사용자" && (
 								<div className="flex items-center gap-3 text-gray-300">
 									<User className="w-5 h-5 text-cyan-400" />
 									<div>
 										<p className="text-sm text-gray-400">작성자</p>
-										<p className="font-semibold">{review.author_name}</p>
+										<p className="font-semibold">{"사용자"}</p>
 									</div>
 								</div>
 							)}
@@ -250,8 +250,8 @@ export default function ReviewDetail() {
 						>
 							<ThumbsUp className="w-5 h-5" />
 							{helpful ? '도움이 되었습니다!' : '도움이 돼요'}
-							{review.helpful_count > 0 && (
-								<span className="ml-2 text-sm">({review.helpful_count})</span>
+							{review.like_count > 0 && (
+								<span className="ml-2 text-sm">({review.like_count})</span>
 							)}
 						</motion.button>
 					</motion.div>

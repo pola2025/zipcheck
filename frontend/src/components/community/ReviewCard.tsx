@@ -18,12 +18,8 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, onClick }) => {
 			<div className='flex items-start justify-between mb-4'>
 				<div className='flex-1'>
 					<div className='flex items-center gap-3 mb-2'>
-						<h3 className='text-xl font-bold text-white'>{review.title}</h3>
-						{review.is_recommended && (
-							<span className='px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/40 text-xs font-semibold rounded-full'>
-								추천
-							</span>
-						)}
+						<h3 className='text-xl font-bold text-white'>{review.company_name} - {review.project_type || '시공'}</h3>
+						
 					</div>
 					<div className='flex items-center gap-4 text-sm text-gray-400'>
 						<div className='flex items-center gap-1'>
@@ -35,8 +31,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, onClick }) => {
 							<span>{review.region}</span>
 						</div>
 						<span className='text-gray-600'>|</span>
-						<span>{review.author_name}</span>
-						<span className='text-gray-600'>|</span>
+						
 						<span>{new Date(review.created_at).toLocaleDateString()}</span>
 					</div>
 				</div>
@@ -44,7 +39,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, onClick }) => {
 			</div>
 
 			{/* Content Preview */}
-			<p className='text-gray-300 mb-4 line-clamp-2 leading-relaxed'>{review.content}</p>
+			<p className='text-gray-300 mb-4 line-clamp-2 leading-relaxed'>{review.review_text}</p>
 
 			{/* Project Info */}
 			{review.project_type && (
@@ -73,7 +68,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, onClick }) => {
 				</div>
 				<div className='flex items-center gap-1'>
 					<MessageCircle size={16} className='text-cyan-400' />
-					<span>{review.comment_count}</span>
+					<span>0</span>
 				</div>
 			</div>
 		</div>
