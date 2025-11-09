@@ -76,6 +76,9 @@ export default function AnimatedBorderButton({
 				<span className="block">{children}</span>
 			</button>
 
+			{/* @ts-ignore */}
+
+
 			<style jsx>{`
 				@media (prefers-reduced-motion: reduce) {
 					.motion-reduce\\:transition-none {

@@ -77,26 +77,26 @@ export default function ZipCheckPage() {
 								WebkitTextFillColor: 'transparent'
 							}}
 						>
-							숫자로 보는 ZipCheck
+							데이터로 확인하는 ZipCheck
 						</motion.h2>
 
 						<div className="grid md:grid-cols-3 gap-8">
 							<StatCounter
 								end={3000}
 								suffix="+"
-								label="누적 공사 데이터 학습"
+								label="누적 공사 분석 건수"
 								icon={<Database className="w-6 h-6" />}
 							/>
 							<StatCounter
 								end={48}
 								suffix="h"
-								label="최대 응답 시간 보장"
+								label="48시간 이내 응답 보장"
 								icon={<Clock className="w-6 h-6" />}
 							/>
 							<StatCounter
 								end={20}
 								suffix="년+"
-								label="현업 경력 인테리어 대표"
+								label="20년 경력 인테리어 전문가"
 								icon={<Sparkles className="w-6 h-6" />}
 							/>
 						</div>
@@ -115,7 +115,7 @@ export default function ZipCheckPage() {
 								WebkitTextFillColor: 'transparent'
 							}}
 						>
-							왜 ZipCheck인가?
+							ZipCheck를 선택하면 좋은 이유
 						</motion.h2>
 
 						<div className="space-y-12">
@@ -230,10 +230,10 @@ export default function ZipCheckPage() {
 								WebkitTextFillColor: 'transparent'
 							}}
 						>
-							집첵 서비스의 장점
+							ZipCheck의 핵심 장점
 						</motion.h2>
 						<p className="text-2xl text-gray-400 text-center max-w-3xl mx-auto mb-24 leading-relaxed">
-							실제 유통망 원가 기준으로 자재, 인건비, 잡비 등 실무 비용을 모두 분석합니다
+							최근 시세와 현장 조건을 함께 살펴보고 핵심만 정리해 드려요.
 						</p>
 
 						<div className="grid md:grid-cols-3 gap-8">
@@ -295,7 +295,7 @@ export default function ZipCheckPage() {
 								WebkitTextFillColor: 'transparent'
 							}}
 						>
-							간단한 4단계로 분석 완료
+							4단계로 끝내는 분석 여정
 						</motion.h2>
 
 						<div className="space-y-8">
@@ -351,10 +351,10 @@ export default function ZipCheckPage() {
 								WebkitTextFillColor: 'transparent'
 							}}
 						>
-							분석 요금제
+							분석 요금제 안내
 						</motion.h2>
 						<p className="text-2xl text-gray-400 text-center max-w-3xl mx-auto mb-24 leading-relaxed">
-							필요한 시간에 맞춰 선택하세요
+							필요한 속도에 맞춰 골라 주세요
 						</p>
 
 						<div className="grid md:grid-cols-2 gap-10 max-w-4xl mx-auto">
@@ -431,7 +431,7 @@ export default function ZipCheckPage() {
 					</div>
 				</ScrollSection>
 
-				{/* TODO: 긴급 분석 신청 섹션 - 추후 오픈 예정
+				{/* TODO: 긴급 분석 도움 섹션 - 추후 오픈 예정
 				     현재는 숨김 처리. 자세한 내용은 .claude/docs/features/urgent-analysis-plan.md 참조
 				*/}
 				{/* Urgent Pricing Section */}
@@ -446,10 +446,10 @@ export default function ZipCheckPage() {
 									WebkitTextFillColor: 'transparent'
 								}}
 							>
-								긴급 분석 신청
+								긴급 분석 도움
 							</motion.h2>
 							<p className="text-2xl text-gray-400 text-center max-w-3xl mx-auto mb-24 leading-relaxed">
-								시간이 급할 때 빠른 대응이 필요하다면
+								시간이 급하면 이렇게 도와드릴게요
 							</p>
 
 							<div className="grid md:grid-cols-3 gap-8">
@@ -507,7 +507,7 @@ export default function ZipCheckPage() {
 												glowColor="#38ef7d"
 												className="w-full mt-auto"
 											>
-												긴급 신청하기
+												긴급 분석 요청하기
 											</GlowButton>
 										</motion.div>
 									</ScrollSection>
@@ -540,13 +540,13 @@ export default function ZipCheckPage() {
 								}}
 								transition={{ duration: 2, repeat: Infinity }}
 							>
-								3만원으로 수천만원 절약!
+								3만 원 투자로 수백만 원을 지켜요
 							</motion.h2>
 
 							<p className="text-2xl md:text-3xl text-gray-300 mb-16 max-w-3xl mx-auto leading-relaxed">
-								수천만원의 비용과 몇개월의 시간 낭비를 막으세요.
+								수백만 원과 몇 달의 시간을 지키는 가장 쉬운 방법이에요.
 								<br />
-								48시간 내 전문가 분석 결과를 받아보세요.
+								48시간 안에 따뜻한 전문가 분석을 전해드려요.
 							</p>
 
 							<div className="flex flex-col sm:flex-row gap-6 justify-center">

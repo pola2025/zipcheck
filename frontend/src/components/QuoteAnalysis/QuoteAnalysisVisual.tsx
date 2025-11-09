@@ -415,7 +415,7 @@ export default function QuoteAnalysisVisual({ analysis }: Props) {
 							itemStyle={{ color: '#ffffff' }}
 							formatter={(value: number) => [`${value.toLocaleString()}원`, '']}
 						/>
-						<Bar dataKey="value" radius={[8, 8, 0, 0]} label={{ position: 'top', fill: '#ffffff', formatter: (value: number) => value.toLocaleString() + '원' }}>
+						<Bar dataKey="value" radius={[8, 8, 0, 0]} label={{ position: 'top', fill: '#ffffff', formatter: ((value: number) => value.toLocaleString() + '원') as any }}>
 							{priceComparisonData.map((entry, index) => (
 								<Cell key={`cell-${index}`} fill={entry.fill} />
 							))}

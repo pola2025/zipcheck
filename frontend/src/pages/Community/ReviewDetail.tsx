@@ -210,7 +210,7 @@ export default function ReviewDetail() {
 									</p>
 								</div>
 							</div>
-							{"사용자" && (
+							{/* 작성자 정보 항상 표시 */ true && (
 								<div className="flex items-center gap-3 text-gray-300">
 									<User className="w-5 h-5 text-cyan-400" />
 									<div>

@@ -139,7 +139,7 @@ export default function QuoteAnalysisRealistic({ analysis, propertySize }: Props
 			'slightly_high': { text: '약간 높음', color: 'bg-amber-500/20 text-amber-400' },
 			'high': { text: '높음', color: 'bg-red-500/20 text-red-400' }
 		}
-		return badges[rating] || badges['reasonable']
+		return (badges as any)[rating] || badges['reasonable']
 	}
 
 	// 파이 차트 데이터
@@ -322,7 +322,7 @@ export default function QuoteAnalysisRealistic({ analysis, propertySize }: Props
 									cx="50%"
 									cy="50%"
 									labelLine={false}
-									label={({ name, percentage }) => `${name} ${percentage.toFixed(1)}%`}
+						label={(props: any) => `${props.name} ${(props.percentage as number).toFixed(1)}%`}
 									outerRadius={100}
 									fill="#8884d8"
 									dataKey="value"

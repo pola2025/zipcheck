@@ -14,20 +14,20 @@ export default function ZipCheckFooter() {
 							<NeonZ size={32} />
 						</div>
 						<p className="text-gray-400 leading-relaxed mb-4">
-							집첵전문가의<br />정확한 견적 분석서비스
+							ZipCheck 전문가가<br />따뜻하게 정리한 견적 분석 서비스
 						</p>
 					</div>
 
 					{/* Quick Links */}
 					<div>
-						<h4 className="text-lg font-bold text-cyan-400 mb-4">바로가기</h4>
+						<h4 className="text-lg font-bold text-cyan-400 mb-4">바로 가기</h4>
 						<ul className="space-y-3">
 							<li>
 								<a
 									href="#features"
 									className="text-gray-400 hover:text-cyan-400 transition-colors"
 								>
-									기능 소개
+									서비스 소개
 								</a>
 							</li>
 							<li>
@@ -35,7 +35,7 @@ export default function ZipCheckFooter() {
 									href="#process"
 									className="text-gray-400 hover:text-cyan-400 transition-colors"
 								>
-									이용 방법
+									이용 가이드
 								</a>
 							</li>
 							<li>
@@ -43,7 +43,7 @@ export default function ZipCheckFooter() {
 									href="#pricing"
 									className="text-gray-400 hover:text-cyan-400 transition-colors"
 								>
-									요금제
+									요금 안내
 								</a>
 							</li>
 							<li>
@@ -51,7 +51,7 @@ export default function ZipCheckFooter() {
 									href="/plan-selection"
 									className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors"
 								>
-									견적 분석 신청
+									견적 분석 신청하기
 								</a>
 							</li>
 						</ul>
@@ -59,7 +59,7 @@ export default function ZipCheckFooter() {
 
 					{/* Contact */}
 					<div>
-						<h4 className="text-lg font-bold text-cyan-400 mb-4">문의하기</h4>
+						<h4 className="text-lg font-bold text-cyan-400 mb-4">문의해 주세요</h4>
 						<ul className="space-y-3">
 							<li className="flex items-start gap-2">
 								<Mail className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />

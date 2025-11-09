@@ -49,7 +49,8 @@ const InteractiveCard: React.FC<InteractiveCardProps> = ({
 	return (
 		<motion.div
 			ref={ref}
-			{...bind()}
+			// @ts-ignore: Filter out HTML animation event handlers that conflict with framer-motion
+			{...(() => { const b = bind(); const { onAnimationStart, onAnimationEnd, onAnimationIteration, ...safe } = b as any; return safe; })()}
 			className={`relative interactive ${className}`}
 			style={{
 				rotateX,

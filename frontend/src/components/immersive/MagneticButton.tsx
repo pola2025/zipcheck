@@ -49,7 +49,8 @@ const MagneticButton: React.FC<MagneticButtonProps> = ({
 	return (
 		<motion.button
 			ref={ref}
-			{...bind()}
+			// @ts-ignore: Filter out conflicting HTML animation events
+			{...(() => { const b = bind(); const { onAnimationStart, onAnimationEnd, onAnimationIteration, ...safe } = b as any; return safe; })()}
 			className={`interactive relative ${className}`}
 			style={{
 				x: xSpring,

@@ -21,10 +21,10 @@ export default function QuoteExampleSection() {
 						WebkitTextFillColor: 'transparent'
 					}}
 				>
-					견적 분석 예시
+					ZipCheck 분석 예시
 				</motion.h2>
 				<p className="text-xl text-gray-400 text-center max-w-3xl mx-auto mb-16 leading-relaxed">
-					실제 견적서를 ZipCheck이 어떻게 분석하는지 확인해보세요
+					ZipCheck가 실제 견적서를 어떻게 풀어내는지 확인해 보세요
 				</p>
 
 				{/* Summary Cards */}
@@ -40,7 +40,7 @@ export default function QuoteExampleSection() {
 						<div className="w-12 h-12 rounded-full bg-gray-500/20 flex items-center justify-center mx-auto mb-4">
 							<AlertCircle className="w-6 h-6 text-gray-400" />
 						</div>
-						<div className="text-sm text-gray-400 mb-2">원본 견적 금액</div>
+						<div className="text-sm text-gray-400 mb-2">원래 받은 견적 금액</div>
 						<div className="text-3xl font-bold text-white mb-1">
 							₩{summary.originalAmount.toLocaleString()}
 						</div>
@@ -57,13 +57,13 @@ export default function QuoteExampleSection() {
 						<div className="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center mx-auto mb-4 glow-cyan">
 							<Award className="w-6 h-6 text-cyan-400" />
 						</div>
-						<div className="text-sm text-gray-400 mb-2">적정 견적 금액</div>
+						<div className="text-sm text-gray-400 mb-2">ZipCheck가 제안한 금액</div>
 						<div className="text-3xl font-bold text-cyan-400 mb-1">
 							₩{summary.appropriateAmount.toLocaleString()}
 						</div>
 					</motion.div>
 
-					{/* 절감 가능 금액 */}
+					{/* 절감 가능한 금액 */}
 					<motion.div
 						className="glass-strong rounded-2xl p-6 text-center border-2 border-green-400/40"
 						initial={{ opacity: 0, y: 20 }}
@@ -74,7 +74,7 @@ export default function QuoteExampleSection() {
 						<div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
 							<TrendingDown className="w-6 h-6 text-green-400" />
 						</div>
-						<div className="text-sm text-gray-400 mb-2">절감 가능 금액</div>
+						<div className="text-sm text-gray-400 mb-2">절감 가능한 금액</div>
 						<div className="text-3xl font-bold text-green-400 mb-1">
 							₩{summary.savingsAmount.toLocaleString()}
 						</div>
@@ -102,7 +102,7 @@ export default function QuoteExampleSection() {
 					</p>
 						{summary.premiumFactors && summary.premiumFactors.length > 0 && (
 					<div className="mt-6">
-						<p className="text-sm text-purple-400 font-semibold mb-3">프리미엄 요소:</p>
+						<p className="text-sm text-purple-400 font-semibold mb-3">프리미엄이 붙은 이유</p>
 						<div className="flex flex-wrap justify-center gap-2">
 							{summary.premiumFactors.map((factor, index) => (
 								<span
@@ -120,7 +120,7 @@ export default function QuoteExampleSection() {
 				{/* Analysis Items */}
 				<div className="space-y-4">
 					<h3 className="text-2xl font-bold text-cyan-400 mb-6">
-						📊 주요 항목별 상세 분석
+						📊 주요 항목별 코멘트
 					</h3>
 					{items.map((item) => {
 						const analysis = analyses.find((a) => a.itemId === item.id)
@@ -138,14 +138,14 @@ export default function QuoteExampleSection() {
 					viewport={{ once: true }}
 				>
 					<p className="text-gray-400 mb-6">
-						이런 상세한 분석을 내 견적서로 받아보고 싶으신가요?
+						이런 분석을 내 견적서로도 받아보고 싶으신가요?
 					</p>
 				<GlowButton
 					onClick={() => (window.location.href = '/plan-selection')}
 					size="md"
 					glowColor="#0DD4E4"
 				>
-					내 견적 분석 받기
+					내 견적 분석 받아 보기
 				</GlowButton>
 				</motion.div>
 			</div>

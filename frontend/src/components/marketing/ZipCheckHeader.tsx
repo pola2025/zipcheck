@@ -41,7 +41,7 @@ export default function ZipCheckHeader() {
 							size="sm"
 							glowColor="#FF6B35"
 						>
-							견적 분석 신청
+							견적 분석 신청하기
 						</GlowButton>
 					</nav>
 

@@ -65,8 +65,6 @@ export default function QuoteForm({ className, copy, onSubmit }: QuoteFormProps)
 			email: '',
 			phone: '',
 			message: '',
-			privacy: false,
-			terms: false
 		}
 	})
 

@@ -133,6 +133,9 @@ export default function GlowButton({
 					{children}
 				</span>
 
+				{/* @ts-ignore */}
+
+
 				<style jsx>{`
 					.glow-button:hover .flash,
 					.glow-button:focus-visible .flash {
