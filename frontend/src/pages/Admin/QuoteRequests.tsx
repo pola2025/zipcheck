@@ -56,7 +56,13 @@ export default function QuoteRequests() {
 		try {
 			const url = getApiUrl(`/api/quote-requests/admin/all?status=${statusFilter}`)
 			console.log('📡 Fetching quote requests:', url)
-			console.log('🔑 Using token:', token ? 'Present' : 'Missing')
+			console.log('🔑 Token status:', token ? `Present (length: ${token.length})` : 'Missing')
+
+			// 403 에러 디버깅을 위한 추가 정보
+			if (token) {
+				console.log('🔑 Token prefix:', token.substring(0, 20) + '...')
+				console.log('📦 Token from localStorage:', localStorage.getItem('admin_token') ? 'exists' : 'missing')
+			}
 
 			const response = await fetch(url, {
 				headers: {
@@ -65,6 +71,13 @@ export default function QuoteRequests() {
 			})
 
 			console.log('📊 Response status:', response.status, response.statusText)
+
+			// 403 에러 시 응답 본문 확인
+			if (response.status === 403) {
+				const errorText = await response.text()
+				console.error('🚫 403 Forbidden details:', errorText)
+				throw new Error(`403 Forbidden: ${errorText}`)
+			}
 
 			if (!response.ok) {
 				throw new Error(`API 오류: ${response.status} ${response.statusText}`)
