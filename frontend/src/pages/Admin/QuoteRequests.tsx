@@ -55,16 +55,40 @@ export default function QuoteRequests() {
 		setLoading(true)
 		try {
 			const url = getApiUrl(`/api/quote-requests/admin/all?status=${statusFilter}`)
+			console.log('📡 Fetching quote requests:', url)
+			console.log('🔑 Using token:', token ? 'Present' : 'Missing')
+
 			const response = await fetch(url, {
 				headers: {
 					'Authorization': `Bearer ${token}`
 				}
 			})
+
+			console.log('📊 Response status:', response.status, response.statusText)
+
+			if (!response.ok) {
+				throw new Error(`API 오류: ${response.status} ${response.statusText}`)
+			}
+
 			const result = await response.json()
-			setRequests(result.data || [])
+			console.log('✅ Fetched requests:', result)
+
+			// result.data가 배열인지 확인
+			if (Array.isArray(result.data)) {
+				setRequests(result.data)
+				console.log(`📋 ${result.data.length}개의 견적 신청을 로드했습니다.`)
+			} else if (Array.isArray(result)) {
+				// 백엔드가 직접 배열을 반환하는 경우
+				setRequests(result)
+				console.log(`📋 ${result.length}개의 견적 신청을 로드했습니다.`)
+			} else {
+				console.warn('⚠️ 예상치 못한 응답 형식:', result)
+				setRequests([])
+			}
 		} catch (error) {
-			console.error('Failed to fetch quote requests:', error)
-			alert('견적 신청 목록을 불러오는데 실패했습니다.')
+			console.error('❌ Failed to fetch quote requests:', error)
+			alert('견적 신청 목록을 불러오는데 실패했습니다.\n' + (error instanceof Error ? error.message : String(error)))
+			setRequests([])
 		} finally {
 			setLoading(false)
 		}

@@ -55,7 +55,7 @@
 #### ⚠️ 마이그레이션 적용 필요
 아래 SQL을 Supabase Dashboard에서 수동 실행 필요:
 ```
-https://supabase.com/dashboard/project/qfnqxzabcuzhkwptfnpa/sql/new
+https://supabase.com/dashboard/project/<your-project-ref>/sql/new
 ```
 
 또는:

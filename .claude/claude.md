@@ -88,9 +88,52 @@ fetch(`${API_URL}/api/auth/admin/login`)
 
 ---
 
+## 🤖 CLI 자율 작업 원칙
+
+**CLI로 접근 가능한 작업은 자체적으로 진행하고, 반복적으로 실패하거나 어려움이 있을 때만 사용자에게 요청:**
+
+### ✅ 자체 진행해야 하는 작업:
+- `git` 명령어 (status, log, diff, add, commit, push)
+- `npm` / `yarn` 명령어 (install, build, test)
+- `railway` CLI 명령어 (logs, status)
+- `vercel` CLI 명령어 (ls, logs, inspect)
+- 파일 읽기/검색 (grep, read, glob)
+- 로컬 빌드 및 테스트
+
+### ❌ 사용자 확인이 필요한 경우:
+- 3회 이상 반복 실패한 작업
+- 인터랙티브 입력이 필요한 명령어 (railway link, railway service 등)
+- 사용자 의사결정이 필요한 작업 (배포 승인, 설정 변경 등)
+- 웹 대시보드에서만 확인 가능한 설정
+
+**워크플로우:**
+```
+1. CLI로 시도 (최대 3회)
+   ↓
+2. 실패 시 대안 방법 시도
+   ↓
+3. 여전히 실패 시 사용자에게 구체적 요청
+   (실패 로그, 시도한 명령어, 필요한 정보 명시)
+```
+
+---
+
 ## 🔍 배포 확인 및 검증 절차
 
 **사용자에게 스크린샷을 요청하기 전에 반드시 다음 단계를 수행:**
+
+### Railway CLI 우선 사용
+
+**Railway 배포 상태 확인:**
+```bash
+cd backend
+railway logs              # 실시간 로그
+railway status           # 서비스 상태
+```
+
+**Railway CLI 실패 시 대안:**
+- WebFetch로 healthcheck 엔드포인트 확인
+- 사용자에게 대시보드 스크린샷 요청
 
 ### 1. Vercel 배포 상태 확인
 

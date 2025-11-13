@@ -37,12 +37,12 @@ CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
 
 		console.log(migrationSQL)
 		console.log('\n📝 Steps to apply:')
-		console.log('1. Go to https://supabase.com/dashboard/project/qfnqxzabcuzhkwptfnpa/sql/new')
+		console.log('1. Go to https://supabase.com/dashboard/project/<your-project-ref>/sql/new')
 		console.log('2. Copy and paste the SQL above')
 		console.log('3. Click "Run" to execute')
 		console.log('\nOr run via Supabase CLI:')
 		console.log(
-			'psql "postgresql://postgres.[password]@db.qfnqxzabcuzhkwptfnpa.supabase.co:5432/postgres" -f supabase/migrations/20251010_add_oauth_fields.sql\n'
+			'psql "postgresql://postgres.[password]@db.<your-project-ref>.supabase.co:5432/postgres" -f supabase/migrations/20251010_add_oauth_fields.sql\n'
 		)
 	} catch (error) {
 		console.error('❌ Error:', error)

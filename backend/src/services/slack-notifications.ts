@@ -12,9 +12,14 @@ import dotenv from 'dotenv'
 // Ensure .env is loaded
 dotenv.config()
 
+// Global toggle: default disabled unless explicitly enabled
+const SLACK_ENABLED = process.env.ENABLE_SLACK_NOTIFICATIONS === 'true'
+
 // 웹훅 URL (환경 변수에서 로드)
 const DEV_WEBHOOK_URL = process.env.SLACK_DEV_WEBHOOK_URL
 const ADMIN_WEBHOOK_URL = process.env.SLACK_ADMIN_WEBHOOK_URL
+
+const missingWebhookWarned = new Set<string>()
 
 interface SlackMessage {
 	text?: string
@@ -27,10 +32,18 @@ interface SlackMessage {
  */
 async function sendSlackMessage(
 	webhookUrl: string | undefined,
-	message: SlackMessage
+	message: SlackMessage,
+	channel: 'dev' | 'admin' | 'custom' = 'custom'
 ): Promise<void> {
+	if (!SLACK_ENABLED) {
+		return
+	}
+
 	if (!webhookUrl) {
-		console.warn('⚠️  Slack webhook URL not configured')
+		if (!missingWebhookWarned.has(channel)) {
+			console.warn('⚠️  Slack webhook URL not configured. Set ENABLE_SLACK_NOTIFICATIONS=true and provide webhook URLs to enable alerts.')
+			missingWebhookWarned.add(channel)
+		}
 		return
 	}
 
@@ -130,7 +143,7 @@ export async function notifyAnalysisComplete(data: {
 		]
 	}
 
-	await sendSlackMessage(DEV_WEBHOOK_URL, message)
+	await sendSlackMessage(DEV_WEBHOOK_URL, message, 'dev')
 }
 
 /**
@@ -181,7 +194,7 @@ export async function notifyTokenWarning(data: {
 		]
 	}
 
-	await sendSlackMessage(DEV_WEBHOOK_URL, message)
+	await sendSlackMessage(DEV_WEBHOOK_URL, message, 'dev')
 }
 
 /**
@@ -226,7 +239,7 @@ export async function notifyCostWarning(data: {
 		]
 	}
 
-	await sendSlackMessage(DEV_WEBHOOK_URL, message)
+	await sendSlackMessage(DEV_WEBHOOK_URL, message, 'dev')
 }
 
 /**
@@ -278,7 +291,7 @@ export async function notifyAnalysisError(data: {
 		]
 	}
 
-	await sendSlackMessage(DEV_WEBHOOK_URL, message)
+	await sendSlackMessage(DEV_WEBHOOK_URL, message, 'dev')
 }
 
 /**
@@ -368,7 +381,7 @@ export async function notifyDailyStats(stats: {
 		]
 	}
 
-	await sendSlackMessage(DEV_WEBHOOK_URL, message)
+	await sendSlackMessage(DEV_WEBHOOK_URL, message, 'dev')
 }
 
 /**
@@ -449,7 +462,7 @@ export async function notifyWeeklyStats(stats: {
 		]
 	}
 
-	await sendSlackMessage(DEV_WEBHOOK_URL, message)
+	await sendSlackMessage(DEV_WEBHOOK_URL, message, 'dev')
 }
 
 /**
@@ -590,7 +603,7 @@ export async function notifyPaymentComplete(data: {
 		]
 	}
 
-	await sendSlackMessage(ADMIN_WEBHOOK_URL, message)
+	await sendSlackMessage(ADMIN_WEBHOOK_URL, message, 'admin')
 }
 
 /**
@@ -659,7 +672,7 @@ export async function notifyQuoteRequest(data: {
 		]
 	}
 
-	await sendSlackMessage(ADMIN_WEBHOOK_URL, message)
+	await sendSlackMessage(ADMIN_WEBHOOK_URL, message, 'admin')
 }
 
 /**
@@ -720,7 +733,7 @@ export async function notifyPostCreated(data: {
 		type: 'divider'
 	})
 
-	await sendSlackMessage(ADMIN_WEBHOOK_URL, message)
+	await sendSlackMessage(ADMIN_WEBHOOK_URL, message, 'admin')
 }
 
 /**
@@ -786,7 +799,7 @@ export async function notifyFloorPlanAnalysis(data: {
 		]
 	}
 
-	await sendSlackMessage(DEV_WEBHOOK_URL, message)
+	await sendSlackMessage(DEV_WEBHOOK_URL, message, 'dev')
 }
 
 /**
@@ -841,5 +854,5 @@ export async function notifySystemError(data: {
 		})
 	}
 
-	await sendSlackMessage(DEV_WEBHOOK_URL, message)
+	await sendSlackMessage(DEV_WEBHOOK_URL, message, 'dev')
 }

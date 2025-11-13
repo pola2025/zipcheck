@@ -242,7 +242,7 @@ export function optionalAuthenticateToken(req, res, next)
 아래 SQL을 Supabase Dashboard에서 실행 필요:
 
 ```
-https://supabase.com/dashboard/project/qfnqxzabcuzhkwptfnpa/sql/new
+https://supabase.com/dashboard/project/<your-project-ref>/sql/new
 ```
 
 파일 경로: `F:\GOI\supabase\migrations\20251010_create_community_tables.sql`
@@ -275,7 +275,7 @@ F:\GOI\openui\frontend\src\App.tsx (수정)
 ### 1. 데이터베이스 설정
 ```bash
 # Supabase Dashboard에서 마이그레이션 SQL 실행
-https://supabase.com/dashboard/project/qfnqxzabcuzhkwptfnpa/sql/new
+https://supabase.com/dashboard/project/<your-project-ref>/sql/new
 ```
 
 ### 2. 백엔드 서버 실행 확인

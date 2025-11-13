@@ -284,7 +284,7 @@ router.get('/naver/callback', async (req: Request, res: Response) => {
 				name: naverUser.name,
 				role: 'user'
 			},
-			process.env.JWT_SECRET || 'REDACTED_JWT_SECRET',
+			process.env.JWT_SECRET || 'change_me_in_production',
 			{ expiresIn: '7d' }
 		)
 
@@ -314,7 +314,7 @@ router.get('/me', async (req: Request, res: Response) => {
 		const token = authHeader.substring(7)
 		const jwt = require('jsonwebtoken')
 
-		const decoded = jwt.verify(token, process.env.JWT_SECRET || 'REDACTED_JWT_SECRET')
+		const decoded = jwt.verify(token, process.env.JWT_SECRET || 'change_me_in_production')
 
 		// ✅ CONVERTED: Get user from database
 		// OLD: const { data: user, error } = await supabase.from('users').select('*').eq('id', decoded.userId).single()

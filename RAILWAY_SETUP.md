@@ -28,22 +28,36 @@ Railway 대시보드에서:
 ```bash
 # Supabase 설정
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_ANON_KEY=<your-supabase-anon-key>
+SUPABASE_SERVICE_KEY=<your-supabase-service-key>
 
-# Claude API (견적 분석용)
-CLAUDE_API_KEY=sk-ant-api03-...
+# Claude API (견적 분석)
+CLAUDE_API_KEY=<your-claude-api-key>
+
+# OpenAI & Google Vision
+OPENAI_API_KEY=sk-...
+GOOGLE_CLOUD_API_KEY=AIza...
+
+# Slack notifications (optional)
+ENABLE_SLACK_NOTIFICATIONS=false
+SLACK_DEV_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/DEV/WEBHOOK
+SLACK_ADMIN_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/ADMIN/WEBHOOK
+
+# Notion 데이터베이스
+NOTION_API_KEY=your_notion_api_key
+NOTION_DATABASE_ID=your_notion_log_db_id
+NOTION_CUSTOMER_REQUEST_DB_ID=your_notion_customer_request_db_id
 
 # 관리자 비밀번호
 ADMIN_PASSWORD=your_secure_admin_password
 
-# JWT Secret (랜덤 문자열)
+# JWT Secret (무작위 문자열)
 JWT_SECRET=your_very_long_random_secret_key_here
 
 # Node 환경
 NODE_ENV=production
 
-# 포트 (Railway 자동 할당하지만 명시)
+# 포트 (Railway 자동 할당됨이지만 명시)
 PORT=3001
 ```
 

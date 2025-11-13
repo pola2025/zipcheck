@@ -1,0 +1,1 @@
+- [ ] Investigate code splitting for CodeEditor bundle (~3.5MB)

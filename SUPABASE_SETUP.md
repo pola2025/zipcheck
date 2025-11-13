@@ -15,9 +15,9 @@
 `backend/.env` 파일을 열고 위에서 복사한 값을 입력:
 
 ```env
-SUPABASE_URL=https://xxxxx.supabase.co
-SUPABASE_SERVICE_KEY=eyJhbGc...  # service_role key
-SUPABASE_ANON_KEY=eyJhbGc...     # anon key
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_KEY=<your-supabase-service-key>  # service_role key
+SUPABASE_ANON_KEY=<your-supabase-anon-key>        # anon key
 ```
 
 ## 3. 데이터베이스 스키마 적용 (방법 1: Supabase 대시보드)
