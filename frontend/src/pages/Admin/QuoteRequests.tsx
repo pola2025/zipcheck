@@ -76,7 +76,23 @@ export default function QuoteRequests() {
 			if (response.status === 403) {
 				const errorText = await response.text()
 				console.error('🚫 403 Forbidden details:', errorText)
-				throw new Error(`403 Forbidden: ${errorText}`)
+
+				// 사용자에게 명확한 디버그 정보 표시
+				const debugInfo = [
+					'403 Forbidden 오류',
+					'',
+					`토큰 상태: ${token ? `있음 (${token.length}자)` : '없음'}`,
+					`localStorage: ${localStorage.getItem('admin_token') ? '있음' : '없음'}`,
+					'',
+					'해결 방법:',
+					'1. 로그아웃 후 다시 로그인',
+					'2. 브라우저 새로고침 (Ctrl+Shift+R)',
+					'',
+					`서버 응답: ${errorText}`
+				].join('\n')
+
+				alert(debugInfo)
+				throw new Error(`403 Forbidden`)
 			}
 
 			if (!response.ok) {
