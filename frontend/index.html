@@ -48,6 +48,20 @@
 		<noscript>You need to enable JavaScript to run this app.</noscript>
 		<div id="root"></div>
 		<script type="module" src="/src/main.tsx"></script>
+
+		<!-- Eruda Mobile Debug Console (Admin only) -->
+		<script>
+			// Admin 페이지에서만 디버깅 콘솔 활성화
+			if (window.location.pathname.startsWith('/admin') || window.location.search.includes('debug=true')) {
+				const script = document.createElement('script')
+				script.src = 'https://cdn.jsdelivr.net/npm/eruda'
+				script.onload = function() {
+					eruda.init()
+					console.log('📱 Eruda mobile debug console initialized')
+				}
+				document.body.appendChild(script)
+			}
+		</script>
 	</body>
 </html>
 <!-- Auto-deploy: Sat, Nov 09, 2025  3:00:00 PM -->
