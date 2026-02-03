@@ -1,10 +1,13 @@
+import { useNavigate } from 'react-router-dom'
 import SectionLabel from './SectionLabel'
 
 const pricingPlans = [
 	{
+		id: 'basic',
 		name: '기본 분석',
 		period: '48시간 이내',
 		price: '₩30,000',
+		priceValue: 30000,
 		priceNote: 'VAT 별도',
 		features: [
 			'항목별 적정가 비교',
@@ -14,9 +17,11 @@ const pricingPlans = [
 		highlighted: false
 	},
 	{
+		id: 'fast',
 		name: '빠른 분석',
 		period: '24시간 이내',
 		price: '₩45,000',
+		priceValue: 45000,
 		priceNote: 'VAT 별도',
 		features: [
 			'우선 배정 전담 분석팀',
@@ -28,6 +33,19 @@ const pricingPlans = [
 ]
 
 export default function NordicPricing() {
+	const navigate = useNavigate()
+
+	const handleSelect = (plan: typeof pricingPlans[number]) => {
+		navigate('/payment', {
+			state: {
+				planId: plan.id,
+				planName: plan.name,
+				price: plan.priceValue,
+				priceDisplay: plan.price
+			}
+		})
+	}
+
 	return (
 		<section id="pricing" className="bg-sand-50 py-24">
 			<div className="max-w-4xl mx-auto px-8">
@@ -73,6 +91,7 @@ export default function NordicPricing() {
 							</ul>
 
 							<button
+								onClick={() => handleSelect(plan)}
 								className={`w-full py-3.5 rounded-xl font-semibold transition ${
 									plan.highlighted
 										? 'bg-forest-600 text-white hover:bg-forest-700 shadow-lg shadow-forest-600/15'
