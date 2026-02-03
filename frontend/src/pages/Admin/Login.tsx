@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Lock, LogIn, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import { adminPath } from '../../lib/admin-path'
 
 const Login: React.FC = () => {
 	const [password, setPassword] = useState('')
@@ -25,7 +26,7 @@ const Login: React.FC = () => {
 		try {
 			await login(password)
 			// Redirect to admin dashboard after successful login
-			navigate('/admin')
+			navigate(adminPath())
 		} catch (err) {
 			setError(err instanceof Error ? err.message : '로그인에 실패했습니다.')
 		} finally {

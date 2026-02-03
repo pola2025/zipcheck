@@ -6,6 +6,7 @@ import QuoteAnalysisVisual from 'components/QuoteAnalysis/QuoteAnalysisVisual'
 import QuoteAnalysisRealistic from 'components/QuoteAnalysis/QuoteAnalysisRealistic'
 import { useAuth } from '../../contexts/AuthContext'
 import { getApiUrl } from '../../lib/api-config'
+import { adminPath } from '../../lib/admin-path'
 
 interface QuoteItem {
 	category: string
@@ -244,7 +245,7 @@ export default function QuoteRequestDetail() {
 				{/* 헤더 */}
 				<div className="mb-8">
 					<button
-						onClick={() => navigate('/admin/quote-requests')}
+						onClick={() => navigate(adminPath('/quote-requests'))}
 						className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 mb-4 transition-colors"
 					>
 						<ArrowLeft className="w-5 h-5" />

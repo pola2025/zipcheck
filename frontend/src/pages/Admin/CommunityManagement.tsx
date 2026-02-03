@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, MessageSquare, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { getApiUrl } from '../../lib/api-config'
+import { adminPath } from '../../lib/admin-path'
 
 interface CompanyReview {
 	id: string
@@ -156,7 +157,7 @@ export default function CommunityManagement() {
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
 					<div className="flex items-center space-x-4">
 						<Link
-							to="/admin"
+							to={adminPath()}
 							className="w-10 h-10 bg-gray-700/50 hover:bg-gray-700 rounded-lg flex items-center justify-center transition-colors"
 						>
 							<ArrowLeft className="w-5 h-5 text-gray-300" />

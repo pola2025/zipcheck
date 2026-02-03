@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { getApiUrl } from '../../lib/api-config'
+import { adminPath } from '../../lib/admin-path'
 
 interface QuoteRequest {
 	id: string
@@ -153,7 +154,7 @@ export default function QuoteRequests() {
 	}
 
 	const viewDetail = (id: string) => {
-		navigate(`/admin/quote-requests/${id}`)
+		navigate(adminPath(`/quote-requests/${id}`))
 	}
 
 	const filteredRequests = requests.filter((req) => {

@@ -12,6 +12,7 @@ import FunnelChart from '../../components/analytics/FunnelChart'
 import GeoChart from '../../components/analytics/GeoChart'
 import SearchKeywordsTable from '../../components/analytics/SearchKeywordsTable'
 
+import { adminPath } from '../../lib/admin-path'
 import {
 	useTrafficReport,
 	useRealtimeUsers,
@@ -56,7 +57,7 @@ function AnalyticsContent() {
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-4">
 							<Link
-								to="/admin"
+								to={adminPath()}
 								className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors"
 							>
 								<ArrowLeft className="w-5 h-5 text-gray-400" />

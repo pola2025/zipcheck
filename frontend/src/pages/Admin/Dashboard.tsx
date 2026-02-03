@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { LayoutDashboard, FileText, Database, TrendingUp, LogOut, ArrowRight, MessageSquare, AlertTriangle, BarChart3 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { getApiUrl } from '../../lib/api-config'
+import { adminPath } from '../../lib/admin-path'
 
 interface QuoteRequest {
 	id: string
@@ -102,7 +103,7 @@ const Dashboard: React.FC = () => {
 
 	const handleLogout = () => {
 		logout()
-		window.location.href = '/admin/login'
+		window.location.href = adminPath('/login')
 	}
 
 	const statCards = [
@@ -111,21 +112,21 @@ const Dashboard: React.FC = () => {
 			value: stats.totalQuoteRequests,
 			icon: FileText,
 			color: 'from-blue-500 to-blue-600',
-			link: '/admin/quote-requests'
+			link: adminPath('/quote-requests')
 		},
 		{
 			title: '처리 대기 중',
 			value: stats.pendingQuoteRequests,
 			icon: TrendingUp,
 			color: 'from-orange-500 to-orange-600',
-			link: '/admin/quote-requests'
+			link: adminPath('/quote-requests')
 		},
 		{
 			title: '최근 7일 요청',
 			value: stats.recentQuoteRequests,
 			icon: LayoutDashboard,
 			color: 'from-green-500 to-green-600',
-			link: '/admin/quote-requests'
+			link: adminPath('/quote-requests')
 		}
 	]
 
@@ -134,14 +135,14 @@ const Dashboard: React.FC = () => {
 			title: '견적 요청 관리',
 			description: '사용자들의 견적 요청을 확인하고 관리합니다',
 			icon: FileText,
-			link: '/admin/quote-requests',
+			link: adminPath('/quote-requests'),
 			color: 'from-blue-500 to-blue-600'
 		},
 		{
 			title: '커뮤니티 관리',
 			description: '업체 후기 및 피해사례를 관리합니다',
 			icon: MessageSquare,
-			link: '/admin/community',
+			link: adminPath('/community'),
 			color: 'from-green-500 to-green-600',
 			badge: (stats.totalReviews + stats.totalDamageCases).toString()
 		},
@@ -149,14 +150,14 @@ const Dashboard: React.FC = () => {
 			title: '유입 분석',
 			description: '트래픽, 검색어, 퍼널, 디바이스 분석',
 			icon: BarChart3,
-			link: '/admin/analytics',
+			link: adminPath('/analytics'),
 			color: 'from-cyan-500 to-cyan-600'
 		},
 		{
 			title: '데이터 관리',
 			description: '업체 정보, 자재 데이터 등을 관리합니다',
 			icon: Database,
-			link: '/admin/data',
+			link: adminPath('/data'),
 			color: 'from-purple-500 to-purple-600'
 		}
 	]
