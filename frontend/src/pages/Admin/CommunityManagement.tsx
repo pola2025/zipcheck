@@ -155,7 +155,7 @@ export default function CommunityManagement() {
 					className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
 						activeTab === 'reviews'
 							? 'bg-forest-600 text-white'
-							: 'text-sand-500 hover:text-sand-700'
+							: 'text-sand-700 hover:text-sand-700'
 					}`}
 				>
 					<MessageSquare className="w-5 h-5" />
@@ -169,7 +169,7 @@ export default function CommunityManagement() {
 					className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
 						activeTab === 'damages'
 							? 'bg-red-500 text-white'
-							: 'text-sand-500 hover:text-sand-700'
+							: 'text-sand-700 hover:text-sand-700'
 					}`}
 				>
 					<AlertTriangle className="w-5 h-5" />
@@ -182,9 +182,9 @@ export default function CommunityManagement() {
 
 			{/* Content */}
 			{loading ? (
-				<div className="bg-white rounded-2xl border border-sand-200 p-12 text-center">
-					<div className="w-8 h-8 border-2 border-sand-200 border-t-sand-500 rounded-full animate-spin mx-auto mb-4"></div>
-					<p className="text-sand-500">로딩 중...</p>
+				<div className="bg-white rounded-2xl border border-sand-300 p-12 text-center">
+					<div className="w-8 h-8 border-2 border-sand-300 border-t-sand-500 rounded-full animate-spin mx-auto mb-4"></div>
+					<p className="text-sand-700">로딩 중...</p>
 				</div>
 			) : activeTab === 'reviews' ? (
 				<ReviewsTable
@@ -213,27 +213,27 @@ function ReviewsTable({
 	onDelete: (id: string) => void
 }) {
 	return (
-		<div className="bg-white rounded-2xl border border-sand-200 overflow-hidden">
+		<div className="bg-white rounded-2xl border border-sand-300 overflow-hidden">
 			<div className="overflow-x-auto">
 				<table className="min-w-full divide-y divide-sand-200">
 					<thead className="bg-sand-50">
 						<tr>
-							<th className="px-6 py-4 text-left text-xs font-medium text-sand-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-sand-700 uppercase tracking-wider">
 								업체명
 							</th>
-							<th className="px-6 py-4 text-left text-xs font-medium text-sand-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-sand-700 uppercase tracking-wider">
 								연락처
 							</th>
-							<th className="px-6 py-4 text-left text-xs font-medium text-sand-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-sand-700 uppercase tracking-wider">
 								별점
 							</th>
-							<th className="px-6 py-4 text-left text-xs font-medium text-sand-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-sand-700 uppercase tracking-wider">
 								상태
 							</th>
-							<th className="px-6 py-4 text-left text-xs font-medium text-sand-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-sand-700 uppercase tracking-wider">
 								등록일
 							</th>
-							<th className="px-6 py-4 text-left text-xs font-medium text-sand-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-sand-700 uppercase tracking-wider">
 								작업
 							</th>
 						</tr>
@@ -248,7 +248,7 @@ function ReviewsTable({
 							>
 								<td className="px-6 py-4">
 									<div className="text-sm font-medium text-sand-900">{review.company_name}</div>
-									<div className="text-sm text-sand-500 truncate max-w-xs">
+									<div className="text-sm text-sand-700 truncate max-w-xs">
 										{review.review_text?.substring(0, 50)}...
 									</div>
 								</td>
@@ -269,8 +269,8 @@ function ReviewsTable({
 										<option value="deleted">삭제됨</option>
 									</select>
 								</td>
-								<td className="px-6 py-4 whitespace-nowrap text-sm text-sand-500">
-									{new Date(review.created_at).toLocaleDateString('ko-KR')}
+								<td className="px-6 py-4 whitespace-nowrap text-sm text-sand-700">
+									{new Date(review.created_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}
 								</td>
 								<td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
 									<button
@@ -284,7 +284,7 @@ function ReviewsTable({
 						))}
 						{reviews.length === 0 && (
 							<tr>
-								<td colSpan={6} className="px-6 py-12 text-center text-sand-400">
+								<td colSpan={6} className="px-6 py-12 text-center text-sand-600">
 									등록된 후기가 없습니다
 								</td>
 							</tr>
@@ -315,27 +315,27 @@ function DamagesTable({
 	}
 
 	return (
-		<div className="bg-white rounded-2xl border border-sand-200 overflow-hidden">
+		<div className="bg-white rounded-2xl border border-sand-300 overflow-hidden">
 			<div className="overflow-x-auto">
 				<table className="min-w-full divide-y divide-sand-200">
 					<thead className="bg-sand-50">
 						<tr>
-							<th className="px-6 py-4 text-left text-xs font-medium text-sand-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-sand-700 uppercase tracking-wider">
 								제목
 							</th>
-							<th className="px-6 py-4 text-left text-xs font-medium text-sand-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-sand-700 uppercase tracking-wider">
 								카테고리
 							</th>
-							<th className="px-6 py-4 text-left text-xs font-medium text-sand-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-sand-700 uppercase tracking-wider">
 								심각도
 							</th>
-							<th className="px-6 py-4 text-left text-xs font-medium text-sand-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-sand-700 uppercase tracking-wider">
 								상태
 							</th>
-							<th className="px-6 py-4 text-left text-xs font-medium text-sand-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-sand-700 uppercase tracking-wider">
 								등록일
 							</th>
-							<th className="px-6 py-4 text-left text-xs font-medium text-sand-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-sand-700 uppercase tracking-wider">
 								작업
 							</th>
 						</tr>
@@ -350,7 +350,7 @@ function DamagesTable({
 							>
 								<td className="px-6 py-4">
 									<div className="text-sm font-medium text-sand-900">{damage.title}</div>
-									<div className="text-sm text-sand-500 truncate max-w-xs">
+									<div className="text-sm text-sand-700 truncate max-w-xs">
 										{damage.description?.substring(0, 50)}...
 									</div>
 								</td>
@@ -374,8 +374,8 @@ function DamagesTable({
 										<option value="deleted">삭제됨</option>
 									</select>
 								</td>
-								<td className="px-6 py-4 whitespace-nowrap text-sm text-sand-500">
-									{new Date(damage.created_at).toLocaleDateString('ko-KR')}
+								<td className="px-6 py-4 whitespace-nowrap text-sm text-sand-700">
+									{new Date(damage.created_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}
 								</td>
 								<td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
 									<button
@@ -389,7 +389,7 @@ function DamagesTable({
 						))}
 						{damages.length === 0 && (
 							<tr>
-								<td colSpan={6} className="px-6 py-12 text-center text-sand-400">
+								<td colSpan={6} className="px-6 py-12 text-center text-sand-600">
 									등록된 피해사례가 없습니다
 								</td>
 							</tr>

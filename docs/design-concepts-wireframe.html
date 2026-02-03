@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZipCheck 디자인 컨셉 와이어프레임 - 5가지 제안</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700&family=DM+Serif+Display&family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        noto: ['Noto Sans KR', 'sans-serif'],
+        playfair: ['Playfair Display', 'serif'],
+        dm: ['DM Serif Display', 'serif'],
+        cormorant: ['Cormorant Garamond', 'serif'],
+        outfit: ['Outfit', 'sans-serif'],
+      }
+    }
+  }
+}
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #f5f5f0; }
+
+/* Tab System */
+.tab-btn { transition: all 0.3s ease; }
+.tab-btn.active { transform: translateY(-2px); }
+.concept-panel { display: none; animation: fadeIn 0.5s ease; }
+.concept-panel.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Concept 1: Warm Hearth */
+.c1-hero-bg {
+  background: linear-gradient(135deg, #FFF8F0 0%, #FDE8D0 30%, #F5D5B8 60%, #E8C4A0 100%);
+}
+.c1-card {
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(193,154,107,0.15);
+  transition: all 0.3s ease;
+}
+.c1-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(193,154,107,0.15); }
+
+/* Concept 2: Sage & Stone */
+.c2-hero-bg {
+  background: linear-gradient(160deg, #F7F6F3 0%, #E8E4DE 40%, #D4CFC5 100%);
+}
+.c2-card {
+  background: #FAFAF8;
+  border: 1px solid #E0DDD5;
+  transition: all 0.3s ease;
+}
+.c2-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.06); }
+.c2-accent-line { width: 40px; height: 3px; background: #7C8B6F; }
+
+/* Concept 3: Golden Hour */
+.c3-hero-bg {
+  background: linear-gradient(135deg, #1A1714 0%, #2D2520 40%, #3D3028 70%, #1A1714 100%);
+}
+.c3-gold { color: #C9A96E; }
+.c3-card {
+  background: rgba(45,37,32,0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(201,169,110,0.2);
+  transition: all 0.3s ease;
+}
+.c3-card:hover { border-color: rgba(201,169,110,0.5); transform: translateY(-4px); }
+
+/* Concept 4: Blush Living */
+.c4-hero-bg {
+  background: linear-gradient(135deg, #FFF5F5 0%, #FDE2E4 30%, #FAD2CF 60%, #F5C6C2 100%);
+}
+.c4-card {
+  background: white;
+  border-radius: 24px;
+  border: 1px solid rgba(245,198,194,0.3);
+  transition: all 0.3s ease;
+}
+.c4-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(245,198,194,0.2); }
+
+/* Concept 5: Nordic Warm */
+.c5-hero-bg {
+  background: #FEFCF9;
+}
+.c5-card {
+  background: white;
+  border: 1px solid #EDEAE5;
+  transition: all 0.3s ease;
+}
+.c5-card:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(0,0,0,0.06); }
+
+/* Color Swatch */
+.swatch {
+  width: 56px; height: 56px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0; transition: all 0.2s;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.swatch:hover { transform: scale(1.15); }
+
+/* Section Divider */
+.section-divider {
+  width: 60px; height: 2px; margin: 0 auto;
+}
+
+/* Placeholder Image */
+.img-placeholder {
+  background: linear-gradient(135deg, #e0ddd5 0%, #d4cfc5 100%);
+  display: flex; align-items: center; justify-content: center;
+  color: #9c9789; font-size: 14px; letter-spacing: 0.05em;
+}
+
+/* Process Step Number */
+.step-num {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 18px;
+}
+
+/* Pricing Badge */
+.badge-popular {
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  padding: 4px 16px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+/* Mobile scroll hint */
+@media (max-width: 768px) {
+  .tab-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tab-scroll::-webkit-scrollbar { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================ -->
+<!-- HEADER: Tab Navigation                       -->
+<!-- ============================================ -->
+<header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 py-4">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h1 class="text-xl font-bold text-gray-900">ZipCheck 디자인 컨셉</h1>
+        <p class="text-sm text-gray-500 mt-0.5">5가지 제안 중 하나를 선택해주세요</p>
+      </div>
+      <span class="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full">UI/UX Wireframe</span>
+    </div>
+    <div class="tab-scroll">
+      <div class="flex gap-2 min-w-max">
+        <button onclick="switchTab(1)" id="tab-1" class="tab-btn active px-4 py-2.5 rounded-xl text-sm font-semibold bg-[#C19A6B] text-white shadow-md">
+          1. Warm Hearth
+        </button>
+        <button onclick="switchTab(2)" id="tab-2" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200">
+          2. Sage & Stone
+        </button>
+        <button onclick="switchTab(3)" id="tab-3" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200">
+          3. Golden Hour
+        </button>
+        <button onclick="switchTab(4)" id="tab-4" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200">
+          4. Blush Living
+        </button>
+        <button onclick="switchTab(5)" id="tab-5" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200">
+          5. Nordic Warm
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============================================ -->
+<!-- CONCEPT 1: Warm Hearth (따뜻한 벽난로)        -->
+<!-- ============================================ -->
+<div id="panel-1" class="concept-panel active">
+
+  <!-- Concept Description -->
+  <section class="max-w-7xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+      <div class="flex items-start gap-6">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#C19A6B] to-[#D4A96A] flex items-center justify-center text-white text-2xl flex-shrink-0">
+          🏠
+        </div>
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">Concept 1: Warm Hearth <span class="text-lg font-normal text-gray-500">따뜻한 벽난로</span></h2>
+          <p class="text-gray-600 leading-relaxed mb-4">
+            캐러멜, 테라코타, 크림 톤이 어우러진 따뜻한 공간감. 인테리어 쇼룸에 들어온 듯한 아늑함과
+            전문가다운 신뢰감을 동시에 전달합니다. 세리프 타이틀 + 산세리프 본문의 클래식 조합.
+          </p>
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="text-xs font-medium bg-[#FDE8D0] text-[#8B6914] px-3 py-1 rounded-full">Warm Caramel</span>
+            <span class="text-xs font-medium bg-[#FDE8D0] text-[#8B6914] px-3 py-1 rounded-full">Serif + Sans</span>
+            <span class="text-xs font-medium bg-[#FDE8D0] text-[#8B6914] px-3 py-1 rounded-full">Glassmorphism Light</span>
+            <span class="text-xs font-medium bg-[#FDE8D0] text-[#8B6914] px-3 py-1 rounded-full">Cozy Trust</span>
+          </div>
+        </div>
+      </div>
+      <!-- Color Palette -->
+      <div class="mt-8 pt-6 border-t border-gray-100">
+        <p class="text-sm font-semibold text-gray-700 mb-4">Color Palette</p>
+        <div class="flex items-center gap-4 flex-wrap">
+          <div class="text-center">
+            <div class="swatch" style="background:#C19A6B;" title="Primary: Caramel"></div>
+            <p class="text-[10px] text-gray-500 mt-2">Primary</p>
+          </div>
+          <div class="text-center">
+            <div class="swatch" style="background:#D4A96A;" title="Accent: Honey Gold"></div>
+            <p class="text-[10px] text-gray-500 mt-2">Accent</p>
+          </div>
+          <div class="text-center">
+            <div class="swatch" style="background:#E8C4A0;" title="Warm: Sand"></div>
+            <p class="text-[10px] text-gray-500 mt-2">Warm</p>
+          </div>
+          <div class="text-center">
+            <div class="swatch" style="background:#FFF8F0;" title="BG: Cream"></div>
+            <p class="text-[10px] text-gray-500 mt-2">BG</p>
+          </div>
+          <div class="text-center">
+            <div class="swatch" style="background:#2C2016;" title="Text: Dark Brown"></div>
+            <p class="text-[10px] text-gray-500 mt-2">Text</p>
+          </div>
+          <div class="text-center">
+            <div class="swatch" style="background:#6B8F71;" title="Success: Sage"></div>
+            <p class="text-[10px] text-gray-500 mt-2">Success</p>
+          </div>
+          <div class="text-center">
+            <div class="swatch" style="background:#C75C3A;" title="CTA: Terracotta"></div>
+            <p class="text-[10px] text-gray-500 mt-2">CTA</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hero Wireframe -->
+  <section class="c1-hero-bg">
+    <div class="max-w-7xl mx-auto px-6 py-24">
+      <nav class="flex items-center justify-between mb-20 pb-4 border-b border-[#C19A6B]/20">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-[#C19A6B] rounded-lg flex items-center justify-center text-white text-xs font-bold">Z</div>
+          <span class="font-bold text-[#2C2016] text-lg">ZipCheck</span>
+        </div>
+        <div class="flex items-center gap-8 text-sm text-[#5C4A32]">
+          <a href="#" class="hover:text-[#C19A6B]">분석 예시</a>
+          <a href="#" class="hover:text-[#C19A6B]">이용 요금</a>
+          <a href="#" class="hover:text-[#C19A6B]">커뮤니티</a>
+          <a href="#" class="px-5 py-2.5 bg-[#C19A6B] text-white rounded-xl font-medium hover:bg-[#A8844D] transition">견적 분석 신청</a>
+        </div>
+      </nav>
+
+      <div class="grid md:grid-cols-2 gap-16 items-center">
+        <div>
+          <p class="text-[#C19A6B] font-semibold text-sm tracking-widest uppercase mb-4">Interior Quote Analysis</p>
+          <h1 class="font-playfair text-5xl lg:text-6xl font-bold text-[#2C2016] leading-tight mb-6">
+            인테리어 견적,<br>
+            <span class="text-[#C19A6B]">마음 편히</span><br>
+            확인하세요
+          </h1>
+          <p class="text-lg text-[#6B5B4D] leading-relaxed mb-8 max-w-md">
+            3,000건 이상의 실제 공사 데이터와 20년 경력 전문가가<br>
+            48시간 안에 꼼꼼하게 분석해 드려요.
+          </p>
+          <div class="flex items-center gap-4">
+            <a href="#" class="px-8 py-4 bg-[#C75C3A] text-white rounded-2xl font-semibold text-lg hover:bg-[#B04E2F] transition shadow-lg shadow-[#C75C3A]/20">
+              견적 분석 신청하기 →
+            </a>
+            <a href="#" class="px-6 py-4 text-[#6B5B4D] font-medium hover:text-[#C19A6B] transition">
+              분석 예시 보기
+            </a>
+          </div>
+          <!-- Trust Badges -->
+          <div class="flex items-center gap-6 mt-10 pt-6 border-t border-[#C19A6B]/15">
+            <div class="text-center">
+              <p class="text-2xl font-bold text-[#2C2016]">3,000+</p>
+              <p class="text-xs text-[#8B7B6B]">누적 분석 건수</p>
+            </div>
+            <div class="w-px h-8 bg-[#C19A6B]/20"></div>
+            <div class="text-center">
+              <p class="text-2xl font-bold text-[#2C2016]">48h</p>
+              <p class="text-xs text-[#8B7B6B]">이내 분석 완료</p>
+            </div>
+            <div class="w-px h-8 bg-[#C19A6B]/20"></div>
+            <div class="text-center">
+              <p class="text-2xl font-bold text-[#2C2016]">20년+</p>
+              <p class="text-xs text-[#8B7B6B]">전문가 경력</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero Image Placeholder -->
+        <div class="relative">
+          <div class="rounded-3xl overflow-hidden shadow-2xl shadow-[#C19A6B]/15">
+            <div class="img-placeholder aspect-[4/3] rounded-3xl">
+              <div class="text-center">
+                <p class="text-4xl mb-2">🏡</p>
+                <p class="text-sm font-medium">따뜻한 인테리어 이미지</p>
+                <p class="text-xs mt-1">Gemini 생성 예정</p>
+              </div>
+            </div>
+          </div>
+          <!-- Floating Card -->
+          <div class="absolute -bottom-6 -left-6 c1-card rounded-2xl p-5 shadow-lg max-w-[220px]">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-10 h-10 rounded-full bg-[#6B8F71]/15 flex items-center justify-center text-[#6B8F71] text-lg">✓</div>
+              <div>
+                <p class="text-sm font-bold text-[#2C2016]">평균 절감액</p>
+                <p class="text-lg font-bold text-[#6B8F71]">350만원</p>
+              </div>
+            </div>
+            <p class="text-xs text-[#8B7B6B]">견적 대비 9.2% 절감</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="bg-white py-24">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <p class="text-[#C19A6B] font-semibold text-sm tracking-widest uppercase mb-3">Why ZipCheck</p>
+        <h2 class="font-playfair text-4xl font-bold text-[#2C2016] mb-4">왜 전문가의 눈이 필요할까요?</h2>
+        <p class="text-[#6B5B4D] text-lg">받은 견적이 적정한지, 혼자 판단하기 어렵지 않으셨나요?</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="c1-card rounded-2xl p-8">
+          <div class="w-14 h-14 rounded-2xl bg-[#FDE8D0] flex items-center justify-center text-2xl mb-5">📊</div>
+          <h3 class="font-bold text-[#2C2016] text-lg mb-2">실데이터 기반 비교</h3>
+          <p class="text-[#6B5B4D] text-sm leading-relaxed">3,000건 이상의 실제 시공 데이터와 비교하여 적정 단가인지 분석합니다.</p>
+        </div>
+        <div class="c1-card rounded-2xl p-8">
+          <div class="w-14 h-14 rounded-2xl bg-[#FDE8D0] flex items-center justify-center text-2xl mb-5">🔍</div>
+          <h3 class="font-bold text-[#2C2016] text-lg mb-2">항목별 상세 분석</h3>
+          <p class="text-[#6B5B4D] text-sm leading-relaxed">견적서의 모든 항목을 하나하나 쪼개어 과다 청구 여부를 확인합니다.</p>
+        </div>
+        <div class="c1-card rounded-2xl p-8">
+          <div class="w-14 h-14 rounded-2xl bg-[#FDE8D0] flex items-center justify-center text-2xl mb-5">💬</div>
+          <h3 class="font-bold text-[#2C2016] text-lg mb-2">전문가 코멘트</h3>
+          <p class="text-[#6B5B4D] text-sm leading-relaxed">20년 경력 전문가가 직접 작성하는 친절하고 구체적인 분석 리포트.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Process Section -->
+  <section class="c1-hero-bg py-24">
+    <div class="max-w-5xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="font-playfair text-4xl font-bold text-[#2C2016] mb-4">간단한 4단계</h2>
+        <p class="text-[#6B5B4D] text-lg">복잡한 과정 없이, 편하게 분석 받으세요.</p>
+      </div>
+      <div class="grid md:grid-cols-4 gap-6">
+        <div class="text-center">
+          <div class="step-num bg-[#C19A6B] text-white mx-auto mb-4">1</div>
+          <h4 class="font-bold text-[#2C2016] mb-2">견적서 업로드</h4>
+          <p class="text-sm text-[#6B5B4D]">사진, PDF 등<br>어떤 형태도 OK</p>
+        </div>
+        <div class="text-center">
+          <div class="step-num bg-[#C19A6B] text-white mx-auto mb-4">2</div>
+          <h4 class="font-bold text-[#2C2016] mb-2">AI 1차 분석</h4>
+          <p class="text-sm text-[#6B5B4D]">항목 자동 분류 및<br>데이터 정리</p>
+        </div>
+        <div class="text-center">
+          <div class="step-num bg-[#C19A6B] text-white mx-auto mb-4">3</div>
+          <h4 class="font-bold text-[#2C2016] mb-2">전문가 리뷰</h4>
+          <p class="text-sm text-[#6B5B4D]">20년 경력 전문가<br>직접 검토</p>
+        </div>
+        <div class="text-center">
+          <div class="step-num bg-[#C19A6B] text-white mx-auto mb-4">4</div>
+          <h4 class="font-bold text-[#2C2016] mb-2">리포트 전달</h4>
+          <p class="text-sm text-[#6B5B4D]">48시간 내<br>상세 분석 리포트</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section class="bg-white py-24">
+    <div class="max-w-4xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="font-playfair text-4xl font-bold text-[#2C2016] mb-4">분석 요금</h2>
+        <p class="text-[#6B5B4D] text-lg">3만 원 투자로 수백만 원을 지켜요.</p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="c1-card rounded-3xl p-8">
+          <h3 class="font-bold text-[#2C2016] text-xl mb-2">기본 분석</h3>
+          <p class="text-sm text-[#8B7B6B] mb-4">넉넉한 시간, 꼼꼼한 분석</p>
+          <p class="text-4xl font-bold text-[#2C2016] mb-1">30,000<span class="text-lg font-normal text-[#8B7B6B]">원</span></p>
+          <p class="text-xs text-[#8B7B6B] mb-6">VAT 별도</p>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-2 text-sm text-[#5C4A32]"><span class="text-[#6B8F71]">✓</span> 48시간 내 분석 완료</li>
+            <li class="flex items-center gap-2 text-sm text-[#5C4A32]"><span class="text-[#6B8F71]">✓</span> 항목별 적정가 비교</li>
+            <li class="flex items-center gap-2 text-sm text-[#5C4A32]"><span class="text-[#6B8F71]">✓</span> 전문가 상세 코멘트</li>
+          </ul>
+          <button class="w-full py-3.5 rounded-xl border-2 border-[#C19A6B] text-[#C19A6B] font-semibold hover:bg-[#C19A6B] hover:text-white transition">선택하기</button>
+        </div>
+
+        <div class="relative c1-card rounded-3xl p-8 border-2 border-[#C75C3A]/30">
+          <div class="badge-popular bg-[#C75C3A] text-white">인기</div>
+          <h3 class="font-bold text-[#2C2016] text-xl mb-2">빠른 분석</h3>
+          <p class="text-sm text-[#8B7B6B] mb-4">급할 때, 더 빠르게</p>
+          <p class="text-4xl font-bold text-[#2C2016] mb-1">45,000<span class="text-lg font-normal text-[#8B7B6B]">원</span></p>
+          <p class="text-xs text-[#8B7B6B] mb-6">VAT 별도</p>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-2 text-sm text-[#5C4A32]"><span class="text-[#6B8F71]">✓</span> 24시간 내 분석 완료</li>
+            <li class="flex items-center gap-2 text-sm text-[#5C4A32]"><span class="text-[#6B8F71]">✓</span> 우선 배정 전담 전문가</li>
+            <li class="flex items-center gap-2 text-sm text-[#5C4A32]"><span class="text-[#6B8F71]">✓</span> 추가 Q&A 지원</li>
+          </ul>
+          <button class="w-full py-3.5 rounded-xl bg-[#C75C3A] text-white font-semibold hover:bg-[#B04E2F] transition shadow-lg shadow-[#C75C3A]/20">선택하기</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="c1-hero-bg py-20">
+    <div class="max-w-3xl mx-auto px-6 text-center">
+      <h2 class="font-playfair text-3xl font-bold text-[#2C2016] mb-4">우리 집 인테리어, 제대로 된 견적으로 시작하세요</h2>
+      <p class="text-[#6B5B4D] text-lg mb-8">전문가의 눈으로 꼼꼼하게 확인해 드립니다.</p>
+      <a href="#" class="inline-block px-10 py-4 bg-[#C75C3A] text-white rounded-2xl font-semibold text-lg hover:bg-[#B04E2F] transition shadow-lg shadow-[#C75C3A]/20">
+        지금 분석 신청하기 →
+      </a>
+    </div>
+  </section>
+</div>
+
+
+<!-- ============================================ -->
+<!-- CONCEPT 2: Sage & Stone (세이지와 돌)          -->
+<!-- ============================================ -->
+<div id="panel-2" class="concept-panel">
+
+  <section class="max-w-7xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+      <div class="flex items-start gap-6">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#7C8B6F] to-[#A3B18A] flex items-center justify-center text-white text-2xl flex-shrink-0">
+          🌿
+        </div>
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">Concept 2: Sage & Stone <span class="text-lg font-normal text-gray-500">세이지와 돌</span></h2>
+          <p class="text-gray-600 leading-relaxed mb-4">
+            자연에서 온 세이지 그린과 따뜻한 스톤 그레이의 조합. 미니멀하면서도 자연스러운 질감이 느껴지는
+            차분한 디자인. 일본 와비사비 감성과 북유럽 미니멀의 교차점.
+          </p>
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="text-xs font-medium bg-[#E8EDE5] text-[#4A5940] px-3 py-1 rounded-full">Sage Green</span>
+            <span class="text-xs font-medium bg-[#E8EDE5] text-[#4A5940] px-3 py-1 rounded-full">Wabi-Sabi</span>
+            <span class="text-xs font-medium bg-[#E8EDE5] text-[#4A5940] px-3 py-1 rounded-full">Natural Texture</span>
+            <span class="text-xs font-medium bg-[#E8EDE5] text-[#4A5940] px-3 py-1 rounded-full">Quiet Luxury</span>
+          </div>
+        </div>
+      </div>
+      <div class="mt-8 pt-6 border-t border-gray-100">
+        <p class="text-sm font-semibold text-gray-700 mb-4">Color Palette</p>
+        <div class="flex items-center gap-4 flex-wrap">
+          <div class="text-center"><div class="swatch" style="background:#7C8B6F;"></div><p class="text-[10px] text-gray-500 mt-2">Primary</p></div>
+          <div class="text-center"><div class="swatch" style="background:#A3B18A;"></div><p class="text-[10px] text-gray-500 mt-2">Accent</p></div>
+          <div class="text-center"><div class="swatch" style="background:#B8AFA6;"></div><p class="text-[10px] text-gray-500 mt-2">Stone</p></div>
+          <div class="text-center"><div class="swatch" style="background:#F7F6F3;"></div><p class="text-[10px] text-gray-500 mt-2">BG</p></div>
+          <div class="text-center"><div class="swatch" style="background:#2F2F2B;"></div><p class="text-[10px] text-gray-500 mt-2">Text</p></div>
+          <div class="text-center"><div class="swatch" style="background:#C4956A;"></div><p class="text-[10px] text-gray-500 mt-2">Warm</p></div>
+          <div class="text-center"><div class="swatch" style="background:#5C7A52;"></div><p class="text-[10px] text-gray-500 mt-2">CTA</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="c2-hero-bg">
+    <div class="max-w-7xl mx-auto px-6 py-24">
+      <nav class="flex items-center justify-between mb-20">
+        <span class="font-outfit font-bold text-[#2F2F2B] text-xl tracking-tight">zip<span class="text-[#7C8B6F]">check</span></span>
+        <div class="flex items-center gap-8 text-sm text-[#5C5C56]">
+          <a href="#" class="hover:text-[#7C8B6F]">서비스</a>
+          <a href="#" class="hover:text-[#7C8B6F]">요금</a>
+          <a href="#" class="hover:text-[#7C8B6F]">커뮤니티</a>
+          <a href="#" class="px-5 py-2.5 bg-[#5C7A52] text-white rounded-lg font-medium hover:bg-[#4A6342] transition">시작하기</a>
+        </div>
+      </nav>
+
+      <div class="grid md:grid-cols-2 gap-20 items-center">
+        <div>
+          <div class="c2-accent-line mb-6"></div>
+          <h1 class="font-dm text-5xl lg:text-6xl text-[#2F2F2B] leading-tight mb-6">
+            견적서 한 장에<br>
+            숨은 <span class="text-[#7C8B6F]">진실</span>을<br>
+            찾아드립니다
+          </h1>
+          <p class="text-lg text-[#6B6B63] leading-relaxed mb-8 max-w-md">
+            수천 건의 데이터와 전문가의 경험이 만나, 당신의 인테리어 견적을 정직하게 분석합니다.
+          </p>
+          <div class="flex items-center gap-4">
+            <a href="#" class="px-8 py-4 bg-[#5C7A52] text-white rounded-xl font-semibold hover:bg-[#4A6342] transition">
+              견적 분석 시작
+            </a>
+            <a href="#" class="px-6 py-4 border border-[#B8AFA6] text-[#5C5C56] rounded-xl font-medium hover:border-[#7C8B6F] hover:text-[#7C8B6F] transition">
+              예시 보기
+            </a>
+          </div>
+        </div>
+
+        <div class="relative">
+          <div class="rounded-2xl overflow-hidden border border-[#E0DDD5]">
+            <div class="img-placeholder aspect-[4/3]" style="background:linear-gradient(135deg,#E8EDE5,#D4CFC5);">
+              <div class="text-center">
+                <p class="text-4xl mb-2">🪴</p>
+                <p class="text-sm font-medium">내추럴 인테리어 이미지</p>
+                <p class="text-xs mt-1">Gemini 생성 예정</p>
+              </div>
+            </div>
+          </div>
+          <div class="absolute -bottom-4 -right-4 bg-white rounded-2xl p-5 shadow-md border border-[#E0DDD5]">
+            <div class="flex items-center gap-3">
+              <div class="w-3 h-3 rounded-full bg-[#7C8B6F]"></div>
+              <span class="text-sm font-semibold text-[#2F2F2B]">분석 완료 3,000건+</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stat Bar -->
+      <div class="mt-20 grid grid-cols-3 gap-8 bg-white rounded-2xl p-8 border border-[#E0DDD5]">
+        <div class="text-center">
+          <p class="text-3xl font-bold text-[#2F2F2B]">3,000<span class="text-[#7C8B6F]">+</span></p>
+          <p class="text-sm text-[#8B8B83] mt-1">누적 분석 건수</p>
+        </div>
+        <div class="text-center border-x border-[#E0DDD5]">
+          <p class="text-3xl font-bold text-[#2F2F2B]">48<span class="text-[#7C8B6F]">h</span></p>
+          <p class="text-sm text-[#8B8B83] mt-1">이내 응답 보장</p>
+        </div>
+        <div class="text-center">
+          <p class="text-3xl font-bold text-[#2F2F2B]">20<span class="text-[#7C8B6F]">년+</span></p>
+          <p class="text-sm text-[#8B8B83] mt-1">전문가 경력</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="bg-[#FAFAF8] py-24">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="mb-16">
+        <div class="c2-accent-line mb-4"></div>
+        <h2 class="font-dm text-4xl text-[#2F2F2B] mb-3">무엇이 다른가요</h2>
+        <p class="text-[#6B6B63]">데이터와 경험, 두 가지 렌즈로 봅니다.</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="c2-card rounded-2xl p-8">
+          <p class="text-3xl mb-4">📐</p>
+          <h3 class="font-semibold text-[#2F2F2B] text-lg mb-2">정밀한 데이터 비교</h3>
+          <p class="text-sm text-[#6B6B63] leading-relaxed">실제 시공 데이터 기반으로 각 항목의 적정가를 산출합니다.</p>
+        </div>
+        <div class="c2-card rounded-2xl p-8">
+          <p class="text-3xl mb-4">🤝</p>
+          <h3 class="font-semibold text-[#2F2F2B] text-lg mb-2">친절한 전문가 해설</h3>
+          <p class="text-sm text-[#6B6B63] leading-relaxed">어려운 전문 용어 없이, 누구나 이해할 수 있게 설명합니다.</p>
+        </div>
+        <div class="c2-card rounded-2xl p-8">
+          <p class="text-3xl mb-4">🛡️</p>
+          <h3 class="font-semibold text-[#2F2F2B] text-lg mb-2">투명한 리포트</h3>
+          <p class="text-sm text-[#6B6B63] leading-relaxed">분석 근거와 비교 데이터를 함께 제공하여 신뢰를 드립니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="bg-white py-24">
+    <div class="max-w-4xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <div class="c2-accent-line mx-auto mb-4"></div>
+        <h2 class="font-dm text-4xl text-[#2F2F2B] mb-3">합리적인 요금</h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="c2-card rounded-2xl p-8">
+          <h3 class="font-semibold text-[#2F2F2B] text-lg mb-1">기본 분석</h3>
+          <p class="text-xs text-[#8B8B83] mb-4">48시간 이내</p>
+          <p class="text-4xl font-bold text-[#2F2F2B] mb-6">₩30,000</p>
+          <button class="w-full py-3 rounded-lg border border-[#7C8B6F] text-[#5C7A52] font-medium hover:bg-[#5C7A52] hover:text-white transition">선택</button>
+        </div>
+        <div class="relative c2-card rounded-2xl p-8 border-2 border-[#5C7A52]">
+          <div class="badge-popular bg-[#5C7A52] text-white">추천</div>
+          <h3 class="font-semibold text-[#2F2F2B] text-lg mb-1">빠른 분석</h3>
+          <p class="text-xs text-[#8B8B83] mb-4">24시간 이내</p>
+          <p class="text-4xl font-bold text-[#2F2F2B] mb-6">₩45,000</p>
+          <button class="w-full py-3 rounded-lg bg-[#5C7A52] text-white font-medium hover:bg-[#4A6342] transition">선택</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ============================================ -->
+<!-- CONCEPT 3: Golden Hour (골든아워)              -->
+<!-- ============================================ -->
+<div id="panel-3" class="concept-panel">
+
+  <section class="max-w-7xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+      <div class="flex items-start gap-6">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#C9A96E] to-[#8B6914] flex items-center justify-center text-white text-2xl flex-shrink-0">
+          ✨
+        </div>
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">Concept 3: Golden Hour <span class="text-lg font-normal text-gray-500">골든아워</span></h2>
+          <p class="text-gray-600 leading-relaxed mb-4">
+            해질녘 황금빛이 실내에 스며든 순간. 다크 브라운 배경에 골드 악센트가 프리미엄 감성을
+            전달하면서도 따뜻함을 잃지 않습니다. 럭셔리 인테리어 브랜드의 느낌.
+          </p>
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="text-xs font-medium bg-[#2D2520] text-[#C9A96E] px-3 py-1 rounded-full">Dark Luxe</span>
+            <span class="text-xs font-medium bg-[#2D2520] text-[#C9A96E] px-3 py-1 rounded-full">Gold Accent</span>
+            <span class="text-xs font-medium bg-[#2D2520] text-[#C9A96E] px-3 py-1 rounded-full">Serif Elegance</span>
+            <span class="text-xs font-medium bg-[#2D2520] text-[#C9A96E] px-3 py-1 rounded-full">Premium Trust</span>
+          </div>
+        </div>
+      </div>
+      <div class="mt-8 pt-6 border-t border-gray-100">
+        <p class="text-sm font-semibold text-gray-700 mb-4">Color Palette</p>
+        <div class="flex items-center gap-4 flex-wrap">
+          <div class="text-center"><div class="swatch" style="background:#C9A96E;"></div><p class="text-[10px] text-gray-500 mt-2">Gold</p></div>
+          <div class="text-center"><div class="swatch" style="background:#E8D5B0;"></div><p class="text-[10px] text-gray-500 mt-2">Warm Light</p></div>
+          <div class="text-center"><div class="swatch" style="background:#1A1714;"></div><p class="text-[10px] text-gray-500 mt-2">Dark BG</p></div>
+          <div class="text-center"><div class="swatch" style="background:#2D2520;"></div><p class="text-[10px] text-gray-500 mt-2">Card BG</p></div>
+          <div class="text-center"><div class="swatch" style="background:#F5EDE0;"></div><p class="text-[10px] text-gray-500 mt-2">Cream Text</p></div>
+          <div class="text-center"><div class="swatch" style="background:#8B7355;"></div><p class="text-[10px] text-gray-500 mt-2">Muted</p></div>
+          <div class="text-center"><div class="swatch" style="background:#D4883A;"></div><p class="text-[10px] text-gray-500 mt-2">CTA</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="c3-hero-bg min-h-screen">
+    <div class="max-w-7xl mx-auto px-6 py-16">
+      <nav class="flex items-center justify-between mb-24">
+        <span class="font-cormorant font-bold text-[#C9A96E] text-2xl tracking-wide">ZIPCHECK</span>
+        <div class="flex items-center gap-8 text-sm text-[#8B7355]">
+          <a href="#" class="hover:text-[#C9A96E] transition">서비스</a>
+          <a href="#" class="hover:text-[#C9A96E] transition">요금</a>
+          <a href="#" class="hover:text-[#C9A96E] transition">커뮤니티</a>
+          <a href="#" class="px-5 py-2.5 border border-[#C9A96E]/40 text-[#C9A96E] rounded-lg hover:bg-[#C9A96E]/10 transition">시작하기</a>
+        </div>
+      </nav>
+
+      <div class="grid md:grid-cols-2 gap-16 items-center">
+        <div>
+          <p class="c3-gold font-cormorant text-lg tracking-[0.2em] mb-6">INTERIOR QUOTE ANALYSIS</p>
+          <h1 class="font-cormorant text-5xl lg:text-7xl text-[#F5EDE0] leading-tight mb-6 font-light">
+            당신의 공간에<br>
+            <span class="c3-gold font-semibold">정직한 가치</span>를
+          </h1>
+          <p class="text-lg text-[#8B7355] leading-relaxed mb-10 max-w-md">
+            3,000건의 실제 데이터와 20년 전문가의 안목으로, 인테리어 견적의 숨은 진실을 밝혀드립니다.
+          </p>
+          <a href="#" class="inline-block px-10 py-4 bg-gradient-to-r from-[#C9A96E] to-[#D4883A] text-[#1A1714] rounded-xl font-bold text-lg hover:opacity-90 transition">
+            견적 분석 신청 →
+          </a>
+        </div>
+        <div class="relative">
+          <div class="rounded-3xl overflow-hidden border border-[#C9A96E]/20">
+            <div class="img-placeholder aspect-[4/3]" style="background:linear-gradient(135deg,#2D2520,#3D3028);">
+              <div class="text-center text-[#8B7355]">
+                <p class="text-4xl mb-2">🌅</p>
+                <p class="text-sm font-medium">골든아워 인테리어</p>
+                <p class="text-xs mt-1">Gemini 생성 예정</p>
+              </div>
+            </div>
+          </div>
+          <!-- Floating Stats -->
+          <div class="absolute -bottom-6 left-8 right-8 c3-card rounded-2xl p-6 grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p class="text-xl font-bold text-[#C9A96E]">3,000+</p>
+              <p class="text-xs text-[#8B7355]">분석 건수</p>
+            </div>
+            <div class="border-x border-[#C9A96E]/15">
+              <p class="text-xl font-bold text-[#C9A96E]">48h</p>
+              <p class="text-xs text-[#8B7355]">응답 보장</p>
+            </div>
+            <div>
+              <p class="text-xl font-bold text-[#C9A96E]">20년+</p>
+              <p class="text-xs text-[#8B7355]">전문가</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section style="background:#1F1B17;" class="py-24">
+    <div class="max-w-6xl mx-auto px-6">
+      <p class="text-center font-cormorant text-[#C9A96E] tracking-[0.2em] text-sm mb-3">WHY ZIPCHECK</p>
+      <h2 class="text-center font-cormorant text-4xl text-[#F5EDE0] mb-16">차별화된 분석 서비스</h2>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="c3-card rounded-2xl p-8 text-center">
+          <div class="w-12 h-12 rounded-full bg-[#C9A96E]/15 flex items-center justify-center mx-auto mb-4 text-xl">📊</div>
+          <h3 class="text-[#F5EDE0] font-semibold mb-2">데이터 기반</h3>
+          <p class="text-sm text-[#8B7355]">실시공 데이터 대비 분석</p>
+        </div>
+        <div class="c3-card rounded-2xl p-8 text-center">
+          <div class="w-12 h-12 rounded-full bg-[#C9A96E]/15 flex items-center justify-center mx-auto mb-4 text-xl">👨‍🔧</div>
+          <h3 class="text-[#F5EDE0] font-semibold mb-2">전문가 직접 리뷰</h3>
+          <p class="text-sm text-[#8B7355]">20년 경력 전문가 코멘트</p>
+        </div>
+        <div class="c3-card rounded-2xl p-8 text-center">
+          <div class="w-12 h-12 rounded-full bg-[#C9A96E]/15 flex items-center justify-center mx-auto mb-4 text-xl">⚡</div>
+          <h3 class="text-[#F5EDE0] font-semibold mb-2">48시간 보장</h3>
+          <p class="text-sm text-[#8B7355]">빠르고 정확한 결과 전달</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="c3-hero-bg py-24">
+    <div class="max-w-4xl mx-auto px-6">
+      <p class="text-center font-cormorant text-[#C9A96E] tracking-[0.2em] text-sm mb-3">PRICING</p>
+      <h2 class="text-center font-cormorant text-4xl text-[#F5EDE0] mb-16">분석 요금</h2>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="c3-card rounded-2xl p-8">
+          <h3 class="text-[#F5EDE0] font-semibold text-lg mb-1">기본 분석</h3>
+          <p class="text-xs text-[#8B7355] mb-4">48시간 이내</p>
+          <p class="text-4xl font-bold c3-gold mb-6">₩30,000</p>
+          <button class="w-full py-3 rounded-lg border border-[#C9A96E]/40 text-[#C9A96E] font-medium hover:bg-[#C9A96E]/10 transition">선택</button>
+        </div>
+        <div class="relative c3-card rounded-2xl p-8 border-[#C9A96E]/40">
+          <div class="badge-popular bg-gradient-to-r from-[#C9A96E] to-[#D4883A] text-[#1A1714]">추천</div>
+          <h3 class="text-[#F5EDE0] font-semibold text-lg mb-1">빠른 분석</h3>
+          <p class="text-xs text-[#8B7355] mb-4">24시간 이내</p>
+          <p class="text-4xl font-bold c3-gold mb-6">₩45,000</p>
+          <button class="w-full py-3 rounded-lg bg-gradient-to-r from-[#C9A96E] to-[#D4883A] text-[#1A1714] font-bold hover:opacity-90 transition">선택</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ============================================ -->
+<!-- CONCEPT 4: Blush Living (블러쉬 리빙)          -->
+<!-- ============================================ -->
+<div id="panel-4" class="concept-panel">
+
+  <section class="max-w-7xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+      <div class="flex items-start gap-6">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#E8A0A0] to-[#F5C6C2] flex items-center justify-center text-white text-2xl flex-shrink-0">
+          🌸
+        </div>
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">Concept 4: Blush Living <span class="text-lg font-normal text-gray-500">블러쉬 리빙</span></h2>
+          <p class="text-gray-600 leading-relaxed mb-4">
+            부드러운 블러쉬 핑크와 따뜻한 로즈톤. 여성적이고 세련된 분위기지만 과하지 않게
+            뉴트럴 톤으로 균형을 잡아 누구에게나 친근합니다. 라운드 UI로 부드러운 인상.
+          </p>
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="text-xs font-medium bg-[#FDE2E4] text-[#8B4A4A] px-3 py-1 rounded-full">Blush Pink</span>
+            <span class="text-xs font-medium bg-[#FDE2E4] text-[#8B4A4A] px-3 py-1 rounded-full">Rounded UI</span>
+            <span class="text-xs font-medium bg-[#FDE2E4] text-[#8B4A4A] px-3 py-1 rounded-full">Soft & Friendly</span>
+            <span class="text-xs font-medium bg-[#FDE2E4] text-[#8B4A4A] px-3 py-1 rounded-full">Modern Warm</span>
+          </div>
+        </div>
+      </div>
+      <div class="mt-8 pt-6 border-t border-gray-100">
+        <p class="text-sm font-semibold text-gray-700 mb-4">Color Palette</p>
+        <div class="flex items-center gap-4 flex-wrap">
+          <div class="text-center"><div class="swatch" style="background:#D4847A;"></div><p class="text-[10px] text-gray-500 mt-2">Primary</p></div>
+          <div class="text-center"><div class="swatch" style="background:#F5C6C2;"></div><p class="text-[10px] text-gray-500 mt-2">Light</p></div>
+          <div class="text-center"><div class="swatch" style="background:#FDE2E4;"></div><p class="text-[10px] text-gray-500 mt-2">Subtle</p></div>
+          <div class="text-center"><div class="swatch" style="background:#FFF5F5;"></div><p class="text-[10px] text-gray-500 mt-2">BG</p></div>
+          <div class="text-center"><div class="swatch" style="background:#3D2C2C;"></div><p class="text-[10px] text-gray-500 mt-2">Text</p></div>
+          <div class="text-center"><div class="swatch" style="background:#C4956A;"></div><p class="text-[10px] text-gray-500 mt-2">Warm</p></div>
+          <div class="text-center"><div class="swatch" style="background:#B85C5C;"></div><p class="text-[10px] text-gray-500 mt-2">CTA</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="c4-hero-bg">
+    <div class="max-w-7xl mx-auto px-6 py-24">
+      <nav class="flex items-center justify-between mb-20">
+        <div class="flex items-center gap-2">
+          <div class="w-9 h-9 bg-[#D4847A] rounded-full flex items-center justify-center text-white text-sm font-bold">Z</div>
+          <span class="font-bold text-[#3D2C2C] text-lg">ZipCheck</span>
+        </div>
+        <div class="flex items-center gap-8 text-sm text-[#6B5555]">
+          <a href="#" class="hover:text-[#D4847A]">서비스 소개</a>
+          <a href="#" class="hover:text-[#D4847A]">이용 요금</a>
+          <a href="#" class="hover:text-[#D4847A]">커뮤니티</a>
+          <a href="#" class="px-5 py-2.5 bg-[#B85C5C] text-white rounded-full font-medium hover:bg-[#A04D4D] transition">견적 분석 신청</a>
+        </div>
+      </nav>
+
+      <div class="text-center max-w-3xl mx-auto">
+        <div class="inline-block px-4 py-1.5 bg-white/60 rounded-full text-sm text-[#D4847A] font-medium mb-6 backdrop-blur-sm">
+          🏠 3,000건+ 분석 완료
+        </div>
+        <h1 class="font-noto text-4xl lg:text-6xl font-bold text-[#3D2C2C] leading-tight mb-6">
+          우리 집 견적,<br>
+          <span class="text-[#D4847A]">따뜻하게</span> 분석해 드려요
+        </h1>
+        <p class="text-lg text-[#6B5555] leading-relaxed mb-10 max-w-xl mx-auto">
+          처음 인테리어라 불안하셨죠? 20년 전문가가 옆에서 친절하게 설명해 드리듯, 견적서를 하나하나 꼼꼼히 봐드려요.
+        </p>
+        <div class="flex items-center justify-center gap-4">
+          <a href="#" class="px-10 py-4 bg-[#B85C5C] text-white rounded-full font-semibold text-lg hover:bg-[#A04D4D] transition shadow-lg shadow-[#B85C5C]/20">
+            무료 상담 시작하기
+          </a>
+          <a href="#" class="px-8 py-4 bg-white/70 text-[#6B5555] rounded-full font-medium backdrop-blur-sm hover:bg-white transition">
+            분석 예시 보기
+          </a>
+        </div>
+
+        <!-- Hero Image -->
+        <div class="mt-16 relative">
+          <div class="rounded-[32px] overflow-hidden shadow-2xl shadow-[#D4847A]/10 border border-white/40">
+            <div class="img-placeholder aspect-[16/7]" style="background:linear-gradient(135deg,#FDE2E4,#FAD2CF,#F5C6C2);">
+              <div class="text-center">
+                <p class="text-5xl mb-2">🛋️</p>
+                <p class="text-base font-medium">부드러운 톤의 리빙룸 이미지</p>
+                <p class="text-xs mt-1">Gemini 생성 예정</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="bg-white py-24">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-bold text-[#3D2C2C] mb-3">왜 ZipCheck인가요?</h2>
+        <p class="text-[#6B5555]">처음이라 어려운 분들을 위해 준비했어요</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="c4-card p-8 text-center">
+          <div class="w-16 h-16 rounded-full bg-[#FDE2E4] flex items-center justify-center mx-auto mb-4 text-2xl">📊</div>
+          <h3 class="font-bold text-[#3D2C2C] mb-2">실데이터 비교</h3>
+          <p class="text-sm text-[#6B5555]">3,000건 실제 시공 데이터와 비교 분석</p>
+        </div>
+        <div class="c4-card p-8 text-center">
+          <div class="w-16 h-16 rounded-full bg-[#FDE2E4] flex items-center justify-center mx-auto mb-4 text-2xl">💝</div>
+          <h3 class="font-bold text-[#3D2C2C] mb-2">친절한 설명</h3>
+          <p class="text-sm text-[#6B5555]">옆에서 설명해 드리듯 친절한 리포트</p>
+        </div>
+        <div class="c4-card p-8 text-center">
+          <div class="w-16 h-16 rounded-full bg-[#FDE2E4] flex items-center justify-center mx-auto mb-4 text-2xl">⏰</div>
+          <h3 class="font-bold text-[#3D2C2C] mb-2">48시간 보장</h3>
+          <p class="text-sm text-[#6B5555]">기다림 없이 빠르게 결과 전달</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="c4-hero-bg py-24">
+    <div class="max-w-4xl mx-auto px-6 text-center">
+      <h2 class="text-3xl font-bold text-[#3D2C2C] mb-3">이용 요금</h2>
+      <p class="text-[#6B5555] mb-12">3만 원으로 수백만 원을 지켜요</p>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="c4-card p-8">
+          <h3 class="font-bold text-[#3D2C2C] text-lg mb-1">기본 분석</h3>
+          <p class="text-xs text-[#8B7B6B] mb-3">48시간 이내</p>
+          <p class="text-4xl font-bold text-[#3D2C2C] mb-6">₩30,000</p>
+          <button class="w-full py-3.5 rounded-full border-2 border-[#D4847A] text-[#D4847A] font-semibold hover:bg-[#D4847A] hover:text-white transition">선택하기</button>
+        </div>
+        <div class="relative c4-card p-8 border-2 border-[#B85C5C]">
+          <div class="badge-popular bg-[#B85C5C] text-white rounded-full">인기</div>
+          <h3 class="font-bold text-[#3D2C2C] text-lg mb-1">빠른 분석</h3>
+          <p class="text-xs text-[#8B7B6B] mb-3">24시간 이내</p>
+          <p class="text-4xl font-bold text-[#3D2C2C] mb-6">₩45,000</p>
+          <button class="w-full py-3.5 rounded-full bg-[#B85C5C] text-white font-semibold hover:bg-[#A04D4D] transition">선택하기</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ============================================ -->
+<!-- CONCEPT 5: Nordic Warm (노르딕 웜)             -->
+<!-- ============================================ -->
+<div id="panel-5" class="concept-panel">
+
+  <section class="max-w-7xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+      <div class="flex items-start gap-6">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#4A6741] to-[#8BAF82] flex items-center justify-center text-white text-2xl flex-shrink-0">
+          🏔
+        </div>
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">Concept 5: Nordic Warm <span class="text-lg font-normal text-gray-500">노르딕 웜</span></h2>
+          <p class="text-gray-600 leading-relaxed mb-4">
+            스칸디나비안 미니멀리즘과 따뜻한 우드톤의 만남. 극도로 깨끗한 레이아웃에
+            자연 소재의 따뜻함을 더해 신뢰와 편안함을 동시에 전달합니다. 화이트 스페이스 적극 활용.
+          </p>
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="text-xs font-medium bg-[#F0EDE8] text-[#4A6741] px-3 py-1 rounded-full">Scandinavian</span>
+            <span class="text-xs font-medium bg-[#F0EDE8] text-[#4A6741] px-3 py-1 rounded-full">White Space</span>
+            <span class="text-xs font-medium bg-[#F0EDE8] text-[#4A6741] px-3 py-1 rounded-full">Wood + Green</span>
+            <span class="text-xs font-medium bg-[#F0EDE8] text-[#4A6741] px-3 py-1 rounded-full">Clean Minimal</span>
+          </div>
+        </div>
+      </div>
+      <div class="mt-8 pt-6 border-t border-gray-100">
+        <p class="text-sm font-semibold text-gray-700 mb-4">Color Palette</p>
+        <div class="flex items-center gap-4 flex-wrap">
+          <div class="text-center"><div class="swatch" style="background:#4A6741;"></div><p class="text-[10px] text-gray-500 mt-2">Primary</p></div>
+          <div class="text-center"><div class="swatch" style="background:#8BAF82;"></div><p class="text-[10px] text-gray-500 mt-2">Light</p></div>
+          <div class="text-center"><div class="swatch" style="background:#C4956A;"></div><p class="text-[10px] text-gray-500 mt-2">Wood</p></div>
+          <div class="text-center"><div class="swatch" style="background:#FEFCF9;"></div><p class="text-[10px] text-gray-500 mt-2">BG</p></div>
+          <div class="text-center"><div class="swatch" style="background:#1A1A1A;"></div><p class="text-[10px] text-gray-500 mt-2">Text</p></div>
+          <div class="text-center"><div class="swatch" style="background:#EDEAE5;"></div><p class="text-[10px] text-gray-500 mt-2">Border</p></div>
+          <div class="text-center"><div class="swatch" style="background:#3D5A35;"></div><p class="text-[10px] text-gray-500 mt-2">CTA</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="c5-hero-bg min-h-screen">
+    <div class="max-w-7xl mx-auto px-6 py-12">
+      <nav class="flex items-center justify-between mb-24 py-3">
+        <span class="font-outfit font-semibold text-[#1A1A1A] text-xl">ZipCheck</span>
+        <div class="flex items-center gap-10 text-sm text-[#6B6B6B]">
+          <a href="#" class="hover:text-[#4A6741]">소개</a>
+          <a href="#" class="hover:text-[#4A6741]">요금</a>
+          <a href="#" class="hover:text-[#4A6741]">커뮤니티</a>
+          <a href="#" class="px-6 py-2.5 bg-[#3D5A35] text-white rounded-lg font-medium hover:bg-[#2E4628] transition text-sm">견적 분석</a>
+        </div>
+      </nav>
+
+      <div class="grid md:grid-cols-2 gap-24 items-center">
+        <div>
+          <h1 class="font-outfit text-5xl lg:text-[3.5rem] font-semibold text-[#1A1A1A] leading-[1.2] mb-6 tracking-tight">
+            인테리어 견적,<br>
+            전문가와 함께<br>
+            <span class="text-[#4A6741]">편안하게.</span>
+          </h1>
+          <p class="text-lg text-[#6B6B6B] leading-relaxed mb-10 max-w-md">
+            3,000건의 실제 데이터를 기반으로 20년 경력 전문가가 48시간 안에 분석해 드립니다. 복잡한 견적서, 쉽고 따뜻하게 풀어드려요.
+          </p>
+          <div class="flex items-center gap-4">
+            <a href="#" class="px-8 py-4 bg-[#3D5A35] text-white rounded-xl font-semibold hover:bg-[#2E4628] transition">
+              분석 신청하기
+            </a>
+            <a href="#" class="px-6 py-4 text-[#6B6B6B] font-medium hover:text-[#4A6741] transition underline underline-offset-4 decoration-[#EDEAE5]">
+              예시 보기
+            </a>
+          </div>
+        </div>
+
+        <div class="relative">
+          <!-- Main Image -->
+          <div class="rounded-3xl overflow-hidden border border-[#EDEAE5]">
+            <div class="img-placeholder aspect-square" style="background:linear-gradient(135deg,#F0EDE8,#E5E0D8);">
+              <div class="text-center">
+                <p class="text-5xl mb-2">🪵</p>
+                <p class="text-sm font-medium">북유럽 스타일 인테리어</p>
+                <p class="text-xs mt-1">Gemini 생성 예정</p>
+              </div>
+            </div>
+          </div>
+          <!-- Side Stats -->
+          <div class="absolute -left-12 top-1/2 -translate-y-1/2 space-y-4">
+            <div class="c5-card rounded-xl px-4 py-3 text-center shadow-md">
+              <p class="text-lg font-bold text-[#1A1A1A]">3K+</p>
+              <p class="text-[10px] text-[#6B6B6B]">분석</p>
+            </div>
+            <div class="c5-card rounded-xl px-4 py-3 text-center shadow-md">
+              <p class="text-lg font-bold text-[#4A6741]">48h</p>
+              <p class="text-[10px] text-[#6B6B6B]">보장</p>
+            </div>
+            <div class="c5-card rounded-xl px-4 py-3 text-center shadow-md">
+              <p class="text-lg font-bold text-[#1A1A1A]">20Y</p>
+              <p class="text-[10px] text-[#6B6B6B]">경력</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="bg-white py-24">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="grid md:grid-cols-2 gap-16 items-center">
+        <div>
+          <p class="text-sm text-[#4A6741] font-semibold mb-3">WHY US</p>
+          <h2 class="font-outfit text-3xl font-semibold text-[#1A1A1A] mb-4 tracking-tight">왜 전문가 분석이<br>필요한가요?</h2>
+          <p class="text-[#6B6B6B] leading-relaxed mb-8">인테리어 견적은 전문 지식 없이 판단하기 어렵습니다. 같은 공사도 업체마다 수백만 원 차이가 날 수 있어요.</p>
+          <div class="space-y-4">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-lg bg-[#4A6741]/10 flex items-center justify-center text-[#4A6741] flex-shrink-0">✓</div>
+              <div>
+                <h4 class="font-semibold text-[#1A1A1A] mb-1">실데이터 기반 적정가 산출</h4>
+                <p class="text-sm text-[#6B6B6B]">감이 아닌 데이터로 판단합니다.</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-lg bg-[#4A6741]/10 flex items-center justify-center text-[#4A6741] flex-shrink-0">✓</div>
+              <div>
+                <h4 class="font-semibold text-[#1A1A1A] mb-1">항목별 상세 분석 리포트</h4>
+                <p class="text-sm text-[#6B6B6B]">각 항목을 쪼개어 과다 청구를 확인합니다.</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-lg bg-[#4A6741]/10 flex items-center justify-center text-[#4A6741] flex-shrink-0">✓</div>
+              <div>
+                <h4 class="font-semibold text-[#1A1A1A] mb-1">이해하기 쉬운 전문가 코멘트</h4>
+                <p class="text-sm text-[#6B6B6B]">어려운 용어 없이 친절하게 설명합니다.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rounded-3xl overflow-hidden border border-[#EDEAE5]">
+          <div class="img-placeholder aspect-[4/3]" style="background:linear-gradient(135deg,#F0EDE8,#E5E0D8);">
+            <div class="text-center">
+              <p class="text-4xl mb-2">📋</p>
+              <p class="text-sm font-medium">분석 리포트 예시 이미지</p>
+              <p class="text-xs mt-1">Gemini 생성 예정</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Process -->
+  <section class="c5-hero-bg py-24">
+    <div class="max-w-5xl mx-auto px-6">
+      <p class="text-sm text-[#4A6741] font-semibold mb-3 text-center">PROCESS</p>
+      <h2 class="font-outfit text-3xl font-semibold text-[#1A1A1A] mb-16 text-center tracking-tight">간단한 4단계</h2>
+      <div class="grid md:grid-cols-4 gap-8">
+        <div class="c5-card rounded-2xl p-6 text-center">
+          <div class="step-num bg-[#4A6741] text-white mx-auto mb-4 text-sm">01</div>
+          <h4 class="font-semibold text-[#1A1A1A] mb-1 text-sm">견적서 업로드</h4>
+          <p class="text-xs text-[#6B6B6B]">사진, PDF 등 자유 형태</p>
+        </div>
+        <div class="c5-card rounded-2xl p-6 text-center">
+          <div class="step-num bg-[#4A6741] text-white mx-auto mb-4 text-sm">02</div>
+          <h4 class="font-semibold text-[#1A1A1A] mb-1 text-sm">AI 분석</h4>
+          <p class="text-xs text-[#6B6B6B]">항목 자동 분류 및 정리</p>
+        </div>
+        <div class="c5-card rounded-2xl p-6 text-center">
+          <div class="step-num bg-[#4A6741] text-white mx-auto mb-4 text-sm">03</div>
+          <h4 class="font-semibold text-[#1A1A1A] mb-1 text-sm">전문가 리뷰</h4>
+          <p class="text-xs text-[#6B6B6B]">20년 경력 전문가 직접 검토</p>
+        </div>
+        <div class="c5-card rounded-2xl p-6 text-center">
+          <div class="step-num bg-[#4A6741] text-white mx-auto mb-4 text-sm">04</div>
+          <h4 class="font-semibold text-[#1A1A1A] mb-1 text-sm">리포트 전달</h4>
+          <p class="text-xs text-[#6B6B6B]">48시간 내 상세 리포트</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="bg-white py-24">
+    <div class="max-w-4xl mx-auto px-6">
+      <p class="text-sm text-[#4A6741] font-semibold mb-3 text-center">PRICING</p>
+      <h2 class="font-outfit text-3xl font-semibold text-[#1A1A1A] mb-16 text-center tracking-tight">합리적인 요금</h2>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="c5-card rounded-2xl p-8">
+          <h3 class="font-semibold text-[#1A1A1A] text-lg mb-1">기본 분석</h3>
+          <p class="text-xs text-[#6B6B6B] mb-4">48시간 이내</p>
+          <p class="text-4xl font-bold text-[#1A1A1A] mb-6 tracking-tight">₩30,000</p>
+          <button class="w-full py-3 rounded-xl border border-[#4A6741] text-[#4A6741] font-medium hover:bg-[#4A6741] hover:text-white transition">선택하기</button>
+        </div>
+        <div class="relative c5-card rounded-2xl p-8 border-2 border-[#3D5A35]">
+          <div class="badge-popular bg-[#3D5A35] text-white">추천</div>
+          <h3 class="font-semibold text-[#1A1A1A] text-lg mb-1">빠른 분석</h3>
+          <p class="text-xs text-[#6B6B6B] mb-4">24시간 이내</p>
+          <p class="text-4xl font-bold text-[#1A1A1A] mb-6 tracking-tight">₩45,000</p>
+          <button class="w-full py-3 rounded-xl bg-[#3D5A35] text-white font-medium hover:bg-[#2E4628] transition">선택하기</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="c5-hero-bg py-20 border-t border-[#EDEAE5]">
+    <div class="max-w-3xl mx-auto px-6 text-center">
+      <h2 class="font-outfit text-3xl font-semibold text-[#1A1A1A] mb-4 tracking-tight">편안한 시작, 정확한 분석</h2>
+      <p class="text-[#6B6B6B] mb-8">복잡한 견적서, 전문가가 따뜻하게 풀어드립니다.</p>
+      <a href="#" class="inline-block px-10 py-4 bg-[#3D5A35] text-white rounded-xl font-semibold hover:bg-[#2E4628] transition">
+        지금 시작하기
+      </a>
+    </div>
+  </section>
+</div>
+
+
+<!-- ============================================ -->
+<!-- TAB SWITCHING SCRIPT                         -->
+<!-- ============================================ -->
+<script>
+const tabColors = {
+  1: { bg: '#C19A6B', text: '#fff' },
+  2: { bg: '#7C8B6F', text: '#fff' },
+  3: { bg: '#C9A96E', text: '#fff' },
+  4: { bg: '#D4847A', text: '#fff' },
+  5: { bg: '#4A6741', text: '#fff' },
+};
+
+function switchTab(num) {
+  // Hide all panels
+  document.querySelectorAll('.concept-panel').forEach(p => p.classList.remove('active'));
+  // Deactivate all tabs
+  document.querySelectorAll('.tab-btn').forEach(t => {
+    t.classList.remove('active');
+    t.style.background = '#f3f4f6';
+    t.style.color = '#4b5563';
+  });
+  // Activate selected
+  document.getElementById('panel-' + num).classList.add('active');
+  const tab = document.getElementById('tab-' + num);
+  tab.classList.add('active');
+  tab.style.background = tabColors[num].bg;
+  tab.style.color = tabColors[num].text;
+  // Scroll to top of panel
+  window.scrollTo({ top: 200, behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>

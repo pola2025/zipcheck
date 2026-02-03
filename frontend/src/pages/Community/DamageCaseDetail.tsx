@@ -204,7 +204,7 @@ export default function DamageCaseDetail() {
 								<Calendar className="w-5 h-5 text-forest-500" />
 								<div>
 									<p className="text-xs text-sand-400">제보일</p>
-									<p className="font-medium">{new Date(damageCase.created_at).toLocaleDateString('ko-KR')}</p>
+									<p className="font-medium">{new Date(damageCase.created_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}</p>
 								</div>
 							</div>
 							{damageCase.reporter_name && (

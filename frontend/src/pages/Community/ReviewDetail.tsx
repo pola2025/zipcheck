@@ -147,7 +147,7 @@ export default function ReviewDetail() {
 								<Calendar className="w-5 h-5 text-forest-500" />
 								<div>
 									<p className="text-xs text-sand-400">작성일</p>
-									<p className="font-medium">{new Date(review.created_at).toLocaleDateString('ko-KR')}</p>
+									<p className="font-medium">{new Date(review.created_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}</p>
 								</div>
 							</div>
 							<div className="flex items-center gap-3 text-sand-600">

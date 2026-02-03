@@ -201,14 +201,14 @@ export default function DataManagement() {
 				<h2 className="text-2xl font-semibold text-sand-900" style={{ fontFamily: 'Outfit, sans-serif' }}>
 					데이터 관리
 				</h2>
-				<p className="text-sand-500 text-sm mt-1">견적 분석을 위한 원본 데이터 관리</p>
+				<p className="text-sand-700 text-sm mt-1">견적 분석을 위한 원본 데이터 관리</p>
 			</div>
 
 			{/* 업로드 섹션 */}
 			<div className="grid md:grid-cols-2 gap-6">
 				{/* 시공 데이터 업로드 */}
 				<motion.div
-					className="bg-white rounded-2xl p-5 border border-sand-200 hover:border-forest-200 hover:shadow-md transition-all"
+					className="bg-white rounded-2xl p-5 border border-sand-300 hover:border-forest-200 hover:shadow-md transition-all"
 					whileHover={{ scale: 1.02 }}
 				>
 					<div className="flex items-center gap-3 mb-4">
@@ -217,7 +217,7 @@ export default function DataManagement() {
 						</div>
 						<h3 className="text-lg font-semibold text-sand-900">시공 데이터</h3>
 					</div>
-					<p className="text-sand-500 text-sm mb-4">
+					<p className="text-sand-700 text-sm mb-4">
 						2024-2025년 실제 시공 데이터 (자재비, 인건비, 간접비)
 					</p>
 
@@ -236,12 +236,12 @@ export default function DataManagement() {
 							{uploading && uploadType === 'construction' ? (
 								<div className="flex flex-col items-center gap-2">
 									<RefreshCw className="w-8 h-8 text-forest-600 animate-spin" />
-									<span className="text-sm text-sand-600">업로드 중...</span>
+									<span className="text-sm text-sand-700">업로드 중...</span>
 								</div>
 							) : (
 								<div className="flex flex-col items-center gap-2">
 									<Upload className="w-8 h-8 text-forest-500" />
-									<span className="text-sm text-sand-500">
+									<span className="text-sm text-sand-700">
 										Excel 파일을 드래그하거나 클릭하세요
 									</span>
 								</div>
@@ -249,7 +249,7 @@ export default function DataManagement() {
 						</div>
 					</label>
 
-					<div className="mt-4 text-xs text-sand-400 space-y-0.5">
+					<div className="mt-4 text-xs text-sand-600 space-y-0.5">
 						<p>지원 형식: .xlsx, .xls, .csv</p>
 						<p>필수 컬럼: 카테고리, 항목명, 년도, 분기, 지역, 자재비, 인건비, 간접비</p>
 					</div>
@@ -257,7 +257,7 @@ export default function DataManagement() {
 
 				{/* 유통사 가격 데이터 업로드 */}
 				<motion.div
-					className="bg-white rounded-2xl p-5 border border-sand-200 hover:border-wood-200 hover:shadow-md transition-all"
+					className="bg-white rounded-2xl p-5 border border-sand-300 hover:border-wood-200 hover:shadow-md transition-all"
 					whileHover={{ scale: 1.02 }}
 				>
 					<div className="flex items-center gap-3 mb-4">
@@ -266,7 +266,7 @@ export default function DataManagement() {
 						</div>
 						<h3 className="text-lg font-semibold text-sand-900">유통사 가격 데이터</h3>
 					</div>
-					<p className="text-sand-500 text-sm mb-4">
+					<p className="text-sand-700 text-sm mb-4">
 						각 유통사의 도매가, 소매가, 브랜드별 가격 정보
 					</p>
 
@@ -285,12 +285,12 @@ export default function DataManagement() {
 							{uploading && uploadType === 'distributor' ? (
 								<div className="flex flex-col items-center gap-2">
 									<RefreshCw className="w-8 h-8 text-wood-500 animate-spin" />
-									<span className="text-sm text-sand-600">업로드 중...</span>
+									<span className="text-sm text-sand-700">업로드 중...</span>
 								</div>
 							) : (
 								<div className="flex flex-col items-center gap-2">
 									<Upload className="w-8 h-8 text-wood-400" />
-									<span className="text-sm text-sand-500">
+									<span className="text-sm text-sand-700">
 										Excel 파일을 드래그하거나 클릭하세요
 									</span>
 								</div>
@@ -298,7 +298,7 @@ export default function DataManagement() {
 						</div>
 					</label>
 
-					<div className="mt-4 text-xs text-sand-400 space-y-0.5">
+					<div className="mt-4 text-xs text-sand-600 space-y-0.5">
 						<p>지원 형식: .xlsx, .xls, .csv</p>
 						<p>필수 컬럼: 항목명, 유통사, 브랜드, 모델명, 도매가, 소매가, 년월</p>
 					</div>
@@ -310,26 +310,26 @@ export default function DataManagement() {
 				<motion.div
 					initial={{ opacity: 0, y: 16 }}
 					animate={{ opacity: 1, y: 0 }}
-					className="bg-white rounded-2xl p-5 border border-sand-200"
+					className="bg-white rounded-2xl p-5 border border-sand-300"
 				>
 					<h3 className="text-lg font-semibold text-sand-900 mb-5">업로드된 데이터 통계</h3>
 
 					{/* 개요 */}
 					<div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 						<div className="bg-forest-50 rounded-xl p-4 border border-forest-100">
-							<div className="text-xs font-medium text-sand-500 mb-1">카테고리</div>
+							<div className="text-xs font-medium text-sand-700 mb-1">카테고리</div>
 							<div className="text-2xl font-bold text-forest-700">{dataStats.overview.categories_count}</div>
 						</div>
 						<div className="bg-wood-50 rounded-xl p-4 border border-wood-100">
-							<div className="text-xs font-medium text-sand-500 mb-1">항목</div>
+							<div className="text-xs font-medium text-sand-700 mb-1">항목</div>
 							<div className="text-2xl font-bold text-wood-500">{dataStats.overview.items_count}</div>
 						</div>
 						<div className="bg-green-50 rounded-xl p-4 border border-green-100">
-							<div className="text-xs font-medium text-sand-500 mb-1">시공 기록</div>
+							<div className="text-xs font-medium text-sand-700 mb-1">시공 기록</div>
 							<div className="text-2xl font-bold text-green-600">{dataStats.overview.records_count}</div>
 						</div>
 						<div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
-							<div className="text-xs font-medium text-sand-500 mb-1">총 금액</div>
+							<div className="text-xs font-medium text-sand-700 mb-1">총 금액</div>
 							<div className="text-xl font-bold text-amber-600">{parseInt(dataStats.overview.total_amount || '0').toLocaleString()}</div>
 						</div>
 					</div>
@@ -343,7 +343,7 @@ export default function DataManagement() {
 									<div key={idx} className="bg-sand-50 rounded-lg p-3 flex items-center justify-between">
 										<div>
 											<div className="text-sm font-medium text-sand-800">{item.category}</div>
-											<div className="text-xs text-sand-400">{item.record_count}개 기록</div>
+											<div className="text-xs text-sand-600">{item.record_count}개 기록</div>
 										</div>
 										<div className="text-right">
 											<div className="text-sm font-bold text-forest-600">{parseInt(item.total_cost).toLocaleString()}</div>
@@ -361,7 +361,7 @@ export default function DataManagement() {
 									<div key={idx} className="bg-sand-50 rounded-lg p-3 flex items-center justify-between">
 										<div>
 											<div className="text-sm font-medium text-sand-800">{item.region}</div>
-											<div className="text-xs text-sand-400">{item.count}개 기록</div>
+											<div className="text-xs text-sand-600">{item.count}개 기록</div>
 										</div>
 										<div className="text-right">
 											<div className="text-sm font-bold text-wood-500">{parseInt(item.total_cost).toLocaleString()}</div>
@@ -379,17 +379,17 @@ export default function DataManagement() {
 				<motion.div
 					initial={{ opacity: 0, y: 16 }}
 					animate={{ opacity: 1, y: 0 }}
-					className="bg-white rounded-2xl p-5 border border-sand-200"
+					className="bg-white rounded-2xl p-5 border border-sand-300"
 				>
 					<h3 className="text-lg font-semibold text-sand-900 mb-4">업로드 결과</h3>
 
 					<div className="grid grid-cols-3 gap-4 mb-6">
 						<div className="bg-sand-50 rounded-xl p-4">
-							<div className="text-xs font-medium text-sand-500 mb-1">총 행 수</div>
+							<div className="text-xs font-medium text-sand-700 mb-1">총 행 수</div>
 							<div className="text-2xl font-bold text-sand-900">{uploadStats.totalRows}</div>
 						</div>
 						<div className="bg-green-50 rounded-xl p-4 border border-green-100">
-							<div className="text-xs font-medium text-sand-500 mb-1 flex items-center gap-2">
+							<div className="text-xs font-medium text-sand-700 mb-1 flex items-center gap-2">
 								<CheckCircle2 className="w-4 h-4 text-green-600" />
 								성공
 							</div>
@@ -398,7 +398,7 @@ export default function DataManagement() {
 							</div>
 						</div>
 						<div className="bg-red-50 rounded-xl p-4 border border-red-100">
-							<div className="text-xs font-medium text-sand-500 mb-1 flex items-center gap-2">
+							<div className="text-xs font-medium text-sand-700 mb-1 flex items-center gap-2">
 								<AlertCircle className="w-4 h-4 text-red-600" />
 								오류
 							</div>
@@ -430,7 +430,7 @@ export default function DataManagement() {
 			)}
 
 			{/* 데이터셋 목록 */}
-			<div className="bg-white rounded-2xl p-5 border border-sand-200">
+			<div className="bg-white rounded-2xl p-5 border border-sand-300">
 				<div className="flex items-center justify-between mb-5">
 					<h3 className="text-lg font-semibold text-sand-900">업로드된 데이터셋</h3>
 				</div>
@@ -438,23 +438,23 @@ export default function DataManagement() {
 				<div className="overflow-x-auto">
 					<table className="w-full">
 						<thead>
-							<tr className="border-b border-sand-200">
-								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-500">
+							<tr className="border-b border-sand-300">
+								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-700">
 									이름
 								</th>
-								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-500">
+								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-700">
 									유형
 								</th>
-								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-500">
+								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-700">
 									업로드 일시
 								</th>
-								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-500">
+								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-700">
 									업로더
 								</th>
-								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-500">
+								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-700">
 									행 수
 								</th>
-								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-500">
+								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-700">
 									상태
 								</th>
 							</tr>
@@ -462,7 +462,7 @@ export default function DataManagement() {
 						<tbody>
 							{datasets.length === 0 ? (
 								<tr>
-									<td colSpan={6} className="text-center py-8 text-sand-400">
+									<td colSpan={6} className="text-center py-8 text-sand-600">
 										업로드된 데이터셋이 없습니다
 									</td>
 								</tr>
@@ -483,13 +483,13 @@ export default function DataManagement() {
 													: '유통사 가격'}
 											</span>
 										</td>
-										<td className="py-3 px-4 text-sm text-sand-500">
-											{new Date(dataset.uploadedAt).toLocaleString('ko-KR')}
+										<td className="py-3 px-4 text-sm text-sand-700">
+											{new Date(dataset.uploadedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}
 										</td>
-										<td className="py-3 px-4 text-sm text-sand-500">
+										<td className="py-3 px-4 text-sm text-sand-700">
 											{dataset.uploadedBy}
 										</td>
-										<td className="py-3 px-4 text-sm text-sand-500">
+										<td className="py-3 px-4 text-sm text-sand-700">
 											{dataset.rowCount.toLocaleString()}
 										</td>
 										<td className="py-3 px-4">
@@ -497,7 +497,7 @@ export default function DataManagement() {
 												className={`px-3 py-1 rounded-full text-xs font-semibold ${
 													dataset.status === 'active'
 														? 'bg-green-50 text-green-600'
-														: 'bg-sand-100 text-sand-400'
+														: 'bg-sand-100 text-sand-600'
 												}`}
 											>
 												{dataset.status === 'active' ? '활성' : '보관'}
@@ -512,7 +512,7 @@ export default function DataManagement() {
 			</div>
 
 			{/* 항목별 가격 통계 */}
-			<div className="bg-white rounded-2xl p-5 border border-sand-200">
+			<div className="bg-white rounded-2xl p-5 border border-sand-300">
 				<div className="flex items-center justify-between mb-5">
 					<div className="flex items-center gap-3">
 						<div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
@@ -525,19 +525,19 @@ export default function DataManagement() {
 				{/* 검색 및 필터 */}
 				<div className="grid md:grid-cols-2 gap-4 mb-6">
 					<div className="relative">
-						<Search className="w-5 h-5 text-sand-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+						<Search className="w-5 h-5 text-sand-600 absolute left-3 top-1/2 transform -translate-y-1/2" />
 						<input
 							type="text"
 							placeholder="항목명 검색..."
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
-							className="w-full pl-10 pr-4 py-2 bg-white border border-sand-200 rounded-lg text-sand-900 placeholder-sand-400 focus:outline-none focus:border-forest-300 focus:ring-1 focus:ring-forest-200 transition-colors"
+							className="w-full pl-10 pr-4 py-2 bg-white border border-sand-300 rounded-lg text-sand-900 placeholder-sand-400 focus:outline-none focus:border-forest-300 focus:ring-1 focus:ring-forest-200 transition-colors"
 						/>
 					</div>
 					<select
 						value={selectedCategory}
 						onChange={(e) => setSelectedCategory(e.target.value)}
-						className="px-4 py-2 bg-white border border-sand-200 rounded-lg text-sand-900 focus:outline-none focus:border-forest-300 focus:ring-1 focus:ring-forest-200 transition-colors"
+						className="px-4 py-2 bg-white border border-sand-300 rounded-lg text-sand-900 focus:outline-none focus:border-forest-300 focus:ring-1 focus:ring-forest-200 transition-colors"
 					>
 						<option value="">전체 카테고리</option>
 						{dataStats?.byCategory.map((cat) => (
@@ -552,27 +552,27 @@ export default function DataManagement() {
 				<div className="overflow-x-auto">
 					<table className="w-full">
 						<thead>
-							<tr className="border-b border-sand-200">
-								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-500">항목명</th>
-								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-500">카테고리</th>
-								<th className="text-right py-3 px-4 text-xs font-semibold text-sand-500">평균 가격</th>
-								<th className="text-right py-3 px-4 text-xs font-semibold text-sand-500">자재비</th>
-								<th className="text-right py-3 px-4 text-xs font-semibold text-sand-500">인건비</th>
-								<th className="text-right py-3 px-4 text-xs font-semibold text-sand-500">간접비</th>
-								<th className="text-right py-3 px-4 text-xs font-semibold text-sand-500">최저~최고</th>
-								<th className="text-center py-3 px-4 text-xs font-semibold text-sand-500">기록수</th>
+							<tr className="border-b border-sand-300">
+								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-700">항목명</th>
+								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-700">카테고리</th>
+								<th className="text-right py-3 px-4 text-xs font-semibold text-sand-700">평균 가격</th>
+								<th className="text-right py-3 px-4 text-xs font-semibold text-sand-700">자재비</th>
+								<th className="text-right py-3 px-4 text-xs font-semibold text-sand-700">인건비</th>
+								<th className="text-right py-3 px-4 text-xs font-semibold text-sand-700">간접비</th>
+								<th className="text-right py-3 px-4 text-xs font-semibold text-sand-700">최저~최고</th>
+								<th className="text-center py-3 px-4 text-xs font-semibold text-sand-700">기록수</th>
 							</tr>
 						</thead>
 						<tbody>
 							{loadingItems ? (
 								<tr>
-									<td colSpan={8} className="text-center py-8 text-sand-400">
+									<td colSpan={8} className="text-center py-8 text-sand-600">
 										로딩 중...
 									</td>
 								</tr>
 							) : itemStats.length === 0 ? (
 								<tr>
-									<td colSpan={8} className="text-center py-8 text-sand-400">
+									<td colSpan={8} className="text-center py-8 text-sand-600">
 										검색 결과가 없습니다
 									</td>
 								</tr>
@@ -594,10 +594,10 @@ export default function DataManagement() {
 										<td className="py-3 px-4 text-right text-sm text-amber-600 font-semibold">
 											{item.avg_labor_cost?.toLocaleString() || '-'}
 										</td>
-										<td className="py-3 px-4 text-right text-sm text-sand-500">
+										<td className="py-3 px-4 text-right text-sm text-sand-700">
 											{item.avg_overhead_cost?.toLocaleString() || '-'}
 										</td>
-										<td className="py-3 px-4 text-right text-xs text-sand-400">
+										<td className="py-3 px-4 text-right text-xs text-sand-600">
 											{item.min_cost?.toLocaleString()} ~<br />
 											{item.max_cost?.toLocaleString()}
 										</td>
@@ -614,7 +614,7 @@ export default function DataManagement() {
 				</div>
 
 				{itemStats.length > 0 && (
-					<div className="mt-4 text-sm text-sand-400 text-center">
+					<div className="mt-4 text-sm text-sand-600 text-center">
 						총 {itemStats.length}개 항목 표시 중
 					</div>
 				)}

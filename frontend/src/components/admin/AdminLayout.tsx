@@ -30,8 +30,8 @@ function NavItem({ item, isMobile }: { item: typeof navItems[0]; isMobile?: bool
 				className={({ isActive }) =>
 					`flex flex-col items-center gap-0.5 px-2 py-1.5 text-[10px] font-medium transition-colors ${
 						isActive
-							? 'text-forest-700'
-							: 'text-sand-500 hover:text-sand-700'
+							? 'text-white'
+							: 'text-forest-300 hover:text-white'
 					}`
 				}
 			>
@@ -48,8 +48,8 @@ function NavItem({ item, isMobile }: { item: typeof navItems[0]; isMobile?: bool
 			className={({ isActive }) =>
 				`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
 					isActive
-						? 'bg-forest-100 text-forest-700 shadow-sm'
-						: 'text-sand-600 hover:bg-sand-100 hover:text-sand-800'
+						? 'bg-white/15 text-white'
+						: 'text-forest-300 hover:bg-white/10 hover:text-white'
 				}`
 			}
 		>
@@ -71,16 +71,16 @@ export default function AdminLayout() {
 	return (
 		<div className="min-h-screen bg-sand-50 flex">
 			{/* ====== PC Sidebar ====== */}
-			<aside className="hidden lg:flex flex-col w-60 border-r border-sand-200 bg-white/80 backdrop-blur-lg fixed inset-y-0 left-0 z-30">
+			<aside className="hidden lg:flex flex-col w-60 border-r border-forest-700/30 bg-forest-800 fixed inset-y-0 left-0 z-30">
 				{/* Logo */}
-				<div className="px-6 py-5 border-b border-sand-200">
+				<div className="px-6 py-5 border-b border-forest-700/50">
 					<div className="flex items-center gap-2.5">
-						<div className="w-8 h-8 rounded-lg bg-forest-600 flex items-center justify-center">
+						<div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center">
 							<span className="text-white font-bold text-sm" style={{ fontFamily: 'Outfit, sans-serif' }}>Z</span>
 						</div>
 						<div>
-							<h1 className="text-base font-semibold text-sand-900" style={{ fontFamily: 'Outfit, sans-serif' }}>ZipCheck</h1>
-							<p className="text-[11px] text-sand-400 uppercase tracking-widest" style={{ fontFamily: 'Outfit, sans-serif' }}>Admin</p>
+							<h1 className="text-base font-semibold text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>ZipCheck</h1>
+							<p className="text-[11px] text-forest-400 uppercase tracking-widest" style={{ fontFamily: 'Outfit, sans-serif' }}>Admin</p>
 						</div>
 					</div>
 				</div>
@@ -93,19 +93,19 @@ export default function AdminLayout() {
 				</nav>
 
 				{/* User & Logout */}
-				<div className="px-4 py-4 border-t border-sand-200">
+				<div className="px-4 py-4 border-t border-forest-700/50">
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-2.5">
-							<div className="w-8 h-8 rounded-full bg-forest-100 flex items-center justify-center">
-								<span className="text-forest-700 text-xs font-semibold">
+							<div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
+								<span className="text-white text-xs font-semibold">
 									{(user?.username || 'A')[0].toUpperCase()}
 								</span>
 							</div>
-							<span className="text-sm text-sand-700 font-medium">{user?.username || 'Admin'}</span>
+							<span className="text-sm text-forest-100 font-medium">{user?.username || 'Admin'}</span>
 						</div>
 						<button
 							onClick={handleLogout}
-							className="p-1.5 rounded-lg text-sand-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+							className="p-1.5 rounded-lg text-forest-300 hover:text-red-400 hover:bg-white/10 transition-colors"
 							title="로그아웃"
 						>
 							<LogOut className="w-4 h-4" />
@@ -117,7 +117,7 @@ export default function AdminLayout() {
 			{/* ====== Main Content ====== */}
 			<main className="flex-1 lg:ml-60 pb-20 lg:pb-0">
 				{/* Mobile Header */}
-				<header className="lg:hidden sticky top-0 z-20 bg-white/85 backdrop-blur-lg border-b border-sand-200 px-4 py-3">
+				<header className="lg:hidden sticky top-0 z-20 bg-white/85 backdrop-blur-lg border-b border-sand-300 px-4 py-3">
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-2">
 							<div className="w-7 h-7 rounded-lg bg-forest-600 flex items-center justify-center">
@@ -127,7 +127,7 @@ export default function AdminLayout() {
 						</div>
 						<button
 							onClick={handleLogout}
-							className="p-2 rounded-lg text-sand-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+							className="p-2 rounded-lg text-sand-700 hover:text-red-500 hover:bg-red-50 transition-colors"
 						>
 							<LogOut className="w-4 h-4" />
 						</button>
@@ -145,7 +145,7 @@ export default function AdminLayout() {
 			</main>
 
 			{/* ====== Mobile Bottom Bar ====== */}
-			<nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white/90 backdrop-blur-lg border-t border-sand-200 flex justify-around items-center px-2 py-1 safe-area-pb">
+			<nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-forest-800 border-t border-forest-700/30 flex justify-around items-center px-2 py-1 safe-area-pb">
 				{navItems.map(item => (
 					<NavItem key={item.path} item={item} isMobile />
 				))}

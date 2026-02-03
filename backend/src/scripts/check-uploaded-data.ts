@@ -42,7 +42,7 @@ async function checkUploadedData() {
 			console.log(`   Type: ${row.dataset_type}`)
 			console.log(`   Status: ${row.status}`)
 			console.log(`   Total: ${row.total_rows}, Success: ${row.success_rows}, Errors: ${row.error_rows}`)
-			console.log(`   Date: ${new Date(row.created_at).toLocaleString()}`)
+			console.log(`   Date: ${new Date(row.created_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}`)
 		})
 
 		// 5. 카테고리별 통계

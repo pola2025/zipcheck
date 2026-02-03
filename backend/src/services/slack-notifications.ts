@@ -830,7 +830,7 @@ export async function notifySystemError(data: {
 					},
 					{
 						type: 'mrkdwn',
-						text: `*시각:*\n${new Date().toLocaleString('ko-KR')}`
+						text: `*시각:*\n${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}`
 					}
 				]
 			},

@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nordic Warm - 5가지 UI/UX 변형</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        noto: ['Noto Sans KR', 'sans-serif'],
+        outfit: ['Outfit', 'sans-serif'],
+        inter: ['Inter', 'sans-serif'],
+        sora: ['Sora', 'sans-serif'],
+      },
+      colors: {
+        forest: { 50:'#F0F5EE', 100:'#E1EBdd', 200:'#C3D7BB', 300:'#8BAF82', 400:'#6B9960', 500:'#4A6741', 600:'#3D5A35', 700:'#2E4628', 800:'#1F301A', 900:'#111A0E' },
+        wood: { 50:'#FBF8F4', 100:'#F5EDE0', 200:'#EBDBC1', 300:'#D4B896', 400:'#C4956A', 500:'#A87B4F', 600:'#8B6340', 700:'#6B4C31', 800:'#4A3522', 900:'#2A1F14' },
+        sand: { 50:'#FEFCF9', 100:'#FBF7F0', 200:'#F5F0E8', 300:'#EDEAE5', 400:'#DDD8D0', 500:'#C4BEB4', 600:'#9B9588', 700:'#6B6B6B', 800:'#3D3D3D', 900:'#1A1A1A' }
+      }
+    }
+  }
+}
+</script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Noto Sans KR',sans-serif; background:#F5F0E8; }
+
+.tab-btn { transition:all .3s ease; cursor:pointer; user-select:none; }
+.tab-btn.active { transform:translateY(-2px); }
+.panel { display:none; animation:fadeUp .5s ease; }
+.panel.active { display:block; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+.img-ph {
+  display:flex; align-items:center; justify-content:center;
+  color:#9B9588; font-size:13px; letter-spacing:.03em;
+}
+.img-ph-light { background:linear-gradient(135deg,#F0EDE8,#E5E0D8); }
+.img-ph-warm { background:linear-gradient(135deg,#EBDBC1,#D4B896); }
+
+/* Variation A specific */
+.va-hero-img { clip-path: polygon(8% 0, 100% 0, 100% 100%, 0% 100%); }
+
+/* Variation B specific */
+.vb-bento > div { transition:all .3s ease; }
+.vb-bento > div:hover { transform:translateY(-4px); box-shadow:0 16px 32px rgba(0,0,0,.06); }
+
+/* Variation C specific */
+.vc-overlay { background:linear-gradient(to top, rgba(26,26,26,0.85) 0%, rgba(26,26,26,0.3) 50%, transparent 100%); }
+.vc-img-section { position:relative; overflow:hidden; }
+
+/* Variation D specific */
+.vd-step-line { width:2px; height:40px; background:linear-gradient(to bottom, #4A6741, #EDEAE5); margin:0 auto; }
+
+/* Variation E specific */
+.ve-split { display:grid; grid-template-columns:1fr 1fr; min-height:80vh; }
+.ve-split-reverse { direction:rtl; }
+.ve-split-reverse > * { direction:ltr; }
+
+/* Shared */
+.card-nordic {
+  background:white; border:1px solid #EDEAE5; border-radius:16px;
+  transition:all .3s ease;
+}
+.card-nordic:hover { transform:translateY(-3px); box-shadow:0 12px 24px rgba(0,0,0,.05); }
+
+.badge-rec {
+  position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+  padding:3px 14px; border-radius:16px; font-size:11px; font-weight:600;
+  background:#3D5A35; color:white; letter-spacing:.04em;
+}
+
+@media(max-width:768px) {
+  .ve-split { grid-template-columns:1fr; min-height:auto; }
+  .tab-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .tab-scroll::-webkit-scrollbar { display:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="sticky top-0 z-50 bg-white/92 backdrop-blur-lg border-b border-sand-300 shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 py-4">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h1 class="text-lg font-bold text-sand-900 flex items-center gap-2">
+          <span class="w-7 h-7 bg-forest-500 rounded-lg flex items-center justify-center text-white text-xs">N</span>
+          Nordic Warm &mdash; 5가지 UI/UX 변형
+        </h1>
+        <p class="text-xs text-sand-600 mt-0.5">동일한 색상 체계, 서로 다른 레이아웃과 UX 흐름</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1.5">
+          <div class="w-4 h-4 rounded-full bg-forest-500 border-2 border-white shadow-sm"></div>
+          <div class="w-4 h-4 rounded-full bg-wood-400 border-2 border-white shadow-sm"></div>
+          <div class="w-4 h-4 rounded-full bg-sand-50 border-2 border-sand-300 shadow-sm"></div>
+          <div class="w-4 h-4 rounded-full bg-sand-900 border-2 border-white shadow-sm"></div>
+        </div>
+        <span class="text-[10px] bg-sand-200 text-sand-700 px-2 py-0.5 rounded-full">Palette</span>
+      </div>
+    </div>
+    <div class="tab-scroll">
+      <div class="flex gap-2 min-w-max">
+        <button onclick="sw(1)" id="t1" class="tab-btn active px-4 py-2.5 rounded-xl text-sm font-semibold bg-forest-600 text-white shadow-md">A. Editorial</button>
+        <button onclick="sw(2)" id="t2" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold bg-sand-200 text-sand-700 hover:bg-sand-300">B. Bento Grid</button>
+        <button onclick="sw(3)" id="t3" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold bg-sand-200 text-sand-700 hover:bg-sand-300">C. Immersive</button>
+        <button onclick="sw(4)" id="t4" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold bg-sand-200 text-sand-700 hover:bg-sand-300">D. Storytelling</button>
+        <button onclick="sw(5)" id="t5" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold bg-sand-200 text-sand-700 hover:bg-sand-300">E. Split Screen</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<!-- ================================================================ -->
+<!-- A. EDITORIAL - 매거진 에디토리얼 스타일                              -->
+<!-- ================================================================ -->
+<div id="p1" class="panel active">
+
+  <!-- Concept Card -->
+  <section class="max-w-7xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-2xl p-8 shadow-sm border border-sand-300">
+      <div class="flex items-start gap-5">
+        <div class="w-14 h-14 rounded-2xl bg-forest-500 flex items-center justify-center text-white text-xl font-bold flex-shrink-0">A</div>
+        <div>
+          <h2 class="text-xl font-bold text-sand-900 mb-1">A. Editorial Layout <span class="text-base font-normal text-sand-600">매거진 에디토리얼</span></h2>
+          <p class="text-sand-700 text-sm leading-relaxed mb-3">
+            대형 타이포그래피와 비대칭 그리드로 구성한 매거진 스타일. 좌측 텍스트 + 우측 비스듬한 이미지 히어로.
+            수평 스크롤 특징 섹션. 정보를 시각적 위계(Visual Hierarchy)로 명확하게 전달합니다.
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">비대칭 레이아웃</span>
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">Large Typography</span>
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">Horizontal Feature</span>
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">Editorial Flow</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Nav -->
+  <section class="bg-sand-50">
+    <div class="max-w-7xl mx-auto px-8 py-5 flex items-center justify-between">
+      <span class="font-outfit font-semibold text-sand-900 text-xl tracking-tight">ZipCheck</span>
+      <div class="flex items-center gap-10 text-sm text-sand-700">
+        <a href="#" class="hover:text-forest-600 transition">서비스</a>
+        <a href="#" class="hover:text-forest-600 transition">요금</a>
+        <a href="#" class="hover:text-forest-600 transition">사례</a>
+        <a href="#" class="hover:text-forest-600 transition">커뮤니티</a>
+        <a href="#" class="px-5 py-2.5 bg-forest-600 text-white rounded-lg font-medium hover:bg-forest-700 transition text-sm">견적 분석</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hero: Editorial Asymmetric -->
+  <section class="bg-sand-50 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-8">
+      <div class="grid md:grid-cols-12 gap-8 items-center min-h-[85vh] py-16">
+        <!-- Text 7 cols -->
+        <div class="md:col-span-7 pr-8">
+          <div class="flex items-center gap-3 mb-8">
+            <div class="w-12 h-[2px] bg-forest-500"></div>
+            <span class="text-forest-600 font-medium text-sm tracking-widest uppercase">Interior Quote Analysis</span>
+          </div>
+          <h1 class="font-outfit text-[3.8rem] lg:text-[4.5rem] font-bold text-sand-900 leading-[1.08] tracking-tight mb-6">
+            견적서의<br>
+            숨은 이야기를<br>
+            <span class="text-forest-500">읽어드립니다</span>
+          </h1>
+          <p class="text-xl text-sand-700 leading-relaxed mb-10 max-w-lg font-light">
+            3,000건의 실제 공사 데이터. 20년 경력 전문가의 안목.<br>
+            48시간 안에 당신의 견적서를 따뜻하게 풀어드립니다.
+          </p>
+          <div class="flex items-center gap-5">
+            <a href="#" class="px-8 py-4 bg-forest-600 text-white rounded-xl font-semibold text-lg hover:bg-forest-700 transition shadow-lg shadow-forest-600/15">
+              분석 신청하기
+            </a>
+            <a href="#" class="text-sand-600 font-medium hover:text-forest-600 transition underline underline-offset-4 decoration-sand-300">
+              분석 예시 보기
+            </a>
+          </div>
+          <!-- Inline Stats -->
+          <div class="flex items-center gap-10 mt-14 pt-8 border-t border-sand-300">
+            <div>
+              <p class="text-3xl font-bold text-sand-900 font-outfit">3,000<span class="text-forest-500">+</span></p>
+              <p class="text-xs text-sand-600 mt-1">누적 분석</p>
+            </div>
+            <div>
+              <p class="text-3xl font-bold text-sand-900 font-outfit">48<span class="text-forest-500">h</span></p>
+              <p class="text-xs text-sand-600 mt-1">응답 보장</p>
+            </div>
+            <div>
+              <p class="text-3xl font-bold text-sand-900 font-outfit">9.2<span class="text-forest-500">%</span></p>
+              <p class="text-xs text-sand-600 mt-1">평균 절감</p>
+            </div>
+          </div>
+        </div>
+        <!-- Image 5 cols - Clipped -->
+        <div class="md:col-span-5">
+          <div class="va-hero-img rounded-3xl overflow-hidden shadow-2xl shadow-sand-900/10">
+            <div class="img-ph img-ph-light aspect-[3/4]">
+              <div class="text-center">
+                <p class="text-5xl mb-3">🪵</p>
+                <p class="font-medium text-sm">밝은 우드톤 거실</p>
+                <p class="text-xs mt-1">Gemini 생성 예정</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features: Horizontal Scroll Cards -->
+  <section class="bg-white py-24">
+    <div class="max-w-7xl mx-auto px-8">
+      <div class="flex items-end justify-between mb-12">
+        <div>
+          <span class="text-forest-600 font-medium text-sm tracking-widest uppercase">Why ZipCheck</span>
+          <h2 class="font-outfit text-4xl font-bold text-sand-900 mt-2 tracking-tight">왜 전문가의 눈이 필요할까요</h2>
+        </div>
+        <p class="text-sand-600 text-sm max-w-xs text-right">같은 공사도 업체마다 수백만 원 차이. 데이터로 확인하세요.</p>
+      </div>
+      <div class="grid md:grid-cols-4 gap-5">
+        <div class="card-nordic p-7 group">
+          <div class="w-12 h-12 rounded-xl bg-forest-50 flex items-center justify-center text-forest-600 text-xl mb-5 group-hover:bg-forest-500 group-hover:text-white transition">📊</div>
+          <h3 class="font-semibold text-sand-900 mb-2">실데이터 비교</h3>
+          <p class="text-sm text-sand-600 leading-relaxed">3,000건 실제 시공 데이터 기반 적정가 산출</p>
+        </div>
+        <div class="card-nordic p-7 group">
+          <div class="w-12 h-12 rounded-xl bg-forest-50 flex items-center justify-center text-forest-600 text-xl mb-5 group-hover:bg-forest-500 group-hover:text-white transition">🔍</div>
+          <h3 class="font-semibold text-sand-900 mb-2">항목별 분석</h3>
+          <p class="text-sm text-sand-600 leading-relaxed">모든 항목을 쪼개어 과다 청구 여부 확인</p>
+        </div>
+        <div class="card-nordic p-7 group">
+          <div class="w-12 h-12 rounded-xl bg-forest-50 flex items-center justify-center text-forest-600 text-xl mb-5 group-hover:bg-forest-500 group-hover:text-white transition">💬</div>
+          <h3 class="font-semibold text-sand-900 mb-2">전문가 코멘트</h3>
+          <p class="text-sm text-sand-600 leading-relaxed">20년 전문가가 친절하고 구체적으로 설명</p>
+        </div>
+        <div class="card-nordic p-7 group">
+          <div class="w-12 h-12 rounded-xl bg-forest-50 flex items-center justify-center text-forest-600 text-xl mb-5 group-hover:bg-forest-500 group-hover:text-white transition">🛡️</div>
+          <h3 class="font-semibold text-sand-900 mb-2">투명한 리포트</h3>
+          <p class="text-sm text-sand-600 leading-relaxed">분석 근거와 비교 데이터를 모두 공개</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Process: Horizontal Timeline -->
+  <section class="bg-sand-50 py-24">
+    <div class="max-w-6xl mx-auto px-8">
+      <div class="text-center mb-16">
+        <span class="text-forest-600 font-medium text-sm tracking-widest uppercase">Process</span>
+        <h2 class="font-outfit text-4xl font-bold text-sand-900 mt-2 tracking-tight">간단한 4단계</h2>
+      </div>
+      <div class="relative">
+        <!-- Timeline Line -->
+        <div class="hidden md:block absolute top-8 left-0 right-0 h-[2px] bg-sand-300"></div>
+        <div class="grid md:grid-cols-4 gap-8">
+          <div class="relative text-center">
+            <div class="w-16 h-16 rounded-full bg-forest-600 text-white flex items-center justify-center text-lg font-bold mx-auto mb-5 relative z-10 shadow-lg shadow-forest-600/20">01</div>
+            <h4 class="font-semibold text-sand-900 mb-1">견적서 업로드</h4>
+            <p class="text-xs text-sand-600">사진, PDF 등 자유 형식</p>
+          </div>
+          <div class="relative text-center">
+            <div class="w-16 h-16 rounded-full bg-forest-500 text-white flex items-center justify-center text-lg font-bold mx-auto mb-5 relative z-10 shadow-lg shadow-forest-500/20">02</div>
+            <h4 class="font-semibold text-sand-900 mb-1">AI 1차 분석</h4>
+            <p class="text-xs text-sand-600">항목 자동 분류 및 정리</p>
+          </div>
+          <div class="relative text-center">
+            <div class="w-16 h-16 rounded-full bg-forest-400 text-white flex items-center justify-center text-lg font-bold mx-auto mb-5 relative z-10 shadow-lg shadow-forest-400/20">03</div>
+            <h4 class="font-semibold text-sand-900 mb-1">전문가 리뷰</h4>
+            <p class="text-xs text-sand-600">20년 경력 전문가 직접 검토</p>
+          </div>
+          <div class="relative text-center">
+            <div class="w-16 h-16 rounded-full bg-forest-300 text-forest-800 flex items-center justify-center text-lg font-bold mx-auto mb-5 relative z-10 shadow-lg shadow-forest-300/20">04</div>
+            <h4 class="font-semibold text-sand-900 mb-1">리포트 전달</h4>
+            <p class="text-xs text-sand-600">48시간 내 상세 분석 리포트</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="bg-white py-24">
+    <div class="max-w-4xl mx-auto px-8">
+      <div class="text-center mb-14">
+        <span class="text-forest-600 font-medium text-sm tracking-widest uppercase">Pricing</span>
+        <h2 class="font-outfit text-4xl font-bold text-sand-900 mt-2 tracking-tight">분석 요금</h2>
+        <p class="text-sand-600 mt-3">3만 원 투자로 수백만 원을 지켜요</p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="card-nordic rounded-2xl p-8">
+          <h3 class="font-semibold text-sand-900 text-lg">기본 분석</h3>
+          <p class="text-xs text-sand-600 mb-4">48시간 이내</p>
+          <p class="text-4xl font-bold text-sand-900 font-outfit mb-6">₩30,000</p>
+          <ul class="space-y-2 mb-8 text-sm text-sand-700">
+            <li class="flex items-center gap-2"><span class="text-forest-500">&#10003;</span> 항목별 적정가 비교</li>
+            <li class="flex items-center gap-2"><span class="text-forest-500">&#10003;</span> 전문가 상세 코멘트</li>
+            <li class="flex items-center gap-2"><span class="text-forest-500">&#10003;</span> PDF 리포트 제공</li>
+          </ul>
+          <button class="w-full py-3.5 rounded-xl border border-forest-500 text-forest-600 font-semibold hover:bg-forest-600 hover:text-white transition">선택하기</button>
+        </div>
+        <div class="relative card-nordic rounded-2xl p-8 border-2 border-forest-600">
+          <div class="badge-rec">추천</div>
+          <h3 class="font-semibold text-sand-900 text-lg">빠른 분석</h3>
+          <p class="text-xs text-sand-600 mb-4">24시간 이내</p>
+          <p class="text-4xl font-bold text-sand-900 font-outfit mb-6">₩45,000</p>
+          <ul class="space-y-2 mb-8 text-sm text-sand-700">
+            <li class="flex items-center gap-2"><span class="text-forest-500">&#10003;</span> 우선 배정 전담 전문가</li>
+            <li class="flex items-center gap-2"><span class="text-forest-500">&#10003;</span> 추가 Q&A 지원</li>
+            <li class="flex items-center gap-2"><span class="text-forest-500">&#10003;</span> 기본 분석 모든 기능 포함</li>
+          </ul>
+          <button class="w-full py-3.5 rounded-xl bg-forest-600 text-white font-semibold hover:bg-forest-700 transition shadow-lg shadow-forest-600/15">선택하기</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="bg-sand-50 py-20 border-t border-sand-300">
+    <div class="max-w-3xl mx-auto px-8 text-center">
+      <h2 class="font-outfit text-3xl font-bold text-sand-900 mb-4 tracking-tight">편안한 시작, 정확한 분석</h2>
+      <p class="text-sand-600 mb-8">복잡한 견적서, 전문가가 따뜻하게 풀어드립니다.</p>
+      <a href="#" class="inline-block px-10 py-4 bg-forest-600 text-white rounded-xl font-semibold text-lg hover:bg-forest-700 transition shadow-lg shadow-forest-600/15">지금 시작하기 →</a>
+    </div>
+  </section>
+</div>
+
+
+<!-- ================================================================ -->
+<!-- B. BENTO GRID - 벤토 그리드 대시보드 스타일                          -->
+<!-- ================================================================ -->
+<div id="p2" class="panel">
+
+  <section class="max-w-7xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-2xl p-8 shadow-sm border border-sand-300">
+      <div class="flex items-start gap-5">
+        <div class="w-14 h-14 rounded-2xl bg-forest-500 flex items-center justify-center text-white text-xl font-bold flex-shrink-0">B</div>
+        <div>
+          <h2 class="text-xl font-bold text-sand-900 mb-1">B. Bento Grid Layout <span class="text-base font-normal text-sand-600">벤토 그리드</span></h2>
+          <p class="text-sand-700 text-sm leading-relaxed mb-3">
+            Apple 스타일의 벤토(도시락) 그리드. 다양한 크기의 카드가 유기적으로 배치되어 한 화면에 핵심 정보를 효과적으로 전달합니다.
+            모듈식 구성으로 모바일 적응력이 뛰어납니다. 히어로 자체가 그리드의 일부.
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">Bento Grid</span>
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">Modular Cards</span>
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">Info-Dense</span>
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">Dashboard Feel</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Nav -->
+  <section class="bg-sand-50">
+    <div class="max-w-7xl mx-auto px-8 py-5 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-forest-600 rounded-lg flex items-center justify-center text-white text-xs font-bold">Z</div>
+        <span class="font-outfit font-semibold text-sand-900 text-lg tracking-tight">ZipCheck</span>
+      </div>
+      <div class="flex items-center gap-8 text-sm text-sand-700">
+        <a href="#" class="hover:text-forest-600">서비스</a>
+        <a href="#" class="hover:text-forest-600">요금</a>
+        <a href="#" class="hover:text-forest-600">커뮤니티</a>
+        <a href="#" class="px-5 py-2.5 bg-sand-900 text-white rounded-lg font-medium hover:bg-sand-800 transition">시작하기</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hero: Bento Grid -->
+  <section class="bg-sand-50 py-12">
+    <div class="max-w-7xl mx-auto px-8">
+      <div class="vb-bento grid md:grid-cols-12 md:grid-rows-3 gap-4 auto-rows-[180px]">
+
+        <!-- Main Hero Card (large) -->
+        <div class="md:col-span-7 md:row-span-2 bg-white rounded-3xl p-10 border border-sand-300 flex flex-col justify-between">
+          <div>
+            <span class="inline-block px-3 py-1 bg-forest-50 text-forest-600 rounded-full text-xs font-medium mb-6">인테리어 견적 분석 서비스</span>
+            <h1 class="font-outfit text-4xl lg:text-5xl font-bold text-sand-900 leading-tight tracking-tight mb-4">
+              견적의 진실,<br><span class="text-forest-500">데이터</span>로 확인하세요
+            </h1>
+            <p class="text-sand-600 text-lg max-w-md">20년 전문가가 3,000건의 실제 데이터와 비교하여 48시간 안에 분석합니다.</p>
+          </div>
+          <div class="flex items-center gap-4 mt-6">
+            <a href="#" class="px-8 py-3.5 bg-forest-600 text-white rounded-xl font-semibold hover:bg-forest-700 transition">분석 신청 →</a>
+            <a href="#" class="px-6 py-3.5 bg-sand-100 text-sand-700 rounded-xl font-medium hover:bg-sand-200 transition">예시 보기</a>
+          </div>
+        </div>
+
+        <!-- Image Card -->
+        <div class="md:col-span-5 md:row-span-2 rounded-3xl overflow-hidden border border-sand-300">
+          <div class="img-ph img-ph-light h-full">
+            <div class="text-center">
+              <p class="text-4xl mb-2">🏠</p>
+              <p class="text-sm font-medium">모던 인테리어</p>
+              <p class="text-xs mt-1">Gemini 생성 예정</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Cards (bottom row) -->
+        <div class="md:col-span-3 bg-forest-600 rounded-2xl p-6 flex flex-col justify-center text-center text-white">
+          <p class="text-3xl font-bold font-outfit">3,000+</p>
+          <p class="text-forest-200 text-xs mt-1">누적 분석 건수</p>
+        </div>
+        <div class="md:col-span-2 bg-white rounded-2xl p-6 flex flex-col justify-center text-center border border-sand-300">
+          <p class="text-3xl font-bold font-outfit text-sand-900">48h</p>
+          <p class="text-sand-600 text-xs mt-1">응답 보장</p>
+        </div>
+        <div class="md:col-span-2 bg-wood-100 rounded-2xl p-6 flex flex-col justify-center text-center border border-wood-200">
+          <p class="text-3xl font-bold font-outfit text-sand-900">20Y+</p>
+          <p class="text-sand-600 text-xs mt-1">전문가 경력</p>
+        </div>
+        <div class="md:col-span-2 bg-sand-900 rounded-2xl p-6 flex flex-col justify-center text-center text-white">
+          <p class="text-3xl font-bold font-outfit">9.2%</p>
+          <p class="text-sand-500 text-xs mt-1">평균 절감율</p>
+        </div>
+        <div class="md:col-span-3 bg-forest-50 rounded-2xl p-6 flex flex-col justify-center text-center border border-forest-100">
+          <p class="text-3xl font-bold font-outfit text-forest-600">350만</p>
+          <p class="text-forest-500 text-xs mt-1">평균 절감액</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features: Bento Style -->
+  <section class="bg-white py-24">
+    <div class="max-w-7xl mx-auto px-8">
+      <div class="text-center mb-12">
+        <span class="text-forest-600 text-sm font-medium tracking-widest uppercase">Features</span>
+        <h2 class="font-outfit text-3xl font-bold text-sand-900 mt-2 tracking-tight">핵심 기능</h2>
+      </div>
+      <div class="vb-bento grid md:grid-cols-3 gap-4">
+        <div class="md:col-span-2 card-nordic rounded-2xl p-8 flex items-start gap-6">
+          <div class="w-14 h-14 rounded-2xl bg-forest-50 flex items-center justify-center text-2xl flex-shrink-0">📊</div>
+          <div>
+            <h3 class="font-semibold text-sand-900 text-lg mb-2">3,000건 실데이터 기반 분석</h3>
+            <p class="text-sm text-sand-600 leading-relaxed">감이 아닌 데이터로. 실제 시공된 3,000건 이상의 공사 데이터를 기반으로 각 항목의 적정 단가를 산출합니다. 같은 평수, 같은 자재 기준으로 정밀 비교.</p>
+          </div>
+        </div>
+        <div class="card-nordic rounded-2xl p-8">
+          <div class="w-14 h-14 rounded-2xl bg-wood-100 flex items-center justify-center text-2xl mb-4">🔍</div>
+          <h3 class="font-semibold text-sand-900 mb-2">항목별 상세 분석</h3>
+          <p class="text-sm text-sand-600 leading-relaxed">견적서의 모든 항목을 하나씩 쪼개어 확인합니다.</p>
+        </div>
+        <div class="card-nordic rounded-2xl p-8">
+          <div class="w-14 h-14 rounded-2xl bg-forest-50 flex items-center justify-center text-2xl mb-4">💬</div>
+          <h3 class="font-semibold text-sand-900 mb-2">전문가 코멘트</h3>
+          <p class="text-sm text-sand-600 leading-relaxed">어려운 용어 없이 친절하게 설명합니다.</p>
+        </div>
+        <div class="md:col-span-2 card-nordic rounded-2xl p-8 flex items-start gap-6">
+          <div class="w-14 h-14 rounded-2xl bg-wood-100 flex items-center justify-center text-2xl flex-shrink-0">⚡</div>
+          <div>
+            <h3 class="font-semibold text-sand-900 text-lg mb-2">AI + 전문가 하이브리드 분석</h3>
+            <p class="text-sm text-sand-600 leading-relaxed">AI가 1차 분류와 데이터 정리를 수행하고, 20년 경력 전문가가 최종 검토합니다. 기술의 속도와 사람의 깊이를 동시에.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="bg-sand-50 py-24">
+    <div class="max-w-4xl mx-auto px-8 text-center">
+      <span class="text-forest-600 text-sm font-medium tracking-widest uppercase">Pricing</span>
+      <h2 class="font-outfit text-3xl font-bold text-sand-900 mt-2 mb-12 tracking-tight">요금 안내</h2>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="card-nordic rounded-2xl p-8 text-left">
+          <p class="text-sm text-sand-600 mb-1">기본 분석 &middot; 48시간</p>
+          <p class="text-4xl font-bold text-sand-900 font-outfit mb-6">₩30,000</p>
+          <button class="w-full py-3 rounded-xl border border-sand-400 text-sand-700 font-medium hover:border-forest-500 hover:text-forest-600 transition">선택</button>
+        </div>
+        <div class="relative card-nordic rounded-2xl p-8 text-left border-2 border-forest-600">
+          <div class="badge-rec">추천</div>
+          <p class="text-sm text-sand-600 mb-1">빠른 분석 &middot; 24시간</p>
+          <p class="text-4xl font-bold text-sand-900 font-outfit mb-6">₩45,000</p>
+          <button class="w-full py-3 rounded-xl bg-forest-600 text-white font-medium hover:bg-forest-700 transition">선택</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ================================================================ -->
+<!-- C. IMMERSIVE - 풀블리드 이미지 몰입형                               -->
+<!-- ================================================================ -->
+<div id="p3" class="panel">
+
+  <section class="max-w-7xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-2xl p-8 shadow-sm border border-sand-300">
+      <div class="flex items-start gap-5">
+        <div class="w-14 h-14 rounded-2xl bg-forest-500 flex items-center justify-center text-white text-xl font-bold flex-shrink-0">C</div>
+        <div>
+          <h2 class="text-xl font-bold text-sand-900 mb-1">C. Immersive Full-Bleed <span class="text-base font-normal text-sand-600">풀블리드 몰입형</span></h2>
+          <p class="text-sand-700 text-sm leading-relaxed mb-3">
+            전폭 이미지 위에 텍스트를 얹는 시네마틱 레이아웃. 실제 인테리어 시공 사진이 배경으로 깔리며
+            오버레이 그라데이션으로 텍스트 가독성을 확보합니다. 감성적 몰입감이 극대화됩니다.
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">Full-Bleed Image</span>
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">Cinematic</span>
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">Overlay Text</span>
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">Emotional Impact</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hero: Full-bleed with overlay -->
+  <section class="vc-img-section" style="min-height:100vh;">
+    <div class="img-ph absolute inset-0" style="background:linear-gradient(135deg,#3D3D3D 0%,#5C5C56 30%,#8B8B83 60%,#6B6B6B 100%);">
+      <div class="text-center text-sand-400">
+        <p class="text-6xl mb-3">🏡</p>
+        <p class="text-base font-medium">전폭 인테리어 이미지 (배경)</p>
+        <p class="text-sm mt-1">Gemini 생성 예정</p>
+      </div>
+    </div>
+    <div class="vc-overlay absolute inset-0"></div>
+    <!-- Nav Overlay -->
+    <div class="relative z-10 max-w-7xl mx-auto px-8 pt-6">
+      <nav class="flex items-center justify-between">
+        <span class="font-outfit font-semibold text-white text-xl tracking-tight">ZipCheck</span>
+        <div class="flex items-center gap-8 text-sm text-white/70">
+          <a href="#" class="hover:text-white transition">서비스</a>
+          <a href="#" class="hover:text-white transition">요금</a>
+          <a href="#" class="hover:text-white transition">커뮤니티</a>
+          <a href="#" class="px-5 py-2.5 bg-white/15 backdrop-blur-sm text-white rounded-lg font-medium hover:bg-white/25 transition border border-white/20">견적 분석</a>
+        </div>
+      </nav>
+    </div>
+    <!-- Hero Text -->
+    <div class="relative z-10 max-w-7xl mx-auto px-8 flex items-end min-h-[100vh] pb-24">
+      <div class="max-w-2xl">
+        <p class="text-forest-300 font-medium text-sm tracking-widest uppercase mb-4">Interior Quote Analysis</p>
+        <h1 class="font-outfit text-5xl lg:text-7xl font-bold text-white leading-[1.08] tracking-tight mb-6">
+          공간의 가치를<br>
+          <span class="text-forest-300">정직하게</span>
+        </h1>
+        <p class="text-xl text-white/70 leading-relaxed mb-10 max-w-lg">
+          3,000건의 데이터와 20년 전문가의 눈으로, 인테리어 견적의 모든 것을 분석합니다.
+        </p>
+        <div class="flex items-center gap-5">
+          <a href="#" class="px-10 py-4 bg-forest-600 text-white rounded-xl font-semibold text-lg hover:bg-forest-700 transition shadow-xl">
+            분석 신청하기
+          </a>
+          <a href="#" class="px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-xl font-medium border border-white/20 hover:bg-white/20 transition">
+            예시 보기
+          </a>
+        </div>
+        <!-- Stats Inline -->
+        <div class="flex items-center gap-8 mt-12 pt-8 border-t border-white/15">
+          <div><p class="text-2xl font-bold text-white font-outfit">3,000+</p><p class="text-xs text-white/50">분석 건수</p></div>
+          <div><p class="text-2xl font-bold text-white font-outfit">48h</p><p class="text-xs text-white/50">응답 보장</p></div>
+          <div><p class="text-2xl font-bold text-white font-outfit">20Y+</p><p class="text-xs text-white/50">전문가</p></div>
+          <div><p class="text-2xl font-bold text-forest-300 font-outfit">9.2%</p><p class="text-xs text-white/50">평균 절감</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features: Image + Text alternating -->
+  <section class="bg-sand-50 py-24">
+    <div class="max-w-6xl mx-auto px-8">
+      <div class="text-center mb-16">
+        <span class="text-forest-600 text-sm font-medium tracking-widest uppercase">Why ZipCheck</span>
+        <h2 class="font-outfit text-4xl font-bold text-sand-900 mt-2 tracking-tight">이런 분들을 위해 만들었어요</h2>
+      </div>
+      <!-- Feature 1 -->
+      <div class="grid md:grid-cols-2 gap-12 items-center mb-20">
+        <div class="rounded-3xl overflow-hidden border border-sand-300">
+          <div class="img-ph img-ph-light aspect-[4/3]">
+            <div class="text-center"><p class="text-3xl mb-1">📋</p><p class="text-xs">견적서 이미지</p></div>
+          </div>
+        </div>
+        <div>
+          <span class="text-forest-500 text-sm font-semibold">01</span>
+          <h3 class="font-outfit text-2xl font-bold text-sand-900 mt-2 mb-3 tracking-tight">받은 견적이 적정한지 모르겠다면</h3>
+          <p class="text-sand-600 leading-relaxed">같은 공사인데 업체마다 수백만 원 차이가 나요. 3,000건의 실제 데이터로 적정가를 산출해 드립니다.</p>
+        </div>
+      </div>
+      <!-- Feature 2 -->
+      <div class="grid md:grid-cols-2 gap-12 items-center mb-20">
+        <div class="md:order-2 rounded-3xl overflow-hidden border border-sand-300">
+          <div class="img-ph img-ph-warm aspect-[4/3]">
+            <div class="text-center"><p class="text-3xl mb-1">💬</p><p class="text-xs">전문가 코멘트</p></div>
+          </div>
+        </div>
+        <div class="md:order-1">
+          <span class="text-forest-500 text-sm font-semibold">02</span>
+          <h3 class="font-outfit text-2xl font-bold text-sand-900 mt-2 mb-3 tracking-tight">전문 용어가 어렵다면</h3>
+          <p class="text-sand-600 leading-relaxed">20년 전문가가 옆에서 설명해 드리듯, 어려운 용어 없이 친절하게 풀어 드립니다.</p>
+        </div>
+      </div>
+      <!-- Feature 3 -->
+      <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div class="rounded-3xl overflow-hidden border border-sand-300">
+          <div class="img-ph img-ph-light aspect-[4/3]">
+            <div class="text-center"><p class="text-3xl mb-1">🛡️</p><p class="text-xs">분석 리포트</p></div>
+          </div>
+        </div>
+        <div>
+          <span class="text-forest-500 text-sm font-semibold">03</span>
+          <h3 class="font-outfit text-2xl font-bold text-sand-900 mt-2 mb-3 tracking-tight">투명한 근거가 필요하다면</h3>
+          <p class="text-sand-600 leading-relaxed">분석 근거와 비교 데이터를 모두 공개합니다. 리포트 하나로 업체와의 협상도 가능해요.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA: Full-bleed Image -->
+  <section class="vc-img-section relative" style="min-height:50vh;">
+    <div class="img-ph absolute inset-0" style="background:linear-gradient(135deg,#4A6741,#2E4628,#1F301A);">
+      <div class="text-center text-forest-300">
+        <p class="text-4xl">🌿</p>
+      </div>
+    </div>
+    <div class="absolute inset-0 bg-forest-800/60"></div>
+    <div class="relative z-10 flex items-center justify-center min-h-[50vh] text-center px-8">
+      <div>
+        <h2 class="font-outfit text-4xl font-bold text-white mb-4 tracking-tight">우리 집 인테리어, 제대로 시작하세요</h2>
+        <p class="text-forest-200 mb-8">3만 원 투자로 수백만 원을 지킬 수 있습니다.</p>
+        <a href="#" class="inline-block px-10 py-4 bg-white text-forest-700 rounded-xl font-bold text-lg hover:bg-sand-100 transition">견적 분석 신청 →</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ================================================================ -->
+<!-- D. STORYTELLING - 싱글 컬럼 스토리텔링                              -->
+<!-- ================================================================ -->
+<div id="p4" class="panel">
+
+  <section class="max-w-7xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-2xl p-8 shadow-sm border border-sand-300">
+      <div class="flex items-start gap-5">
+        <div class="w-14 h-14 rounded-2xl bg-forest-500 flex items-center justify-center text-white text-xl font-bold flex-shrink-0">D</div>
+        <div>
+          <h2 class="text-xl font-bold text-sand-900 mb-1">D. Storytelling Flow <span class="text-base font-normal text-sand-600">스토리텔링 싱글 컬럼</span></h2>
+          <p class="text-sand-700 text-sm leading-relaxed mb-3">
+            한 줄기 이야기처럼 위에서 아래로 자연스럽게 흐르는 레이아웃. 넓은 여백, 큰 텍스트, 한 번에 하나의 메시지만 전달합니다.
+            스크롤 자체가 내러티브가 되어 사용자를 CTA까지 자연스럽게 이끕니다.
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">Single Column</span>
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">Narrative Scroll</span>
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">Generous Whitespace</span>
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">One Message at a Time</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sticky Nav -->
+  <section class="bg-sand-50">
+    <div class="max-w-3xl mx-auto px-8 py-5 flex items-center justify-between">
+      <span class="font-sora font-semibold text-sand-900 text-lg">ZipCheck</span>
+      <div class="flex items-center gap-6 text-sm text-sand-600">
+        <a href="#" class="hover:text-forest-600">서비스</a>
+        <a href="#" class="hover:text-forest-600">요금</a>
+        <a href="#" class="px-5 py-2 bg-forest-600 text-white rounded-lg font-medium hover:bg-forest-700 transition text-sm">시작하기</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hero: Centered Single Column -->
+  <section class="bg-sand-50 py-32">
+    <div class="max-w-3xl mx-auto px-8 text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-sand-300 text-sm text-sand-700 mb-10 shadow-sm">
+        <span class="w-2 h-2 rounded-full bg-forest-500"></span>
+        3,000건+ 분석 완료
+      </div>
+      <h1 class="font-sora text-5xl lg:text-6xl font-bold text-sand-900 leading-[1.15] tracking-tight mb-8">
+        인테리어 견적,<br>
+        혼자 고민하지 마세요.
+      </h1>
+      <p class="text-xl text-sand-600 leading-relaxed mb-12 max-w-xl mx-auto">
+        20년 경력 전문가가 당신의 견적서를 꼼꼼하게 읽고,<br>
+        따뜻하게 설명해 드립니다.
+      </p>
+      <a href="#" class="inline-block px-10 py-4 bg-forest-600 text-white rounded-2xl font-semibold text-lg hover:bg-forest-700 transition shadow-lg shadow-forest-600/15">
+        견적 분석 신청하기
+      </a>
+    </div>
+  </section>
+
+  <!-- Image Break -->
+  <section class="max-w-4xl mx-auto px-8 -mt-8">
+    <div class="rounded-3xl overflow-hidden border border-sand-300 shadow-xl">
+      <div class="img-ph img-ph-light aspect-[16/7]">
+        <div class="text-center">
+          <p class="text-5xl mb-2">🪴</p>
+          <p class="font-medium">따뜻한 톤의 거실 파노라마</p>
+          <p class="text-xs mt-1">Gemini 생성 예정</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Story Section: Problem -->
+  <section class="bg-sand-50 py-32">
+    <div class="max-w-2xl mx-auto px-8 text-center">
+      <p class="text-forest-600 font-semibold text-sm tracking-widest uppercase mb-4">The Problem</p>
+      <h2 class="font-sora text-3xl font-bold text-sand-900 leading-snug mb-6 tracking-tight">
+        "이 견적이 적당한 건지<br>도무지 모르겠어요"
+      </h2>
+      <p class="text-lg text-sand-600 leading-relaxed">
+        같은 30평 아파트인데 업체마다 1,000만 원 이상 차이가 납니다.<br>
+        어떤 항목이 비싼 건지, 빠진 건 없는지,<br>
+        전문 지식 없이는 판단하기 어렵습니다.
+      </p>
+    </div>
+  </section>
+
+  <!-- Story Section: Solution -->
+  <section class="bg-white py-32">
+    <div class="max-w-2xl mx-auto px-8 text-center">
+      <p class="text-forest-600 font-semibold text-sm tracking-widest uppercase mb-4">The Solution</p>
+      <h2 class="font-sora text-3xl font-bold text-sand-900 leading-snug mb-6 tracking-tight">
+        데이터와 경험,<br>두 가지 렌즈로 봅니다.
+      </h2>
+      <p class="text-lg text-sand-600 leading-relaxed mb-12">
+        AI가 3,000건의 실제 데이터로 1차 분석하고,<br>
+        20년 경력 전문가가 최종 검토합니다.
+      </p>
+      <!-- Vertical Steps -->
+      <div class="text-left max-w-md mx-auto space-y-0">
+        <div class="flex gap-5">
+          <div class="flex flex-col items-center">
+            <div class="w-10 h-10 rounded-full bg-forest-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">1</div>
+            <div class="vd-step-line"></div>
+          </div>
+          <div class="pb-8"><h4 class="font-semibold text-sand-900 mb-1">견적서를 올려주세요</h4><p class="text-sm text-sand-600">사진, PDF, 어떤 형태도 괜찮아요.</p></div>
+        </div>
+        <div class="flex gap-5">
+          <div class="flex flex-col items-center">
+            <div class="w-10 h-10 rounded-full bg-forest-500 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">2</div>
+            <div class="vd-step-line"></div>
+          </div>
+          <div class="pb-8"><h4 class="font-semibold text-sand-900 mb-1">AI가 항목을 정리합니다</h4><p class="text-sm text-sand-600">자동 분류 + 데이터 비교 분석.</p></div>
+        </div>
+        <div class="flex gap-5">
+          <div class="flex flex-col items-center">
+            <div class="w-10 h-10 rounded-full bg-forest-400 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">3</div>
+            <div class="vd-step-line"></div>
+          </div>
+          <div class="pb-8"><h4 class="font-semibold text-sand-900 mb-1">전문가가 직접 검토합니다</h4><p class="text-sm text-sand-600">친절한 코멘트와 함께.</p></div>
+        </div>
+        <div class="flex gap-5">
+          <div class="flex flex-col items-center">
+            <div class="w-10 h-10 rounded-full bg-forest-300 text-forest-800 flex items-center justify-center text-sm font-bold flex-shrink-0">4</div>
+          </div>
+          <div><h4 class="font-semibold text-sand-900 mb-1">48시간 내 리포트 전달</h4><p class="text-sm text-sand-600">상세한 분석 리포트를 받으세요.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing: Minimal -->
+  <section class="bg-sand-50 py-32">
+    <div class="max-w-xl mx-auto px-8 text-center">
+      <p class="text-forest-600 font-semibold text-sm tracking-widest uppercase mb-4">Pricing</p>
+      <h2 class="font-sora text-3xl font-bold text-sand-900 mb-3 tracking-tight">3만 원으로 시작하세요</h2>
+      <p class="text-sand-600 mb-12">수백만 원을 지킬 수 있습니다.</p>
+      <div class="space-y-4">
+        <div class="card-nordic rounded-2xl p-6 flex items-center justify-between">
+          <div class="text-left">
+            <h3 class="font-semibold text-sand-900">기본 분석</h3>
+            <p class="text-xs text-sand-600">48시간 이내</p>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-2xl font-bold text-sand-900 font-outfit">₩30,000</span>
+            <button class="px-5 py-2.5 rounded-xl border border-forest-500 text-forest-600 font-medium text-sm hover:bg-forest-600 hover:text-white transition">선택</button>
+          </div>
+        </div>
+        <div class="relative card-nordic rounded-2xl p-6 flex items-center justify-between border-2 border-forest-600">
+          <div class="absolute -top-2.5 left-6 px-2 py-0.5 bg-forest-600 text-white text-[10px] font-semibold rounded">추천</div>
+          <div class="text-left">
+            <h3 class="font-semibold text-sand-900">빠른 분석</h3>
+            <p class="text-xs text-sand-600">24시간 이내 &middot; 추가 Q&A</p>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-2xl font-bold text-sand-900 font-outfit">₩45,000</span>
+            <button class="px-5 py-2.5 rounded-xl bg-forest-600 text-white font-medium text-sm hover:bg-forest-700 transition">선택</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="bg-forest-600 py-24">
+    <div class="max-w-2xl mx-auto px-8 text-center">
+      <h2 class="font-sora text-3xl font-bold text-white mb-4 tracking-tight">편안한 시작, 정확한 분석</h2>
+      <p class="text-forest-200 mb-8">전문가가 따뜻하게 풀어드립니다.</p>
+      <a href="#" class="inline-block px-10 py-4 bg-white text-forest-700 rounded-2xl font-bold text-lg hover:bg-sand-100 transition">지금 시작하기 →</a>
+    </div>
+  </section>
+</div>
+
+
+<!-- ================================================================ -->
+<!-- E. SPLIT SCREEN - 좌우 분할 레이아웃                               -->
+<!-- ================================================================ -->
+<div id="p5" class="panel">
+
+  <section class="max-w-7xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-2xl p-8 shadow-sm border border-sand-300">
+      <div class="flex items-start gap-5">
+        <div class="w-14 h-14 rounded-2xl bg-forest-500 flex items-center justify-center text-white text-xl font-bold flex-shrink-0">E</div>
+        <div>
+          <h2 class="text-xl font-bold text-sand-900 mb-1">E. Split Screen <span class="text-base font-normal text-sand-600">좌우 분할</span></h2>
+          <p class="text-sand-700 text-sm leading-relaxed mb-3">
+            화면을 50:50으로 나누어 좌측은 텍스트, 우측은 이미지(또는 반대)로 구성합니다.
+            섹션마다 좌우가 번갈아 바뀌며 강한 시각적 리듬을 만듭니다. 인테리어 포트폴리오 사이트에서 많이 쓰이는 패턴.
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">50:50 Split</span>
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">Alternating L/R</span>
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">Strong Rhythm</span>
+            <span class="text-[11px] bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full font-medium">Portfolio Style</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hero: Split 50/50 -->
+  <section class="ve-split">
+    <!-- Left: Text -->
+    <div class="bg-sand-50 flex items-center px-12 lg:px-20 py-20">
+      <div class="max-w-lg">
+        <nav class="flex items-center gap-6 text-sm text-sand-600 mb-16">
+          <span class="font-outfit font-semibold text-sand-900 text-lg">ZipCheck</span>
+          <a href="#" class="hover:text-forest-600 ml-auto">서비스</a>
+          <a href="#" class="hover:text-forest-600">요금</a>
+        </nav>
+        <div class="w-10 h-[2px] bg-forest-500 mb-6"></div>
+        <h1 class="font-outfit text-4xl lg:text-5xl font-bold text-sand-900 leading-tight tracking-tight mb-6">
+          견적서 한 장,<br>
+          <span class="text-forest-500">전문가의 눈</span>으로
+        </h1>
+        <p class="text-lg text-sand-600 leading-relaxed mb-10">
+          3,000건의 데이터와 20년 경력. 48시간 안에 당신의 견적서를 따뜻하게 분석합니다.
+        </p>
+        <div class="flex items-center gap-4">
+          <a href="#" class="px-8 py-4 bg-forest-600 text-white rounded-xl font-semibold hover:bg-forest-700 transition shadow-lg shadow-forest-600/15">분석 신청</a>
+          <a href="#" class="px-6 py-4 text-sand-600 font-medium hover:text-forest-600 transition">예시 보기 →</a>
+        </div>
+        <!-- Stats -->
+        <div class="flex gap-8 mt-12 pt-8 border-t border-sand-300">
+          <div><p class="text-2xl font-bold text-sand-900 font-outfit">3K+</p><p class="text-xs text-sand-600">분석</p></div>
+          <div><p class="text-2xl font-bold text-sand-900 font-outfit">48h</p><p class="text-xs text-sand-600">보장</p></div>
+          <div><p class="text-2xl font-bold text-forest-500 font-outfit">9.2%</p><p class="text-xs text-sand-600">절감</p></div>
+        </div>
+      </div>
+    </div>
+    <!-- Right: Image -->
+    <div class="img-ph img-ph-light min-h-[60vh]">
+      <div class="text-center">
+        <p class="text-5xl mb-3">🏠</p>
+        <p class="font-medium">밝은 톤 인테리어</p>
+        <p class="text-xs mt-1">Gemini 생성 예정</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Split: Problem (reversed) -->
+  <section class="ve-split ve-split-reverse">
+    <div class="bg-white flex items-center px-12 lg:px-20 py-20">
+      <div class="max-w-lg">
+        <span class="text-forest-600 text-sm font-semibold tracking-widest uppercase">Problem</span>
+        <h2 class="font-outfit text-3xl font-bold text-sand-900 mt-3 mb-4 tracking-tight">견적서, 혼자 보면<br>어려운 이유</h2>
+        <p class="text-sand-600 leading-relaxed mb-6">같은 공사인데 업체마다 수백만 원 차이. 전문 용어 가득한 항목들. 빠진 건 없는지, 비싼 건 맞는지, 판단이 어렵습니다.</p>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3 text-sm"><span class="w-6 h-6 rounded-full bg-red-50 text-red-500 flex items-center justify-center text-xs">!</span><span class="text-sand-700">업체마다 1,000만 원 이상 차이</span></div>
+          <div class="flex items-center gap-3 text-sm"><span class="w-6 h-6 rounded-full bg-red-50 text-red-500 flex items-center justify-center text-xs">!</span><span class="text-sand-700">전문 용어와 복잡한 항목</span></div>
+          <div class="flex items-center gap-3 text-sm"><span class="w-6 h-6 rounded-full bg-red-50 text-red-500 flex items-center justify-center text-xs">!</span><span class="text-sand-700">비교 기준 없이 감으로 판단</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="img-ph min-h-[50vh]" style="background:linear-gradient(135deg,#EBDBC1,#D4B896);">
+      <div class="text-center"><p class="text-4xl mb-2">📋</p><p class="text-xs">견적서 클로즈업</p></div>
+    </div>
+  </section>
+
+  <!-- Split: Solution -->
+  <section class="ve-split">
+    <div class="bg-forest-600 flex items-center px-12 lg:px-20 py-20">
+      <div class="max-w-lg">
+        <span class="text-forest-200 text-sm font-semibold tracking-widest uppercase">Solution</span>
+        <h2 class="font-outfit text-3xl font-bold text-white mt-3 mb-4 tracking-tight">데이터 + 전문가<br>이중 분석</h2>
+        <p class="text-forest-200 leading-relaxed mb-6">AI가 3,000건 데이터로 1차 비교하고, 20년 전문가가 최종 코멘트를 달아드립니다.</p>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3 text-sm"><span class="w-6 h-6 rounded-full bg-white/15 text-white flex items-center justify-center text-xs">&#10003;</span><span class="text-white/90">실데이터 기반 적정가 산출</span></div>
+          <div class="flex items-center gap-3 text-sm"><span class="w-6 h-6 rounded-full bg-white/15 text-white flex items-center justify-center text-xs">&#10003;</span><span class="text-white/90">항목별 상세 코멘트</span></div>
+          <div class="flex items-center gap-3 text-sm"><span class="w-6 h-6 rounded-full bg-white/15 text-white flex items-center justify-center text-xs">&#10003;</span><span class="text-white/90">투명한 근거 데이터 공개</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="img-ph img-ph-light min-h-[50vh]">
+      <div class="text-center"><p class="text-4xl mb-2">📊</p><p class="text-xs">분석 리포트 예시</p></div>
+    </div>
+  </section>
+
+  <!-- Split: Pricing -->
+  <section class="ve-split ve-split-reverse">
+    <div class="bg-sand-50 flex items-center px-12 lg:px-20 py-20">
+      <div class="max-w-lg w-full">
+        <span class="text-forest-600 text-sm font-semibold tracking-widest uppercase">Pricing</span>
+        <h2 class="font-outfit text-3xl font-bold text-sand-900 mt-3 mb-8 tracking-tight">합리적인 요금</h2>
+        <div class="space-y-4">
+          <div class="card-nordic rounded-2xl p-6">
+            <div class="flex items-center justify-between">
+              <div><h3 class="font-semibold text-sand-900">기본 분석</h3><p class="text-xs text-sand-600">48시간 이내</p></div>
+              <p class="text-2xl font-bold text-sand-900 font-outfit">₩30,000</p>
+            </div>
+          </div>
+          <div class="card-nordic rounded-2xl p-6 border-2 border-forest-600">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="flex items-center gap-2"><h3 class="font-semibold text-sand-900">빠른 분석</h3><span class="text-[10px] bg-forest-600 text-white px-1.5 py-0.5 rounded font-semibold">추천</span></div>
+                <p class="text-xs text-sand-600">24시간 이내 + Q&A</p>
+              </div>
+              <p class="text-2xl font-bold text-sand-900 font-outfit">₩45,000</p>
+            </div>
+          </div>
+        </div>
+        <a href="#" class="block mt-6 py-4 bg-forest-600 text-white rounded-xl font-semibold text-center hover:bg-forest-700 transition shadow-lg shadow-forest-600/15">견적 분석 신청하기 →</a>
+      </div>
+    </div>
+    <div class="img-ph min-h-[50vh]" style="background:linear-gradient(135deg,#E1EBdd,#C3D7BB);">
+      <div class="text-center"><p class="text-4xl mb-2">🌿</p><p class="text-xs">자연 인테리어</p></div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ===== TAB SCRIPT ===== -->
+<script>
+function sw(n){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(t=>{
+    t.classList.remove('active');
+    t.style.background='#F5F0E8'; t.style.color='#6B6B6B';
+  });
+  document.getElementById('p'+n).classList.add('active');
+  const t=document.getElementById('t'+n);
+  t.classList.add('active');
+  t.style.background='#3D5A35'; t.style.color='#fff';
+  window.scrollTo({top:200,behavior:'smooth'});
+}
+</script>
+</body>
+</html>

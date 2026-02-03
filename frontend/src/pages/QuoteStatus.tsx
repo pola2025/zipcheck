@@ -215,7 +215,7 @@ export default function QuoteStatus() {
 										<div>
 											<p className="text-xs text-sand-400 mb-0.5">신청일</p>
 											<p className="text-sand-900 font-medium">
-												{new Date(quote.created_at).toLocaleString('ko-KR')}
+												{new Date(quote.created_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}
 											</p>
 										</div>
 									</div>

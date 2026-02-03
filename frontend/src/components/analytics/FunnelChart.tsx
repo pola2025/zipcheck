@@ -29,7 +29,7 @@ export default function FunnelChart({ data }: FunnelChartProps) {
 	})
 
 	return (
-		<div className="bg-white rounded-2xl p-5 border border-sand-200">
+		<div className="bg-white rounded-2xl p-5 border border-sand-300">
 			<h3 className="text-base font-semibold text-sand-900 mb-4">퍼널 분석</h3>
 			<ResponsiveContainer width="100%" height={280}>
 				<BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>

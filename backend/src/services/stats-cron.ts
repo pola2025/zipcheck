@@ -8,6 +8,11 @@ import cron from 'node-cron'
 import { query } from '../lib/db'
 import { notifyDailyStats, notifyWeeklyStats, notifyMonthlyStats } from './slack-notifications'
 
+/** 서버 TZ에 관계없이 KST 기준 현재 시각 Date 객체 반환 */
+function nowKST(): Date {
+	return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
+}
+
 interface StatsData {
 	date: string
 	totalJobs: number
@@ -68,7 +73,7 @@ function startDailyStatsJob() {
 		try {
 			console.log('🕐 Running daily statistics job...')
 
-			const now = new Date()
+			const now = nowKST()
 			const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
 			const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
 
@@ -110,7 +115,7 @@ function startWeeklyStatsJob() {
 		try {
 			console.log('🕐 Running weekly statistics job...')
 
-			const now = new Date()
+			const now = nowKST()
 			const dayOfWeek = now.getDay()
 			const startOfWeek = new Date(now)
 			startOfWeek.setDate(now.getDate() - dayOfWeek) // Go back to Sunday
@@ -173,7 +178,7 @@ function startMonthlyStatsJob() {
 		try {
 			console.log('🕐 Running monthly statistics job...')
 
-			const now = new Date()
+			const now = nowKST()
 			const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
 			const startOfMonth = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1, 0, 0, 0)
 			const endOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0) // 1st of current month
@@ -226,7 +231,7 @@ export function startStatsCronJobs() {
  * Manual trigger for testing (call from API endpoint)
  */
 export async function triggerDailyStats() {
-	const now = new Date()
+	const now = nowKST()
 	const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
 	const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
 
@@ -246,7 +251,7 @@ export async function triggerDailyStats() {
 }
 
 export async function triggerWeeklyStats() {
-	const now = new Date()
+	const now = nowKST()
 	const dayOfWeek = now.getDay()
 	const startOfWeek = new Date(now)
 	startOfWeek.setDate(now.getDate() - dayOfWeek)
@@ -289,7 +294,7 @@ export async function triggerWeeklyStats() {
 }
 
 export async function triggerMonthlyStats() {
-	const now = new Date()
+	const now = nowKST()
 	const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
 	const startOfMonth = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1, 0, 0, 0)
 	const endOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0)

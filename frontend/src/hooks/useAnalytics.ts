@@ -28,6 +28,11 @@ interface TrafficReport {
 	totalPageViews: number
 	avgSessionDuration: number
 	bounceRate: number
+	prevTotalUsers: number
+	prevTotalSessions: number
+	prevTotalPageViews: number
+	prevAvgSessionDuration: number
+	prevBounceRate: number
 	dailyData: Array<{
 		date: string
 		users: number
@@ -100,7 +105,7 @@ interface GeoReportItem {
 }
 
 interface GeoReport {
-	countries: GeoReportItem[]
+	regions: GeoReportItem[]
 	cities: GeoReportItem[]
 }
 
@@ -158,6 +163,61 @@ export function useSearchPerformance(days: number = 28) {
 	return useQuery<SearchPerformance>({
 		queryKey: ['analytics', 'search', days],
 		queryFn: () => fetchAnalytics(`/api/admin/google/search/performance?days=${days}`),
+		staleTime: 5 * 60 * 1000,
+	})
+}
+
+// ============================================
+// Hourly Report
+// ============================================
+
+interface HourlyReportItem {
+	hour: number
+	users: number
+	sessions: number
+}
+
+export function useHourlyReport(days: number = 30) {
+	return useQuery<HourlyReportItem[]>({
+		queryKey: ['analytics', 'hourly', days],
+		queryFn: () => fetchAnalytics(`/api/admin/google/analytics/hourly?days=${days}`),
+		staleTime: 5 * 60 * 1000,
+	})
+}
+
+// ============================================
+// New vs Returning
+// ============================================
+
+interface NewVsReturningItem {
+	type: string
+	users: number
+	sessions: number
+}
+
+export function useNewVsReturningReport(days: number = 30) {
+	return useQuery<NewVsReturningItem[]>({
+		queryKey: ['analytics', 'new-returning', days],
+		queryFn: () => fetchAnalytics(`/api/admin/google/analytics/new-returning?days=${days}`),
+		staleTime: 5 * 60 * 1000,
+	})
+}
+
+// ============================================
+// Conversion Trend
+// ============================================
+
+interface ConversionTrendItem {
+	date: string
+	totalUsers: number
+	conversionUsers: number
+	conversionRate: number
+}
+
+export function useConversionTrend(days: number = 30) {
+	return useQuery<ConversionTrendItem[]>({
+		queryKey: ['analytics', 'conversion-trend', days],
+		queryFn: () => fetchAnalytics(`/api/admin/google/analytics/conversion-trend?days=${days}`),
 		staleTime: 5 * 60 * 1000,
 	})
 }

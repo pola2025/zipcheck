@@ -14,9 +14,14 @@
 import { google } from 'googleapis'
 import { getGoogleAuth, GOOGLE_SCOPES } from './google-auth'
 
+let _analyticsClient: ReturnType<typeof google.analyticsdata> | null = null
+
 const analyticsDataClient = () => {
-	const auth = getGoogleAuth([GOOGLE_SCOPES.ANALYTICS_READONLY])
-	return google.analyticsdata({ version: 'v1beta', auth })
+	if (!_analyticsClient) {
+		const auth = getGoogleAuth([GOOGLE_SCOPES.ANALYTICS_READONLY])
+		_analyticsClient = google.analyticsdata({ version: 'v1beta', auth })
+	}
+	return _analyticsClient
 }
 
 interface TrafficReport {
@@ -25,6 +30,11 @@ interface TrafficReport {
 	totalPageViews: number
 	avgSessionDuration: number
 	bounceRate: number
+	prevTotalUsers: number
+	prevTotalSessions: number
+	prevTotalPageViews: number
+	prevAvgSessionDuration: number
+	prevBounceRate: number
 	dailyData: Array<{
 		date: string
 		users: number
@@ -58,13 +68,32 @@ export async function getTrafficReport(days: number = 30): Promise<TrafficReport
 	const client = analyticsDataClient()
 	const property = `properties/${propertyId}`
 
-	// 일별 트래픽 + 전체 요약
-	const [overviewRes, dailyRes, pagesRes, sourcesRes] = await Promise.all([
-		// 전체 요약 메트릭
+	// 이전 기간 계산 (같은 일수)
+	const prevStart = `${days * 2}daysAgo`
+	const prevEnd = `${days + 1}daysAgo`
+
+	// 일별 트래픽 + 전체 요약 + 이전 기간
+	const [overviewRes, prevOverviewRes, dailyRes, pagesRes, sourcesRes] = await Promise.all([
+		// 현재 기간 요약 메트릭
 		client.properties.runReport({
 			property,
 			requestBody: {
 				dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
+				metrics: [
+					{ name: 'totalUsers' },
+					{ name: 'sessions' },
+					{ name: 'screenPageViews' },
+					{ name: 'averageSessionDuration' },
+					{ name: 'bounceRate' },
+				],
+			},
+		}),
+
+		// 이전 기간 요약 메트릭
+		client.properties.runReport({
+			property,
+			requestBody: {
+				dateRanges: [{ startDate: prevStart, endDate: prevEnd }],
 				metrics: [
 					{ name: 'totalUsers' },
 					{ name: 'sessions' },
@@ -131,6 +160,10 @@ export async function getTrafficReport(days: number = 30): Promise<TrafficReport
 	const overviewRow = overviewRes.data.rows?.[0]
 	const overviewMetrics = overviewRow?.metricValues || []
 
+	// 이전 기간 요약 파싱
+	const prevRow = prevOverviewRes.data.rows?.[0]
+	const prevMetrics = prevRow?.metricValues || []
+
 	// 일별 데이터 파싱
 	const dailyData = (dailyRes.data.rows || []).map(row => ({
 		date: row.dimensionValues?.[0]?.value || '',
@@ -161,6 +194,11 @@ export async function getTrafficReport(days: number = 30): Promise<TrafficReport
 		totalPageViews: parseInt(overviewMetrics[2]?.value || '0'),
 		avgSessionDuration: parseFloat(overviewMetrics[3]?.value || '0'),
 		bounceRate: parseFloat(overviewMetrics[4]?.value || '0'),
+		prevTotalUsers: parseInt(prevMetrics[0]?.value || '0'),
+		prevTotalSessions: parseInt(prevMetrics[1]?.value || '0'),
+		prevTotalPageViews: parseInt(prevMetrics[2]?.value || '0'),
+		prevAvgSessionDuration: parseFloat(prevMetrics[3]?.value || '0'),
+		prevBounceRate: parseFloat(prevMetrics[4]?.value || '0'),
 		dailyData,
 		topPages,
 		trafficSources,
@@ -226,7 +264,7 @@ interface GeoReportItem {
 }
 
 interface GeoReport {
-	countries: GeoReportItem[]
+	regions: GeoReportItem[]
 	cities: GeoReportItem[]
 }
 
@@ -239,20 +277,22 @@ export async function getGeoReport(days: number = 30): Promise<GeoReport> {
 	const client = analyticsDataClient()
 	const property = `properties/${propertyId}`
 
-	const [countriesRes, citiesRes] = await Promise.all([
+	const [regionsRes, citiesRes] = await Promise.all([
+		// 시/도 단위
 		client.properties.runReport({
 			property,
 			requestBody: {
 				dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
-				dimensions: [{ name: 'country' }],
+				dimensions: [{ name: 'region' }],
 				metrics: [
 					{ name: 'totalUsers' },
 					{ name: 'sessions' },
 				],
 				orderBys: [{ metric: { metricName: 'totalUsers' }, desc: true }],
-				limit: '10',
+				limit: '15',
 			},
 		}),
+		// 도시 단위
 		client.properties.runReport({
 			property,
 			requestBody: {
@@ -263,12 +303,12 @@ export async function getGeoReport(days: number = 30): Promise<GeoReport> {
 					{ name: 'sessions' },
 				],
 				orderBys: [{ metric: { metricName: 'totalUsers' }, desc: true }],
-				limit: '10',
+				limit: '15',
 			},
 		}),
 	])
 
-	const countries = (countriesRes.data.rows || []).map(row => ({
+	const regions = (regionsRes.data.rows || []).map(row => ({
 		name: row.dimensionValues?.[0]?.value || 'unknown',
 		users: parseInt(row.metricValues?.[0]?.value || '0'),
 		sessions: parseInt(row.metricValues?.[1]?.value || '0'),
@@ -280,7 +320,7 @@ export async function getGeoReport(days: number = 30): Promise<GeoReport> {
 		sessions: parseInt(row.metricValues?.[1]?.value || '0'),
 	}))
 
-	return { countries, cities }
+	return { regions, cities }
 }
 
 // ============================================
@@ -349,6 +389,171 @@ export async function getFunnelReport(days: number = 30): Promise<FunnelStep[]> 
 			pagePath: funnel.path,
 			pageViews: data.pageViews,
 			users: data.users,
+		}
+	})
+}
+
+// ============================================
+// Hourly Report
+// ============================================
+
+interface HourlyReportItem {
+	hour: number
+	users: number
+	sessions: number
+}
+
+export async function getHourlyReport(days: number = 30): Promise<HourlyReportItem[]> {
+	const propertyId = process.env.GA4_PROPERTY_ID
+	if (!propertyId) {
+		throw new Error('GA4_PROPERTY_ID 환경변수가 설정되지 않았습니다.')
+	}
+
+	const client = analyticsDataClient()
+	const property = `properties/${propertyId}`
+
+	const res = await client.properties.runReport({
+		property,
+		requestBody: {
+			dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
+			dimensions: [{ name: 'hour' }],
+			metrics: [
+				{ name: 'totalUsers' },
+				{ name: 'sessions' },
+			],
+			orderBys: [{ dimension: { dimensionName: 'hour' } }],
+		},
+	})
+
+	// 0~23 시간대 모두 포함 (데이터 없는 시간대는 0)
+	const dataMap = new Map<number, { users: number; sessions: number }>()
+	for (const row of (res.data.rows || [])) {
+		const hour = parseInt(row.dimensionValues?.[0]?.value || '0')
+		dataMap.set(hour, {
+			users: parseInt(row.metricValues?.[0]?.value || '0'),
+			sessions: parseInt(row.metricValues?.[1]?.value || '0'),
+		})
+	}
+
+	return Array.from({ length: 24 }, (_, i) => ({
+		hour: i,
+		users: dataMap.get(i)?.users || 0,
+		sessions: dataMap.get(i)?.sessions || 0,
+	}))
+}
+
+// ============================================
+// New vs Returning
+// ============================================
+
+interface NewVsReturningItem {
+	type: string
+	users: number
+	sessions: number
+}
+
+export async function getNewVsReturningReport(days: number = 30): Promise<NewVsReturningItem[]> {
+	const propertyId = process.env.GA4_PROPERTY_ID
+	if (!propertyId) {
+		throw new Error('GA4_PROPERTY_ID 환경변수가 설정되지 않았습니다.')
+	}
+
+	const client = analyticsDataClient()
+	const property = `properties/${propertyId}`
+
+	const res = await client.properties.runReport({
+		property,
+		requestBody: {
+			dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
+			dimensions: [{ name: 'newVsReturning' }],
+			metrics: [
+				{ name: 'totalUsers' },
+				{ name: 'sessions' },
+			],
+			orderBys: [{ metric: { metricName: 'totalUsers' }, desc: true }],
+		},
+	})
+
+	return (res.data.rows || []).map(row => ({
+		type: row.dimensionValues?.[0]?.value || 'unknown',
+		users: parseInt(row.metricValues?.[0]?.value || '0'),
+		sessions: parseInt(row.metricValues?.[1]?.value || '0'),
+	}))
+}
+
+// ============================================
+// Conversion Trend
+// ============================================
+
+interface ConversionTrendItem {
+	date: string
+	totalUsers: number
+	conversionUsers: number
+	conversionRate: number
+}
+
+export async function getConversionTrend(days: number = 30): Promise<ConversionTrendItem[]> {
+	const propertyId = process.env.GA4_PROPERTY_ID
+	if (!propertyId) {
+		throw new Error('GA4_PROPERTY_ID 환경변수가 설정되지 않았습니다.')
+	}
+
+	const client = analyticsDataClient()
+	const property = `properties/${propertyId}`
+
+	const [totalRes, convRes] = await Promise.all([
+		// 일별 전체 사용자
+		client.properties.runReport({
+			property,
+			requestBody: {
+				dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
+				dimensions: [{ name: 'date' }],
+				metrics: [{ name: 'totalUsers' }],
+				orderBys: [{ dimension: { dimensionName: 'date' } }],
+			},
+		}),
+		// 일별 견적신청 페이지 사용자
+		client.properties.runReport({
+			property,
+			requestBody: {
+				dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
+				dimensions: [{ name: 'date' }],
+				metrics: [{ name: 'totalUsers' }],
+				dimensionFilter: {
+					filter: {
+						fieldName: 'pagePath',
+						stringFilter: {
+							matchType: 'EXACT',
+							value: '/quote-submission',
+						},
+					},
+				},
+				orderBys: [{ dimension: { dimensionName: 'date' } }],
+			},
+		}),
+	])
+
+	const totalMap = new Map<string, number>()
+	for (const row of (totalRes.data.rows || [])) {
+		const date = row.dimensionValues?.[0]?.value || ''
+		totalMap.set(date, parseInt(row.metricValues?.[0]?.value || '0'))
+	}
+
+	const convMap = new Map<string, number>()
+	for (const row of (convRes.data.rows || [])) {
+		const date = row.dimensionValues?.[0]?.value || ''
+		convMap.set(date, parseInt(row.metricValues?.[0]?.value || '0'))
+	}
+
+	const dates = Array.from(totalMap.keys()).sort()
+	return dates.map(date => {
+		const totalUsers = totalMap.get(date) || 0
+		const conversionUsers = convMap.get(date) || 0
+		return {
+			date,
+			totalUsers,
+			conversionUsers,
+			conversionRate: totalUsers > 0 ? (conversionUsers / totalUsers) * 100 : 0,
 		}
 	})
 }

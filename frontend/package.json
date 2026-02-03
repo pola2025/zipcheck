@@ -170,6 +170,10 @@
 	},
 	"pnpm": {
 		"overrides": {
+			"react": "^18.3.1",
+			"react-dom": "^18.3.1",
+			"@types/react": "^18.3.20",
+			"@types/react-dom": "^18.3.6",
 			"headers-polyfill": "3.1.2",
 			"refractor>prismjs": "1.30.0"
 		}

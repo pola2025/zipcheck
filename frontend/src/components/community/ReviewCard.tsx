@@ -32,7 +32,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, onClick }) => {
 						</div>
 						<span className='text-gray-600'>|</span>
 						
-						<span>{new Date(review.created_at).toLocaleDateString()}</span>
+						<span>{new Date(review.created_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}</span>
 					</div>
 				</div>
 				<StarRating rating={review.rating} showScore />

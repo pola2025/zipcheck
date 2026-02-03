@@ -222,7 +222,7 @@ export default function QuoteRequestDetail() {
 			<div className="flex items-center justify-center py-20">
 				<div className="text-center">
 					<div className="w-12 h-12 border-4 border-forest-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-					<p className="text-sand-500 text-sm">로딩 중...</p>
+					<p className="text-sand-700 text-sm">로딩 중...</p>
 				</div>
 			</div>
 		)
@@ -232,8 +232,8 @@ export default function QuoteRequestDetail() {
 		return (
 			<div className="flex items-center justify-center py-20">
 				<div className="text-center">
-					<FileText className="w-12 h-12 mx-auto mb-4 text-sand-400" />
-					<p className="text-sand-500">견적 신청을 찾을 수 없습니다.</p>
+					<FileText className="w-12 h-12 mx-auto mb-4 text-sand-600" />
+					<p className="text-sand-700">견적 신청을 찾을 수 없습니다.</p>
 				</div>
 			</div>
 		)
@@ -245,7 +245,7 @@ export default function QuoteRequestDetail() {
 			<div>
 				<Link
 					to={adminPath('/quote-requests')}
-					className="inline-flex items-center gap-1.5 text-sm text-sand-500 hover:text-forest-600 transition-colors mb-3"
+					className="inline-flex items-center gap-1.5 text-sm text-sand-700 hover:text-forest-600 transition-colors mb-3"
 				>
 					<span>&larr;</span>
 					<span>견적 요청 목록</span>
@@ -256,7 +256,7 @@ export default function QuoteRequestDetail() {
 						<h2 className="text-2xl font-semibold text-sand-900" style={{ fontFamily: 'Outfit, sans-serif' }}>
 							견적 신청 상세
 						</h2>
-						<p className="text-sand-500 text-sm mt-1">요청 ID: {request.id}</p>
+						<p className="text-sand-700 text-sm mt-1">요청 ID: {request.id}</p>
 					</div>
 
 					<div className="flex items-center gap-3">
@@ -274,7 +274,7 @@ export default function QuoteRequestDetail() {
 								disabled={analyzing}
 								className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
 									analyzing
-										? 'bg-sand-100 text-sand-400 border border-sand-200 cursor-not-allowed'
+										? 'bg-sand-100 text-sand-600 border border-sand-300 cursor-not-allowed'
 										: 'bg-forest-600 hover:bg-forest-700 text-white'
 								}`}
 							>
@@ -333,7 +333,7 @@ export default function QuoteRequestDetail() {
 				<motion.div
 					initial={{ opacity: 0, x: -20 }}
 					animate={{ opacity: 1, x: 0 }}
-					className="bg-white rounded-2xl p-5 border border-sand-200"
+					className="bg-white rounded-2xl p-5 border border-sand-300"
 				>
 					<div className="flex items-center gap-3 mb-5">
 						<div className="w-9 h-9 rounded-xl bg-forest-50 flex items-center justify-center">
@@ -344,33 +344,33 @@ export default function QuoteRequestDetail() {
 
 					<div className="space-y-4">
 						<div>
-							<div className="text-xs text-sand-500 mb-0.5">이름</div>
+							<div className="text-xs text-sand-700 mb-0.5">이름</div>
 							<div className="text-base font-semibold text-sand-900">{request.customer_name}</div>
 						</div>
 
 						<div className="flex items-center gap-2">
-							<Phone className="w-4 h-4 text-sand-400" />
+							<Phone className="w-4 h-4 text-sand-600" />
 							<div>
-								<div className="text-xs text-sand-500">전화번호</div>
+								<div className="text-xs text-sand-700">전화번호</div>
 								<div className="font-mono text-sand-700">{request.customer_phone}</div>
 							</div>
 						</div>
 
 						{request.customer_email && (
 							<div className="flex items-center gap-2">
-								<Mail className="w-4 h-4 text-sand-400" />
+								<Mail className="w-4 h-4 text-sand-600" />
 								<div>
-									<div className="text-xs text-sand-500">이메일</div>
+									<div className="text-xs text-sand-700">이메일</div>
 									<div className="text-sand-700">{request.customer_email}</div>
 								</div>
 							</div>
 						)}
 
 						<div className="flex items-center gap-2">
-							<Calendar className="w-4 h-4 text-sand-400" />
+							<Calendar className="w-4 h-4 text-sand-600" />
 							<div>
-								<div className="text-xs text-sand-500">신청일시</div>
-								<div className="text-sand-700">{new Date(request.created_at).toLocaleString('ko-KR')}</div>
+								<div className="text-xs text-sand-700">신청일시</div>
+								<div className="text-sand-700">{new Date(request.created_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}</div>
 							</div>
 						</div>
 					</div>
@@ -380,7 +380,7 @@ export default function QuoteRequestDetail() {
 				<motion.div
 					initial={{ opacity: 0, x: 20 }}
 					animate={{ opacity: 1, x: 0 }}
-					className="bg-white rounded-2xl p-5 border border-sand-200"
+					className="bg-white rounded-2xl p-5 border border-sand-300"
 				>
 					<div className="flex items-center gap-3 mb-5">
 						<div className="w-9 h-9 rounded-xl bg-wood-100 flex items-center justify-center">
@@ -391,16 +391,16 @@ export default function QuoteRequestDetail() {
 
 					<div className="space-y-4">
 						<div>
-							<div className="text-xs text-sand-500 mb-0.5">건물 유형</div>
+							<div className="text-xs text-sand-700 mb-0.5">건물 유형</div>
 							<div className="text-base font-semibold text-sand-900">{request.property_type}</div>
 						</div>
 
 						<div>
-							<div className="text-xs text-sand-500 mb-0.5">시공 면적</div>
+							<div className="text-xs text-sand-700 mb-0.5">시공 면적</div>
 							<div className="text-base font-semibold text-sand-900">
 								{request.property_size}㎡
 								{request.property_size && (
-									<span className="text-sand-500 text-sm ml-2">
+									<span className="text-sand-700 text-sm ml-2">
 										(약 {(request.property_size / 3.3058).toFixed(1)}평)
 									</span>
 								)}
@@ -408,16 +408,16 @@ export default function QuoteRequestDetail() {
 						</div>
 
 						<div className="flex items-center gap-2">
-							<MapPin className="w-4 h-4 text-sand-400" />
+							<MapPin className="w-4 h-4 text-sand-600" />
 							<div>
-								<div className="text-xs text-sand-500">지역</div>
+								<div className="text-xs text-sand-700">지역</div>
 								<div className="text-sand-700">{request.region}</div>
 							</div>
 						</div>
 
 						{request.address && (
 							<div>
-								<div className="text-xs text-sand-500 mb-0.5">상세 주소</div>
+								<div className="text-xs text-sand-700 mb-0.5">상세 주소</div>
 								<div className="text-sm text-sand-700">{request.address}</div>
 							</div>
 						)}
@@ -430,7 +430,7 @@ export default function QuoteRequestDetail() {
 				initial={{ opacity: 0, y: 20 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ delay: 0.1 }}
-				className="bg-white rounded-2xl p-5 border border-sand-200"
+				className="bg-white rounded-2xl p-5 border border-sand-300"
 			>
 				<div className="flex items-center justify-between mb-5">
 					<div className="flex items-center gap-3">
@@ -440,7 +440,7 @@ export default function QuoteRequestDetail() {
 						<h3 className="text-lg font-semibold text-sand-900">견적 항목</h3>
 					</div>
 					<div className="text-right">
-						<div className="text-xs text-sand-500">총 견적액</div>
+						<div className="text-xs text-sand-700">총 견적액</div>
 						<div className="text-2xl font-bold text-sand-900">
 							{totalAmount.toLocaleString()}원
 						</div>
@@ -450,23 +450,23 @@ export default function QuoteRequestDetail() {
 				<div className="overflow-x-auto">
 					<table className="w-full">
 						<thead>
-							<tr className="border-b border-sand-200">
-								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-500">
+							<tr className="border-b border-sand-300">
+								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-700">
 									카테고리
 								</th>
-								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-500">
+								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-700">
 									항목명
 								</th>
-								<th className="text-right py-3 px-4 text-xs font-semibold text-sand-500">
+								<th className="text-right py-3 px-4 text-xs font-semibold text-sand-700">
 									수량
 								</th>
-								<th className="text-right py-3 px-4 text-xs font-semibold text-sand-500">
+								<th className="text-right py-3 px-4 text-xs font-semibold text-sand-700">
 									단가
 								</th>
-								<th className="text-right py-3 px-4 text-xs font-semibold text-sand-500">
+								<th className="text-right py-3 px-4 text-xs font-semibold text-sand-700">
 									금액
 								</th>
-								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-500">
+								<th className="text-left py-3 px-4 text-xs font-semibold text-sand-700">
 									비고
 								</th>
 							</tr>
@@ -489,7 +489,7 @@ export default function QuoteRequestDetail() {
 									<td className="py-3 px-4 text-right font-semibold text-sand-900">
 										{(item.totalPrice || 0).toLocaleString()}원
 									</td>
-									<td className="py-3 px-4 text-sm text-sand-500">{item.notes || ''}</td>
+									<td className="py-3 px-4 text-sm text-sand-700">{item.notes || ''}</td>
 								</tr>
 							))}
 						</tbody>
@@ -559,7 +559,7 @@ export default function QuoteRequestDetail() {
 														</span>
 														<span className="font-semibold text-sand-900">{item.itemName}</span>
 													</div>
-													<div className="text-sm text-sand-500">
+													<div className="text-sm text-sand-700">
 														{(item.totalPrice || 0).toLocaleString()}원
 													</div>
 												</div>
@@ -570,7 +570,7 @@ export default function QuoteRequestDetail() {
 														[itemKey]: e.target.value
 													})}
 													placeholder="특이사항이 있다면 전문가 의견을 입력하세요... (예: 시공 자재가 적절하게 선정되었습니다, 해당 항목은 추가 면적이 필요할 수 있습니다 등)"
-													className="w-full bg-sand-50 border border-sand-200 rounded-lg p-3 text-sm text-sand-800 placeholder-sand-400 focus:outline-none focus:ring-2 focus:ring-forest-300 resize-none"
+													className="w-full bg-sand-50 border border-sand-300 rounded-lg p-3 text-sm text-sand-800 placeholder-sand-400 focus:outline-none focus:ring-2 focus:ring-forest-300 resize-none"
 													rows={2}
 												/>
 											</div>
@@ -582,7 +582,7 @@ export default function QuoteRequestDetail() {
 											disabled={savingNotes}
 											className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
 												savingNotes
-													? 'bg-sand-100 text-sand-400 border border-sand-200 cursor-not-allowed'
+													? 'bg-sand-100 text-sand-600 border border-sand-300 cursor-not-allowed'
 													: 'bg-amber-600 hover:bg-amber-700 text-white'
 											}`}
 										>
@@ -609,8 +609,8 @@ export default function QuoteRequestDetail() {
 							<h3 className="text-xl font-semibold text-sand-900" style={{ fontFamily: 'Outfit, sans-serif' }}>
 								집첵 견적 분석 결과
 							</h3>
-							<p className="text-sand-500 text-sm mt-1">
-								분석 완료: {request.analyzed_at && new Date(request.analyzed_at).toLocaleString('ko-KR')}
+							<p className="text-sand-700 text-sm mt-1">
+								분석 완료: {request.analyzed_at && new Date(request.analyzed_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}
 								{request.analyzed_by && ` \u00b7 분석자: ${request.analyzed_by}`}
 							</p>
 						</div>
@@ -626,7 +626,7 @@ export default function QuoteRequestDetail() {
 							<div className="flex gap-2">
 								<button
 									onClick={cancelEditingAnalysis}
-									className="px-5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 bg-sand-100 hover:bg-sand-200 text-sand-700 border border-sand-200"
+									className="px-5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 bg-sand-100 hover:bg-sand-200 text-sand-700 border border-sand-300"
 								>
 									<X className="w-4 h-4" />
 									취소
@@ -665,7 +665,7 @@ export default function QuoteRequestDetail() {
 										// Invalid JSON, just update the text
 									}
 								}}
-								className="w-full h-96 bg-sand-50 border border-sand-200 rounded-lg p-4 text-sm text-sand-800 font-mono focus:outline-none focus:ring-2 focus:ring-forest-300 resize-none"
+								className="w-full h-96 bg-sand-50 border border-sand-300 rounded-lg p-4 text-sm text-sand-800 font-mono focus:outline-none focus:ring-2 focus:ring-forest-300 resize-none"
 								spellCheck={false}
 							/>
 							<div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">

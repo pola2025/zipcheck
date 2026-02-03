@@ -172,7 +172,7 @@ export default function QuoteRequests() {
 				<h2 className="text-2xl font-semibold text-sand-900" style={{ fontFamily: 'Outfit, sans-serif' }}>
 					견적 신청 관리
 				</h2>
-				<p className="text-sand-500 mt-1">사용자가 신청한 견적 분석 요청 관리</p>
+				<p className="text-sand-700 mt-1">사용자가 신청한 견적 분석 요청 관리</p>
 			</div>
 
 			{/* 검증 실패 알림 */}
@@ -199,11 +199,11 @@ export default function QuoteRequests() {
 			)}
 
 			{/* 필터 & 검색 */}
-			<div className="bg-white rounded-2xl p-5 border border-sand-200">
+			<div className="bg-white rounded-2xl p-5 border border-sand-300">
 				<div className="grid md:grid-cols-2 gap-4">
 					{/* 상태 필터 */}
 					<div>
-						<label className="text-sm text-sand-500 mb-2 flex items-center gap-2">
+						<label className="text-sm text-sand-700 mb-2 flex items-center gap-2">
 							<Filter className="w-4 h-4" />
 							상태 필터
 						</label>
@@ -215,7 +215,7 @@ export default function QuoteRequests() {
 									className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
 										statusFilter === status
 											? 'bg-forest-600 text-white'
-											: 'bg-sand-50 text-sand-700 hover:bg-sand-100 border border-sand-200'
+											: 'bg-sand-50 text-sand-700 hover:bg-sand-100 border border-sand-300'
 									}`}
 								>
 									{statusLabels[status]}
@@ -226,7 +226,7 @@ export default function QuoteRequests() {
 
 					{/* 검색 */}
 					<div>
-						<label className="text-sm text-sand-500 mb-2 flex items-center gap-2">
+						<label className="text-sm text-sand-700 mb-2 flex items-center gap-2">
 							<Search className="w-4 h-4" />
 							검색 (이름, 전화번호, 지역)
 						</label>
@@ -235,19 +235,19 @@ export default function QuoteRequests() {
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
 							placeholder="검색어 입력..."
-							className="w-full px-4 py-2 bg-sand-50 border border-sand-200 rounded-xl text-sand-900 placeholder-sand-400 focus:outline-none focus:border-forest-300 focus:ring-1 focus:ring-forest-300 transition-colors"
+							className="w-full px-4 py-2 bg-sand-50 border border-sand-300 rounded-xl text-sand-900 placeholder-sand-400 focus:outline-none focus:border-forest-300 focus:ring-1 focus:ring-forest-300 transition-colors"
 						/>
 					</div>
 				</div>
 
 				<div className="mt-4 flex items-center justify-between">
-					<div className="text-sm text-sand-500">
+					<div className="text-sm text-sand-700">
 						총 <span className="text-forest-600 font-semibold">{filteredRequests.length}</span>
 						건의 견적 신청
 					</div>
 					<button
 						onClick={fetchRequests}
-						className="px-4 py-2 bg-sand-50 hover:bg-sand-100 border border-sand-200 rounded-xl text-sm font-semibold text-sand-700 transition-all flex items-center gap-2"
+						className="px-4 py-2 bg-sand-50 hover:bg-sand-100 border border-sand-300 rounded-xl text-sm font-semibold text-sand-700 transition-all flex items-center gap-2"
 					>
 						<RefreshCw className="w-4 h-4" />
 						새로고침
@@ -256,14 +256,14 @@ export default function QuoteRequests() {
 			</div>
 
 			{/* 견적 신청 목록 */}
-			<div className="bg-white rounded-2xl border border-sand-200 overflow-hidden">
+			<div className="bg-white rounded-2xl border border-sand-300 overflow-hidden">
 				{loading ? (
-					<div className="p-12 text-center text-sand-400">
+					<div className="p-12 text-center text-sand-600">
 						<RefreshCw className="w-8 h-8 mx-auto mb-4 animate-spin" />
 						로딩 중...
 					</div>
 				) : filteredRequests.length === 0 ? (
-					<div className="p-12 text-center text-sand-400">
+					<div className="p-12 text-center text-sand-600">
 						<FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
 						<p>해당하는 견적 신청이 없습니다</p>
 					</div>
@@ -271,23 +271,23 @@ export default function QuoteRequests() {
 					<div className="overflow-x-auto">
 						<table className="w-full">
 							<thead>
-								<tr className="border-b border-sand-200 bg-sand-50">
-									<th className="text-left py-4 px-4 text-sm font-semibold text-sand-500">
+								<tr className="border-b border-sand-300 bg-sand-50">
+									<th className="text-left py-4 px-4 text-sm font-semibold text-sand-700">
 										신청일시
 									</th>
-									<th className="text-left py-4 px-4 text-sm font-semibold text-sand-500">
+									<th className="text-left py-4 px-4 text-sm font-semibold text-sand-700">
 										고객 정보
 									</th>
-									<th className="text-left py-4 px-4 text-sm font-semibold text-sand-500">
+									<th className="text-left py-4 px-4 text-sm font-semibold text-sand-700">
 										매물 정보
 									</th>
-									<th className="text-left py-4 px-4 text-sm font-semibold text-sand-500">
+									<th className="text-left py-4 px-4 text-sm font-semibold text-sand-700">
 										항목 수
 									</th>
-									<th className="text-left py-4 px-4 text-sm font-semibold text-sand-500">
+									<th className="text-left py-4 px-4 text-sm font-semibold text-sand-700">
 										상태
 									</th>
-									<th className="text-left py-4 px-4 text-sm font-semibold text-sand-500">
+									<th className="text-left py-4 px-4 text-sm font-semibold text-sand-700">
 										작업
 									</th>
 								</tr>
@@ -305,6 +305,7 @@ export default function QuoteRequests() {
 										>
 											<td className="py-4 px-4 text-sm text-sand-700">
 												{new Date(request.created_at).toLocaleString('ko-KR', {
+													timeZone: 'Asia/Seoul',
 													year: 'numeric',
 													month: '2-digit',
 													day: '2-digit',
@@ -315,7 +316,7 @@ export default function QuoteRequests() {
 											<td className="py-4 px-4">
 												<div className="text-sm">
 													<div className="font-semibold text-sand-900">{request.customer_name}</div>
-													<div className="text-sand-400 text-xs">
+													<div className="text-sand-600 text-xs">
 														{request.customer_phone}
 													</div>
 												</div>
@@ -325,12 +326,12 @@ export default function QuoteRequests() {
 													<div className="text-sand-900">
 														{request.property_type} {request.property_size}㎡
 														{request.property_size && (
-															<span className="text-sand-400 text-xs ml-1">
+															<span className="text-sand-600 text-xs ml-1">
 																(약 {(request.property_size / 3.3058).toFixed(1)}평)
 															</span>
 														)}
 													</div>
-													<div className="text-sand-400 text-xs">{request.region}</div>
+													<div className="text-sand-600 text-xs">{request.region}</div>
 												</div>
 											</td>
 											<td className="py-4 px-4">
@@ -408,32 +409,32 @@ export default function QuoteRequests() {
 														className="space-y-4"
 													>
 														<div className="grid grid-cols-2 gap-4">
-															<div className="bg-white rounded-xl p-4 border border-sand-200">
-																<h4 className="text-sm font-semibold text-sand-500 mb-2">고객 정보</h4>
+															<div className="bg-white rounded-xl p-4 border border-sand-300">
+																<h4 className="text-sm font-semibold text-sand-700 mb-2">고객 정보</h4>
 																<div className="space-y-1 text-sm">
-																	<div><span className="text-sand-500">이름:</span> <span className="text-sand-900 font-medium">{request.customer_name}</span></div>
-																	<div><span className="text-sand-500">전화:</span> <span className="text-sand-900">{request.customer_phone}</span></div>
+																	<div><span className="text-sand-700">이름:</span> <span className="text-sand-900 font-medium">{request.customer_name}</span></div>
+																	<div><span className="text-sand-700">전화:</span> <span className="text-sand-900">{request.customer_phone}</span></div>
 																</div>
 															</div>
-															<div className="bg-white rounded-xl p-4 border border-sand-200">
-																<h4 className="text-sm font-semibold text-sand-500 mb-2">매물 정보</h4>
+															<div className="bg-white rounded-xl p-4 border border-sand-300">
+																<h4 className="text-sm font-semibold text-sand-700 mb-2">매물 정보</h4>
 																<div className="space-y-1 text-sm">
-																	<div><span className="text-sand-500">유형:</span> <span className="text-sand-900">{request.property_type}</span></div>
+																	<div><span className="text-sand-700">유형:</span> <span className="text-sand-900">{request.property_type}</span></div>
 																	<div>
-																		<span className="text-sand-500">면적:</span> <span className="text-sand-900">{request.property_size}㎡</span>
+																		<span className="text-sand-700">면적:</span> <span className="text-sand-900">{request.property_size}㎡</span>
 																		{request.property_size && (
-																			<span className="text-sand-400 text-xs ml-1">
+																			<span className="text-sand-600 text-xs ml-1">
 																				(약 {(request.property_size / 3.3058).toFixed(1)}평)
 																			</span>
 																		)}
 																	</div>
-																	<div><span className="text-sand-500">지역:</span> <span className="text-sand-900">{request.region}</span></div>
+																	<div><span className="text-sand-700">지역:</span> <span className="text-sand-900">{request.region}</span></div>
 																</div>
 															</div>
 														</div>
 
-														<div className="bg-white rounded-xl p-4 border border-sand-200">
-															<h4 className="text-sm font-semibold text-sand-500 mb-3">견적 항목 ({request.items.length}개)</h4>
+														<div className="bg-white rounded-xl p-4 border border-sand-300">
+															<h4 className="text-sm font-semibold text-sand-700 mb-3">견적 항목 ({request.items.length}개)</h4>
 															<div className="space-y-2 max-h-96 overflow-y-auto">
 																{request.items.map((item, idx) => (
 																	<div key={idx} className="bg-sand-50 rounded-xl p-3 text-sm border border-sand-100">
@@ -445,12 +446,12 @@ export default function QuoteRequests() {
 																			<div className="text-sand-700">{item.item_name}</div>
 																		)}
 																		{item.specification && (
-																			<div className="text-sand-400 text-xs mt-1">{item.specification}</div>
+																			<div className="text-sand-600 text-xs mt-1">{item.specification}</div>
 																		)}
 																		<div className="grid grid-cols-3 gap-2 mt-2 text-xs">
-																			{item.quantity && <div className="text-sand-500">수량: <span className="text-sand-900">{item.quantity} {item.unit || ''}</span></div>}
-																			{item.unit_price && <div className="text-sand-500">단가: <span className="text-sand-900">{item.unit_price.toLocaleString()}원</span></div>}
-																			{item.material_cost && <div className="text-sand-500">자재비: <span className="text-sand-900">{item.material_cost.toLocaleString()}원</span></div>}
+																			{item.quantity && <div className="text-sand-700">수량: <span className="text-sand-900">{item.quantity} {item.unit || ''}</span></div>}
+																			{item.unit_price && <div className="text-sand-700">단가: <span className="text-sand-900">{item.unit_price.toLocaleString()}원</span></div>}
+																			{item.material_cost && <div className="text-sand-700">자재비: <span className="text-sand-900">{item.material_cost.toLocaleString()}원</span></div>}
 																		</div>
 																	</div>
 																))}

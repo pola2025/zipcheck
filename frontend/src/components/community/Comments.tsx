@@ -202,7 +202,7 @@ const Comments: React.FC<CommentsProps> = ({ targetType, targetId }) => {
 						<div className='flex items-center gap-2'>
 							<span className='font-semibold text-gray-800'>{comment.author_name}</span>
 							<span className='text-sm text-gray-500'>
-								{new Date(comment.created_at).toLocaleString()}
+								{new Date(comment.created_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}
 							</span>
 							{comment.updated_at !== comment.created_at && (
 								<span className='text-xs text-gray-400'>(수정됨)</span>

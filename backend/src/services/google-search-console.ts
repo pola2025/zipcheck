@@ -72,7 +72,7 @@ export async function requestIndexingForSitemap(): Promise<{
 	failed: number
 	results: Array<{ url: string; success: boolean; error?: string }>
 }> {
-	const siteUrl = process.env.SEARCH_CONSOLE_SITE_URL || 'https://zcheck.co.kr'
+	const siteUrl = process.env.SEARCH_CONSOLE_SITE_URL || 'sc-domain:zcheck.co.kr'
 
 	// 사이트맵 URL 목록
 	const urls = [
@@ -127,7 +127,7 @@ interface SearchPerformanceData {
  * @param days 조회 기간 (기본 28일)
  */
 export async function getSearchPerformance(days: number = 28): Promise<SearchPerformanceData> {
-	const siteUrl = process.env.SEARCH_CONSOLE_SITE_URL || 'https://zcheck.co.kr'
+	const siteUrl = process.env.SEARCH_CONSOLE_SITE_URL || 'sc-domain:zcheck.co.kr'
 	const auth = getGoogleAuth([GOOGLE_SCOPES.SEARCH_CONSOLE_READONLY])
 	const searchConsole = google.searchconsole({ version: 'v1', auth })
 
@@ -183,7 +183,7 @@ export async function getSearchPerformance(days: number = 28): Promise<SearchPer
  */
 export async function submitSitemap(): Promise<{ success: boolean; error?: string }> {
 	try {
-		const siteUrl = process.env.SEARCH_CONSOLE_SITE_URL || 'https://zcheck.co.kr'
+		const siteUrl = process.env.SEARCH_CONSOLE_SITE_URL || 'sc-domain:zcheck.co.kr'
 		const auth = getGoogleAuth([GOOGLE_SCOPES.SEARCH_CONSOLE])
 		const searchConsole = google.searchconsole({ version: 'v1', auth })
 

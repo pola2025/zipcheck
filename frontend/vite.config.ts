@@ -47,6 +47,9 @@ export default defineConfig(({ mode }) => ({
 			reportsDirectory: 'coverage'
 		}
 	},
+	resolve: {
+		dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime']
+	},
 	server: {
 		proxy: {
 			'/v1': 'http://localhost:7878',

@@ -5,12 +5,19 @@
  */
 
 import { Router } from 'express'
-import { getTrafficReport, getRealtimeUsers, getDeviceReport, getGeoReport, getFunnelReport } from '../../services/google-analytics'
+import { getTrafficReport, getRealtimeUsers, getDeviceReport, getGeoReport, getFunnelReport, getHourlyReport, getNewVsReturningReport, getConversionTrend } from '../../services/google-analytics'
 import { syncDailyAnalytics } from '../../services/airtable-sync'
 import { getSearchPerformance, requestIndexing, requestIndexingForSitemap, submitSitemap } from '../../services/google-search-console'
 import { sendEmail } from '../../services/google-gmail'
 
 const router = Router()
+
+/** days 파라미터 파싱 및 범위 검증 (1~365) */
+function parseDays(raw: unknown, defaultValue: number): number {
+	const parsed = parseInt(raw as string)
+	if (isNaN(parsed) || parsed < 1) return defaultValue
+	return Math.min(parsed, 365)
+}
 
 // ============================================
 // Google Analytics 4
@@ -23,7 +30,7 @@ const router = Router()
  */
 router.get('/analytics/traffic', async (req, res) => {
 	try {
-		const days = parseInt(req.query.days as string) || 30
+		const days = parseDays(req.query.days, 30)
 		const report = await getTrafficReport(days)
 		res.json(report)
 	} catch (error) {
@@ -55,7 +62,7 @@ router.get('/analytics/realtime', async (req, res) => {
  */
 router.get('/analytics/devices', async (req, res) => {
 	try {
-		const days = parseInt(req.query.days as string) || 30
+		const days = parseDays(req.query.days, 30)
 		const report = await getDeviceReport(days)
 		res.json(report)
 	} catch (error) {
@@ -72,7 +79,7 @@ router.get('/analytics/devices', async (req, res) => {
  */
 router.get('/analytics/geo', async (req, res) => {
 	try {
-		const days = parseInt(req.query.days as string) || 30
+		const days = parseDays(req.query.days, 30)
 		const report = await getGeoReport(days)
 		res.json(report)
 	} catch (error) {
@@ -89,12 +96,63 @@ router.get('/analytics/geo', async (req, res) => {
  */
 router.get('/analytics/funnel', async (req, res) => {
 	try {
-		const days = parseInt(req.query.days as string) || 30
+		const days = parseDays(req.query.days, 30)
 		const report = await getFunnelReport(days)
 		res.json(report)
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Unknown error'
 		console.error('GA4 funnel report error:', message)
+		res.status(500).json({ error: message })
+	}
+})
+
+/**
+ * GET /api/admin/google/analytics/hourly
+ * 시간대별 방문 패턴
+ * Query: ?days=30
+ */
+router.get('/analytics/hourly', async (req, res) => {
+	try {
+		const days = parseDays(req.query.days, 30)
+		const report = await getHourlyReport(days)
+		res.json(report)
+	} catch (error) {
+		const message = error instanceof Error ? error.message : 'Unknown error'
+		console.error('GA4 hourly report error:', message)
+		res.status(500).json({ error: message })
+	}
+})
+
+/**
+ * GET /api/admin/google/analytics/new-returning
+ * 신규 vs 재방문 사용자
+ * Query: ?days=30
+ */
+router.get('/analytics/new-returning', async (req, res) => {
+	try {
+		const days = parseDays(req.query.days, 30)
+		const report = await getNewVsReturningReport(days)
+		res.json(report)
+	} catch (error) {
+		const message = error instanceof Error ? error.message : 'Unknown error'
+		console.error('GA4 new-returning report error:', message)
+		res.status(500).json({ error: message })
+	}
+})
+
+/**
+ * GET /api/admin/google/analytics/conversion-trend
+ * 전환율 추이
+ * Query: ?days=30
+ */
+router.get('/analytics/conversion-trend', async (req, res) => {
+	try {
+		const days = parseDays(req.query.days, 30)
+		const report = await getConversionTrend(days)
+		res.json(report)
+	} catch (error) {
+		const message = error instanceof Error ? error.message : 'Unknown error'
+		console.error('GA4 conversion trend error:', message)
 		res.status(500).json({ error: message })
 	}
 })
@@ -106,7 +164,7 @@ router.get('/analytics/funnel', async (req, res) => {
  */
 router.post('/analytics/sync-airtable', async (req, res) => {
 	try {
-		const days = parseInt(req.body.days) || 30
+		const days = parseDays(req.body.days, 30)
 		const result = await syncDailyAnalytics(days)
 		res.json(result)
 	} catch (error) {
@@ -127,7 +185,7 @@ router.post('/analytics/sync-airtable', async (req, res) => {
  */
 router.get('/search/performance', async (req, res) => {
 	try {
-		const days = parseInt(req.query.days as string) || 28
+		const days = parseDays(req.query.days, 28)
 		const data = await getSearchPerformance(days)
 		res.json(data)
 	} catch (error) {

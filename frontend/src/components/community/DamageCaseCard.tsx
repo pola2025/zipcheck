@@ -70,7 +70,7 @@ const DamageCaseCard: React.FC<DamageCaseCardProps> = ({ damageCase, onClick }) 
 						<span className='text-gray-600'>|</span>
 						<span>{damageCase.author_name}</span>
 						<span className='text-gray-600'>|</span>
-						<span>{new Date(damageCase.created_at).toLocaleDateString()}</span>
+						<span>{new Date(damageCase.created_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}</span>
 					</div>
 				</div>
 			</div>

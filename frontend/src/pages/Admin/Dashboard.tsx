@@ -130,7 +130,7 @@ const Dashboard: React.FC = () => {
 				<h2 className="text-2xl font-semibold text-sand-900" style={{ fontFamily: 'Outfit, sans-serif' }}>
 					대시보드
 				</h2>
-				<p className="text-sand-500 text-sm mt-1">서비스 운영 현황을 한눈에 확인하세요</p>
+				<p className="text-sand-700 text-sm mt-1">서비스 운영 현황을 한눈에 확인하세요</p>
 			</div>
 
 			{/* Stat Cards */}
@@ -144,15 +144,15 @@ const Dashboard: React.FC = () => {
 					>
 						<Link
 							to={card.link}
-							className="block bg-white rounded-2xl p-5 border border-sand-200 hover:border-sand-300 hover:shadow-md transition-all group"
+							className="block bg-white rounded-2xl p-5 border border-sand-300 hover:border-sand-300 hover:shadow-md transition-all group"
 						>
 							<div className="flex items-center justify-between mb-3">
 								<div className={`w-10 h-10 rounded-xl ${card.accent} flex items-center justify-center`}>
 									<card.icon className="w-5 h-5" />
 								</div>
-								<ArrowRight className="w-4 h-4 text-sand-300 group-hover:text-sand-500 transition-colors" />
+								<ArrowRight className="w-4 h-4 text-sand-600 group-hover:text-sand-700 transition-colors" />
 							</div>
-							<p className="text-sand-500 text-xs font-medium mb-0.5">{card.title}</p>
+							<p className="text-sand-700 text-xs font-medium mb-0.5">{card.title}</p>
 							<p className="text-2xl font-bold text-sand-900">
 								{loading ? '—' : card.value.toLocaleString()}
 							</p>
@@ -170,16 +170,16 @@ const Dashboard: React.FC = () => {
 				>
 					<Link
 						to={adminPath('/analytics')}
-						className="flex items-center gap-4 bg-white rounded-2xl p-5 border border-sand-200 hover:border-forest-200 hover:shadow-md transition-all group"
+						className="flex items-center gap-4 bg-white rounded-2xl p-5 border border-sand-300 hover:border-forest-200 hover:shadow-md transition-all group"
 					>
 						<div className="w-12 h-12 rounded-xl bg-forest-100 flex items-center justify-center flex-shrink-0">
 							<BarChart3 className="w-6 h-6 text-forest-700" />
 						</div>
 						<div className="flex-1 min-w-0">
 							<h3 className="text-base font-semibold text-sand-900">유입 분석</h3>
-							<p className="text-sm text-sand-500">트래픽, 검색어, 퍼널 분석</p>
+							<p className="text-sm text-sand-700">트래픽, 검색어, 퍼널 분석</p>
 						</div>
-						<ArrowRight className="w-5 h-5 text-sand-300 group-hover:text-forest-500 transition-colors flex-shrink-0" />
+						<ArrowRight className="w-5 h-5 text-sand-600 group-hover:text-forest-500 transition-colors flex-shrink-0" />
 					</Link>
 				</motion.div>
 
@@ -190,16 +190,16 @@ const Dashboard: React.FC = () => {
 				>
 					<Link
 						to={adminPath('/data')}
-						className="flex items-center gap-4 bg-white rounded-2xl p-5 border border-sand-200 hover:border-wood-200 hover:shadow-md transition-all group"
+						className="flex items-center gap-4 bg-white rounded-2xl p-5 border border-sand-300 hover:border-wood-200 hover:shadow-md transition-all group"
 					>
 						<div className="w-12 h-12 rounded-xl bg-wood-100 flex items-center justify-center flex-shrink-0">
 							<FileText className="w-6 h-6 text-wood-500" />
 						</div>
 						<div className="flex-1 min-w-0">
 							<h3 className="text-base font-semibold text-sand-900">데이터 관리</h3>
-							<p className="text-sm text-sand-500">시공 데이터, 유통사 가격 정보</p>
+							<p className="text-sm text-sand-700">시공 데이터, 유통사 가격 정보</p>
 						</div>
-						<ArrowRight className="w-5 h-5 text-sand-300 group-hover:text-wood-500 transition-colors flex-shrink-0" />
+						<ArrowRight className="w-5 h-5 text-sand-600 group-hover:text-wood-500 transition-colors flex-shrink-0" />
 					</Link>
 				</motion.div>
 			</div>
@@ -209,7 +209,7 @@ const Dashboard: React.FC = () => {
 				initial={{ opacity: 0, y: 16 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ delay: 0.4 }}
-				className="bg-white rounded-2xl p-5 border border-sand-200"
+				className="bg-white rounded-2xl p-5 border border-sand-300"
 			>
 				<h3 className="text-sm font-semibold text-sand-700 mb-3" style={{ fontFamily: 'Outfit, sans-serif' }}>
 					System Status
@@ -217,11 +217,11 @@ const Dashboard: React.FC = () => {
 				<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 					<div className="flex items-center gap-2.5">
 						<div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-						<span className="text-sm text-sand-600">시스템 정상 운영 중</span>
+						<span className="text-sm text-sand-700">시스템 정상 운영 중</span>
 					</div>
 					<div className="flex items-center gap-2.5">
 						<div className="w-2 h-2 bg-forest-500 rounded-full" />
-						<span className="text-sm text-sand-600">데이터베이스 연결됨</span>
+						<span className="text-sm text-sand-700">데이터베이스 연결됨</span>
 					</div>
 				</div>
 			</motion.div>
