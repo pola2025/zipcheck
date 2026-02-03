@@ -5,8 +5,8 @@ compatibility_flags = ["nodejs_compat"]
 account_id = "1b84b674abad17f8ce74f6b8c1fd61bd"
 
 [vars]
-GA4_PROPERTY_ID = "properties/464978877"
-SEARCH_CONSOLE_SITE_URL = "https://zcheck.co.kr"
+GA4_PROPERTY_ID = "properties/522887939"
+SEARCH_CONSOLE_SITE_URL = "sc-domain:zcheck.co.kr"
 FRONTEND_URL = "https://zcheck.co.kr"
 GMAIL_SENDER_EMAIL = "zipcheck.notify@gmail.com"
 
