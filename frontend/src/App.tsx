@@ -38,6 +38,8 @@ const ReviewSlugPage = lazy(async () => import('pages/Reviews/ReviewSlugPage'))
 const DamageCaseSlugPage = lazy(async () => import('pages/DamageCases/DamageCaseSlugPage'))
 const GoogleCallback = lazy(async () => import('pages/auth/GoogleCallback'))
 const NaverCallback = lazy(async () => import('pages/auth/NaverCallback'))
+const PrivacyPolicy = lazy(async () => import('pages/Legal/PrivacyPolicy'))
+const TermsOfService = lazy(async () => import('pages/Legal/TermsOfService'))
 const NotFound = lazy(async () => import('pages/NotFound'))
 
 // Admin pages
@@ -103,6 +105,8 @@ const mainDomainRoutes = (
 		<Route path='/auth/google/success' element={<GoogleCallback />} />
 		<Route path='/auth/naver/callback' element={<NaverCallback />} />
 		<Route path='/auth/naver/success' element={<NaverCallback />} />
+		<Route path='/privacy' element={<PrivacyPolicy />} />
+		<Route path='/terms' element={<TermsOfService />} />
 		<Route path='/admin/login' element={<AdminLogin />} />
 		<Route path='/admin' element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
 			{adminChildRoutes}
