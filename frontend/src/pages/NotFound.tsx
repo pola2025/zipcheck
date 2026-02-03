@@ -3,7 +3,7 @@ import { Home, ArrowLeft, Search, LogIn } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../contexts/UserAuthContext'
 
-const API_URL = import.meta.env.VITE_API_URL || ''
+import { getApiUrl } from '../lib/api-config'
 
 export default function NotFound() {
 	const navigate = useNavigate()
@@ -11,7 +11,7 @@ export default function NotFound() {
 
 	const handleGoogleLogin = () => {
 		const currentPath = window.location.pathname
-		window.location.href = `${API_URL}/api/auth/google?redirect_to=${encodeURIComponent(currentPath)}`
+		window.location.href = getApiUrl(`/api/auth/google?redirect_to=${encodeURIComponent(currentPath)}`)
 	}
 
 	return (
