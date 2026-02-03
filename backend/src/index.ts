@@ -12,6 +12,7 @@ import damageCasesRouter from './routes/damage-cases'
 import communityRouter from './routes/community'
 import companyReviewsAdminRouter from './routes/admin/company-reviews-admin'
 import damageCasesAdminRouter from './routes/admin/damage-cases-admin'
+import googleServicesRouter from './routes/admin/google-services'
 import { authenticateToken, requireAdmin } from './middleware/auth'
 import { pool } from './lib/db' // Import database pool to initialize connection
 import { startStatsCronJobs } from './services/stats-cron'
@@ -301,6 +302,7 @@ app.use('/api/community', communityRouter)
 // 관리자 API
 app.use('/api/company-reviews/admin', companyReviewsAdminRouter)
 app.use('/api/damage-cases/admin', damageCasesAdminRouter)
+app.use('/api/admin/google', authenticateToken, requireAdmin, googleServicesRouter)
 
 // ============================================
 // 서버 시작

@@ -1,21 +1,13 @@
 <!doctype html>
 <html lang="ko" class="antialiased">
 	<head>
+		<!-- Google tag (gtag.js) -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-Z15NR826B7"></script>
 		<script>
-			// Only add google analytics when built for hosting
-			if ('%MODE%' === 'hosted') {
-				const script = document.createElement('script')
-				script.src = 'https://www.googletagmanager.com/gtag/js?id=G-FDHP7DEY94'
-				script.async = true
-				document.head.appendChild(script)
-			}
-			window.dataLayer = window.dataLayer || []
-			function gtag() {
-				dataLayer.push(arguments)
-			}
-			gtag('js', new Date())
-
-			gtag('config', 'G-FDHP7DEY94')
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			gtag('js', new Date());
+			gtag('config', 'G-Z15NR826B7');
 		</script>
 		<meta charset="UTF-8" />
 		<link rel="icon" type="image/png" href="/favicon.png" />

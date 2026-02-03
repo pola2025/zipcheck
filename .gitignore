@@ -25,6 +25,9 @@ supabase/.env
 **/secrets/
 *.pem
 *.key
+*-service-account*.json
+*-credentials*.json
+zipcheck-*.json
 
 # Build outputs
 dist/
@@ -56,3 +59,7 @@ coverage/
 *.temp
 .cache/
 nul
+
+
+#Ignore vscode AI rules
+.github\instructions\codacy.instructions.md

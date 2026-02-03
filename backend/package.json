@@ -14,6 +14,7 @@
     "migrate:neon": "tsx src/scripts/migrate-to-neon.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.981.0",
     "@google-cloud/vision": "^5.3.3",
     "@notionhq/client": "^2.2.15",
     "@types/cors": "^2.8.17",
@@ -27,6 +28,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "googleapis": "^171.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "node-cron": "^3.0.3",
