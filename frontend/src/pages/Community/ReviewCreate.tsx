@@ -1,17 +1,15 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import { Star, Building, Phone, FileText, Send, ArrowLeft, Image as ImageIcon, X } from 'lucide-react'
-import { AnimatedBackground } from 'components/immersive'
-import ZipCheckHeader from 'components/marketing/ZipCheckHeader'
-import ZipCheckFooter from 'components/marketing/ZipCheckFooter'
+import NordicNavigation from 'components/nordic/NordicNavigation'
+import NordicFooter from 'components/nordic/NordicFooter'
+import PageSEO from 'components/PageSEO'
 import { getApiUrl } from '../../lib/api-config'
 
 export default function ReviewCreate() {
 	const navigate = useNavigate()
 	const [submitting, setSubmitting] = useState(false)
 
-	// Form fields
 	const [companyName, setCompanyName] = useState('')
 	const [companyPhone, setCompanyPhone] = useState('')
 	const [businessNumber, setBusinessNumber] = useState('')
@@ -24,7 +22,6 @@ export default function ReviewCreate() {
 	const [images, setImages] = useState<File[]>([])
 	const [imagePreviews, setImagePreviews] = useState<string[]>([])
 
-	// Handle image file selection (max 10 images)
 	const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const files = e.target.files
 		if (!files) return
@@ -37,30 +34,23 @@ export default function ReviewCreate() {
 			return
 		}
 
-		// Validate file types
 		const invalidFiles = fileArray.filter(file => !file.type.startsWith('image/'))
 		if (invalidFiles.length > 0) {
 			alert('이미지 파일만 업로드할 수 있습니다.')
 			return
 		}
 
-		// Add new images
 		const newImages = [...images, ...fileArray]
 		setImages(newImages)
 
-		// Create preview URLs
 		const newPreviews = fileArray.map(file => URL.createObjectURL(file))
 		setImagePreviews([...imagePreviews, ...newPreviews])
 	}
 
-	// Remove image by index
 	const handleRemoveImage = (index: number) => {
 		const newImages = images.filter((_, i) => i !== index)
 		const newPreviews = imagePreviews.filter((_, i) => i !== index)
-
-		// Revoke the URL to free memory
 		URL.revokeObjectURL(imagePreviews[index])
-
 		setImages(newImages)
 		setImagePreviews(newPreviews)
 	}
@@ -68,7 +58,6 @@ export default function ReviewCreate() {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 
-		// Check authentication
 		const token = localStorage.getItem('auth_token')
 		if (!token) {
 			alert('로그인이 필요합니다. 로그인 후 이용해주세요.')
@@ -76,7 +65,6 @@ export default function ReviewCreate() {
 			return
 		}
 
-		// Validate: 업체명, 연락처, 사업자번호 모두 필수
 		if (!companyName || !companyPhone || !businessNumber) {
 			alert('업체명, 연락처, 사업자번호를 모두 입력해주세요.')
 			return
@@ -95,7 +83,6 @@ export default function ReviewCreate() {
 		setSubmitting(true)
 
 		try {
-			// Use FormData to send images + text data
 			const formData = new FormData()
 			formData.append('company_name', companyName)
 			formData.append('company_phone', companyPhone || '')
@@ -107,7 +94,6 @@ export default function ReviewCreate() {
 			formData.append('rating', rating.toString())
 			formData.append('review_text', reviewText)
 
-			// Append all images
 			images.forEach((image) => {
 				formData.append('images', image)
 			})
@@ -116,7 +102,6 @@ export default function ReviewCreate() {
 				method: 'POST',
 				headers: {
 					'Authorization': `Bearer ${token}`
-					// Note: Don't set Content-Type for FormData, browser will set it automatically with boundary
 				},
 				body: formData
 			})
@@ -126,162 +111,98 @@ export default function ReviewCreate() {
 				throw new Error(error.error || '후기 등록에 실패했습니다.')
 			}
 
-			const data = await response.json()
-			alert('✅ 후기가 등록되었습니다! 관리자 승인 후 게시됩니다.')
+			alert('후기가 등록되었습니다. 관리자 승인 후 게시됩니다.')
 			navigate(`/community?tab=reviews`)
 		} catch (error) {
 			console.error('Failed to submit review:', error)
-			alert('❌ ' + (error instanceof Error ? error.message : '후기 등록에 실패했습니다.'))
+			alert(error instanceof Error ? error.message : '후기 등록에 실패했습니다.')
 		} finally {
 			setSubmitting(false)
 		}
 	}
 
+	const inputClass = "w-full px-4 py-3 bg-white border border-sand-200 rounded-xl text-sand-900 placeholder-sand-400 focus:outline-none focus:border-forest-500 focus:ring-2 focus:ring-forest-500/20 transition-all"
+	const selectClass = "w-full px-4 py-3 bg-white border border-sand-200 rounded-xl text-sand-900 focus:outline-none focus:border-forest-500 focus:ring-2 focus:ring-forest-500/20 transition-all"
+
 	return (
-		<div className="relative min-h-screen bg-black text-white">
-			{/* Header */}
-			<ZipCheckHeader />
+		<div className="min-h-screen bg-sand-50">
+			<PageSEO
+				title="업체 후기 작성"
+				description="인테리어 업체 이용 후기를 남겨주세요. 다른 소비자들의 현명한 선택에 도움이 됩니다."
+				path="/community/reviews/create"
+			/>
+			<NordicNavigation />
 
-			{/* Animated background */}
-			<AnimatedBackground />
-
-			{/* Content */}
-			<div className="relative z-10 pt-32 pb-20 px-6">
-				<div className="container mx-auto max-w-3xl">
-					{/* Back Button */}
-					<motion.button
+			{/* Hero */}
+			<div className="pt-28 pb-10 md:pt-36 md:pb-14 bg-gradient-to-b from-sand-100 to-sand-50">
+				<div className="max-w-3xl mx-auto px-5 md:px-8">
+					<button
 						onClick={() => navigate('/community?tab=reviews')}
-						className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 mb-8 transition-colors"
-						initial={{ opacity: 0, x: -20 }}
-						animate={{ opacity: 1, x: 0 }}
+						className="flex items-center gap-2 text-forest-600 hover:text-forest-700 mb-6 transition-colors text-sm font-medium"
 					>
-						<ArrowLeft className="w-5 h-5" />
-						<span>커뮤니티로 돌아가기</span>
-					</motion.button>
-
-					{/* Page Title */}
-					<motion.div
-						className="text-center mb-12"
-						initial={{ opacity: 0, y: -20 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.6 }}
-					>
-						<h1
-							className="text-5xl md:text-6xl font-bold mb-4"
-							style={{
-								background: 'linear-gradient(135deg, #06B6D4, #3B82F6)',
-								WebkitBackgroundClip: 'text',
-								WebkitTextFillColor: 'transparent',
-								filter: 'drop-shadow(0 0 30px rgba(6, 182, 212, 0.6))'
-							}}
-						>
+						<ArrowLeft className="w-4 h-4" />
+						커뮤니티로 돌아가기
+					</button>
+					<div className="text-center">
+						<div className="flex items-center justify-center gap-3 mb-6">
+							<div className="w-8 h-[2px] bg-forest-500" />
+							<span className="text-forest-600 font-medium text-xs tracking-widest uppercase">Review</span>
+							<div className="w-8 h-[2px] bg-forest-500" />
+						</div>
+						<h1 className="font-outfit text-3xl md:text-5xl font-bold text-sand-900 tracking-tight mb-4">
 							업체 후기 작성
 						</h1>
-						<p className="text-lg text-gray-300">만족스러운 시공 경험을 공유해주세요</p>
-					</motion.div>
+						<p className="text-sand-600 text-base md:text-lg">만족스러운 시공 경험을 공유해주세요</p>
+					</div>
+				</div>
+			</div>
 
-					{/* Form */}
-					<motion.form
-						onSubmit={handleSubmit}
-						className="glass-neon rounded-3xl p-8 border-2 border-cyan-500/30"
-						style={{
-							boxShadow: '0 0 40px rgba(6, 182, 212, 0.2), inset 0 0 60px rgba(6, 182, 212, 0.05)'
-						}}
-						initial={{ opacity: 0, scale: 0.95 }}
-						animate={{ opacity: 1, scale: 1 }}
-						transition={{ duration: 0.5, delay: 0.2 }}
-					>
+			{/* Content */}
+			<div className="max-w-3xl mx-auto px-5 md:px-8 pb-20">
+				<form onSubmit={handleSubmit} className="nordic-card rounded-2xl p-6 md:p-10">
+					<div className="space-y-6">
 						{/* Company Name */}
-						<div className="mb-6">
-							<label className="block text-sm font-semibold mb-3 text-cyan-400 flex items-center gap-2">
-								<Building className="w-4 h-4" />
-								업체명 <span className="text-red-400">*</span>
+						<div>
+							<label htmlFor="rc-company" className="block text-sm font-semibold mb-2 text-sand-700 flex items-center gap-2">
+								<Building className="w-4 h-4 text-forest-500" />
+								업체명 <span className="text-red-500">*</span>
 							</label>
-							<input
-								type="text"
-								value={companyName}
-								onChange={(e) => setCompanyName(e.target.value)}
-								placeholder="예: OO인테리어"
-								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
-								required
-							/>
+							<input id="rc-company" type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="예: OO인테리어" className={inputClass} required />
 						</div>
 
 						{/* Company Phone */}
-						<div className="mb-6">
-							<label className="block text-sm font-semibold mb-3 text-cyan-400 flex items-center gap-2">
-								<Phone className="w-4 h-4" />
-								업체 전화번호 <span className="text-red-400">*</span>
+						<div>
+							<label htmlFor="rc-phone" className="block text-sm font-semibold mb-2 text-sand-700 flex items-center gap-2">
+								<Phone className="w-4 h-4 text-forest-500" />
+								업체 전화번호 <span className="text-red-500">*</span>
 							</label>
-							<input
-								type="tel"
-								value={companyPhone}
-								onChange={(e) => setCompanyPhone(e.target.value)}
-								placeholder="02-1234-5678"
-								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
-								required
-							/>
+							<input id="rc-phone" type="tel" value={companyPhone} onChange={(e) => setCompanyPhone(e.target.value)} placeholder="02-1234-5678" className={inputClass} required />
 						</div>
 
 						{/* Business Number */}
-						<div className="mb-6">
-							<label className="block text-sm font-semibold mb-3 text-cyan-400 flex items-center gap-2">
-								<FileText className="w-4 h-4" />
-								사업자번호 <span className="text-red-400">*</span>
+						<div>
+							<label htmlFor="rc-biz" className="block text-sm font-semibold mb-2 text-sand-700 flex items-center gap-2">
+								<FileText className="w-4 h-4 text-forest-500" />
+								사업자번호 <span className="text-red-500">*</span>
 							</label>
-							<input
-								type="text"
-								value={businessNumber}
-								onChange={(e) => setBusinessNumber(e.target.value)}
-								placeholder="123-45-67890"
-								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
-								required
-							/>
+							<input id="rc-biz" type="text" value={businessNumber} onChange={(e) => setBusinessNumber(e.target.value)} placeholder="123-45-67890" className={inputClass} required />
 						</div>
 
 						{/* Region */}
-						<div className="mb-6">
-							<label className="block text-sm font-semibold mb-3 text-cyan-400">
-								지역
-							</label>
-							<select
-								value={region}
-								onChange={(e) => setRegion(e.target.value)}
-								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
-								style={{ colorScheme: 'dark' }}
-							>
+						<div>
+							<label htmlFor="rc-region" className="block text-sm font-semibold mb-2 text-sand-500">지역</label>
+							<select id="rc-region" value={region} onChange={(e) => setRegion(e.target.value)} className={selectClass}>
 								<option value="">선택 안 함</option>
-								<option value="서울">서울</option>
-								<option value="경기">경기</option>
-								<option value="인천">인천</option>
-								<option value="부산">부산</option>
-								<option value="대구">대구</option>
-								<option value="대전">대전</option>
-								<option value="광주">광주</option>
-								<option value="울산">울산</option>
-								<option value="세종">세종</option>
-								<option value="강원">강원</option>
-								<option value="충북">충북</option>
-								<option value="충남">충남</option>
-								<option value="전북">전북</option>
-								<option value="전남">전남</option>
-								<option value="경북">경북</option>
-								<option value="경남">경남</option>
-								<option value="제주">제주</option>
+								{['서울','경기','인천','부산','대구','대전','광주','울산','세종','강원','충북','충남','전북','전남','경북','경남','제주'].map(r => (
+									<option key={r} value={r}>{r}</option>
+								))}
 							</select>
 						</div>
 
 						{/* Project Type */}
-						<div className="mb-6">
-							<label className="block text-sm font-semibold mb-3 text-cyan-400">
-								시공유형
-							</label>
-							<select
-								value={projectType}
-								onChange={(e) => setProjectType(e.target.value)}
-								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
-								style={{ colorScheme: 'dark' }}
-							>
+						<div>
+							<label htmlFor="rc-type" className="block text-sm font-semibold mb-2 text-sand-500">시공유형</label>
+							<select id="rc-type" value={projectType} onChange={(e) => setProjectType(e.target.value)} className={selectClass}>
 								<option value="">선택 안 함</option>
 								<option value="주거공간">주거공간</option>
 								<option value="상업공간">상업공간</option>
@@ -289,130 +210,70 @@ export default function ReviewCreate() {
 						</div>
 
 						{/* Project Size */}
-						<div className="mb-6">
-							<label className="block text-sm font-semibold mb-3 text-cyan-400">
-								시공 면적 (㎡)
-							</label>
-							<input
-								type="number"
-								value={projectSize}
-								onChange={(e) => setProjectSize(e.target.value)}
-								placeholder="예: 85"
-								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
-							/>
-							{projectSize && (
-								<p className="text-xs text-gray-400 mt-2">
-									약 {(Number(projectSize) / 3.3058).toFixed(1)}평
-								</p>
-							)}
+						<div>
+							<label htmlFor="rc-size" className="block text-sm font-semibold mb-2 text-sand-500">시공 면적 (m²)</label>
+							<input id="rc-size" type="number" value={projectSize} onChange={(e) => setProjectSize(e.target.value)} placeholder="예: 85" className={inputClass} />
+							{projectSize && <p className="text-xs text-sand-400 mt-1.5">약 {(Number(projectSize) / 3.3058).toFixed(1)}평</p>}
 						</div>
 
 						{/* Project Cost */}
-						<div className="mb-6">
-							<label className="block text-sm font-semibold mb-3 text-cyan-400">
-								시공비용 (만원)
-							</label>
-							<input
-								type="number"
-								value={projectCost}
-								onChange={(e) => setProjectCost(e.target.value)}
-								placeholder="예: 3000"
-								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all"
-							/>
-							{projectCost && (
-								<p className="text-xs text-gray-400 mt-2">
-									{Number(projectCost).toLocaleString()}만원
-								</p>
-							)}
+						<div>
+							<label htmlFor="rc-cost" className="block text-sm font-semibold mb-2 text-sand-500">시공비용 (만원)</label>
+							<input id="rc-cost" type="number" value={projectCost} onChange={(e) => setProjectCost(e.target.value)} placeholder="예: 3000" className={inputClass} />
+							{projectCost && <p className="text-xs text-sand-400 mt-1.5">{Number(projectCost).toLocaleString()}만원</p>}
 						</div>
 
 						{/* Rating */}
-						<div className="mb-6">
-							<label className="block text-sm font-semibold mb-3 text-cyan-400 flex items-center gap-2">
-								<Star className="w-4 h-4" />
-								별점 <span className="text-red-400">*</span>
+						<div>
+							<label className="block text-sm font-semibold mb-2 text-sand-700 flex items-center gap-2">
+								<Star className="w-4 h-4 text-forest-500" />
+								별점 <span className="text-red-500">*</span>
 							</label>
-							<div className="flex gap-2">
+							<div className="flex gap-1.5">
 								{[1, 2, 3, 4, 5].map((star) => (
-									<motion.button
-										key={star}
-										type="button"
-										onClick={() => setRating(star)}
-										whileHover={{ scale: 1.1 }}
-										whileTap={{ scale: 0.9 }}
-										className="focus:outline-none"
-									>
-										<Star
-											className={`w-10 h-10 transition-all ${
-												star <= rating
-													? 'fill-cyan-400 text-cyan-400'
-													: 'text-gray-600 hover:text-cyan-500'
-											}`}
-											style={
-												star <= rating
-													? {
-															filter: 'drop-shadow(0 0 8px rgba(6, 182, 212, 0.8))'
-														}
-													: {}
-											}
-										/>
-									</motion.button>
+									<button key={star} type="button" onClick={() => setRating(star)} className="focus:outline-none">
+										<Star className={`w-9 h-9 transition-all ${star <= rating ? 'fill-amber-400 text-amber-400' : 'text-sand-300 hover:text-amber-300'}`} />
+									</button>
 								))}
 							</div>
-							{rating > 0 && (
-								<p className="text-sm text-cyan-400 mt-2">
-									{rating}점 선택됨
-								</p>
-							)}
+							{rating > 0 && <p className="text-sm text-forest-600 mt-1.5">{rating}점 선택됨</p>}
 						</div>
 
 						{/* Review Text */}
-						<div className="mb-8">
-							<label className="block text-sm font-semibold mb-3 text-cyan-400">
-								후기 내용 <span className="text-red-400">*</span>
+						<div>
+							<label htmlFor="rc-text" className="block text-sm font-semibold mb-2 text-sand-700">
+								후기 내용 <span className="text-red-500">*</span>
 							</label>
 							<textarea
+								id="rc-text"
 								value={reviewText}
 								onChange={(e) => setReviewText(e.target.value)}
 								placeholder="시공 경험, 업체의 장점, 추천 이유 등을 자유롭게 작성해주세요. (최소 10자)"
 								rows={8}
-								className="w-full px-5 py-4 bg-black/60 border border-cyan-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all resize-none"
+								className={`${inputClass} resize-none`}
 								required
 							/>
-							<div className="flex justify-between items-center mt-2">
-								<p className="text-xs text-gray-400">최소 10자 이상 작성해주세요</p>
-								<p className="text-xs text-gray-400">{reviewText.length}자</p>
+							<div className="flex justify-between items-center mt-1.5">
+								<p className="text-xs text-sand-400">최소 10자 이상 작성해주세요</p>
+								<p className="text-xs text-sand-400">{reviewText.length}자</p>
 							</div>
 						</div>
 
 						{/* Image Upload */}
-						<div className="mb-8">
-							<label className="block text-sm font-semibold mb-3 text-cyan-400 flex items-center gap-2">
+						<div>
+							<label className="block text-sm font-semibold mb-2 text-sand-500 flex items-center gap-2">
 								<ImageIcon className="w-4 h-4" />
 								시공 사진 업로드 (선택, 최대 10장)
 							</label>
-							<p className="text-xs text-gray-400 mb-3">
-								• 이미지는 자동으로 WebP 형식으로 압축됩니다<br />
-								• 최대 10장까지 업로드 가능 (파일당 2MB 이하)<br />
-								• JPG, PNG, WebP 형식 지원
-							</p>
+							<p className="text-xs text-sand-400 mb-3">JPG, PNG, WebP 형식 지원 / 파일당 2MB 이하 / 최대 10장</p>
 
-							{/* File Input */}
-							<input
-								type="file"
-								id="image-upload"
-								accept="image/*"
-								multiple
-								onChange={handleImageChange}
-								className="hidden"
-								disabled={images.length >= 10}
-							/>
+							<input type="file" id="rc-image-upload" accept="image/*" multiple onChange={handleImageChange} className="hidden" disabled={images.length >= 10} />
 							<label
-								htmlFor="image-upload"
-								className={`flex items-center justify-center gap-2 w-full py-4 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+								htmlFor="rc-image-upload"
+								className={`flex items-center justify-center gap-2 w-full py-3.5 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
 									images.length >= 10
-										? 'border-gray-600 bg-gray-800/50 cursor-not-allowed text-gray-500'
-										: 'border-cyan-500/50 bg-black/40 hover:bg-cyan-500/10 hover:border-cyan-400 text-cyan-300'
+										? 'border-sand-200 bg-sand-100 cursor-not-allowed text-sand-400'
+										: 'border-sand-300 bg-white hover:bg-sand-50 hover:border-forest-400 text-sand-600'
 								}`}
 							>
 								<ImageIcon className="w-5 h-5" />
@@ -421,78 +282,48 @@ export default function ReviewCreate() {
 								</span>
 							</label>
 
-							{/* Image Previews */}
 							{imagePreviews.length > 0 && (
 								<div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 mt-4">
 									{imagePreviews.map((preview, index) => (
-										<motion.div
-											key={index}
-											initial={{ opacity: 0, scale: 0.8 }}
-											animate={{ opacity: 1, scale: 1 }}
-											className="relative group aspect-square"
-										>
-											<img
-												src={preview}
-												alt={`Preview ${index + 1}`}
-												className="w-full h-full object-cover rounded-lg border border-cyan-500/30"
-											/>
-											<button
-												type="button"
-												onClick={() => handleRemoveImage(index)}
-												className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-											>
+										<div key={index} className="relative group aspect-square">
+											<img src={preview} alt={`사진 ${index + 1}`} className="w-full h-full object-cover rounded-xl border border-sand-200" />
+											<button type="button" onClick={() => handleRemoveImage(index)} className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
 												<X className="w-4 h-4" />
 											</button>
-											<div className="absolute bottom-1 left-1 bg-black/60 text-xs text-white px-2 py-0.5 rounded">
-												{index + 1}
-											</div>
-										</motion.div>
+											<div className="absolute bottom-1 left-1 bg-sand-900/60 text-xs text-white px-2 py-0.5 rounded-lg">{index + 1}</div>
+										</div>
 									))}
 								</div>
 							)}
 						</div>
 
 						{/* Notice */}
-						<div className="mb-6 bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
-							<p className="text-sm text-blue-300">
-								💡 <strong>안내사항</strong>
-							</p>
-							<ul className="text-xs text-gray-300 mt-2 space-y-1 ml-4">
+						<div className="bg-sand-100 border border-sand-200 rounded-xl p-4">
+							<p className="text-sm text-sand-700 font-medium mb-1.5">안내사항</p>
+							<ul className="text-xs text-sand-500 space-y-1 ml-1">
 								<li>• 작성하신 후기는 관리자 승인 후 게시됩니다</li>
 								<li>• 허위 사실이나 비방 내용은 게시가 거부될 수 있습니다</li>
 								<li>• 연락처/사업자번호 입력 시 커뮤니티 데이터와 자동 연계됩니다</li>
 							</ul>
 						</div>
 
-						{/* Submit Button */}
-						<motion.button
+						{/* Submit */}
+						<button
 							type="submit"
 							disabled={submitting || !companyName || !companyPhone || !businessNumber || rating === 0 || reviewText.length < 10}
-							whileHover={{ scale: 1.02 }}
-							whileTap={{ scale: 0.98 }}
-							className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2"
-							style={{
-								boxShadow: '0 4px 30px rgba(6, 182, 212, 0.5), 0 0 60px rgba(59, 130, 246, 0.3)'
-							}}
+							className="w-full py-3.5 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:bg-sand-300 disabled:text-sand-500 bg-forest-600 text-white hover:bg-forest-700 shadow-lg shadow-forest-600/15"
 						>
 							{submitting ? (
-								<>
-									<div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-									제출 중...
-								</>
+								<><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> 제출 중...</>
 							) : (
-								<>
-									<Send className="w-5 h-5" />
-									후기 등록하기
-								</>
+								<><Send className="w-5 h-5" /> 후기 등록하기</>
 							)}
-						</motion.button>
-					</motion.form>
-				</div>
+						</button>
+					</div>
+				</form>
 			</div>
 
-			{/* Footer */}
-			<ZipCheckFooter />
+			<NordicFooter />
 		</div>
 	)
 }

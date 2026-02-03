@@ -2,6 +2,7 @@ import ErrorBoundary from 'components/ErrorBoundary'
 import LoadingOrError from 'components/LoadingOrError'
 import { TooltipProvider } from 'components/ui/tooltip'
 import { useMediaQuery } from 'hooks'
+import { HelmetProvider } from 'react-helmet-async'
 
 import type { ReactElement } from 'react'
 import { lazy, Suspense, useEffect } from 'react'
@@ -79,13 +80,15 @@ export default function App(): ReactElement {
 	}, [darkMode, systemDarkMode])
 
 	return (
-		<Suspense fallback={<LoadingOrError />}>
-			<ErrorBoundary renderError={error => <LoadingOrError error={error} />}>
-				<TooltipProvider>
-					<DevTools />
-					<RouterProvider router={router} />
-				</TooltipProvider>
-			</ErrorBoundary>
-		</Suspense>
+		<HelmetProvider>
+			<Suspense fallback={<LoadingOrError />}>
+				<ErrorBoundary renderError={error => <LoadingOrError error={error} />}>
+					<TooltipProvider>
+						<DevTools />
+						<RouterProvider router={router} />
+					</TooltipProvider>
+				</ErrorBoundary>
+			</Suspense>
+		</HelmetProvider>
 	)
 }

@@ -11,7 +11,9 @@ module.exports = {
 	prefix: '',
 	theme: {
 		fontFamily: {
-			sans: ['"Source Sans 3"', 'sans-serif']
+			sans: ['"Noto Sans KR"', 'sans-serif'],
+			noto: ['"Noto Sans KR"', 'sans-serif'],
+			outfit: ['Outfit', 'sans-serif']
 		},
 		container: {
 			center: true,
@@ -22,6 +24,20 @@ module.exports = {
 		},
 		extend: {
 			colors: {
+				forest: {
+					50: '#F0F5EE', 100: '#E1EBdd', 200: '#C3D7BB', 300: '#8BAF82',
+					400: '#6B9960', 500: '#4A6741', 600: '#3D5A35', 700: '#2E4628',
+					800: '#1F301A', 900: '#111A0E'
+				},
+				wood: {
+					50: '#FBF8F4', 100: '#F5EDE0', 200: '#EBDBC1',
+					300: '#D4B896', 400: '#C4956A', 500: '#A87B4F'
+				},
+				sand: {
+					50: '#FEFCF9', 100: '#FBF7F0', 200: '#F5F0E8', 300: '#EDEAE5',
+					400: '#DDD8D0', 500: '#C4BEB4', 600: '#9B9588', 700: '#6B6B6B',
+					800: '#3D3D3D', 900: '#1A1A1A'
+				},
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&family=Noto+Sans+KR:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -92,6 +92,78 @@
 	min-height: calc(
 		100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom)
 	);
+}
+
+/* ===== Nordic Warm Editorial Utilities ===== */
+.hero-img-clip {
+	clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 100%);
+}
+
+.img-card {
+	position: relative;
+	overflow: hidden;
+	border-radius: 20px;
+	transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.img-card:hover {
+	transform: translateY(-6px);
+	box-shadow: 0 24px 48px rgba(0, 0, 0, 0.08);
+}
+
+.img-card-overlay {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		to top,
+		rgba(26, 26, 26, 0.7) 0%,
+		rgba(26, 26, 26, 0.15) 50%,
+		transparent 100%
+	);
+	border-radius: 20px;
+}
+
+.nordic-card {
+	background: white;
+	border: 1px solid #edeae5;
+	border-radius: 16px;
+	transition: all 0.3s ease;
+}
+.nordic-card:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);
+}
+
+.banner-overlay-forest {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		135deg,
+		rgba(62, 90, 53, 0.85),
+		rgba(30, 48, 26, 0.7)
+	);
+}
+
+/* Placeholder image backgrounds */
+.ph-living {
+	background: linear-gradient(135deg, #d4cfc5 0%, #c4beb4 30%, #b8afa6 60%, #a69e92 100%);
+}
+.ph-kitchen {
+	background: linear-gradient(135deg, #ebdbc1 0%, #d4b896 50%, #c4956a 100%);
+}
+.ph-bedroom {
+	background: linear-gradient(135deg, #e1ebdd 0%, #c3d7bb 50%, #8baf82 100%);
+}
+.ph-bathroom {
+	background: linear-gradient(135deg, #d4d8d0 0%, #c4c8c0 50%, #b4b8b0 100%);
+}
+.ph-wood {
+	background: linear-gradient(135deg, #f5ede0 0%, #ebdbc1 100%);
+}
+.ph-dark {
+	background: linear-gradient(135deg, #3d3d3d 0%, #5c5c56 50%, #4a4a44 100%);
+}
+.ph-green {
+	background: linear-gradient(135deg, #4a6741 0%, #3d5a35 50%, #2e4628 100%);
 }
 
 .code-responsive-wrapper {
