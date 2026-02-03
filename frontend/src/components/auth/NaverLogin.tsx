@@ -1,4 +1,5 @@
 import React from 'react'
+import { getApiUrl } from '../../lib/api-config'
 
 /**
  * Naver Login Button Component
@@ -7,7 +8,7 @@ import React from 'react'
 const NaverLogin: React.FC = () => {
 	const handleNaverLogin = () => {
 		// Redirect to backend Naver OAuth endpoint
-		window.location.href = 'http://localhost:3001/api/auth/naver'
+		window.location.href = getApiUrl('/api/auth/naver')
 	}
 
 	return (

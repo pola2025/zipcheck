@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { MessageCircle, Edit, Trash2, Reply } from 'lucide-react'
 import LikeButton from './LikeButton'
+import { getApiUrl } from '../../lib/api-config'
 
 interface Comment {
 	id: string
@@ -41,7 +42,7 @@ const Comments: React.FC<CommentsProps> = ({ targetType, targetId }) => {
 			setLoading(true)
 
 			const response = await fetch(
-				`http://localhost:3001/api/community/comments/${targetType}/${targetId}`
+				getApiUrl(`/api/community/comments/${targetType}/${targetId}`)
 			)
 
 			if (!response.ok) {
@@ -71,7 +72,7 @@ const Comments: React.FC<CommentsProps> = ({ targetType, targetId }) => {
 		}
 
 		try {
-			const response = await fetch('http://localhost:3001/api/community/comments', {
+			const response = await fetch(getApiUrl('/api/community/comments'), {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -108,7 +109,7 @@ const Comments: React.FC<CommentsProps> = ({ targetType, targetId }) => {
 		}
 
 		try {
-			const response = await fetch('http://localhost:3001/api/community/comments', {
+			const response = await fetch(getApiUrl('/api/community/comments'), {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -142,7 +143,7 @@ const Comments: React.FC<CommentsProps> = ({ targetType, targetId }) => {
 		}
 
 		try {
-			const response = await fetch(`http://localhost:3001/api/community/comments/${commentId}`, {
+			const response = await fetch(getApiUrl(`/api/community/comments/${commentId}`), {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json',
@@ -168,7 +169,7 @@ const Comments: React.FC<CommentsProps> = ({ targetType, targetId }) => {
 		if (!confirm('정말 삭제하시겠습니까?')) return
 
 		try {
-			const response = await fetch(`http://localhost:3001/api/community/comments/${commentId}`, {
+			const response = await fetch(getApiUrl(`/api/community/comments/${commentId}`), {
 				method: 'DELETE',
 				headers: {
 					Authorization: `Bearer ${token}`

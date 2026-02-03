@@ -18,8 +18,8 @@ export async function compressImage(
 	options: CompressionOptions = {}
 ): Promise<File> {
 	const {
-		maxSizeMB = 2, // 최대 2MB
-		maxWidthOrHeight = 1920, // 최대 너비/높이
+		maxSizeMB = 0.03, // 최대 30KB (커뮤니티 업로드 최적화)
+		maxWidthOrHeight = 1200, // 최대 너비/높이
 		useWebWorker = true,
 		fileType = 'image/webp' // WebP 형식으로 변환
 	} = options

@@ -40,6 +40,7 @@ interface TrafficReport {
 		users: number
 		sessions: number
 		pageViews: number
+		avgSessionDuration: number
 	}>
 	topPages: Array<{
 		pagePath: string
@@ -114,6 +115,7 @@ export async function getTrafficReport(days: number = 30): Promise<TrafficReport
 					{ name: 'totalUsers' },
 					{ name: 'sessions' },
 					{ name: 'screenPageViews' },
+					{ name: 'averageSessionDuration' },
 				],
 				orderBys: [{ dimension: { dimensionName: 'date' } }],
 			},
@@ -170,6 +172,7 @@ export async function getTrafficReport(days: number = 30): Promise<TrafficReport
 		users: parseInt(row.metricValues?.[0]?.value || '0'),
 		sessions: parseInt(row.metricValues?.[1]?.value || '0'),
 		pageViews: parseInt(row.metricValues?.[2]?.value || '0'),
+		avgSessionDuration: parseFloat(row.metricValues?.[3]?.value || '0'),
 	}))
 
 	// 인기 페이지 파싱

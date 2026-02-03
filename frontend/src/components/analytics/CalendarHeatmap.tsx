@@ -1,25 +1,37 @@
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 
 interface DailyData {
 	date: string
 	users: number
 	sessions: number
 	pageViews: number
+	avgSessionDuration: number
 }
 
 interface CalendarHeatmapProps {
 	data: DailyData[]
 }
 
-type MetricKey = 'pageViews' | 'users' | 'sessions'
-
-const METRIC_OPTIONS: Array<{ key: MetricKey; label: string }> = [
-	{ key: 'pageViews', label: '페이지뷰' },
-	{ key: 'users', label: '사용자' },
-	{ key: 'sessions', label: '세션' },
+const WEEKDAY_HEADERS = ['월', '화', '수', '목', '금', '토', '일']
+const WEEKDAY_HEADER_COLORS = [
+	'text-sand-600', 'text-sand-600', 'text-sand-600', 'text-sand-600', 'text-sand-600',
+	'text-blue-500', 'text-red-400',
 ]
 
-const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
+interface HeatmapCell {
+	date: string
+	dayOfWeek: number
+	dayLabel: string
+	users: number
+	pageViews: number
+	sessions: number
+	avgSessionDuration: number
+}
+
+interface WeekRow {
+	weekLabel: string
+	cells: (HeatmapCell | null)[]
+}
 
 function parseDate(dateStr: string): Date {
 	if (dateStr.length === 8) {
@@ -31,180 +43,262 @@ function parseDate(dateStr: string): Date {
 	return new Date(dateStr)
 }
 
-function formatDateLabel(d: Date): string {
-	return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}`
+function formatDateStr(dateStr: string): string {
+	if (dateStr.length === 8) {
+		return `${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`
+	}
+	return dateStr.slice(5)
 }
 
-function getColorIntensity(value: number, max: number): string {
-	if (max === 0 || value === 0) return '#F5F0E8'
-	const ratio = value / max
-	if (ratio < 0.25) return '#C8E6C9'
-	if (ratio < 0.5) return '#81C784'
-	if (ratio < 0.75) return '#4A6741'
-	return '#2E4628'
+function cellBg(users: number, max: number): string {
+	if (users === 0) return 'bg-sand-100'
+	const r = users / (max || 1)
+	if (r >= 0.7) return 'bg-forest-700'
+	if (r >= 0.5) return 'bg-forest-600'
+	if (r >= 0.3) return 'bg-forest-400'
+	return 'bg-forest-200'
+}
+
+function mainTextCls(users: number, max: number): string {
+	if (users === 0) return 'text-sand-400'
+	const r = users / (max || 1)
+	if (r >= 0.3) return 'text-white'
+	return 'text-forest-900'
+}
+
+function subTextCls(users: number, max: number): string {
+	if (users === 0) return 'text-sand-400'
+	const r = users / (max || 1)
+	if (r >= 0.5) return 'text-forest-200'
+	if (r >= 0.3) return 'text-forest-100'
+	return 'text-forest-800'
+}
+
+function fmtDuration(sec: number): string {
+	if (!sec || sec === 0) return '0:00'
+	const m = Math.floor(sec / 60)
+	const s = Math.round(sec % 60)
+	return `${m}:${String(s).padStart(2, '0')}`
 }
 
 export default function CalendarHeatmap({ data }: CalendarHeatmapProps) {
-	const [metric, setMetric] = useState<MetricKey>('pageViews')
-	const [hoveredCell, setHoveredCell] = useState<{ date: string; value: number; x: number; y: number } | null>(null)
+	const { weeks, maxUsers, dayAverages } = useMemo(() => {
+		if (data.length === 0) return { weeks: [], maxUsers: 0, dayAverages: [] }
 
-	const { weeks, maxValue, monthLabels } = useMemo(() => {
-		if (data.length === 0) return { weeks: [], maxValue: 0, monthLabels: [] }
+		const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date))
+		const dayBuckets: Record<number, number[]> = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] }
+		const weekMap = new Map<string, (HeatmapCell | null)[]>()
 
-		const dataMap = new Map<string, DailyData>()
-		for (const d of data) {
-			dataMap.set(d.date, d)
-		}
+		sorted.forEach((d) => {
+			const date = parseDate(d.date)
+			const jsDay = date.getDay()
+			const dayIdx = jsDay === 0 ? 6 : jsDay - 1
 
-		const dates = data.map(d => parseDate(d.date)).sort((a, b) => a.getTime() - b.getTime())
-		const startDate = new Date(dates[0])
-		const endDate = new Date(dates[dates.length - 1])
+			const startOfYear = new Date(date.getFullYear(), 0, 1)
+			const dayOfYear = Math.floor((date.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24))
+			let weekNum = Math.ceil((dayOfYear + startOfYear.getDay() + 1) / 7)
+			if (jsDay === 0) weekNum = Math.max(1, weekNum - 1)
 
-		// 시작일의 주 첫날(일요일)로 맞춤
-		const calStart = new Date(startDate)
-		calStart.setDate(calStart.getDate() - calStart.getDay())
-
-		const weeks: Array<Array<{ date: Date; value: number; dateStr: string } | null>> = []
-		const months: Array<{ label: string; weekIndex: number }> = []
-		let currentWeek: Array<{ date: Date; value: number; dateStr: string } | null> = []
-		let lastMonth = -1
-
-		const cursor = new Date(calStart)
-		let weekIndex = 0
-
-		while (cursor <= endDate || currentWeek.length > 0) {
-			if (cursor > endDate && currentWeek.length < 7) {
-				// 마지막 주 채우기
-				while (currentWeek.length < 7) currentWeek.push(null)
-				weeks.push(currentWeek)
-				break
+			const dateShort = formatDateStr(d.date)
+			const cell: HeatmapCell = {
+				date: d.date,
+				dayOfWeek: dayIdx,
+				dayLabel: `${dateShort} (${WEEKDAY_HEADERS[dayIdx]})`,
+				users: d.users,
+				pageViews: d.pageViews,
+				sessions: d.sessions,
+				avgSessionDuration: d.avgSessionDuration || 0,
 			}
 
-			const dateStr = `${cursor.getFullYear()}${String(cursor.getMonth() + 1).padStart(2, '0')}${String(cursor.getDate()).padStart(2, '0')}`
-			const isInRange = cursor >= startDate && cursor <= endDate
-			const dayData = dataMap.get(dateStr)
-			const value = isInRange ? (dayData ? dayData[metric] : 0) : -1
-
-			if (cursor.getMonth() !== lastMonth && isInRange) {
-				months.push({ label: `${cursor.getMonth() + 1}월`, weekIndex })
-				lastMonth = cursor.getMonth()
+			const wKey = `${date.getFullYear()}-W${String(weekNum).padStart(2, '0')}`
+			if (!weekMap.has(wKey)) {
+				weekMap.set(wKey, Array(7).fill(null))
 			}
+			weekMap.get(wKey)![dayIdx] = cell
 
-			currentWeek.push(value >= 0 ? { date: new Date(cursor), value, dateStr } : null)
+			if (d.users > 0) dayBuckets[dayIdx].push(d.users)
+		})
 
-			if (currentWeek.length === 7) {
-				weeks.push(currentWeek)
-				currentWeek = []
-				weekIndex++
-			}
+		const weekRows: WeekRow[] = Array.from(weekMap.entries())
+			.sort(([a], [b]) => a.localeCompare(b))
+			.map(([, cells]) => {
+				const firstCell = cells.find(c => c !== null)
+				const label = firstCell ? formatDateStr(firstCell.date) : ''
+				return { weekLabel: label, cells }
+			})
 
-			cursor.setDate(cursor.getDate() + 1)
-		}
+		const avgByDay = WEEKDAY_HEADERS.map((_, idx) => {
+			const vals = dayBuckets[idx]
+			if (vals.length === 0) return 0
+			return vals.reduce((a, b) => a + b, 0) / vals.length
+		})
 
-		let maxVal = 0
-		for (const d of data) {
-			if (d[metric] > maxVal) maxVal = d[metric]
-		}
+		const allUsers = sorted.map(d => d.users).filter(v => v > 0)
+		const mx = allUsers.length > 0 ? Math.max(...allUsers) : 0
 
-		return { weeks, maxValue: maxVal, monthLabels: months }
-	}, [data, metric])
+		return { weeks: weekRows, maxUsers: mx, dayAverages: avgByDay }
+	}, [data])
+
+	if (data.length === 0) return null
 
 	return (
-		<div className="bg-white rounded-2xl p-5 border border-sand-300">
-			<div className="flex items-center justify-between mb-4">
-				<div>
-					<h3 className="text-base font-semibold text-sand-900">일별 활동 히트맵</h3>
-					<p className="text-sm text-sand-700">날짜별 방문 현황</p>
-				</div>
-				<div className="flex gap-1 bg-sand-100 rounded-lg p-0.5">
-					{METRIC_OPTIONS.map(opt => (
-						<button
-							key={opt.key}
-							onClick={() => setMetric(opt.key)}
-							className={`px-2.5 py-1 text-xs rounded-md font-medium transition-all ${
-								metric === opt.key
-									? 'bg-white text-forest-700 shadow-sm'
-									: 'text-sand-600 hover:text-sand-800'
-							}`}
-						>
-							{opt.label}
-						</button>
-					))}
-				</div>
+		<div className="bg-white rounded-2xl border border-sand-300 p-4 lg:p-5 space-y-3 lg:space-y-4">
+			{/* Header */}
+			<div>
+				<h3 className="text-base font-semibold text-sand-900">일별 활동 히트맵</h3>
+				<p className="text-sm text-sand-600">방문자 · 페이지뷰 · 체류시간</p>
 			</div>
 
-			<div className="overflow-x-auto relative">
-				{/* Month labels */}
-				<div className="flex ml-8 mb-1">
-					{monthLabels.map((m, i) => (
+			{/* Heatmap grid */}
+			<div className="overflow-x-auto">
+				{/* Day headers */}
+				<div
+					className="grid gap-[2px] lg:gap-[5px] mb-[2px] lg:mb-[5px]"
+					style={{ gridTemplateColumns: '36px repeat(7, 1fr)' }}
+				>
+					<div />
+					{WEEKDAY_HEADERS.map((day, idx) => (
 						<div
-							key={i}
-							className="text-xs text-sand-600"
-							style={{ position: 'absolute', left: `${m.weekIndex * 16 + 32}px` }}
+							key={day}
+							className={`text-center text-[9px] lg:text-xs font-semibold py-0.5 ${WEEKDAY_HEADER_COLORS[idx]}`}
 						>
-							{m.label}
+							{day}
 						</div>
 					))}
 				</div>
 
-				<div className="flex gap-[2px] mt-5">
-					{/* Weekday labels */}
-					<div className="flex flex-col gap-[2px] mr-1 pt-0">
-						{WEEKDAY_LABELS.map((label, i) => (
-							<div key={i} className="h-[14px] flex items-center">
-								{i % 2 === 1 && (
-									<span className="text-[10px] text-sand-500 w-5 text-right">{label}</span>
-								)}
-							</div>
-						))}
-					</div>
-
-					{/* Heatmap cells */}
-					{weeks.map((week, wi) => (
-						<div key={wi} className="flex flex-col gap-[2px]">
-							{week.map((cell, di) => (
-								<div
-									key={di}
-									className="w-[14px] h-[14px] rounded-[3px] transition-colors cursor-pointer"
-									style={{
-										backgroundColor: cell ? getColorIntensity(cell.value, maxValue) : 'transparent',
-									}}
-									onMouseEnter={e => {
-										if (cell) {
-											const rect = e.currentTarget.getBoundingClientRect()
-											setHoveredCell({
-												date: formatDateLabel(cell.date),
-												value: cell.value,
-												x: rect.left,
-												y: rect.top - 40,
-											})
-										}
-									}}
-									onMouseLeave={() => setHoveredCell(null)}
-								/>
-							))}
-						</div>
-					))}
-				</div>
-
-				{/* Tooltip */}
-				{hoveredCell && (
+				{/* Week rows */}
+				{weeks.map((week, wIdx) => (
 					<div
-						className="fixed z-50 bg-sand-900 text-white text-xs px-2.5 py-1.5 rounded-lg shadow-lg pointer-events-none"
-						style={{ left: hoveredCell.x, top: hoveredCell.y }}
+						key={`week-${wIdx}`}
+						className="grid gap-[2px] lg:gap-[5px] mb-[2px] lg:mb-[5px]"
+						style={{ gridTemplateColumns: '36px repeat(7, 1fr)' }}
 					>
-						{hoveredCell.date}: <span className="font-semibold">{hoveredCell.value.toLocaleString()}</span>
+						<div className="flex items-center justify-end pr-1 text-[9px] lg:text-xs text-sand-700 font-medium">
+							{week.weekLabel}
+						</div>
+						{week.cells.map((cell, dIdx) => {
+							if (!cell) {
+								return (
+									<div
+										key={`empty-${wIdx}-${dIdx}`}
+										className="rounded-md bg-sand-50 flex items-center justify-center h-7 lg:h-[92px]"
+									>
+										<span className="text-[7px] lg:text-[9px] text-sand-300">-</span>
+									</div>
+								)
+							}
+
+							if (cell.users === 0) {
+								const hasPV = cell.pageViews > 0
+								return (
+									<div
+										key={`zero-${wIdx}-${dIdx}`}
+										className={`rounded-md ${hasPV ? 'bg-sand-200' : 'bg-sand-100'} flex flex-col items-center justify-center h-7 lg:h-[92px] group relative`}
+									>
+										<span className={`font-bold ${hasPV ? 'text-[9px] lg:text-lg text-sand-500' : 'text-[8px] lg:text-sm text-sand-400'}`}>0</span>
+										{hasPV && (
+											<div className="hidden lg:flex flex-col items-center mt-0.5 text-sand-500" style={{ fontSize: '11px', lineHeight: 1.45 }}>
+												<span>PV {cell.pageViews.toLocaleString()}</span>
+												<span>{fmtDuration(cell.avgSessionDuration)}</span>
+											</div>
+										)}
+										{/* Tooltip */}
+										<div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 bg-sand-900 text-white px-2.5 py-2 rounded-lg text-[11px] whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none shadow-lg">
+											<div className="font-semibold">{cell.dayLabel}</div>
+											<div className="mt-1 space-y-0.5 text-sand-300">
+												<div>방문자: {cell.users}명</div>
+												<div>페이지뷰: {cell.pageViews.toLocaleString()}</div>
+												<div>세션: {cell.sessions}</div>
+												<div>체류시간: {fmtDuration(cell.avgSessionDuration)}</div>
+											</div>
+											<div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-sand-900" />
+										</div>
+									</div>
+								)
+							}
+
+							const bg = cellBg(cell.users, maxUsers)
+							const mainCls = mainTextCls(cell.users, maxUsers)
+							const subCls = subTextCls(cell.users, maxUsers)
+
+							return (
+								<div
+									key={`cell-${wIdx}-${dIdx}`}
+									className={`rounded-md ${bg} cursor-pointer transition-all duration-150 hover:scale-105 hover:z-10 hover:shadow-md relative group h-7 lg:h-[92px] flex flex-col items-center justify-center`}
+								>
+									{/* Mobile: users only */}
+									<span className={`lg:hidden font-bold text-[9px] ${mainCls}`}>
+										{cell.users}
+									</span>
+
+									{/* Desktop: users (large) + PV + duration */}
+									<div className="hidden lg:flex flex-col items-center justify-center w-full leading-none">
+										<span className={`font-extrabold ${mainCls}`} style={{ fontSize: '24px', lineHeight: 1 }}>
+											{cell.users}
+										</span>
+										<div className={`flex flex-col items-center mt-1 ${subCls}`} style={{ fontSize: '11px', lineHeight: 1.45 }}>
+											<span>PV {cell.pageViews.toLocaleString()}</span>
+											<span>{fmtDuration(cell.avgSessionDuration)}</span>
+										</div>
+									</div>
+
+									{/* Tooltip */}
+									<div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 bg-sand-900 text-white px-2.5 py-2 rounded-lg text-[11px] whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none shadow-lg">
+										<div className="font-semibold">{cell.dayLabel}</div>
+										<div className="mt-1 space-y-0.5 text-sand-300">
+											<div>방문자: {cell.users}명</div>
+											<div>페이지뷰: {cell.pageViews.toLocaleString()}</div>
+											<div>세션: {cell.sessions}</div>
+											<div>체류시간: {fmtDuration(cell.avgSessionDuration)}</div>
+										</div>
+										<div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-sand-900" />
+									</div>
+								</div>
+							)
+						})}
 					</div>
-				)}
+				))}
 			</div>
 
 			{/* Legend */}
-			<div className="flex items-center gap-2 mt-3 justify-end">
-				<span className="text-[10px] text-sand-600">적음</span>
-				{['#F5F0E8', '#C8E6C9', '#81C784', '#4A6741', '#2E4628'].map(color => (
-					<div key={color} className="w-[12px] h-[12px] rounded-[2px]" style={{ backgroundColor: color }} />
-				))}
-				<span className="text-[10px] text-sand-600">많음</span>
+			<div className="flex items-center justify-between flex-wrap gap-2">
+				<div className="flex items-center gap-1.5">
+					<span className="text-[10px] text-sand-500">적음</span>
+					<div className="flex gap-0.5">
+						{['bg-forest-200', 'bg-forest-400', 'bg-forest-600', 'bg-forest-700'].map((c, i) => (
+							<div key={i} className={`w-4 lg:w-5 h-2.5 lg:h-3 ${c} rounded`} />
+						))}
+					</div>
+					<span className="text-[10px] text-sand-500">많음</span>
+				</div>
+				<div className="text-[10px] text-sand-500">방문자 수 기준</div>
+			</div>
+
+			{/* Day averages */}
+			<div className="grid grid-cols-7 gap-0.5 lg:gap-1.5">
+				{dayAverages.map((avg, idx) => {
+					if (avg === 0) return (
+						<div key={idx} className="text-center bg-sand-50 rounded py-1 lg:py-1.5 border border-sand-200">
+							<div className="text-[8px] lg:text-[10px] text-sand-500">{WEEKDAY_HEADERS[idx]}</div>
+							<div className="text-[10px] lg:text-sm font-bold text-sand-400">-</div>
+						</div>
+					)
+
+					const isHigh = avg >= Math.max(...dayAverages) * 0.8
+					const colorStyle = isHigh
+						? { text: 'text-forest-700', bg: 'bg-forest-50', border: 'border-forest-200' }
+						: { text: 'text-sand-700', bg: 'bg-sand-50', border: 'border-sand-200' }
+
+					return (
+						<div key={idx} className={`text-center ${colorStyle.bg} rounded py-1 lg:py-1.5 border ${colorStyle.border}`}>
+							<div className="text-[8px] lg:text-[10px] text-sand-500">{WEEKDAY_HEADERS[idx]}</div>
+							<div className={`text-[10px] lg:text-sm font-bold ${colorStyle.text}`}>
+								{avg.toFixed(1)}
+							</div>
+						</div>
+					)
+				})}
 			</div>
 		</div>
 	)

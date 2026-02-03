@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { ThumbsUp } from 'lucide-react'
+import { getApiUrl } from '../../lib/api-config'
 
 interface LikeButtonProps {
 	targetType: 'review' | 'damage_case' | 'comment'
@@ -30,7 +31,7 @@ const LikeButton: React.FC<LikeButtonProps> = ({
 			if (!token) return
 
 			const response = await fetch(
-				`http://localhost:3001/api/community/likes/${targetType}/${targetId}/check`,
+				getApiUrl(`/api/community/likes/${targetType}/${targetId}/check`),
 				{
 					headers: {
 						Authorization: `Bearer ${token}`
@@ -61,7 +62,7 @@ const LikeButton: React.FC<LikeButtonProps> = ({
 		try {
 			setLoading(true)
 
-			const response = await fetch('http://localhost:3001/api/community/likes', {
+			const response = await fetch(getApiUrl('/api/community/likes'), {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',

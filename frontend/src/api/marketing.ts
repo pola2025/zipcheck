@@ -1,3 +1,5 @@
+import { getApiUrl } from '../lib/api-config'
+
 export type QuoteRequestPayload = {
 	name: string
 	email: string
@@ -17,7 +19,7 @@ export async function submitQuoteRequest(
 	payload: QuoteRequestPayload
 ): Promise<QuoteRequestResponse | undefined> {
 	try {
-		const response = await fetch('http://localhost:3001/api/quote-requests/submit', {
+		const response = await fetch(getApiUrl('/api/quote-requests/submit'), {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

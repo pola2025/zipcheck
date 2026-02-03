@@ -38,6 +38,7 @@ interface TrafficReport {
 		users: number
 		sessions: number
 		pageViews: number
+		avgSessionDuration: number
 	}>
 	topPages: Array<{
 		pagePath: string

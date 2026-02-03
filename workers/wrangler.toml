@@ -1,0 +1,22 @@
+name = "zipcheck-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-30"
+compatibility_flags = ["nodejs_compat"]
+account_id = "1b84b674abad17f8ce74f6b8c1fd61bd"
+
+[vars]
+GA4_PROPERTY_ID = "properties/464978877"
+SEARCH_CONSOLE_SITE_URL = "https://zcheck.co.kr"
+FRONTEND_URL = "https://zcheck.co.kr"
+GMAIL_SENDER_EMAIL = "zipcheck.notify@gmail.com"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "a0b6fc575fbf4575b653b1dd424e07e1"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "zipcheck-uploads"
+
+[triggers]
+crons = ["59 14 * * *", "59 14 * * 7", "0 15 1 * *"]

@@ -2,11 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getApiUrl } from '../../lib/api-config'
 
-/**
- * Naver OAuth Callback Page
- * Handles the redirect from Naver OAuth and stores the JWT token
- */
-const NaverCallback: React.FC = () => {
+const GoogleCallback: React.FC = () => {
 	const [searchParams] = useSearchParams()
 	const navigate = useNavigate()
 	const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing')
@@ -15,11 +11,10 @@ const NaverCallback: React.FC = () => {
 	useEffect(() => {
 		const handleCallback = async () => {
 			try {
-				// Get token from URL query parameter
 				const token = searchParams.get('token')
 				const error = searchParams.get('error')
+				const redirectTo = searchParams.get('redirect_to') || '/'
 
-				// Check for errors
 				if (error) {
 					console.error('OAuth error:', error)
 					setErrorMessage(getErrorMessage(error))
@@ -36,14 +31,12 @@ const NaverCallback: React.FC = () => {
 					return
 				}
 
-				// Store token in localStorage
+				// Store token
 				localStorage.setItem('auth_token', token)
 
 				// Fetch user info
 				const response = await fetch(getApiUrl('/api/auth/me'), {
-					headers: {
-						Authorization: `Bearer ${token}`
-					}
+					headers: { Authorization: `Bearer ${token}` }
 				})
 
 				if (!response.ok) {
@@ -51,16 +44,12 @@ const NaverCallback: React.FC = () => {
 				}
 
 				const user = await response.json()
-
-				// Store user info
 				localStorage.setItem('user', JSON.stringify(user))
 
-				console.log('✅ Naver login successful:', user.email)
 				setStatus('success')
 
-				// Redirect to main page after 1 second
 				setTimeout(() => {
-					navigate('/')
+					navigate(redirectTo)
 				}, 1000)
 			} catch (error) {
 				console.error('Callback processing error:', error)
@@ -75,7 +64,7 @@ const NaverCallback: React.FC = () => {
 
 	const getErrorMessage = (errorCode: string): string => {
 		const errorMessages: Record<string, string> = {
-			oauth_failed: '네이버 로그인에 실패했습니다.',
+			oauth_failed: 'Google 로그인에 실패했습니다.',
 			invalid_request: '잘못된 요청입니다.',
 			session_expired: '세션이 만료되었습니다. 다시 시도해주세요.',
 			invalid_state: '보안 검증에 실패했습니다. 다시 시도해주세요.'
@@ -84,12 +73,12 @@ const NaverCallback: React.FC = () => {
 	}
 
 	return (
-		<div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-50'>
+		<div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50'>
 			<div className='bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center'>
 				{status === 'processing' && (
 					<>
 						<div className='mb-6'>
-							<div className='animate-spin rounded-full h-16 w-16 border-b-2 border-[#03C75A] mx-auto'></div>
+							<div className='animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto'></div>
 						</div>
 						<h2 className='text-2xl font-bold text-gray-800 mb-2'>로그인 처리 중</h2>
 						<p className='text-gray-600'>잠시만 기다려주세요...</p>
@@ -99,40 +88,20 @@ const NaverCallback: React.FC = () => {
 				{status === 'success' && (
 					<>
 						<div className='mb-6'>
-							<svg
-								className='mx-auto h-16 w-16 text-green-500'
-								fill='none'
-								stroke='currentColor'
-								viewBox='0 0 24 24'
-							>
-								<path
-									strokeLinecap='round'
-									strokeLinejoin='round'
-									strokeWidth={2}
-									d='M5 13l4 4L19 7'
-								/>
+							<svg className='mx-auto h-16 w-16 text-green-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+								<path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
 							</svg>
 						</div>
 						<h2 className='text-2xl font-bold text-gray-800 mb-2'>로그인 성공!</h2>
-						<p className='text-gray-600'>메인 페이지로 이동합니다...</p>
+						<p className='text-gray-600'>페이지로 이동합니다...</p>
 					</>
 				)}
 
 				{status === 'error' && (
 					<>
 						<div className='mb-6'>
-							<svg
-								className='mx-auto h-16 w-16 text-red-500'
-								fill='none'
-								stroke='currentColor'
-								viewBox='0 0 24 24'
-							>
-								<path
-									strokeLinecap='round'
-									strokeLinejoin='round'
-									strokeWidth={2}
-									d='M6 18L18 6M6 6l12 12'
-								/>
+							<svg className='mx-auto h-16 w-16 text-red-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+								<path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
 							</svg>
 						</div>
 						<h2 className='text-2xl font-bold text-gray-800 mb-2'>로그인 실패</h2>
@@ -145,4 +114,4 @@ const NaverCallback: React.FC = () => {
 	)
 }
 
-export default NaverCallback
+export default GoogleCallback

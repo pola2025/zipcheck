@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { X, AlertTriangle } from 'lucide-react'
+import { getApiUrl } from '../../lib/api-config'
 
 interface ReportModalProps {
 	isOpen: boolean
@@ -39,7 +40,7 @@ const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, targetType, 
 		try {
 			setSubmitting(true)
 
-			const response = await fetch('http://localhost:3001/api/community/reports', {
+			const response = await fetch(getApiUrl('/api/community/reports'), {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',

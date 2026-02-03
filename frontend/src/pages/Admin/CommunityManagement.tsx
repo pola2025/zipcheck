@@ -13,6 +13,7 @@ interface CompanyReview {
 	review_text: string
 	status: string
 	verified: boolean
+	ip_address?: string
 	created_at: string
 }
 
@@ -25,6 +26,7 @@ interface DamageCase {
 	status: string
 	company_name?: string
 	verified: boolean
+	ip_address?: string
 	created_at: string
 }
 
@@ -231,6 +233,9 @@ function ReviewsTable({
 								상태
 							</th>
 							<th className="px-6 py-4 text-left text-xs font-medium text-sand-700 uppercase tracking-wider">
+								IP 주소
+							</th>
+							<th className="px-6 py-4 text-left text-xs font-medium text-sand-700 uppercase tracking-wider">
 								등록일
 							</th>
 							<th className="px-6 py-4 text-left text-xs font-medium text-sand-700 uppercase tracking-wider">
@@ -269,6 +274,9 @@ function ReviewsTable({
 										<option value="deleted">삭제됨</option>
 									</select>
 								</td>
+								<td className="px-6 py-4 whitespace-nowrap text-xs text-sand-500 font-mono">
+									{review.ip_address || '-'}
+								</td>
 								<td className="px-6 py-4 whitespace-nowrap text-sm text-sand-700">
 									{new Date(review.created_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}
 								</td>
@@ -284,7 +292,7 @@ function ReviewsTable({
 						))}
 						{reviews.length === 0 && (
 							<tr>
-								<td colSpan={6} className="px-6 py-12 text-center text-sand-600">
+								<td colSpan={7} className="px-6 py-12 text-center text-sand-600">
 									등록된 후기가 없습니다
 								</td>
 							</tr>
@@ -333,6 +341,9 @@ function DamagesTable({
 								상태
 							</th>
 							<th className="px-6 py-4 text-left text-xs font-medium text-sand-700 uppercase tracking-wider">
+								IP 주소
+							</th>
+							<th className="px-6 py-4 text-left text-xs font-medium text-sand-700 uppercase tracking-wider">
 								등록일
 							</th>
 							<th className="px-6 py-4 text-left text-xs font-medium text-sand-700 uppercase tracking-wider">
@@ -374,6 +385,9 @@ function DamagesTable({
 										<option value="deleted">삭제됨</option>
 									</select>
 								</td>
+								<td className="px-6 py-4 whitespace-nowrap text-xs text-sand-500 font-mono">
+									{damage.ip_address || '-'}
+								</td>
 								<td className="px-6 py-4 whitespace-nowrap text-sm text-sand-700">
 									{new Date(damage.created_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}
 								</td>
@@ -389,7 +403,7 @@ function DamagesTable({
 						))}
 						{damages.length === 0 && (
 							<tr>
-								<td colSpan={6} className="px-6 py-12 text-center text-sand-600">
+								<td colSpan={7} className="px-6 py-12 text-center text-sand-600">
 									등록된 피해사례가 없습니다
 								</td>
 							</tr>
