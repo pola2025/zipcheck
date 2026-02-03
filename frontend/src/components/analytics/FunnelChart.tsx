@@ -12,7 +12,7 @@ interface FunnelChartProps {
 	data: FunnelStep[]
 }
 
-const STEP_COLORS = ['#3B82F6', '#06B6D4', '#10B981', '#F59E0B', '#EF4444']
+const STEP_COLORS = ['#4A6741', '#6B9960', '#A87B4F', '#3B82F6', '#F59E0B']
 
 export default function FunnelChart({ data }: FunnelChartProps) {
 	const maxPV = Math.max(...data.map(d => d.pageViews), 1)
@@ -29,21 +29,21 @@ export default function FunnelChart({ data }: FunnelChartProps) {
 	})
 
 	return (
-		<div className="bg-gray-800/50 backdrop-blur-xl rounded-xl p-6 border border-gray-700">
-			<h3 className="text-lg font-semibold text-white mb-4">퍼널 분석</h3>
+		<div className="bg-white rounded-2xl p-5 border border-sand-200">
+			<h3 className="text-base font-semibold text-sand-900 mb-4">퍼널 분석</h3>
 			<ResponsiveContainer width="100%" height={280}>
 				<BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-					<CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
-					<XAxis type="number" tick={{ fill: '#9CA3AF', fontSize: 12 }} />
+					<CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" horizontal={false} />
+					<XAxis type="number" tick={{ fill: '#9B9588', fontSize: 12 }} />
 					<YAxis
 						type="category"
 						dataKey="displayLabel"
-						tick={{ fill: '#D1D5DB', fontSize: 13 }}
+						tick={{ fill: '#3D3D3D', fontSize: 13 }}
 						width={120}
 					/>
 					<Tooltip
-						contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: 8 }}
-						labelStyle={{ color: '#F3F4F6' }}
+						contentStyle={{ backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+						labelStyle={{ color: '#1A1A1A' }}
 						formatter={(value: number, name: string) => {
 							if (name === 'pageViews') return [value.toLocaleString(), '페이지뷰']
 							return [value, name]
@@ -57,10 +57,9 @@ export default function FunnelChart({ data }: FunnelChartProps) {
 				</BarChart>
 			</ResponsiveContainer>
 
-			{/* Drop-off indicators */}
-			<div className="mt-4 flex flex-wrap gap-3">
+			<div className="mt-4 flex flex-wrap gap-2">
 				{chartData.slice(1).map(d => (
-					<span key={d.step} className="text-xs bg-red-500/10 text-red-400 px-2.5 py-1 rounded-full">
+					<span key={d.step} className="text-xs bg-red-50 text-red-500 px-2.5 py-1 rounded-full">
 						{d.displayLabel}: -{d.dropOff}% 이탈
 					</span>
 				))}

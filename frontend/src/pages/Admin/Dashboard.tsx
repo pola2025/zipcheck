@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { LayoutDashboard, FileText, Database, TrendingUp, LogOut, ArrowRight, MessageSquare, AlertTriangle, BarChart3 } from 'lucide-react'
-import { useAuth } from '../../contexts/AuthContext'
+import { FileText, TrendingUp, LayoutDashboard, ArrowRight, MessageSquare, BarChart3 } from 'lucide-react'
 import { getApiUrl } from '../../lib/api-config'
 import { adminPath } from '../../lib/admin-path'
 
@@ -15,18 +14,15 @@ interface QuoteRequest {
 interface DashboardStats {
 	totalQuoteRequests: number
 	pendingQuoteRequests: number
-	totalUsers: number
 	recentQuoteRequests: number
 	totalReviews: number
 	totalDamageCases: number
 }
 
 const Dashboard: React.FC = () => {
-	const { user, logout } = useAuth()
 	const [stats, setStats] = useState<DashboardStats>({
 		totalQuoteRequests: 0,
 		pendingQuoteRequests: 0,
-		totalUsers: 0,
 		recentQuoteRequests: 0,
 		totalReviews: 0,
 		totalDamageCases: 0
@@ -42,7 +38,6 @@ const Dashboard: React.FC = () => {
 			const token = localStorage.getItem('admin_token')
 			if (!token) return
 
-			// Fetch quote requests, reviews, and damage cases in parallel
 			const [quoteResponse, reviewsResponse, damagesResponse] = await Promise.all([
 				fetch(getApiUrl('/api/admin/quote-requests'), {
 					headers: { Authorization: `Bearer ${token}` }
@@ -61,7 +56,6 @@ const Dashboard: React.FC = () => {
 			let totalReviews = 0
 			let totalDamageCases = 0
 
-			// Process quote requests
 			if (quoteResponse.ok) {
 				const quoteData: QuoteRequest[] = await quoteResponse.json()
 				totalQuoteRequests = quoteData.length || 0
@@ -74,13 +68,11 @@ const Dashboard: React.FC = () => {
 				}).length || 0
 			}
 
-			// Process reviews
 			if (reviewsResponse.ok) {
 				const reviewsData = await reviewsResponse.json()
 				totalReviews = reviewsData.data?.length || 0
 			}
 
-			// Process damage cases
 			if (damagesResponse.ok) {
 				const damagesData = await damagesResponse.json()
 				totalDamageCases = damagesData.data?.length || 0
@@ -89,7 +81,6 @@ const Dashboard: React.FC = () => {
 			setStats({
 				totalQuoteRequests,
 				pendingQuoteRequests,
-				totalUsers: 0,
 				recentQuoteRequests,
 				totalReviews,
 				totalDamageCases
@@ -101,173 +92,139 @@ const Dashboard: React.FC = () => {
 		}
 	}
 
-	const handleLogout = () => {
-		logout()
-		window.location.href = adminPath('/login')
-	}
-
 	const statCards = [
 		{
 			title: '전체 견적 요청',
 			value: stats.totalQuoteRequests,
 			icon: FileText,
-			color: 'from-blue-500 to-blue-600',
+			accent: 'bg-forest-100 text-forest-700',
 			link: adminPath('/quote-requests')
 		},
 		{
 			title: '처리 대기 중',
 			value: stats.pendingQuoteRequests,
 			icon: TrendingUp,
-			color: 'from-orange-500 to-orange-600',
+			accent: 'bg-amber-50 text-amber-600',
 			link: adminPath('/quote-requests')
 		},
 		{
 			title: '최근 7일 요청',
 			value: stats.recentQuoteRequests,
 			icon: LayoutDashboard,
-			color: 'from-green-500 to-green-600',
+			accent: 'bg-forest-50 text-forest-600',
 			link: adminPath('/quote-requests')
-		}
-	]
-
-	const menuItems = [
-		{
-			title: '견적 요청 관리',
-			description: '사용자들의 견적 요청을 확인하고 관리합니다',
-			icon: FileText,
-			link: adminPath('/quote-requests'),
-			color: 'from-blue-500 to-blue-600'
 		},
 		{
-			title: '커뮤니티 관리',
-			description: '업체 후기 및 피해사례를 관리합니다',
+			title: '커뮤니티 글',
+			value: stats.totalReviews + stats.totalDamageCases,
 			icon: MessageSquare,
-			link: adminPath('/community'),
-			color: 'from-green-500 to-green-600',
-			badge: (stats.totalReviews + stats.totalDamageCases).toString()
-		},
-		{
-			title: '유입 분석',
-			description: '트래픽, 검색어, 퍼널, 디바이스 분석',
-			icon: BarChart3,
-			link: adminPath('/analytics'),
-			color: 'from-cyan-500 to-cyan-600'
-		},
-		{
-			title: '데이터 관리',
-			description: '업체 정보, 자재 데이터 등을 관리합니다',
-			icon: Database,
-			link: adminPath('/data'),
-			color: 'from-purple-500 to-purple-600'
+			accent: 'bg-wood-100 text-wood-500',
+			link: adminPath('/community')
 		}
 	]
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-			{/* Header */}
-			<header className="bg-gray-800/50 backdrop-blur-xl border-b border-gray-700">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-					<div className="flex items-center justify-between">
-						<div className="flex items-center space-x-4">
-							<div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-								<LayoutDashboard className="w-6 h-6 text-white" />
-							</div>
-							<div>
-								<h1 className="text-2xl font-bold text-white">ZipCheck 관리자</h1>
-								<p className="text-gray-400 text-sm">환영합니다, {user?.username || 'Admin'}님</p>
-							</div>
-						</div>
-						<button
-							onClick={handleLogout}
-							className="flex items-center space-x-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 transition-all"
-						>
-							<LogOut className="w-4 h-4" />
-							<span>로그아웃</span>
-						</button>
-					</div>
-				</div>
-			</header>
+		<div className="space-y-6">
+			{/* Page Title */}
+			<div>
+				<h2 className="text-2xl font-semibold text-sand-900" style={{ fontFamily: 'Outfit, sans-serif' }}>
+					대시보드
+				</h2>
+				<p className="text-sand-500 text-sm mt-1">서비스 운영 현황을 한눈에 확인하세요</p>
+			</div>
 
-			{/* Main Content */}
-			<main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-				{/* Stats Cards */}
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-					{statCards.map((card, index) => (
-						<motion.div
-							key={card.title}
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ delay: index * 0.1 }}
+			{/* Stat Cards */}
+			<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+				{statCards.map((card, index) => (
+					<motion.div
+						key={card.title}
+						initial={{ opacity: 0, y: 16 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ delay: index * 0.07 }}
+					>
+						<Link
+							to={card.link}
+							className="block bg-white rounded-2xl p-5 border border-sand-200 hover:border-sand-300 hover:shadow-md transition-all group"
 						>
-							<Link
-								to={card.link}
-								className="block bg-gray-800/50 backdrop-blur-xl rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition-all"
-							>
-								<div className="flex items-center justify-between mb-4">
-									<div className={`w-12 h-12 bg-gradient-to-br ${card.color} rounded-lg flex items-center justify-center`}>
-										<card.icon className="w-6 h-6 text-white" />
-									</div>
-									<ArrowRight className="w-5 h-5 text-gray-500" />
+							<div className="flex items-center justify-between mb-3">
+								<div className={`w-10 h-10 rounded-xl ${card.accent} flex items-center justify-center`}>
+									<card.icon className="w-5 h-5" />
 								</div>
-								<h3 className="text-gray-400 text-sm mb-1">{card.title}</h3>
-								<p className="text-3xl font-bold text-white">
-									{loading ? '...' : card.value.toLocaleString()}
-								</p>
-							</Link>
-						</motion.div>
-					))}
-				</div>
+								<ArrowRight className="w-4 h-4 text-sand-300 group-hover:text-sand-500 transition-colors" />
+							</div>
+							<p className="text-sand-500 text-xs font-medium mb-0.5">{card.title}</p>
+							<p className="text-2xl font-bold text-sand-900">
+								{loading ? '—' : card.value.toLocaleString()}
+							</p>
+						</Link>
+					</motion.div>
+				))}
+			</div>
 
-				{/* Menu Items */}
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-					{menuItems.map((item, index) => (
-						<motion.div
-							key={item.title}
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ delay: 0.3 + index * 0.1 }}
-						>
-							<Link
-								to={item.link}
-								className="block bg-gray-800/50 backdrop-blur-xl rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition-all group"
-							>
-								<div className="flex items-start justify-between">
-									<div className="flex items-start space-x-4">
-										<div className={`w-12 h-12 bg-gradient-to-br ${item.color} rounded-lg flex items-center justify-center flex-shrink-0`}>
-											<item.icon className="w-6 h-6 text-white" />
-										</div>
-										<div>
-											<h3 className="text-xl font-semibold text-white mb-2">{item.title}</h3>
-											<p className="text-gray-400">{item.description}</p>
-										</div>
-									</div>
-									<ArrowRight className="w-5 h-5 text-gray-500 group-hover:text-gray-300 transition-colors" />
-								</div>
-							</Link>
-						</motion.div>
-					))}
-				</div>
-
-				{/* Quick Stats Section */}
+			{/* Quick Links */}
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<motion.div
-					initial={{ opacity: 0, y: 20 }}
+					initial={{ opacity: 0, y: 16 }}
 					animate={{ opacity: 1, y: 0 }}
-					transition={{ delay: 0.5 }}
-					className="mt-8 bg-gray-800/50 backdrop-blur-xl rounded-xl p-6 border border-gray-700"
+					transition={{ delay: 0.3 }}
 				>
-					<h2 className="text-xl font-semibold text-white mb-4">시스템 상태</h2>
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<div className="flex items-center space-x-3">
-							<div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-							<span className="text-gray-300">시스템 정상 운영 중</span>
+					<Link
+						to={adminPath('/analytics')}
+						className="flex items-center gap-4 bg-white rounded-2xl p-5 border border-sand-200 hover:border-forest-200 hover:shadow-md transition-all group"
+					>
+						<div className="w-12 h-12 rounded-xl bg-forest-100 flex items-center justify-center flex-shrink-0">
+							<BarChart3 className="w-6 h-6 text-forest-700" />
 						</div>
-						<div className="flex items-center space-x-3">
-							<div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-							<span className="text-gray-300">데이터베이스 연결됨</span>
+						<div className="flex-1 min-w-0">
+							<h3 className="text-base font-semibold text-sand-900">유입 분석</h3>
+							<p className="text-sm text-sand-500">트래픽, 검색어, 퍼널 분석</p>
 						</div>
-					</div>
+						<ArrowRight className="w-5 h-5 text-sand-300 group-hover:text-forest-500 transition-colors flex-shrink-0" />
+					</Link>
 				</motion.div>
-			</main>
+
+				<motion.div
+					initial={{ opacity: 0, y: 16 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ delay: 0.35 }}
+				>
+					<Link
+						to={adminPath('/data')}
+						className="flex items-center gap-4 bg-white rounded-2xl p-5 border border-sand-200 hover:border-wood-200 hover:shadow-md transition-all group"
+					>
+						<div className="w-12 h-12 rounded-xl bg-wood-100 flex items-center justify-center flex-shrink-0">
+							<FileText className="w-6 h-6 text-wood-500" />
+						</div>
+						<div className="flex-1 min-w-0">
+							<h3 className="text-base font-semibold text-sand-900">데이터 관리</h3>
+							<p className="text-sm text-sand-500">시공 데이터, 유통사 가격 정보</p>
+						</div>
+						<ArrowRight className="w-5 h-5 text-sand-300 group-hover:text-wood-500 transition-colors flex-shrink-0" />
+					</Link>
+				</motion.div>
+			</div>
+
+			{/* System Status */}
+			<motion.div
+				initial={{ opacity: 0, y: 16 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ delay: 0.4 }}
+				className="bg-white rounded-2xl p-5 border border-sand-200"
+			>
+				<h3 className="text-sm font-semibold text-sand-700 mb-3" style={{ fontFamily: 'Outfit, sans-serif' }}>
+					System Status
+				</h3>
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+					<div className="flex items-center gap-2.5">
+						<div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+						<span className="text-sm text-sand-600">시스템 정상 운영 중</span>
+					</div>
+					<div className="flex items-center gap-2.5">
+						<div className="w-2 h-2 bg-forest-500 rounded-full" />
+						<span className="text-sm text-sand-600">데이터베이스 연결됨</span>
+					</div>
+				</div>
+			</motion.div>
 		</div>
 	)
 }

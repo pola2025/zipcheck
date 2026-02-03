@@ -151,7 +151,7 @@ interface SearchPerformance {
 		ctr: number
 		position: number
 	}
-	keywords: SearchKeyword[]
+	rows: SearchKeyword[]
 }
 
 export function useSearchPerformance(days: number = 28) {

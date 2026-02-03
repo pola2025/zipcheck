@@ -19,7 +19,7 @@ import { useAtomValue } from 'jotai'
 import { DevTools } from 'jotai-devtools'
 import 'jotai-devtools/styles.css'
 
-// Const Index = lazy(async () => import('pages/Index'))
+// Public pages
 const AI = lazy(async () => import('pages/AI'))
 const ZipCheck = lazy(async () => import('pages/Marketing/ZipCheck'))
 const PlanSelection = lazy(async () => import('pages/PlanSelection'))
@@ -31,39 +31,48 @@ const ReviewCreate = lazy(async () => import('pages/Community/ReviewCreate'))
 const ReviewDetail = lazy(async () => import('pages/Community/ReviewDetail'))
 const DamageCaseCreate = lazy(async () => import('pages/Community/DamageCaseCreate'))
 const DamageCaseDetail = lazy(async () => import('pages/Community/DamageCaseDetail'))
+const NotFound = lazy(async () => import('pages/NotFound'))
+
+// Admin pages
 const AdminLogin = lazy(async () => import('pages/Admin/Login'))
+const AdminLayout = lazy(async () => import('components/admin/AdminLayout'))
+const ProtectedRoute = lazy(async () => import('components/auth/ProtectedRoute'))
 const AdminDashboard = lazy(async () => import('pages/Admin/Dashboard'))
 const AdminQuoteRequests = lazy(async () => import('pages/Admin/QuoteRequests'))
 const AdminQuoteRequestDetail = lazy(async () => import('pages/Admin/QuoteRequestDetail'))
 const AdminDataManagement = lazy(async () => import('pages/Admin/DataManagement'))
 const AdminCommunityManagement = lazy(async () => import('pages/Admin/CommunityManagement'))
 const AdminAnalytics = lazy(async () => import('pages/Admin/Analytics'))
-const NotFound = lazy(async () => import('pages/NotFound'))
 
 const isAdminDomain = window.location.hostname === 'admin.zcheck.co.kr'
 
-const adminRoutes = (
+// Admin child routes shared between both domains
+const adminChildRoutes = (
 	<>
-		{/* admin.zcheck.co.kr 전용: prefix 없이 접근 */}
+		<Route index element={<AdminDashboard />} />
+		<Route path='quote-requests' element={<AdminQuoteRequests />} />
+		<Route path='quote-requests/:id' element={<AdminQuoteRequestDetail />} />
+		<Route path='analytics' element={<AdminAnalytics />} />
+		<Route path='community' element={<AdminCommunityManagement />} />
+		<Route path='data' element={<AdminDataManagement />} />
+	</>
+)
+
+const adminDomainRoutes = (
+	<>
 		<Route path='/login' element={<AdminLogin />} />
-		<Route path='/' element={<AdminDashboard />} />
-		<Route path='/quote-requests' element={<AdminQuoteRequests />} />
-		<Route path='/quote-requests/:id' element={<AdminQuoteRequestDetail />} />
-		<Route path='/data' element={<AdminDataManagement />} />
-		<Route path='/community' element={<AdminCommunityManagement />} />
-		<Route path='/analytics' element={<AdminAnalytics />} />
-		{/* 기존 /admin/* 경로도 리다이렉트 지원 */}
+		<Route path='/' element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+			{adminChildRoutes}
+		</Route>
+		{/* Legacy /admin/* redirects */}
 		<Route path='/admin' element={<Navigate to="/" replace />} />
 		<Route path='/admin/login' element={<Navigate to="/login" replace />} />
-		<Route path='/admin/quote-requests' element={<Navigate to="/quote-requests" replace />} />
-		<Route path='/admin/analytics' element={<Navigate to="/analytics" replace />} />
-		<Route path='/admin/data' element={<Navigate to="/data" replace />} />
-		<Route path='/admin/community' element={<Navigate to="/community" replace />} />
+		<Route path='/admin/*' element={<Navigate to="/" replace />} />
 		<Route path='*' element={<NotFound />} />
 	</>
 )
 
-const mainRoutes = (
+const mainDomainRoutes = (
 	<>
 		<Route path='/' element={<ZipCheck />} />
 		<Route path='/plan-selection' element={<PlanSelection />} />
@@ -80,18 +89,15 @@ const mainRoutes = (
 		</Route>
 		<Route path='/ai/shared/:id' element={<AI isShared />} />
 		<Route path='/admin/login' element={<AdminLogin />} />
-		<Route path='/admin' element={<AdminDashboard />} />
-		<Route path='/admin/quote-requests' element={<AdminQuoteRequests />} />
-		<Route path='/admin/quote-requests/:id' element={<AdminQuoteRequestDetail />} />
-		<Route path='/admin/data' element={<AdminDataManagement />} />
-		<Route path='/admin/community' element={<AdminCommunityManagement />} />
-		<Route path='/admin/analytics' element={<AdminAnalytics />} />
+		<Route path='/admin' element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+			{adminChildRoutes}
+		</Route>
 		<Route path='*' element={<NotFound />} />
 	</>
 )
 
 const router = createBrowserRouter(
-	createRoutesFromElements(isAdminDomain ? adminRoutes : mainRoutes)
+	createRoutesFromElements(isAdminDomain ? adminDomainRoutes : mainDomainRoutes)
 )
 
 export default function App(): ReactElement {

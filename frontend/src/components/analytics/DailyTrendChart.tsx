@@ -12,7 +12,6 @@ interface DailyTrendChartProps {
 }
 
 function formatDate(dateStr: string): string {
-	// "20250103" → "1/3"
 	if (dateStr.length === 8) {
 		const m = parseInt(dateStr.slice(4, 6))
 		const d = parseInt(dateStr.slice(6, 8))
@@ -28,36 +27,36 @@ export default function DailyTrendChart({ data }: DailyTrendChartProps) {
 	}))
 
 	return (
-		<div className="bg-gray-800/50 backdrop-blur-xl rounded-xl p-6 border border-gray-700">
-			<h3 className="text-lg font-semibold text-white mb-4">일별 추이</h3>
+		<div className="bg-white rounded-2xl p-5 border border-sand-200">
+			<h3 className="text-base font-semibold text-sand-900 mb-4">일별 추이</h3>
 			<ResponsiveContainer width="100%" height={320}>
 				<AreaChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
 					<defs>
 						<linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-							<stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
-							<stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+							<stop offset="5%" stopColor="#4A6741" stopOpacity={0.2} />
+							<stop offset="95%" stopColor="#4A6741" stopOpacity={0} />
 						</linearGradient>
 						<linearGradient id="colorSessions" x1="0" y1="0" x2="0" y2="1">
-							<stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
-							<stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+							<stop offset="5%" stopColor="#A87B4F" stopOpacity={0.2} />
+							<stop offset="95%" stopColor="#A87B4F" stopOpacity={0} />
 						</linearGradient>
 						<linearGradient id="colorPV" x1="0" y1="0" x2="0" y2="1">
-							<stop offset="5%" stopColor="#F59E0B" stopOpacity={0.3} />
-							<stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
+							<stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2} />
+							<stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
 						</linearGradient>
 					</defs>
-					<CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-					<XAxis dataKey="dateLabel" tick={{ fill: '#9CA3AF', fontSize: 12 }} />
-					<YAxis tick={{ fill: '#9CA3AF', fontSize: 12 }} />
+					<CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+					<XAxis dataKey="dateLabel" tick={{ fill: '#9B9588', fontSize: 12 }} />
+					<YAxis tick={{ fill: '#9B9588', fontSize: 12 }} />
 					<Tooltip
-						contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: 8 }}
-						labelStyle={{ color: '#F3F4F6' }}
-						itemStyle={{ color: '#D1D5DB' }}
+						contentStyle={{ backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+						labelStyle={{ color: '#1A1A1A' }}
+						itemStyle={{ color: '#6B6B6B' }}
 					/>
-					<Legend wrapperStyle={{ color: '#9CA3AF' }} />
-					<Area type="monotone" dataKey="users" name="사용자" stroke="#3B82F6" fill="url(#colorUsers)" strokeWidth={2} />
-					<Area type="monotone" dataKey="sessions" name="세션" stroke="#10B981" fill="url(#colorSessions)" strokeWidth={2} />
-					<Area type="monotone" dataKey="pageViews" name="페이지뷰" stroke="#F59E0B" fill="url(#colorPV)" strokeWidth={2} />
+					<Legend wrapperStyle={{ color: '#6B6B6B' }} />
+					<Area type="monotone" dataKey="users" name="사용자" stroke="#4A6741" fill="url(#colorUsers)" strokeWidth={2} />
+					<Area type="monotone" dataKey="sessions" name="세션" stroke="#A87B4F" fill="url(#colorSessions)" strokeWidth={2} />
+					<Area type="monotone" dataKey="pageViews" name="페이지뷰" stroke="#3B82F6" fill="url(#colorPV)" strokeWidth={2} />
 				</AreaChart>
 			</ResponsiveContainer>
 		</div>

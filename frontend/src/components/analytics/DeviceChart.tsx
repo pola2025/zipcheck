@@ -13,9 +13,9 @@ interface DeviceChartProps {
 }
 
 const DEVICE_COLORS: Record<string, string> = {
-	desktop: '#3B82F6',
-	mobile: '#10B981',
-	tablet: '#F59E0B',
+	desktop: '#4A6741',
+	mobile: '#A87B4F',
+	tablet: '#3B82F6',
 }
 
 const DEVICE_LABELS: Record<string, string> = {
@@ -28,14 +28,14 @@ export default function DeviceChart({ data }: DeviceChartProps) {
 	const chartData = data.map(d => ({
 		name: DEVICE_LABELS[d.device.toLowerCase()] || d.device,
 		value: d.users,
-		fill: DEVICE_COLORS[d.device.toLowerCase()] || '#6B7280',
+		fill: DEVICE_COLORS[d.device.toLowerCase()] || '#9B9588',
 	}))
 
 	const total = chartData.reduce((sum, d) => sum + d.value, 0)
 
 	return (
-		<div className="bg-gray-800/50 backdrop-blur-xl rounded-xl p-6 border border-gray-700">
-			<h3 className="text-lg font-semibold text-white mb-4">디바이스</h3>
+		<div className="bg-white rounded-2xl p-5 border border-sand-200">
+			<h3 className="text-base font-semibold text-sand-900 mb-4">디바이스</h3>
 			<ResponsiveContainer width="100%" height={200}>
 				<PieChart>
 					<Pie
@@ -52,8 +52,8 @@ export default function DeviceChart({ data }: DeviceChartProps) {
 						))}
 					</Pie>
 					<Tooltip
-						contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: 8 }}
-						itemStyle={{ color: '#D1D5DB' }}
+						contentStyle={{ backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+						itemStyle={{ color: '#6B6B6B' }}
 					/>
 				</PieChart>
 			</ResponsiveContainer>
@@ -61,7 +61,7 @@ export default function DeviceChart({ data }: DeviceChartProps) {
 				{chartData.map(d => (
 					<div key={d.name} className="flex items-center gap-2">
 						<span className="w-3 h-3 rounded-full" style={{ backgroundColor: d.fill }} />
-						<span className="text-sm text-gray-300">
+						<span className="text-sm text-sand-600">
 							{d.name} {total > 0 ? `${Math.round((d.value / total) * 100)}%` : '0%'}
 						</span>
 					</div>

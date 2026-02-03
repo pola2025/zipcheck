@@ -61,5 +61,21 @@ coverage/
 nul
 
 
-#Ignore vscode AI rules
-.github\instructions\codacy.instructions.md
+# Ignore vscode AI rules
+.github/instructions/
+
+# ML models (large binaries)
+models/
+
+# Resource files (images, docs)
+resources/
+
+# Vercel
+.vercel/
+.vercel-archive/
+
+# Session handoff
+NEXT_SESSION_REQUEST.md
+
+# Claude project guide
+.claude/PROJECT_START_GUIDE.md

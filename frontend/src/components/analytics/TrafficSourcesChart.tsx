@@ -1,4 +1,4 @@
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 
 interface TrafficSource {
 	source: string
@@ -11,7 +11,7 @@ interface TrafficSourcesChartProps {
 	data: TrafficSource[]
 }
 
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316']
+const COLORS = ['#4A6741', '#A87B4F', '#3B82F6', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#EF4444']
 
 export default function TrafficSourcesChart({ data }: TrafficSourcesChartProps) {
 	const chartData = data.slice(0, 8).map(d => ({
@@ -20,8 +20,8 @@ export default function TrafficSourcesChart({ data }: TrafficSourcesChartProps) 
 	}))
 
 	return (
-		<div className="bg-gray-800/50 backdrop-blur-xl rounded-xl p-6 border border-gray-700">
-			<h3 className="text-lg font-semibold text-white mb-4">유입 출처</h3>
+		<div className="bg-white rounded-2xl p-5 border border-sand-200">
+			<h3 className="text-base font-semibold text-sand-900 mb-4">유입 출처</h3>
 			<ResponsiveContainer width="100%" height={300}>
 				<PieChart>
 					<Pie
@@ -33,16 +33,16 @@ export default function TrafficSourcesChart({ data }: TrafficSourcesChartProps) 
 						dataKey="value"
 						paddingAngle={2}
 						label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-						labelLine={{ stroke: '#6B7280' }}
+						labelLine={{ stroke: '#C4BEB4' }}
 					>
 						{chartData.map((_, index) => (
 							<Cell key={index} fill={COLORS[index % COLORS.length]} />
 						))}
 					</Pie>
 					<Tooltip
-						contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: 8 }}
-						labelStyle={{ color: '#F3F4F6' }}
-						itemStyle={{ color: '#D1D5DB' }}
+						contentStyle={{ backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+						labelStyle={{ color: '#1A1A1A' }}
+						itemStyle={{ color: '#6B6B6B' }}
 					/>
 				</PieChart>
 			</ResponsiveContainer>
