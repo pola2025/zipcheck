@@ -5,7 +5,8 @@
  */
 
 import { Router } from 'express'
-import { getTrafficReport, getRealtimeUsers } from '../../services/google-analytics'
+import { getTrafficReport, getRealtimeUsers, getDeviceReport, getGeoReport, getFunnelReport } from '../../services/google-analytics'
+import { syncDailyAnalytics } from '../../services/airtable-sync'
 import { getSearchPerformance, requestIndexing, requestIndexingForSitemap, submitSitemap } from '../../services/google-search-console'
 import { sendEmail } from '../../services/google-gmail'
 
@@ -43,6 +44,74 @@ router.get('/analytics/realtime', async (req, res) => {
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Unknown error'
 		console.error('GA4 realtime error:', message)
+		res.status(500).json({ error: message })
+	}
+})
+
+/**
+ * GET /api/admin/google/analytics/devices
+ * 디바이스별 분석 데이터
+ * Query: ?days=30
+ */
+router.get('/analytics/devices', async (req, res) => {
+	try {
+		const days = parseInt(req.query.days as string) || 30
+		const report = await getDeviceReport(days)
+		res.json(report)
+	} catch (error) {
+		const message = error instanceof Error ? error.message : 'Unknown error'
+		console.error('GA4 device report error:', message)
+		res.status(500).json({ error: message })
+	}
+})
+
+/**
+ * GET /api/admin/google/analytics/geo
+ * 지역별 분석 데이터
+ * Query: ?days=30
+ */
+router.get('/analytics/geo', async (req, res) => {
+	try {
+		const days = parseInt(req.query.days as string) || 30
+		const report = await getGeoReport(days)
+		res.json(report)
+	} catch (error) {
+		const message = error instanceof Error ? error.message : 'Unknown error'
+		console.error('GA4 geo report error:', message)
+		res.status(500).json({ error: message })
+	}
+})
+
+/**
+ * GET /api/admin/google/analytics/funnel
+ * 퍼널 분석 데이터
+ * Query: ?days=30
+ */
+router.get('/analytics/funnel', async (req, res) => {
+	try {
+		const days = parseInt(req.query.days as string) || 30
+		const report = await getFunnelReport(days)
+		res.json(report)
+	} catch (error) {
+		const message = error instanceof Error ? error.message : 'Unknown error'
+		console.error('GA4 funnel report error:', message)
+		res.status(500).json({ error: message })
+	}
+})
+
+/**
+ * POST /api/admin/google/analytics/sync-airtable
+ * Airtable에 일별 분석 데이터 동기화
+ * Body: { days?: number }
+ */
+router.post('/analytics/sync-airtable', async (req, res) => {
+	try {
+		const days = parseInt(req.body.days) || 30
+		const result = await syncDailyAnalytics(days)
+		res.json(result)
+	} catch (error) {
+		const message = error instanceof Error ? error.message : 'Unknown error'
+		console.error('Airtable sync error:', message)
 		res.status(500).json({ error: message })
 	}
 })

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { LayoutDashboard, FileText, Database, TrendingUp, LogOut, ArrowRight, MessageSquare, AlertTriangle } from 'lucide-react'
+import { LayoutDashboard, FileText, Database, TrendingUp, LogOut, ArrowRight, MessageSquare, AlertTriangle, BarChart3 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { getApiUrl } from '../../lib/api-config'
 
@@ -144,6 +144,13 @@ const Dashboard: React.FC = () => {
 			link: '/admin/community',
 			color: 'from-green-500 to-green-600',
 			badge: (stats.totalReviews + stats.totalDamageCases).toString()
+		},
+		{
+			title: '유입 분석',
+			description: '트래픽, 검색어, 퍼널, 디바이스 분석',
+			icon: BarChart3,
+			link: '/admin/analytics',
+			color: 'from-cyan-500 to-cyan-600'
 		},
 		{
 			title: '데이터 관리',

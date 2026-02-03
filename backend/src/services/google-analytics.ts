@@ -170,6 +170,193 @@ export async function getTrafficReport(days: number = 30): Promise<TrafficReport
 /**
  * 실시간 사용자 수 조회
  */
+// ============================================
+// Device Report
+// ============================================
+
+interface DeviceReportItem {
+	device: string
+	users: number
+	sessions: number
+	pageViews: number
+	bounceRate: number
+}
+
+export async function getDeviceReport(days: number = 30): Promise<DeviceReportItem[]> {
+	const propertyId = process.env.GA4_PROPERTY_ID
+	if (!propertyId) {
+		throw new Error('GA4_PROPERTY_ID 환경변수가 설정되지 않았습니다.')
+	}
+
+	const client = analyticsDataClient()
+	const property = `properties/${propertyId}`
+
+	const res = await client.properties.runReport({
+		property,
+		requestBody: {
+			dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
+			dimensions: [{ name: 'deviceCategory' }],
+			metrics: [
+				{ name: 'totalUsers' },
+				{ name: 'sessions' },
+				{ name: 'screenPageViews' },
+				{ name: 'bounceRate' },
+			],
+			orderBys: [{ metric: { metricName: 'totalUsers' }, desc: true }],
+		},
+	})
+
+	return (res.data.rows || []).map(row => ({
+		device: row.dimensionValues?.[0]?.value || 'unknown',
+		users: parseInt(row.metricValues?.[0]?.value || '0'),
+		sessions: parseInt(row.metricValues?.[1]?.value || '0'),
+		pageViews: parseInt(row.metricValues?.[2]?.value || '0'),
+		bounceRate: parseFloat(row.metricValues?.[3]?.value || '0'),
+	}))
+}
+
+// ============================================
+// Geo Report
+// ============================================
+
+interface GeoReportItem {
+	name: string
+	users: number
+	sessions: number
+}
+
+interface GeoReport {
+	countries: GeoReportItem[]
+	cities: GeoReportItem[]
+}
+
+export async function getGeoReport(days: number = 30): Promise<GeoReport> {
+	const propertyId = process.env.GA4_PROPERTY_ID
+	if (!propertyId) {
+		throw new Error('GA4_PROPERTY_ID 환경변수가 설정되지 않았습니다.')
+	}
+
+	const client = analyticsDataClient()
+	const property = `properties/${propertyId}`
+
+	const [countriesRes, citiesRes] = await Promise.all([
+		client.properties.runReport({
+			property,
+			requestBody: {
+				dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
+				dimensions: [{ name: 'country' }],
+				metrics: [
+					{ name: 'totalUsers' },
+					{ name: 'sessions' },
+				],
+				orderBys: [{ metric: { metricName: 'totalUsers' }, desc: true }],
+				limit: '10',
+			},
+		}),
+		client.properties.runReport({
+			property,
+			requestBody: {
+				dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
+				dimensions: [{ name: 'city' }],
+				metrics: [
+					{ name: 'totalUsers' },
+					{ name: 'sessions' },
+				],
+				orderBys: [{ metric: { metricName: 'totalUsers' }, desc: true }],
+				limit: '10',
+			},
+		}),
+	])
+
+	const countries = (countriesRes.data.rows || []).map(row => ({
+		name: row.dimensionValues?.[0]?.value || 'unknown',
+		users: parseInt(row.metricValues?.[0]?.value || '0'),
+		sessions: parseInt(row.metricValues?.[1]?.value || '0'),
+	}))
+
+	const cities = (citiesRes.data.rows || []).map(row => ({
+		name: row.dimensionValues?.[0]?.value || 'unknown',
+		users: parseInt(row.metricValues?.[0]?.value || '0'),
+		sessions: parseInt(row.metricValues?.[1]?.value || '0'),
+	}))
+
+	return { countries, cities }
+}
+
+// ============================================
+// Funnel Report
+// ============================================
+
+interface FunnelStep {
+	step: number
+	label: string
+	pagePath: string
+	pageViews: number
+	users: number
+}
+
+const FUNNEL_PATHS: Array<{ path: string; label: string }> = [
+	{ path: '/', label: '메인 페이지' },
+	{ path: '/plan-selection', label: '플랜 선택' },
+	{ path: '/payment', label: '결제' },
+	{ path: '/quote-submission', label: '견적 신청' },
+	{ path: '/quote-status', label: '견적 확인' },
+]
+
+export async function getFunnelReport(days: number = 30): Promise<FunnelStep[]> {
+	const propertyId = process.env.GA4_PROPERTY_ID
+	if (!propertyId) {
+		throw new Error('GA4_PROPERTY_ID 환경변수가 설정되지 않았습니다.')
+	}
+
+	const client = analyticsDataClient()
+	const property = `properties/${propertyId}`
+
+	const res = await client.properties.runReport({
+		property,
+		requestBody: {
+			dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
+			dimensions: [{ name: 'pagePath' }],
+			metrics: [
+				{ name: 'screenPageViews' },
+				{ name: 'totalUsers' },
+			],
+			dimensionFilter: {
+				filter: {
+					fieldName: 'pagePath',
+					inListFilter: {
+						values: FUNNEL_PATHS.map(f => f.path),
+					},
+				},
+			},
+		},
+	})
+
+	const dataMap = new Map<string, { pageViews: number; users: number }>()
+	for (const row of (res.data.rows || [])) {
+		const pagePath = row.dimensionValues?.[0]?.value || ''
+		dataMap.set(pagePath, {
+			pageViews: parseInt(row.metricValues?.[0]?.value || '0'),
+			users: parseInt(row.metricValues?.[1]?.value || '0'),
+		})
+	}
+
+	return FUNNEL_PATHS.map((funnel, index) => {
+		const data = dataMap.get(funnel.path) || { pageViews: 0, users: 0 }
+		return {
+			step: index + 1,
+			label: funnel.label,
+			pagePath: funnel.path,
+			pageViews: data.pageViews,
+			users: data.users,
+		}
+	})
+}
+
+// ============================================
+// Realtime Users
+// ============================================
+
 export async function getRealtimeUsers(): Promise<number> {
 	const propertyId = process.env.GA4_PROPERTY_ID
 	if (!propertyId) {
