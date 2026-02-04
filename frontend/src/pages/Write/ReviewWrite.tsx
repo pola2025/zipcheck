@@ -670,7 +670,7 @@ export default function ReviewWrite() {
 									<div>
 										<label
 											htmlFor="rw-size"
-											className="block text-sm font-semibold mb-1.5 text-gray-500 flex items-center gap-1.5"
+											className="block text-sm font-semibold mb-1.5 text-gray-700 flex items-center gap-1.5"
 										>
 											<Ruler className="w-3.5 h-3.5" />
 											평수
@@ -693,7 +693,7 @@ export default function ReviewWrite() {
 									<div>
 										<label
 											htmlFor="rw-cost"
-											className="block text-sm font-semibold mb-1.5 text-gray-500 flex items-center gap-1.5"
+											className="block text-sm font-semibold mb-1.5 text-gray-700 flex items-center gap-1.5"
 										>
 											<Banknote className="w-3.5 h-3.5" />
 											시공 비용

@@ -58,6 +58,16 @@ export default function DamageCaseWrite() {
 			return
 		}
 
+		if (!companyPhone.trim()) {
+			alert('업체 전화번호를 입력해주세요.')
+			return
+		}
+
+		if (!businessNumber.trim()) {
+			alert('사업자번호를 입력해주세요.')
+			return
+		}
+
 		if (!damageType) {
 			alert('피해 유형을 선택해주세요.')
 			return
@@ -83,8 +93,8 @@ export default function DamageCaseWrite() {
 		try {
 			const formData = new FormData()
 			formData.append('company_name', companyName)
-			if (companyPhone) formData.append('company_phone', companyPhone)
-			if (businessNumber) formData.append('business_number', businessNumber)
+			formData.append('company_phone', companyPhone)
+			formData.append('business_number', businessNumber)
 			if (representativeName) formData.append('representative_name', representativeName)
 			formData.append('damage_type', damageType)
 			if (region) formData.append('region', region)
@@ -126,7 +136,7 @@ export default function DamageCaseWrite() {
 	const inputClass = "w-full px-4 py-3 bg-white border border-sand-200 rounded-xl text-sand-900 placeholder-sand-400 focus:outline-none focus:border-forest-500 focus:ring-2 focus:ring-forest-500/20 transition-all"
 	const selectClass = "w-full px-4 py-3 bg-white border border-sand-200 rounded-xl text-sand-900 focus:outline-none focus:border-forest-500 focus:ring-2 focus:ring-forest-500/20 transition-all"
 
-	const canSubmit = isLoggedIn && companyName.trim() && damageType && title.trim() && caseDescription.length >= 100 && agreed
+	const canSubmit = isLoggedIn && companyName.trim() && companyPhone.trim() && businessNumber.trim() && damageType && title.trim() && caseDescription.length >= 100 && agreed
 
 	return (
 		<div className="min-h-screen bg-sand-50">
@@ -193,7 +203,10 @@ export default function DamageCaseWrite() {
 						<div className="space-y-6">
 							{/* Company Info Section */}
 							<div className="space-y-4">
-								<h3 className="text-sm font-bold text-sand-800 uppercase tracking-wider">업체 정보</h3>
+								<h3 className="text-base font-bold text-sand-900 flex items-center gap-2 pb-3 border-b border-sand-200">
+									<Building className="w-5 h-5 text-forest-600" />
+									업체 정보
+								</h3>
 
 								<div>
 									<label htmlFor="dcw-company" className="block text-sm font-semibold mb-2 text-sand-700 flex items-center gap-2">
@@ -205,23 +218,23 @@ export default function DamageCaseWrite() {
 
 								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 									<div>
-										<label htmlFor="dcw-phone" className="block text-sm font-semibold mb-2 text-sand-500 flex items-center gap-2">
-											<Phone className="w-4 h-4" />
-											업체 전화번호
+										<label htmlFor="dcw-phone" className="block text-sm font-semibold mb-2 text-sand-800 flex items-center gap-2">
+											<Phone className="w-4 h-4 text-forest-500" />
+											업체 전화번호 <span className="text-red-500">*</span>
 										</label>
-										<input id="dcw-phone" type="tel" value={companyPhone} onChange={(e) => setCompanyPhone(e.target.value)} placeholder="02-1234-5678" className={inputClass} />
+										<input id="dcw-phone" type="tel" value={companyPhone} onChange={(e) => setCompanyPhone(e.target.value)} placeholder="02-1234-5678" className={inputClass} required />
 									</div>
 									<div>
-										<label htmlFor="dcw-biz" className="block text-sm font-semibold mb-2 text-sand-500 flex items-center gap-2">
-											<FileText className="w-4 h-4" />
-											사업자번호
+										<label htmlFor="dcw-biz" className="block text-sm font-semibold mb-2 text-sand-800 flex items-center gap-2">
+											<FileText className="w-4 h-4 text-forest-500" />
+											사업자번호 <span className="text-red-500">*</span>
 										</label>
-										<input id="dcw-biz" type="text" value={businessNumber} onChange={(e) => setBusinessNumber(e.target.value)} placeholder="123-45-67890" className={inputClass} />
+										<input id="dcw-biz" type="text" value={businessNumber} onChange={(e) => setBusinessNumber(e.target.value)} placeholder="123-45-67890" className={inputClass} required />
 									</div>
 								</div>
 
 								<div>
-									<label htmlFor="dcw-rep" className="block text-sm font-semibold mb-2 text-sand-500 flex items-center gap-2">
+									<label htmlFor="dcw-rep" className="block text-sm font-semibold mb-2 text-sand-600 flex items-center gap-2">
 										<User className="w-4 h-4" />
 										대표자/담당자 이름
 									</label>
@@ -230,8 +243,11 @@ export default function DamageCaseWrite() {
 							</div>
 
 							{/* Damage Details Section */}
-							<div className="space-y-4 pt-2">
-								<h3 className="text-sm font-bold text-sand-800 uppercase tracking-wider">피해 정보</h3>
+							<div className="space-y-4 pt-4">
+								<h3 className="text-base font-bold text-sand-900 flex items-center gap-2 pb-3 border-b border-sand-200">
+									<AlertTriangle className="w-5 h-5 text-red-500" />
+									피해 정보
+								</h3>
 
 								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 									<div>
@@ -247,7 +263,7 @@ export default function DamageCaseWrite() {
 										</select>
 									</div>
 									<div>
-										<label htmlFor="dcw-region" className="block text-sm font-semibold mb-2 text-sand-500 flex items-center gap-2">
+										<label htmlFor="dcw-region" className="block text-sm font-semibold mb-2 text-sand-700 flex items-center gap-2">
 											<MapPin className="w-4 h-4" />
 											피해 지역
 										</label>
@@ -257,7 +273,7 @@ export default function DamageCaseWrite() {
 
 								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 									<div>
-										<label htmlFor="dcw-amount" className="block text-sm font-semibold mb-2 text-sand-500 flex items-center gap-2">
+										<label htmlFor="dcw-amount" className="block text-sm font-semibold mb-2 text-sand-700 flex items-center gap-2">
 											<Banknote className="w-4 h-4" />
 											피해 금액
 										</label>
@@ -275,7 +291,7 @@ export default function DamageCaseWrite() {
 										)}
 									</div>
 									<div>
-										<label htmlFor="dcw-severity" className="block text-sm font-semibold mb-2 text-sand-500 flex items-center gap-2">
+										<label htmlFor="dcw-severity" className="block text-sm font-semibold mb-2 text-sand-700 flex items-center gap-2">
 											<ShieldAlert className="w-4 h-4" />
 											피해 심각도
 										</label>
@@ -290,8 +306,11 @@ export default function DamageCaseWrite() {
 							</div>
 
 							{/* Title and Description Section */}
-							<div className="space-y-4 pt-2">
-								<h3 className="text-sm font-bold text-sand-800 uppercase tracking-wider">상세 내용</h3>
+							<div className="space-y-4 pt-4">
+								<h3 className="text-base font-bold text-sand-900 flex items-center gap-2 pb-3 border-b border-sand-200">
+									<FileText className="w-5 h-5 text-forest-600" />
+									상세 내용
+								</h3>
 
 								<div>
 									<label htmlFor="dcw-title" className="block text-sm font-semibold mb-2 text-sand-700">
@@ -333,13 +352,15 @@ export default function DamageCaseWrite() {
 							</div>
 
 							{/* Resolution & Legal Section */}
-							<div className="space-y-4 pt-2">
-								<h3 className="text-sm font-bold text-sand-800 uppercase tracking-wider">진행 상태</h3>
+							<div className="space-y-4 pt-4">
+								<h3 className="text-base font-bold text-sand-900 flex items-center gap-2 pb-3 border-b border-sand-200">
+									<CheckCircle2 className="w-5 h-5 text-forest-600" />
+									진행 상태
+								</h3>
 
 								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 									<div>
-										<label htmlFor="dcw-resolution" className="block text-sm font-semibold mb-2 text-sand-500 flex items-center gap-2">
-											<CheckCircle2 className="w-4 h-4" />
+										<label htmlFor="dcw-resolution" className="block text-sm font-semibold mb-2 text-sand-700 flex items-center gap-2">
 											해결 상태
 										</label>
 										<select id="dcw-resolution" value={resolutionStatus} onChange={(e) => setResolutionStatus(e.target.value)} className={selectClass}>
