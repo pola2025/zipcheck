@@ -92,7 +92,7 @@ export default function BlacklistCheck() {
 		}
 	}
 
-	const inputClass = "w-full px-4 py-3 bg-white border border-sand-200 rounded-xl text-sand-900 placeholder-sand-400 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-200 transition-all"
+	const inputClass = "w-full px-4 py-3 bg-white border border-sand-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-200 transition-all"
 
 	return (
 		<div className="min-h-screen bg-sand-50">
@@ -128,8 +128,8 @@ export default function BlacklistCheck() {
 
 					<div className="space-y-4">
 						<div>
-							<label htmlFor="bl-biz" className="block text-sm font-semibold mb-2 text-sand-700 flex items-center gap-2">
-								<FileText className="w-4 h-4 text-sand-400" />
+							<label htmlFor="bl-biz" className="block text-sm font-semibold mb-2 text-gray-700 flex items-center gap-2">
+								<FileText className="w-4 h-4 text-gray-500" />
 								사업자등록번호
 							</label>
 							<input
@@ -143,8 +143,8 @@ export default function BlacklistCheck() {
 						</div>
 
 						<div>
-							<label htmlFor="bl-name" className="block text-sm font-semibold mb-2 text-sand-700 flex items-center gap-2">
-								<User className="w-4 h-4 text-sand-400" />
+							<label htmlFor="bl-name" className="block text-sm font-semibold mb-2 text-gray-700 flex items-center gap-2">
+								<User className="w-4 h-4 text-gray-500" />
 								대표자/담당자 이름
 							</label>
 							<input
@@ -158,8 +158,8 @@ export default function BlacklistCheck() {
 						</div>
 
 						<div>
-							<label htmlFor="bl-phone" className="block text-sm font-semibold mb-2 text-sand-700 flex items-center gap-2">
-								<Phone className="w-4 h-4 text-sand-400" />
+							<label htmlFor="bl-phone" className="block text-sm font-semibold mb-2 text-gray-700 flex items-center gap-2">
+								<Phone className="w-4 h-4 text-gray-500" />
 								연락처 (업체 전화번호)
 							</label>
 							<input
