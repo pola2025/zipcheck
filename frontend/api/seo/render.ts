@@ -254,7 +254,7 @@ function buildFallbackHtml(path: string): string {
 <link rel="canonical" href="${FRONTEND_URL}${path}">
 <meta property="og:title" content="원가 기준 인테리어 견적 분석">
 <meta property="og:description" content="인테리어 리모델링 견적이 적정한지 궁금하다면, 집첵에서 원가 기준으로 분석해보세요.">
-<meta property="og:image" content="${FRONTEND_URL}/api/og/home">
+<meta property="og:image" content="${FRONTEND_URL}/og-image.png">
 <meta property="og:url" content="${FRONTEND_URL}${path}">
 </head>
 <body>

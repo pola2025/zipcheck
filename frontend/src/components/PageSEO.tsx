@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async'
 
 const SITE_NAME = 'ZipCheck'
 const BASE_URL = 'https://zcheck.co.kr'
-const DEFAULT_IMAGE = `${BASE_URL}/api/og/home`
+const DEFAULT_IMAGE = `${BASE_URL}/og-image.png`
 
 interface PageSEOProps {
 	title: string
@@ -25,7 +25,7 @@ export default function PageSEO({
 }: PageSEOProps) {
 	const fullTitle = path === '/' ? '원가 기준 인테리어 견적 분석' : `${title} | ${SITE_NAME}`
 	const url = `${BASE_URL}${path}`
-	const imageUrl = ogImage || `${BASE_URL}/api/og${path === '/' ? '/home' : path}`
+	const imageUrl = ogImage || DEFAULT_IMAGE
 
 	const jsonLdScripts = jsonLd
 		? Array.isArray(jsonLd)

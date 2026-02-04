@@ -77,7 +77,7 @@ app.get('/api/seo/meta', async (c) => {
 				description: meta.description,
 				canonical: `${frontendUrl}${normalizedPath === '/' ? '' : normalizedPath}`,
 				ogType: meta.ogType,
-				ogImage: `${frontendUrl}/api/og${normalizedPath === '/' ? '/home' : normalizedPath}`,
+				ogImage: `${frontendUrl}/og-image.png`,
 				jsonLdType: meta.jsonLdType,
 			})
 		}
@@ -111,7 +111,7 @@ app.get('/api/seo/meta', async (c) => {
 				description: desc,
 				canonical: `${frontendUrl}/reviews/${slug}`,
 				ogType: 'article',
-				ogImage: `${frontendUrl}/api/og/reviews/${slug}`,
+				ogImage: `${frontendUrl}/og-image.png`,
 				jsonLdType: 'Review',
 				data: {
 					companyName: review.company_name,
@@ -159,7 +159,7 @@ app.get('/api/seo/meta', async (c) => {
 				description: desc,
 				canonical: `${frontendUrl}/damage-cases/${slug}`,
 				ogType: 'article',
-				ogImage: `${frontendUrl}/api/og/damage-cases/${slug}`,
+				ogImage: `${frontendUrl}/og-image.png`,
 				jsonLdType: 'Article',
 				data: {
 					title: dc.title,
@@ -180,7 +180,7 @@ app.get('/api/seo/meta', async (c) => {
 			description: '인테리어 리모델링 견적이 적정한지 궁금하다면, 집첵에서 원가 기준으로 분석해보세요.',
 			canonical: `${frontendUrl}${normalizedPath}`,
 			ogType: 'website',
-			ogImage: `${frontendUrl}/api/og/home`,
+			ogImage: `${frontendUrl}/og-image.png`,
 			jsonLdType: 'WebPage',
 		})
 
