@@ -339,7 +339,21 @@ app.get('/google/callback', async (c) => {
 			c.env.JWT_SECRET
 		)
 
-		return c.redirect(`${frontendUrl}/auth/google/success?token=${jwtToken}&redirect_to=${encodeURIComponent(redirectTo)}`)
+		// Support subdomain redirects (*.zcheck.co.kr)
+		let finalRedirectBase = frontendUrl
+		if (redirectTo.startsWith('http')) {
+			try {
+				const redirectUrl = new URL(redirectTo)
+				if (redirectUrl.hostname.endsWith('.zcheck.co.kr') || redirectUrl.hostname === 'zcheck.co.kr') {
+					finalRedirectBase = redirectUrl.origin
+				}
+			} catch {
+				// Invalid URL, use default
+			}
+		}
+
+		const redirectPath = redirectTo.startsWith('http') ? new URL(redirectTo).pathname : redirectTo
+		return c.redirect(`${finalRedirectBase}/auth/google/success?token=${jwtToken}&redirect_to=${encodeURIComponent(redirectPath)}`)
 	} catch (err) {
 		console.error('Google OAuth callback error:', err)
 		return c.redirect(`${frontendUrl}?error=oauth_failed`)

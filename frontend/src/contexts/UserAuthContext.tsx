@@ -101,7 +101,9 @@ export function UserAuthProvider({ children }: { children: ReactNode }) {
 	}, [refreshUser])
 
 	const loginWithGoogle = useCallback((redirectTo?: string) => {
-		const params = redirectTo ? `?redirect_to=${encodeURIComponent(redirectTo)}` : ''
+		// For subdomain support: pass full URL so backend can redirect back correctly
+		const fullRedirect = redirectTo ? `${window.location.origin}${redirectTo}` : window.location.origin
+		const params = `?redirect_to=${encodeURIComponent(fullRedirect)}`
 		window.location.href = getApiUrl(`/api/auth/google${params}`)
 	}, [])
 

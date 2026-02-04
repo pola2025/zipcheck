@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, Building, Phone, FileText, Send, ArrowLeft, Banknote, MapPin, Scale, ShieldAlert, CheckCircle2 } from 'lucide-react'
+import { AlertTriangle, Building, Phone, FileText, Send, ArrowLeft, Banknote, MapPin, Scale, ShieldAlert, CheckCircle2, User } from 'lucide-react'
 import NordicNavigation from 'components/nordic/NordicNavigation'
 import NordicFooter from 'components/nordic/NordicFooter'
 import PageSEO from 'components/PageSEO'
@@ -34,6 +34,7 @@ export default function DamageCaseWrite() {
 	const [companyName, setCompanyName] = useState('')
 	const [companyPhone, setCompanyPhone] = useState('')
 	const [businessNumber, setBusinessNumber] = useState('')
+	const [representativeName, setRepresentativeName] = useState('')
 	const [damageType, setDamageType] = useState('')
 	const [region, setRegion] = useState('')
 	const [damageAmount, setDamageAmount] = useState('')
@@ -84,6 +85,7 @@ export default function DamageCaseWrite() {
 			formData.append('company_name', companyName)
 			if (companyPhone) formData.append('company_phone', companyPhone)
 			if (businessNumber) formData.append('business_number', businessNumber)
+			if (representativeName) formData.append('representative_name', representativeName)
 			formData.append('damage_type', damageType)
 			if (region) formData.append('region', region)
 			if (damageAmount) formData.append('damage_amount', damageAmount)
@@ -216,6 +218,14 @@ export default function DamageCaseWrite() {
 										</label>
 										<input id="dcw-biz" type="text" value={businessNumber} onChange={(e) => setBusinessNumber(e.target.value)} placeholder="123-45-67890" className={inputClass} />
 									</div>
+								</div>
+
+								<div>
+									<label htmlFor="dcw-rep" className="block text-sm font-semibold mb-2 text-sand-500 flex items-center gap-2">
+										<User className="w-4 h-4" />
+										대표자/담당자 이름
+									</label>
+									<input id="dcw-rep" type="text" value={representativeName} onChange={(e) => setRepresentativeName(e.target.value)} placeholder="예: 홍길동" className={inputClass} />
 								</div>
 							</div>
 

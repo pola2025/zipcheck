@@ -15,6 +15,7 @@ import {
 	XCircle,
 	ThumbsUp,
 	ChevronRight,
+	User,
 } from 'lucide-react'
 import GoogleLoginButton from '../../components/auth/GoogleLoginButton'
 import ImageUploader from '../../components/community/ImageUploader'
@@ -206,6 +207,7 @@ export default function ReviewWrite() {
 	const [companyName, setCompanyName] = useState('')
 	const [companyPhone, setCompanyPhone] = useState('')
 	const [businessNumber, setBusinessNumber] = useState('')
+	const [representativeName, setRepresentativeName] = useState('')
 	const [projectType, setProjectType] = useState('')
 	const [region, setRegion] = useState('')
 	const [projectSize, setProjectSize] = useState('')
@@ -283,6 +285,7 @@ export default function ReviewWrite() {
 			formData.append('company_name', companyName.trim())
 			if (companyPhone.trim()) formData.append('company_phone', companyPhone.trim())
 			if (businessNumber.trim()) formData.append('business_number', businessNumber.trim())
+			if (representativeName.trim()) formData.append('representative_name', representativeName.trim())
 			formData.append('project_type', projectType)
 			formData.append('region', region.trim())
 			if (projectSize) formData.append('project_size', projectSize)
@@ -575,6 +578,24 @@ export default function ReviewWrite() {
 										value={businessNumber}
 										onChange={(e) => setBusinessNumber(e.target.value)}
 										placeholder="123-45-67890"
+										className={inputClass}
+									/>
+								</div>
+
+								<div>
+									<label
+										htmlFor="rw-rep"
+										className="block text-sm font-semibold mb-1.5 text-gray-700 flex items-center gap-1.5"
+									>
+										<User className="w-3.5 h-3.5 text-gray-400" />
+										대표자/담당자 이름
+									</label>
+									<input
+										id="rw-rep"
+										type="text"
+										value={representativeName}
+										onChange={(e) => setRepresentativeName(e.target.value)}
+										placeholder="예: 홍길동"
 										className={inputClass}
 									/>
 								</div>

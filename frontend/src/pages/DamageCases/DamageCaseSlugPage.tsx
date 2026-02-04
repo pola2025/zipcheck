@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { AlertTriangle, Calendar, Eye, ThumbsUp, ArrowLeft, Share2, ShieldAlert, Flag, Info } from 'lucide-react'
-import NordicNavigation from 'components/nordic/NordicNavigation'
+import AutoNavigation from 'components/AutoNavigation'
 import NordicFooter from 'components/nordic/NordicFooter'
 import BeforeAfterGallery from 'components/community/BeforeAfterGallery'
 import Comments from 'components/community/Comments'
@@ -126,28 +126,39 @@ export default function DamageCaseSlugPage() {
 	const categoryColor = damageCase?.category ? (CATEGORY_COLORS[damageCase.category] || 'bg-sand-100 text-sand-700') : null
 
 	// JSON-LD structured data
-	const jsonLd = damageCase ? {
-		'@context': 'https://schema.org',
-		'@type': 'Article',
-		headline: damageCase.title,
-		description: damageCase.description.substring(0, 200),
-		datePublished: damageCase.created_at,
-		dateModified: damageCase.updated_at || damageCase.created_at,
-		publisher: {
-			'@type': 'Organization',
-			name: '집첵',
-			url: BASE_URL
+	const jsonLd = damageCase ? [
+		{
+			'@context': 'https://schema.org',
+			'@type': 'Article',
+			headline: damageCase.title,
+			description: damageCase.description.substring(0, 200),
+			datePublished: damageCase.created_at,
+			dateModified: damageCase.updated_at || damageCase.created_at,
+			publisher: {
+				'@type': 'Organization',
+				name: '집첵',
+				url: BASE_URL
+			},
+			mainEntityOfPage: {
+				'@type': 'WebPage',
+				'@id': `${BASE_URL}/damage-cases/${slug}`
+			},
+			...(parseImages().length > 0 && {
+				image: parseImages().map(img =>
+					img.startsWith('http') ? img : `${IMAGE_BASE_URL}${img}`
+				)
+			})
 		},
-		mainEntityOfPage: {
-			'@type': 'WebPage',
-			'@id': `${BASE_URL}/damage-cases/${slug}`
-		},
-		...(parseImages().length > 0 && {
-			image: parseImages().map(img =>
-				img.startsWith('http') ? img : `${IMAGE_BASE_URL}${img}`
-			)
-		})
-	} : null
+		{
+			'@context': 'https://schema.org',
+			'@type': 'BreadcrumbList',
+			itemListElement: [
+				{ '@type': 'ListItem', position: 1, name: '홈', item: BASE_URL },
+				{ '@type': 'ListItem', position: 2, name: '피해사례', item: `${BASE_URL}/damage-cases` },
+				{ '@type': 'ListItem', position: 3, name: damageCase.title }
+			]
+		}
+	] : null
 
 	const pageTitle = damageCase
 		? `${damageCase.title} | 피해사례 | 집첵`
@@ -157,20 +168,13 @@ export default function DamageCaseSlugPage() {
 		? damageCase.description.substring(0, 160)
 		: '인테리어 피해사례를 확인하세요.'
 
-	const ogImageUrl = (() => {
-		const images = parseImages()
-		if (images.length > 0) {
-			const first = images[0]
-			return first.startsWith('http') ? first : `${IMAGE_BASE_URL}${first}`
-		}
-		return `${BASE_URL}/logo.png`
-	})()
+	const ogImageUrl = `${BASE_URL}/api/og/damage-cases/${slug}`
 
 	// Loading state
 	if (loading) {
 		return (
 			<div className="min-h-screen bg-sand-50">
-				<NordicNavigation />
+				<AutoNavigation />
 				<div className="flex justify-center items-center min-h-[60vh]">
 					<div className="w-8 h-8 border-2 border-sand-300 border-t-forest-500 rounded-full animate-spin" />
 				</div>
@@ -187,7 +191,7 @@ export default function DamageCaseSlugPage() {
 					<title>피해사례를 찾을 수 없습니다 | 집첵</title>
 					<meta name="robots" content="noindex" />
 				</Helmet>
-				<NordicNavigation />
+				<AutoNavigation />
 				<div className="flex flex-col items-center justify-center min-h-[60vh] px-5">
 					<div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
 						<AlertTriangle className="w-8 h-8 text-red-500" />
@@ -219,17 +223,20 @@ export default function DamageCaseSlugPage() {
 				<meta property="og:description" content={pageDescription} />
 				<meta property="og:url" content={`${BASE_URL}/damage-cases/${slug}`} />
 				<meta property="og:image" content={ogImageUrl} />
+				<meta property="og:image:width" content="1200" />
+				<meta property="og:image:height" content="630" />
 				<meta property="og:site_name" content="집첵" />
-				<meta property="twitter:card" content="summary_large_image" />
-				<meta property="twitter:title" content={pageTitle} />
-				<meta property="twitter:description" content={pageDescription} />
-				<meta property="twitter:image" content={ogImageUrl} />
-				{jsonLd && (
-					<script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-				)}
+				<meta property="og:locale" content="ko_KR" />
+				<meta name="twitter:card" content="summary_large_image" />
+				<meta name="twitter:title" content={pageTitle} />
+				<meta name="twitter:description" content={pageDescription} />
+				<meta name="twitter:image" content={ogImageUrl} />
+				{jsonLd?.map((schema, i) => (
+					<script key={i} type="application/ld+json">{JSON.stringify(schema)}</script>
+				))}
 			</Helmet>
 
-			<NordicNavigation />
+			<AutoNavigation />
 
 			{/* Warning Banner */}
 			<div className="bg-amber-50 border-b border-amber-200">

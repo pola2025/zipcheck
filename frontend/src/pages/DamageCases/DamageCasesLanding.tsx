@@ -2,17 +2,20 @@ import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { AlertTriangle, Search, SortDesc, PenLine, Info, Loader2 } from 'lucide-react'
 import NordicNavigation from 'components/nordic/NordicNavigation'
+import SubdomainNavigation from 'components/SubdomainNavigation'
 import NordicFooter from 'components/nordic/NordicFooter'
 import PageSEO from 'components/PageSEO'
 import DamageCaseCard from 'components/community/DamageCaseCard'
 import { DamageCase } from 'types/damageCase'
 import { getApiUrl } from '../../lib/api-config'
+import { getSubdomain } from '../../lib/subdomain'
 
 const PAGE_SIZE = 12
 
 export default function DamageCasesLanding() {
 	const navigate = useNavigate()
 	const [searchParams, setSearchParams] = useSearchParams()
+	const subdomain = getSubdomain()
 
 	const [cases, setCases] = useState<DamageCase[]>([])
 	const [loading, setLoading] = useState(true)
@@ -102,8 +105,26 @@ export default function DamageCasesLanding() {
 				title="피해사례 | 인테리어 피해 사례 모음"
 				description="인테리어 시공 중 발생한 피해 사례를 확인하세요. 동일한 피해를 예방하고 현명한 업체 선택에 도움이 됩니다."
 				path="/damage-cases"
+				jsonLd={[
+					{
+						'@context': 'https://schema.org',
+						'@type': 'CollectionPage',
+						name: '피해사례 | 인테리어 피해 사례 모음',
+						description: '인테리어 시공 중 발생한 피해 사례를 확인하세요.',
+						url: 'https://zcheck.co.kr/damage-cases',
+						isPartOf: { '@type': 'WebSite', name: 'ZipCheck', url: 'https://zcheck.co.kr' }
+					},
+					{
+						'@context': 'https://schema.org',
+						'@type': 'BreadcrumbList',
+						itemListElement: [
+							{ '@type': 'ListItem', position: 1, name: '홈', item: 'https://zcheck.co.kr' },
+							{ '@type': 'ListItem', position: 2, name: '피해사례' }
+						]
+					}
+				]}
 			/>
-			<NordicNavigation />
+			{subdomain === 'report' ? <SubdomainNavigation subdomain="report" /> : <NordicNavigation />}
 
 			{/* Hero */}
 			<div className="pt-28 pb-10 md:pt-36 md:pb-14 bg-gradient-to-b from-sand-100 to-sand-50">

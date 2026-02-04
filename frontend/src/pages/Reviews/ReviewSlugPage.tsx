@@ -23,7 +23,7 @@ import {
 	BadgeCheck,
 	ImageIcon
 } from 'lucide-react'
-import NordicNavigation from 'components/nordic/NordicNavigation'
+import AutoNavigation from 'components/AutoNavigation'
 import NordicFooter from 'components/nordic/NordicFooter'
 import BeforeAfterGallery from 'components/community/BeforeAfterGallery'
 import Comments from 'components/community/Comments'
@@ -238,11 +238,8 @@ export default function ReviewSlugPage() {
 
 	const hasBeforeAfter = beforeImages.length > 0 || afterImages.length > 0
 
-	// Best image for OG: prefer after, then before, then general
-	const ogImage = afterImages[0] || beforeImages[0] || generalImages[0] || null
-	const ogImageUrl = ogImage
-		? `${IMAGE_BASE_URL}${ogImage}`
-		: `${BASE_URL}/logo.png`
+	// Dynamic OG image via serverless function
+	const ogImageUrl = `${BASE_URL}/api/og/reviews/${slug}`
 
 	// SEO meta
 	const metaDescription = review
@@ -252,27 +249,44 @@ export default function ReviewSlugPage() {
 		? `${review.company_name} ${review.project_type || '시공'} 후기 | 집첵`
 		: '후기 | 집첵'
 
-	// JSON-LD structured data (matching the required schema)
-	const jsonLd = review ? {
-		'@context': 'https://schema.org',
-		'@type': 'Review',
-		itemReviewed: {
-			'@type': 'LocalBusiness',
-			name: review.company_name,
-			...(review.region && { address: review.region })
+	// JSON-LD structured data
+	const jsonLd = review ? [
+		{
+			'@context': 'https://schema.org',
+			'@type': 'Review',
+			itemReviewed: {
+				'@type': 'LocalBusiness',
+				name: review.company_name,
+				...(review.region && {
+					address: {
+						'@type': 'PostalAddress',
+						addressLocality: review.region
+					}
+				})
+			},
+			reviewRating: {
+				'@type': 'Rating',
+				ratingValue: String(review.rating),
+				bestRating: '5'
+			},
+			author: {
+				'@type': 'Person',
+				name: review.author_name || '익명'
+			},
+			reviewBody: review.review_text,
+			datePublished: review.created_at,
+			...(review.updated_at && { dateModified: review.updated_at })
 		},
-		reviewRating: {
-			'@type': 'Rating',
-			ratingValue: String(review.rating),
-			bestRating: '5'
-		},
-		author: {
-			'@type': 'Person',
-			name: review.author_name || '익명'
-		},
-		reviewBody: review.review_text,
-		datePublished: review.created_at
-	} : null
+		{
+			'@context': 'https://schema.org',
+			'@type': 'BreadcrumbList',
+			itemListElement: [
+				{ '@type': 'ListItem', position: 1, name: '홈', item: BASE_URL },
+				{ '@type': 'ListItem', position: 2, name: '업체 후기', item: `${BASE_URL}/reviews` },
+				{ '@type': 'ListItem', position: 3, name: review.company_name }
+			]
+		}
+	] : null
 
 	// Sub-ratings (only render if data exists)
 	const subRatings = review ? [
@@ -292,7 +306,7 @@ export default function ReviewSlugPage() {
 	if (loading) {
 		return (
 			<div className="min-h-screen bg-sand-50">
-				<NordicNavigation />
+				<AutoNavigation />
 				<div className="flex justify-center items-center min-h-[60vh]">
 					<div className="w-8 h-8 border-2 border-sand-300 border-t-forest-500 rounded-full animate-spin" />
 				</div>
@@ -305,7 +319,7 @@ export default function ReviewSlugPage() {
 	if (error || !review) {
 		return (
 			<div className="min-h-screen bg-sand-50">
-				<NordicNavigation />
+				<AutoNavigation />
 				<Helmet>
 					<title>후기를 찾을 수 없습니다 | 집첵</title>
 					<meta name="robots" content="noindex" />
@@ -348,6 +362,8 @@ export default function ReviewSlugPage() {
 				<meta property="og:description" content={metaDescription} />
 				<meta property="og:url" content={`${BASE_URL}/reviews/${slug}`} />
 				<meta property="og:image" content={ogImageUrl} />
+				<meta property="og:image:width" content="1200" />
+				<meta property="og:image:height" content="630" />
 				<meta property="og:site_name" content="집첵" />
 				<meta property="og:locale" content="ko_KR" />
 
@@ -358,12 +374,12 @@ export default function ReviewSlugPage() {
 				<meta name="twitter:image" content={ogImageUrl} />
 
 				{/* JSON-LD Structured Data */}
-				{jsonLd && (
-					<script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-				)}
+				{jsonLd?.map((schema, i) => (
+					<script key={i} type="application/ld+json">{JSON.stringify(schema)}</script>
+				))}
 			</Helmet>
 
-			<NordicNavigation />
+			<AutoNavigation />
 
 			{/* ==================== HERO SECTION ==================== */}
 			<div className="pt-28 pb-8 md:pt-36 md:pb-12 bg-gradient-to-b from-sand-100 to-sand-50">

@@ -2,17 +2,20 @@ import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Star, Search, SortDesc, PenLine, Loader2 } from 'lucide-react'
 import NordicNavigation from 'components/nordic/NordicNavigation'
+import SubdomainNavigation from 'components/SubdomainNavigation'
 import NordicFooter from 'components/nordic/NordicFooter'
 import PageSEO from 'components/PageSEO'
 import ReviewCard from 'components/community/ReviewCard'
 import { Review } from 'types/review'
 import { getApiUrl } from '../../lib/api-config'
+import { getSubdomain } from '../../lib/subdomain'
 
 const PAGE_SIZE = 12
 
 export default function ReviewsLanding() {
 	const navigate = useNavigate()
 	const [searchParams, setSearchParams] = useSearchParams()
+	const subdomain = getSubdomain()
 
 	const [reviews, setReviews] = useState<Review[]>([])
 	const [loading, setLoading] = useState(true)
@@ -102,8 +105,26 @@ export default function ReviewsLanding() {
 				title="업체 후기 | 인테리어 시공 후기 모음"
 				description="실제 고객들의 인테리어 시공 후기를 확인하세요. 업체별 평점, 시공 사진, 상세 리뷰를 한눈에 비교할 수 있습니다."
 				path="/reviews"
+				jsonLd={[
+					{
+						'@context': 'https://schema.org',
+						'@type': 'CollectionPage',
+						name: '업체 후기 | 인테리어 시공 후기 모음',
+						description: '실제 고객들의 인테리어 시공 후기를 확인하세요.',
+						url: 'https://zcheck.co.kr/reviews',
+						isPartOf: { '@type': 'WebSite', name: 'ZipCheck', url: 'https://zcheck.co.kr' }
+					},
+					{
+						'@context': 'https://schema.org',
+						'@type': 'BreadcrumbList',
+						itemListElement: [
+							{ '@type': 'ListItem', position: 1, name: '홈', item: 'https://zcheck.co.kr' },
+							{ '@type': 'ListItem', position: 2, name: '업체 후기' }
+						]
+					}
+				]}
 			/>
-			<NordicNavigation />
+			{subdomain === 'review' ? <SubdomainNavigation subdomain="review" /> : <NordicNavigation />}
 
 			{/* Hero */}
 			<div className="pt-28 pb-10 md:pt-36 md:pb-14 bg-gradient-to-b from-sand-100 to-sand-50">

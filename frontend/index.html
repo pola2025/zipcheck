@@ -40,7 +40,45 @@
 
 		<title>ZipCheck | AI 인테리어 견적 분석 서비스</title>
 
-		<!-- JSON-LD Structured Data -->
+		<!-- JSON-LD: Organization -->
+		<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@type": "Organization",
+			"name": "ZipCheck",
+			"alternateName": "집첵",
+			"url": "https://zcheck.co.kr",
+			"logo": "https://zcheck.co.kr/logo.png",
+			"description": "AI 기반 인테리어 견적 분석 서비스",
+			"contactPoint": {
+				"@type": "ContactPoint",
+				"email": "contact@zipcheck.kr",
+				"contactType": "customer service",
+				"availableLanguage": "Korean"
+			}
+		}
+		</script>
+
+		<!-- JSON-LD: WebSite with SearchAction -->
+		<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@type": "WebSite",
+			"name": "ZipCheck",
+			"alternateName": "집첵",
+			"url": "https://zcheck.co.kr",
+			"potentialAction": {
+				"@type": "SearchAction",
+				"target": {
+					"@type": "EntryPoint",
+					"urlTemplate": "https://zcheck.co.kr/reviews?search={search_term_string}"
+				},
+				"query-input": "required name=search_term_string"
+			}
+		}
+		</script>
+
+		<!-- JSON-LD: WebApplication -->
 		<script type="application/ld+json">
 		{
 			"@context": "https://schema.org",

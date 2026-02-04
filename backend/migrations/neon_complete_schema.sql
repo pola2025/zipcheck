@@ -309,14 +309,44 @@ CREATE TABLE IF NOT EXISTS public.damage_cases (
     images JSONB DEFAULT '[]'::jsonb,
     category TEXT,
     severity TEXT CHECK (severity IN ('low', 'medium', 'high', 'critical')),
-    status TEXT DEFAULT 'open' CHECK (status IN ('open', 'in_progress', 'resolved', 'closed')),
+    status TEXT DEFAULT 'open' CHECK (status IN ('pending', 'open', 'in_progress', 'resolved', 'closed', 'deleted')),
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+
+    -- 업체 정보
+    company_name TEXT,
+    company_phone TEXT,
+    business_number TEXT,
+    representative_name TEXT,
+    region TEXT,
+
+    -- 피해 상세
+    damage_type TEXT,
+    damage_amount NUMERIC,
+    resolution_status TEXT DEFAULT 'unresolved',
+    legal_action BOOLEAN DEFAULT false,
+
+    -- SEO & 추적
+    slug TEXT,
+    ip_address TEXT,
+    disclaimer_agreed BOOLEAN DEFAULT false,
+    disclaimer_agreed_at TIMESTAMPTZ,
+
+    -- 커뮤니티 카운터
+    view_count INTEGER DEFAULT 0,
+    like_count INTEGER DEFAULT 0,
+    comment_count INTEGER DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_damage_cases_user_id ON public.damage_cases(user_id);
 CREATE INDEX IF NOT EXISTS idx_damage_cases_status ON public.damage_cases(status);
 CREATE INDEX IF NOT EXISTS idx_damage_cases_created_at ON public.damage_cases(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_damage_cases_slug ON public.damage_cases(slug);
+CREATE INDEX IF NOT EXISTS idx_damage_cases_region ON public.damage_cases(region);
+CREATE INDEX IF NOT EXISTS idx_damage_cases_company_name ON public.damage_cases(company_name);
+CREATE INDEX IF NOT EXISTS idx_dc_representative ON public.damage_cases(representative_name);
+CREATE INDEX IF NOT EXISTS idx_dc_business_number ON public.damage_cases(business_number);
+CREATE INDEX IF NOT EXISTS idx_dc_company_phone ON public.damage_cases(company_phone);
 
 COMMENT ON TABLE public.damage_cases IS '하자 사례 게시판';
 
@@ -337,13 +367,50 @@ CREATE TABLE IF NOT EXISTS public.company_reviews (
     images JSONB DEFAULT '[]'::jsonb,
     verified BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+
+    -- 업체 연락처
+    company_phone TEXT,
+    business_number TEXT,
+    representative_name TEXT,
+
+    -- 프로젝트 정보
+    region TEXT,
+    project_type TEXT,
+    project_size NUMERIC,
+    project_cost NUMERIC,
+
+    -- 세부 평점
+    quality_rating DECIMAL(2,1),
+    price_rating DECIMAL(2,1),
+    communication_rating DECIMAL(2,1),
+    schedule_rating DECIMAL(2,1),
+
+    -- 추가 정보
+    title TEXT,
+    is_recommended BOOLEAN DEFAULT true,
+    before_images JSONB DEFAULT '[]'::jsonb,
+    after_images JSONB DEFAULT '[]'::jsonb,
+
+    -- SEO & 추적
+    slug TEXT,
+    ip_address TEXT,
+    disclaimer_agreed BOOLEAN DEFAULT false,
+
+    -- 상태 & 카운터
+    status TEXT DEFAULT 'published',
+    view_count INTEGER DEFAULT 0,
+    like_count INTEGER DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_company_reviews_user_id ON public.company_reviews(user_id);
 CREATE INDEX IF NOT EXISTS idx_company_reviews_company_name ON public.company_reviews(company_name);
 CREATE INDEX IF NOT EXISTS idx_company_reviews_rating ON public.company_reviews(rating);
 CREATE INDEX IF NOT EXISTS idx_company_reviews_created_at ON public.company_reviews(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_company_reviews_slug ON public.company_reviews(slug);
+CREATE INDEX IF NOT EXISTS idx_company_reviews_region ON public.company_reviews(region);
+CREATE INDEX IF NOT EXISTS idx_company_reviews_status ON public.company_reviews(status);
+CREATE INDEX IF NOT EXISTS idx_company_reviews_view_count ON public.company_reviews(view_count);
 
 COMMENT ON TABLE public.company_reviews IS '업체 리뷰 및 평가';
 

@@ -4,6 +4,7 @@ import { query, findOne, findMany, insertOne } from '../lib/db'
 import { authenticateToken, optionalAuth } from '../middleware/auth'
 import { getClientIp, generateSlug } from '../lib/utils'
 import { isBlacklisted } from '../lib/blacklist'
+import { maskReview } from '../lib/masking'
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>()
 
@@ -100,7 +101,7 @@ app.get('/', optionalAuth(), async (c) => {
 		console.log(`Found ${dataRows.length} reviews (total: ${count})`)
 
 		return c.json({
-			data: dataRows,
+			data: (dataRows as Record<string, unknown>[]).map(maskReview),
 			pagination: {
 				page,
 				limit,
@@ -140,7 +141,7 @@ app.get('/slug/:slug', optionalAuth(), async (c) => {
 			[(data.view_count || 0) + 1, data.id]
 		)
 
-		return c.json(data)
+		return c.json(maskReview(data as Record<string, unknown>))
 	} catch (error) {
 		console.error('Get review by slug error:', error)
 		const message = error instanceof Error ? error.message : 'Unknown error'
@@ -175,7 +176,7 @@ app.get('/:id', optionalAuth(), async (c) => {
 			[(data.view_count || 0) + 1, id]
 		)
 
-		return c.json(data)
+		return c.json(maskReview(data as Record<string, unknown>))
 	} catch (error) {
 		console.error('Get review error:', error)
 		const message = error instanceof Error ? error.message : 'Unknown error'
@@ -212,6 +213,7 @@ app.post('/', authenticateToken(), async (c) => {
 		const company_name = formData.get('company_name') as string | null
 		const company_phone = formData.get('company_phone') as string | null
 		const business_number = formData.get('business_number') as string | null
+		const representative_name = formData.get('representative_name') as string | null
 		const region = formData.get('region') as string | null
 		const project_type = formData.get('project_type') as string | null
 		const project_size = formData.get('project_size') as string | null
@@ -326,6 +328,7 @@ app.post('/', authenticateToken(), async (c) => {
 			company_name,
 			company_phone: company_phone || null,
 			business_number: business_number || null,
+			representative_name: representative_name || null,
 			region: region || null,
 			project_type: project_type || null,
 			project_size: project_size ? Number(project_size) : null,

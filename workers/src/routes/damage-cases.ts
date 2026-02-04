@@ -4,6 +4,7 @@ import { query, findOne, findMany, insertOne } from '../lib/db'
 import { authenticateToken, optionalAuth } from '../middleware/auth'
 import { getClientIp, generateSlug } from '../lib/utils'
 import { isBlacklisted } from '../lib/blacklist'
+import { maskDamageCase, stripSensitiveFields } from '../lib/masking'
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>()
 
@@ -153,7 +154,7 @@ app.get('/', optionalAuth(), async (c) => {
 		console.log(`Found ${dataRows.length} damage cases (total: ${count})`)
 
 		return c.json({
-			data: dataRows,
+			data: (dataRows as Record<string, unknown>[]).map(maskDamageCase),
 			pagination: {
 				page,
 				limit,
@@ -193,7 +194,7 @@ app.get('/slug/:slug', optionalAuth(), async (c) => {
 			[data.id]
 		)
 
-		return c.json(data)
+		return c.json(maskDamageCase(data as Record<string, unknown>))
 	} catch (error) {
 		console.error('Get damage case by slug error:', error)
 		const message = error instanceof Error ? error.message : 'Unknown error'
@@ -221,9 +222,79 @@ app.get('/:id', optionalAuth(), async (c) => {
 			return c.json({ error: '피해 사례를 찾을 수 없습니다.' }, 404)
 		}
 
-		return c.json(data)
+		return c.json(maskDamageCase(data as Record<string, unknown>))
 	} catch (error) {
 		console.error('Get damage case error:', error)
+		const message = error instanceof Error ? error.message : 'Unknown error'
+		return c.json({ error: message }, 500)
+	}
+})
+
+/**
+ * POST /match
+ * Blacklist matching - find damage cases by matching 2+ company info fields
+ * Rate limited: IP-based, 10 requests per minute
+ */
+app.post('/match', optionalAuth(), async (c) => {
+	try {
+		// Rate limiting via KV
+		const clientIp = getClientIp(c)
+		const rateLimitKey = `ratelimit:match:${clientIp}`
+		const currentCount = parseInt(await c.env.KV.get(rateLimitKey) || '0')
+
+		if (currentCount >= 10) {
+			return c.json({ error: '요청 횟수를 초과했습니다. 1분 후 다시 시도해주세요.' }, 429)
+		}
+
+		await c.env.KV.put(rateLimitKey, String(currentCount + 1), { expirationTtl: 60 })
+
+		const body = await c.req.json<{
+			representative_name?: string
+			company_phone?: string
+			company_name?: string
+			business_number?: string
+		}>()
+
+		// Count provided fields
+		const fields: { column: string; value: string }[] = []
+		if (body.representative_name?.trim()) fields.push({ column: 'representative_name', value: body.representative_name.trim() })
+		if (body.company_phone?.trim()) fields.push({ column: 'company_phone', value: body.company_phone.trim() })
+		if (body.company_name?.trim()) fields.push({ column: 'company_name', value: body.company_name.trim() })
+		if (body.business_number?.trim()) fields.push({ column: 'business_number', value: body.business_number.trim() })
+
+		if (fields.length < 2) {
+			return c.json({ error: '최소 2개 이상의 업체 정보를 입력해주세요.' }, 400)
+		}
+
+		// Build SQL: count matching fields per row, return rows with match_count >= 2
+		const matchClauses = fields.map((f, i) => `CASE WHEN ${f.column} = $${i + 1} THEN 1 ELSE 0 END`)
+		const matchExpr = matchClauses.join(' + ')
+		const params = fields.map(f => f.value)
+
+		const sql = `
+			SELECT *, (${matchExpr}) as match_count
+			FROM damage_cases
+			WHERE status IN ('open', 'in_progress', 'resolved')
+			  AND (${matchExpr}) >= 2
+			ORDER BY (${matchExpr}) DESC, created_at DESC
+			LIMIT 50
+		`
+
+		const rows = await query(c.env.DATABASE_URL, sql, params) as Record<string, unknown>[]
+
+		// Strip ip_address and user_id but keep company info for matched results
+		const results = rows.map(row => {
+			const { ip_address, user_id, ...rest } = row
+			return rest
+		})
+
+		return c.json({
+			data: results,
+			total: results.length,
+			fields_searched: fields.length
+		})
+	} catch (error) {
+		console.error('Match damage cases error:', error)
 		const message = error instanceof Error ? error.message : 'Unknown error'
 		return c.json({ error: message }, 500)
 	}
@@ -318,6 +389,7 @@ app.post('/', authenticateToken(), async (c) => {
 		}
 
 		// Get extra fields
+		const representative_name = formData.get('representative_name') as string | null
 		const title = formData.get('title') as string | null
 		const resolution_status = formData.get('resolution_status') as string | null
 		const legal_action = formData.get('legal_action') as string | null
@@ -332,12 +404,6 @@ app.post('/', authenticateToken(), async (c) => {
 
 		// Build full description with extra info
 		let fullDescription = case_description
-		if (company_phone) {
-			fullDescription += `\n\n**업체 연락처**: ${company_phone}`
-		}
-		if (business_number) {
-			fullDescription += `\n**사업자번호**: ${business_number}`
-		}
 		if (damage_amount) {
 			const amt = Number(damage_amount)
 			const amtText = amt >= 10000 ? '1억원 이상' : `${amt.toLocaleString()}만원`
@@ -365,6 +431,9 @@ app.post('/', authenticateToken(), async (c) => {
 			severity: severity || 'medium',
 			status: 'pending',
 			company_name: company_name,
+			company_phone: company_phone,
+			business_number: business_number,
+			representative_name: representative_name || null,
 			region: region,
 			damage_type: damage_type,
 			damage_amount: damage_amount ? Number(damage_amount) : null,

@@ -76,6 +76,9 @@ const PrivacyPolicy = lazyWithRetry(async () => import('pages/Legal/PrivacyPolic
 const TermsOfService = lazyWithRetry(async () => import('pages/Legal/TermsOfService'))
 const NotFound = lazyWithRetry(async () => import('pages/NotFound'))
 
+// BlacklistCheck page
+const BlacklistCheck = lazyWithRetry(async () => import('pages/BlacklistCheck/BlacklistCheck'))
+
 // Admin pages
 const AdminLogin = lazyWithRetry(async () => import('pages/Admin/Login'))
 const AdminLayout = lazyWithRetry(async () => import('components/admin/AdminLayout'))
@@ -87,7 +90,9 @@ const AdminDataManagement = lazyWithRetry(async () => import('pages/Admin/DataMa
 const AdminCommunityManagement = lazyWithRetry(async () => import('pages/Admin/CommunityManagement'))
 const AdminAnalytics = lazyWithRetry(async () => import('pages/Admin/Analytics'))
 
-const isAdminDomain = window.location.hostname === 'admin.zcheck.co.kr'
+import { getSubdomain } from 'lib/subdomain'
+
+const currentSubdomain = getSubdomain()
 
 // Admin child routes shared between both domains
 const adminChildRoutes = (
@@ -111,6 +116,39 @@ const adminDomainRoutes = (
 		<Route path='/admin' element={<Navigate to="/" replace />} />
 		<Route path='/admin/login' element={<Navigate to="/login" replace />} />
 		<Route path='/admin/*' element={<Navigate to="/" replace />} />
+		<Route path='*' element={<NotFound />} />
+	</>
+)
+
+const reviewDomainRoutes = (
+	<>
+		<Route path='/' element={<ReviewsLanding />} />
+		<Route path='/reviews' element={<ReviewsLanding />} />
+		<Route path='/reviews/:slug' element={<ReviewSlugPage />} />
+		<Route path='/write/review' element={<ReviewWrite />} />
+		<Route path='/auth/google/callback' element={<GoogleCallback />} />
+		<Route path='/auth/google/success' element={<GoogleCallback />} />
+		<Route path='/auth/naver/callback' element={<NaverCallback />} />
+		<Route path='/auth/naver/success' element={<NaverCallback />} />
+		<Route path='/privacy' element={<PrivacyPolicy />} />
+		<Route path='/terms' element={<TermsOfService />} />
+		<Route path='*' element={<NotFound />} />
+	</>
+)
+
+const reportDomainRoutes = (
+	<>
+		<Route path='/' element={<DamageCasesLanding />} />
+		<Route path='/damage-cases' element={<DamageCasesLanding />} />
+		<Route path='/damage-cases/:slug' element={<DamageCaseSlugPage />} />
+		<Route path='/write/damage-case' element={<DamageCaseWrite />} />
+		<Route path='/blacklist-check' element={<BlacklistCheck />} />
+		<Route path='/auth/google/callback' element={<GoogleCallback />} />
+		<Route path='/auth/google/success' element={<GoogleCallback />} />
+		<Route path='/auth/naver/callback' element={<NaverCallback />} />
+		<Route path='/auth/naver/success' element={<NaverCallback />} />
+		<Route path='/privacy' element={<PrivacyPolicy />} />
+		<Route path='/terms' element={<TermsOfService />} />
 		<Route path='*' element={<NotFound />} />
 	</>
 )
@@ -151,8 +189,17 @@ const mainDomainRoutes = (
 	</>
 )
 
+function getRoutesForSubdomain() {
+	switch (currentSubdomain) {
+		case 'admin': return adminDomainRoutes
+		case 'review': return reviewDomainRoutes
+		case 'report': return reportDomainRoutes
+		default: return mainDomainRoutes
+	}
+}
+
 const router = createBrowserRouter(
-	createRoutesFromElements(isAdminDomain ? adminDomainRoutes : mainDomainRoutes)
+	createRoutesFromElements(getRoutesForSubdomain())
 )
 
 export default function App(): ReactElement {

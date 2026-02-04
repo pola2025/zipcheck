@@ -48,7 +48,7 @@ app.route('/api/company-reviews/admin', companyReviewsAdminRoutes)
 app.route('/api/damage-cases/admin', damageCasesAdminRoutes)
 app.route('/api/admin/blacklist', blacklistAdminRoutes)
 app.route('/images', imageRoutes)
-app.route('/', seoRoutes)
+app.route('/', seoRoutes)  // sitemap.xml, robots.txt, /api/seo/meta
 
 // 404 fallback
 app.notFound((c) => {

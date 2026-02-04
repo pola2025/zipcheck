@@ -1,3 +1,38 @@
 {
-	"rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+	"rewrites": [
+		{
+			"source": "/sitemap.xml",
+			"destination": "/api/sitemap"
+		},
+		{
+			"source": "/robots.txt",
+			"destination": "/api/robots"
+		},
+		{
+			"source": "/(.*)",
+			"has": [
+				{
+					"type": "header",
+					"key": "user-agent",
+					"value": ".*(Googlebot|bingbot|Yeti|naverbot|kakaotalk-scrap|facebookexternalhit|Twitterbot|Slackbot|LinkedInBot|Discordbot|ChatGPT-User|PerplexityBot|ClaudeBot|GPTBot|Google-Extended|Applebot|PetalBot|Bytespider|DuckDuckBot).*"
+				}
+			],
+			"destination": "/api/seo/render?path=/$1"
+		},
+		{
+			"source": "/(.*)",
+			"destination": "/index.html"
+		}
+	],
+	"headers": [
+		{
+			"source": "/api/og/(.*)",
+			"headers": [
+				{
+					"key": "Cache-Control",
+					"value": "public, s-maxage=86400, stale-while-revalidate=604800"
+				}
+			]
+		}
+	]
 }
