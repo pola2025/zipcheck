@@ -4,12 +4,17 @@ import type { Env, JWTPayload, Variables } from '../types'
 // JWT helpers using crypto.subtle HMAC-SHA256
 
 function base64urlEncode(data: string): string {
-	return btoa(data).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+	// UTF-8 encode first to handle Unicode characters (Korean names, etc.)
+	const bytes = new TextEncoder().encode(data)
+	const binStr = Array.from(bytes, b => String.fromCharCode(b)).join('')
+	return btoa(binStr).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
 function base64urlDecode(str: string): string {
 	const padded = str + '='.repeat((4 - str.length % 4) % 4)
-	return atob(padded.replace(/-/g, '+').replace(/_/g, '/'))
+	const binStr = atob(padded.replace(/-/g, '+').replace(/_/g, '/'))
+	const bytes = Uint8Array.from(binStr, c => c.charCodeAt(0))
+	return new TextDecoder().decode(bytes)
 }
 
 async function getSigningKey(secret: string): Promise<CryptoKey> {

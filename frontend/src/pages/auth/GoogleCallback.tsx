@@ -35,17 +35,18 @@ const GoogleCallback: React.FC = () => {
 				// Store token
 				localStorage.setItem('auth_token', token)
 
-				// Fetch user info
-				const response = await fetch(getApiUrl('/api/auth/me'), {
-					headers: { Authorization: `Bearer ${token}` }
-				})
-
-				if (!response.ok) {
-					throw new Error('사용자 정보를 가져올 수 없습니다.')
+				// Fetch user info (non-blocking: always redirect even if this fails)
+				try {
+					const response = await fetch(getApiUrl('/api/auth/me'), {
+						headers: { Authorization: `Bearer ${token}` }
+					})
+					if (response.ok) {
+						const user = await response.json()
+						localStorage.setItem('user', JSON.stringify(user))
+					}
+				} catch (fetchErr) {
+					console.warn('Failed to fetch user info, will retry on page load:', fetchErr)
 				}
-
-				const user = await response.json()
-				localStorage.setItem('user', JSON.stringify(user))
 
 				setStatus('success')
 
