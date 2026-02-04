@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getApiUrl } from '../../lib/api-config'
+import { useUser } from '../../contexts/UserAuthContext'
 
 const GoogleCallback: React.FC = () => {
 	const [searchParams] = useSearchParams()
 	const navigate = useNavigate()
+	const { refreshUser } = useUser()
 	const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing')
 	const [errorMessage, setErrorMessage] = useState<string>('')
 
@@ -45,6 +47,9 @@ const GoogleCallback: React.FC = () => {
 
 				const user = await response.json()
 				localStorage.setItem('user', JSON.stringify(user))
+
+				// Update auth context state so navigation target sees isLoggedIn=true
+				await refreshUser()
 
 				setStatus('success')
 

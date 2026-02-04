@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getApiUrl } from '../../lib/api-config'
+import { useUser } from '../../contexts/UserAuthContext'
 
 /**
  * Naver OAuth Callback Page
@@ -9,6 +10,7 @@ import { getApiUrl } from '../../lib/api-config'
 const NaverCallback: React.FC = () => {
 	const [searchParams] = useSearchParams()
 	const navigate = useNavigate()
+	const { refreshUser } = useUser()
 	const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing')
 	const [errorMessage, setErrorMessage] = useState<string>('')
 
@@ -18,6 +20,7 @@ const NaverCallback: React.FC = () => {
 				// Get token from URL query parameter
 				const token = searchParams.get('token')
 				const error = searchParams.get('error')
+				const redirectTo = searchParams.get('redirect_to') || '/'
 
 				// Check for errors
 				if (error) {
@@ -55,12 +58,14 @@ const NaverCallback: React.FC = () => {
 				// Store user info
 				localStorage.setItem('user', JSON.stringify(user))
 
+				// Update auth context state
+				await refreshUser()
+
 				console.log('✅ Naver login successful:', user.email)
 				setStatus('success')
 
-				// Redirect to main page after 1 second
 				setTimeout(() => {
-					navigate('/')
+					navigate(redirectTo)
 				}, 1000)
 			} catch (error) {
 				console.error('Callback processing error:', error)
