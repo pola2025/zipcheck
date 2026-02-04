@@ -339,7 +339,9 @@ app.post('/', authenticateToken(), async (c) => {
 			fullDescription += `\n**사업자번호**: ${business_number}`
 		}
 		if (damage_amount) {
-			fullDescription += `\n**피해 금액**: ${damage_amount}`
+			const amt = Number(damage_amount)
+			const amtText = amt >= 10000 ? '1억원 이상' : `${amt.toLocaleString()}만원`
+			fullDescription += `\n**피해 금액**: ${amtText}`
 		}
 
 		// Generate title and slug

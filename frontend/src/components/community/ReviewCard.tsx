@@ -2,6 +2,7 @@ import React from 'react'
 import { Star, MapPin, Camera, Eye, ArrowRight, Banknote, Wrench } from 'lucide-react'
 import { Review } from 'types/review'
 import { getApiUrl } from '../../lib/api-config'
+import { formatKoreanMoney } from '../../lib/pricing'
 
 interface ReviewCardProps {
 	review: Review
@@ -112,7 +113,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, onClick }) => {
 					{review.project_cost && review.project_cost > 0 && (
 						<span className='inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-800 rounded-md text-xs font-semibold border border-blue-200'>
 							<Banknote size={11} className='text-blue-600' />
-							{review.project_cost.toLocaleString()}만원
+							{formatKoreanMoney(review.project_cost)}
 						</span>
 					)}
 				</div>

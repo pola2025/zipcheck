@@ -5,6 +5,7 @@ import NordicNavigation from 'components/nordic/NordicNavigation'
 import NordicFooter from 'components/nordic/NordicFooter'
 import PageSEO from 'components/PageSEO'
 import { getApiUrl } from '../../lib/api-config'
+import { formatKoreanMoney } from '../../lib/pricing'
 
 export default function DamageCaseCreate() {
 	const navigate = useNavigate()
@@ -175,7 +176,16 @@ export default function DamageCaseCreate() {
 						{/* Damage Amount */}
 						<div>
 							<label htmlFor="dc-amount" className="block text-sm font-semibold mb-2 text-sand-500">피해 금액 (선택)</label>
-							<input id="dc-amount" type="text" value={damageAmount} onChange={(e) => setDamageAmount(e.target.value)} placeholder="예: 500만원" className={inputClass} />
+							<div className="flex gap-2">
+								<div className="relative flex-1">
+									<input id="dc-amount" type="number" value={damageAmount === '10000' ? '' : damageAmount} onChange={(e) => { const v = e.target.value; if (v === '' || (Number(v) >= 0 && Number(v) <= 9999)) { setDamageAmount(v) } }} placeholder="예: 500" className={`${inputClass} pr-14 ${damageAmount === '10000' ? 'opacity-40' : ''}`} min={0} max={9999} disabled={damageAmount === '10000'} />
+									<span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-sand-400">만원</span>
+								</div>
+								<button type="button" onClick={() => setDamageAmount(damageAmount === '10000' ? '' : '10000')} className={`shrink-0 px-3 py-2 rounded-xl text-sm font-semibold border transition-all ${damageAmount === '10000' ? 'bg-forest-600 text-white border-forest-600' : 'bg-white text-sand-500 border-sand-300 hover:border-forest-400'}`}>
+									1억원 이상
+								</button>
+							</div>
+							{damageAmount && <p className="text-xs text-sand-400 mt-1.5">{formatKoreanMoney(Number(damageAmount))}</p>}
 						</div>
 
 						{/* Case Description */}

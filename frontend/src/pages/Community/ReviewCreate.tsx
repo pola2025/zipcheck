@@ -5,6 +5,7 @@ import NordicNavigation from 'components/nordic/NordicNavigation'
 import NordicFooter from 'components/nordic/NordicFooter'
 import PageSEO from 'components/PageSEO'
 import { getApiUrl } from '../../lib/api-config'
+import { formatKoreanMoney } from '../../lib/pricing'
 
 export default function ReviewCreate() {
 	const navigate = useNavigate()
@@ -219,8 +220,16 @@ export default function ReviewCreate() {
 						{/* Project Cost */}
 						<div>
 							<label htmlFor="rc-cost" className="block text-sm font-semibold mb-2 text-sand-500">시공비용 (만원)</label>
-							<input id="rc-cost" type="number" value={projectCost} onChange={(e) => setProjectCost(e.target.value)} placeholder="예: 3000" className={inputClass} />
-							{projectCost && <p className="text-xs text-sand-400 mt-1.5">{Number(projectCost).toLocaleString()}만원</p>}
+							<div className="flex gap-2">
+								<div className="relative flex-1">
+									<input id="rc-cost" type="number" value={projectCost === '10000' ? '' : projectCost} onChange={(e) => { const v = e.target.value; if (v === '' || (Number(v) >= 0 && Number(v) <= 9999)) { setProjectCost(v) } }} placeholder="예: 3000" className={`${inputClass} pr-14 ${projectCost === '10000' ? 'opacity-40' : ''}`} min={0} max={9999} disabled={projectCost === '10000'} />
+									<span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-sand-400">만원</span>
+								</div>
+								<button type="button" onClick={() => setProjectCost(projectCost === '10000' ? '' : '10000')} className={`shrink-0 px-3 py-2 rounded-xl text-sm font-semibold border transition-all ${projectCost === '10000' ? 'bg-forest-600 text-white border-forest-600' : 'bg-white text-sand-500 border-sand-300 hover:border-forest-400'}`}>
+									1억원 이상
+								</button>
+							</div>
+							{projectCost && <p className="text-xs text-sand-400 mt-1.5">{formatKoreanMoney(Number(projectCost))}</p>}
 						</div>
 
 						{/* Rating */}

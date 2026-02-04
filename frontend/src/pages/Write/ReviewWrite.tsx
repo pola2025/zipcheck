@@ -21,6 +21,7 @@ import ImageUploader from '../../components/community/ImageUploader'
 import LegalDisclaimer from '../../components/community/LegalDisclaimer'
 import { useUser } from '../../contexts/UserAuthContext'
 import { getApiUrl } from '../../lib/api-config'
+import { formatKoreanMoney } from '../../lib/pricing'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -676,23 +677,39 @@ export default function ReviewWrite() {
 											<Banknote className="w-3.5 h-3.5" />
 											시공 비용
 										</label>
-										<div className="relative">
-											<input
-												id="rw-cost"
-												type="number"
-												value={projectCost}
-												onChange={(e) => setProjectCost(e.target.value)}
-												placeholder="예: 3000"
-												className={`${inputClass} pr-12`}
-												min={0}
-											/>
-											<span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none">
-												만원
-											</span>
+										<div className="flex gap-2">
+											<div className="relative flex-1">
+												<input
+													id="rw-cost"
+													type="number"
+													value={projectCost === '10000' ? '' : projectCost}
+													onChange={(e) => {
+														const v = e.target.value
+														if (v === '' || (Number(v) >= 0 && Number(v) <= 9999)) {
+															setProjectCost(v)
+														}
+													}}
+													placeholder="예: 3000"
+													className={`${inputClass} pr-12 ${projectCost === '10000' ? 'opacity-40' : ''}`}
+													min={0}
+													max={9999}
+													disabled={projectCost === '10000'}
+												/>
+												<span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none">
+													만원
+												</span>
+											</div>
+											<button
+												type="button"
+												onClick={() => setProjectCost(projectCost === '10000' ? '' : '10000')}
+												className={`shrink-0 px-3 py-2 rounded-xl text-sm font-semibold border transition-all ${projectCost === '10000' ? 'bg-forest-600 text-white border-forest-600' : 'bg-white text-gray-500 border-gray-300 hover:border-forest-400'}`}
+											>
+												1억원 이상
+											</button>
 										</div>
 										{projectCost && (
 											<p className="text-xs text-gray-400 mt-1">
-												{Number(projectCost).toLocaleString()}만원
+												{formatKoreanMoney(Number(projectCost))}
 											</p>
 										)}
 									</div>

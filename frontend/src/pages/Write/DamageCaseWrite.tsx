@@ -9,6 +9,7 @@ import ImageUploader from 'components/community/ImageUploader'
 import LegalDisclaimer from 'components/community/LegalDisclaimer'
 import { useUser } from '../../contexts/UserAuthContext'
 import { getApiUrl } from '../../lib/api-config'
+import { formatKoreanMoney } from '../../lib/pricing'
 
 const DAMAGE_TYPES = ['시공불량', '계약위반', '금전사기', '자재불량', '공사지연', '사후서비스불이행', '기타']
 const SEVERITY_OPTIONS = [
@@ -250,12 +251,17 @@ export default function DamageCaseWrite() {
 											<Banknote className="w-4 h-4" />
 											피해 금액
 										</label>
-										<div className="relative">
-											<input id="dcw-amount" type="number" value={damageAmount} onChange={(e) => setDamageAmount(e.target.value)} placeholder="예: 500" className={`${inputClass} pr-14`} />
-											<span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-sand-400">만원</span>
+										<div className="flex gap-2">
+											<div className="relative flex-1">
+												<input id="dcw-amount" type="number" value={damageAmount === '10000' ? '' : damageAmount} onChange={(e) => { const v = e.target.value; if (v === '' || (Number(v) >= 0 && Number(v) <= 9999)) { setDamageAmount(v) } }} placeholder="예: 500" className={`${inputClass} pr-14 ${damageAmount === '10000' ? 'opacity-40' : ''}`} min={0} max={9999} disabled={damageAmount === '10000'} />
+												<span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-sand-400">만원</span>
+											</div>
+											<button type="button" onClick={() => setDamageAmount(damageAmount === '10000' ? '' : '10000')} className={`shrink-0 px-3 py-2 rounded-xl text-sm font-semibold border transition-all ${damageAmount === '10000' ? 'bg-forest-600 text-white border-forest-600' : 'bg-white text-sand-500 border-sand-300 hover:border-forest-400'}`}>
+												1억원 이상
+											</button>
 										</div>
 										{damageAmount && (
-											<p className="text-xs text-sand-400 mt-1.5">{Number(damageAmount).toLocaleString()}만원</p>
+											<p className="text-xs text-sand-400 mt-1.5">{formatKoreanMoney(Number(damageAmount))}</p>
 										)}
 									</div>
 									<div>

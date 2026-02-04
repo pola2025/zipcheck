@@ -82,3 +82,14 @@ export function calculatePrice(planId: PlanId): PriceCalculation {
 export function formatPrice(amount: number): string {
   return `${amount.toLocaleString('ko-KR')}원`
 }
+
+/**
+ * 만원 단위 금액을 한국어로 포맷팅
+ * 10000 이상(1억원 이상)은 "1억원 이상"으로 표시
+ * @param value 만원 단위 숫자 (예: 4500 → "4,500만원", 10000 → "1억원 이상")
+ */
+export function formatKoreanMoney(value: number): string {
+  if (!value || value <= 0) return ''
+  if (value >= 10000) return '1억원 이상'
+  return `${value.toLocaleString()}만원`
+}

@@ -30,6 +30,7 @@ import Comments from 'components/community/Comments'
 import LikeButton from 'components/community/LikeButton'
 import ReportModal from 'components/community/ReportModal'
 import { getApiUrl } from '../../lib/api-config'
+import { formatKoreanMoney } from '../../lib/pricing'
 
 const BASE_URL = 'https://zcheck.co.kr'
 const IMAGE_BASE_URL = getApiUrl('/images/')
@@ -512,7 +513,7 @@ export default function ReviewSlugPage() {
 						{review.project_cost && (
 							<div className="flex items-center gap-2 text-sm text-sand-600">
 								<Banknote className="w-4 h-4 text-forest-500 shrink-0" />
-								<span>{Number(review.project_cost).toLocaleString()}만원</span>
+								<span>{formatKoreanMoney(Number(review.project_cost))}</span>
 							</div>
 						)}
 					</div>
