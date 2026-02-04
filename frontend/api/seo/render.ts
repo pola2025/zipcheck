@@ -86,7 +86,7 @@ function buildJsonLd(meta: MetaResponse, path: string): string {
 			itemReviewed: {
 				'@type': 'LocalBusiness',
 				name: data.companyName,
-				...(data.region && { address: { '@type': 'PostalAddress', addressLocality: data.region } }),
+				...(data.region ? { address: { '@type': 'PostalAddress', addressLocality: data.region } } : {}),
 			},
 			reviewRating: {
 				'@type': 'Rating',
@@ -99,7 +99,7 @@ function buildJsonLd(meta: MetaResponse, path: string): string {
 			},
 			reviewBody: data.reviewText as string,
 			datePublished: data.createdAt as string,
-			...(data.updatedAt && { dateModified: data.updatedAt as string }),
+			...(data.updatedAt ? { dateModified: data.updatedAt as string } : {}),
 		})
 	}
 

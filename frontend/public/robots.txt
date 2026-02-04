@@ -1,6 +1,36 @@
 User-agent: *
 Allow: /
+Allow: /reviews/
+Allow: /damage-cases/
+Allow: /community
+Allow: /plan-selection
+Allow: /privacy
+Allow: /terms
 Disallow: /admin/
-Disallow: /admin
+Disallow: /api/
+Disallow: /auth/
+Disallow: /write/
+Disallow: /payment
+Disallow: /quote-submission
+Disallow: /quote-status
+
+# AI Crawlers - explicitly allowed for GEO/AEO
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot
+Allow: /
 
 Sitemap: https://zcheck.co.kr/sitemap.xml

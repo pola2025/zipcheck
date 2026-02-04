@@ -57,6 +57,7 @@ coverage/
 # Temporary files
 *.tmp
 *.temp
+tmp_*.json
 .cache/
 nul
 
@@ -75,7 +76,7 @@ resources/
 .vercel-archive/
 
 # Session handoff
-NEXT_SESSION_REQUEST.md
+NEXT_SESSION_*.md
 
 # Claude project guide
 .claude/PROJECT_START_GUIDE.md
@@ -83,3 +84,4 @@ NEXT_SESSION_REQUEST.md
 # Claude local settings (contains tokens/permissions - NEVER commit)
 .claude/settings.local.json
 **/settings.local.json
+.vercel

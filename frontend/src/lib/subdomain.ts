@@ -1,4 +1,4 @@
-export type SubdomainType = 'main' | 'admin' | 'review' | 'report'
+export type SubdomainType = 'main' | 'admin' | 'review' | 'report' | 'blog'
 
 /**
  * Detect current subdomain from window.location.hostname
@@ -9,6 +9,7 @@ export function getSubdomain(): SubdomainType {
 	if (hostname.startsWith('admin.')) return 'admin'
 	if (hostname.startsWith('review.')) return 'review'
 	if (hostname.startsWith('report.')) return 'report'
+	if (hostname.startsWith('blog.')) return 'blog'
 
 	return 'main'
 }
@@ -34,9 +35,9 @@ export function getSubdomainUrl(sub: SubdomainType): string {
 }
 
 /**
- * Check if we're on a subdomain (not main or admin)
+ * Check if we're on a content subdomain (not main or admin)
  */
 export function isContentSubdomain(): boolean {
 	const sub = getSubdomain()
-	return sub === 'review' || sub === 'report'
+	return sub === 'review' || sub === 'report' || sub === 'blog'
 }

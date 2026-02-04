@@ -16,15 +16,24 @@ function getNavLinks(subdomain: SubdomainType): NavLink[] {
 			{ label: '후기 목록', href: '/reviews', isRoute: true },
 			{ label: '후기 작성', href: '/write/review', isRoute: true },
 			{ label: '피해사례', href: getSubdomainUrl('report'), isExternal: true },
+			{ label: '블로그', href: getSubdomainUrl('blog'), isExternal: true },
 			{ label: '집첵 메인', href: getSubdomainUrl('main'), isExternal: true },
 		]
 	}
-	// report subdomain
+	if (subdomain === 'report') {
+		return [
+			{ label: '피해사례 목록', href: '/damage-cases', isRoute: true },
+			{ label: '사례 등록', href: '/write/damage-case', isRoute: true },
+			{ label: '블랙리스트 조회', href: '/blacklist-check', isRoute: true },
+			{ label: '업체 후기', href: getSubdomainUrl('review'), isExternal: true },
+			{ label: '집첵 메인', href: getSubdomainUrl('main'), isExternal: true },
+		]
+	}
+	// blog subdomain
 	return [
-		{ label: '피해사례 목록', href: '/damage-cases', isRoute: true },
-		{ label: '사례 등록', href: '/write/damage-case', isRoute: true },
-		{ label: '블랙리스트 조회', href: '/blacklist-check', isRoute: true },
+		{ label: '블로그', href: '/', isRoute: true },
 		{ label: '업체 후기', href: getSubdomainUrl('review'), isExternal: true },
+		{ label: '피해사례', href: getSubdomainUrl('report'), isExternal: true },
 		{ label: '집첵 메인', href: getSubdomainUrl('main'), isExternal: true },
 	]
 }
@@ -33,13 +42,18 @@ function getCtaConfig(subdomain: SubdomainType) {
 	if (subdomain === 'review') {
 		return { label: '후기 작성', href: '/write/review', color: 'bg-forest-600 hover:bg-forest-700' }
 	}
-	return { label: '사례 등록', href: '/write/damage-case', color: 'bg-red-500 hover:bg-red-600' }
+	if (subdomain === 'report') {
+		return { label: '사례 등록', href: '/write/damage-case', color: 'bg-red-500 hover:bg-red-600' }
+	}
+	// blog
+	return { label: '후기 작성', href: getSubdomainUrl('review') + '/write/review', color: 'bg-forest-600 hover:bg-forest-700', isExternal: true }
 }
 
 export default function SubdomainNavigation({ subdomain }: { subdomain: SubdomainType }) {
 	const [open, setOpen] = useState(false)
 	const navLinks = getNavLinks(subdomain)
 	const cta = getCtaConfig(subdomain)
+	const ctaIsExternal = 'isExternal' in cta && cta.isExternal
 
 	return (
 		<nav className="fixed top-0 left-0 right-0 z-50 bg-sand-50/85 backdrop-blur-lg border-b border-sand-300/50">
@@ -61,12 +75,21 @@ export default function SubdomainNavigation({ subdomain }: { subdomain: Subdomai
 							</Link>
 						)
 					)}
-					<Link
-						to={cta.href}
-						className={`px-6 py-2.5 ${cta.color} text-white rounded-xl font-semibold transition text-sm shadow-sm`}
-					>
-						{cta.label}
-					</Link>
+					{ctaIsExternal ? (
+						<a
+							href={cta.href}
+							className={`px-6 py-2.5 ${cta.color} text-white rounded-xl font-semibold transition text-sm shadow-sm`}
+						>
+							{cta.label}
+						</a>
+					) : (
+						<Link
+							to={cta.href}
+							className={`px-6 py-2.5 ${cta.color} text-white rounded-xl font-semibold transition text-sm shadow-sm`}
+						>
+							{cta.label}
+						</Link>
+					)}
 				</div>
 
 				{/* Mobile hamburger */}
@@ -104,13 +127,23 @@ export default function SubdomainNavigation({ subdomain }: { subdomain: Subdomai
 								</Link>
 							)
 						)}
-						<Link
-							to={cta.href}
-							className={`mt-2 py-3 ${cta.color} text-white rounded-xl font-semibold text-center transition text-sm shadow-sm`}
-							onClick={() => setOpen(false)}
-						>
-							{cta.label}
-						</Link>
+						{ctaIsExternal ? (
+							<a
+								href={cta.href}
+								className={`mt-2 py-3 ${cta.color} text-white rounded-xl font-semibold text-center transition text-sm shadow-sm`}
+								onClick={() => setOpen(false)}
+							>
+								{cta.label}
+							</a>
+						) : (
+							<Link
+								to={cta.href}
+								className={`mt-2 py-3 ${cta.color} text-white rounded-xl font-semibold text-center transition text-sm shadow-sm`}
+								onClick={() => setOpen(false)}
+							>
+								{cta.label}
+							</Link>
+						)}
 					</div>
 				</div>
 			)}

@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>서브도메인 와이어프레임 - 2안 비교</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+<style>
+  :root {
+    --sand-50: #FAFAF8; --sand-100: #F5F5F0; --sand-200: #E8E6DF;
+    --sand-300: #D4D0C8; --sand-400: #9CA396; --sand-500: #6B7260;
+    --sand-600: #4B5243; --sand-700: #374131; --sand-800: #1F2518; --sand-900: #111510;
+    --forest-50: #F0F5F0; --forest-100: #DCE8DC; --forest-200: #B8D1B8;
+    --forest-300: #8FB98F; --forest-400: #6BA06B; --forest-500: #4A7C4A;
+    --forest-600: #3B6B3B; --forest-700: #2D522D; --forest-800: #1F3A1F; --forest-900: #112211;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Pretendard Variable', -apple-system, system-ui, sans-serif;
+    background: #F0F0EC;
+    color: var(--sand-900);
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .page-header {
+    background: var(--sand-900);
+    color: white;
+    padding: 28px 0 20px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+  .page-header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .page-header p { color: var(--sand-400); font-size: 13px; margin-top: 4px; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 0 24px; }
+
+  /* Tabs */
+  .tab-group { display: flex; gap: 8px; margin-top: 16px; }
+  .tab-btn {
+    padding: 10px 24px; border-radius: 12px; font-size: 13px; font-weight: 700;
+    cursor: pointer; border: none; transition: all 0.2s ease;
+  }
+  .tab-btn.active-a { background: var(--forest-500); color: white; }
+  .tab-btn.active-b { background: #4F46E5; color: white; }
+  .tab-btn.inactive { background: var(--sand-700); color: var(--sand-400); }
+  .tab-btn:hover { transform: translateY(-1px); }
+
+  /* Flow Diagram */
+  .flow-diagram {
+    background: white; border-radius: 16px; padding: 24px;
+    border: 1px solid var(--sand-200); margin: 32px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .flow-diagram h2 { font-size: 15px; font-weight: 800; color: var(--sand-800); margin-bottom: 16px; }
+  .flow-row { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+  .flow-item {
+    padding: 10px 16px; border-radius: 12px; font-size: 12px;
+    font-weight: 700; text-align: center; line-height: 1.5;
+  }
+  .flow-item small { font-weight: 400; display: block; font-size: 10px; opacity: 0.8; margin-top: 2px; }
+  .flow-arrow-icon { color: var(--sand-400); font-size: 18px; font-weight: 300; }
+
+  /* Design Section */
+  .design-section { display: none; }
+  .design-section.active { display: block; }
+  .design-label {
+    display: inline-block; padding: 4px 12px; border-radius: 20px;
+    font-size: 11px; font-weight: 800; color: white;
+  }
+  .design-title { font-size: 20px; font-weight: 800; margin-left: 12px; color: var(--sand-900); }
+  .design-desc { font-size: 13px; color: var(--sand-500); margin-top: 4px; }
+
+  /* Device Frames */
+  .devices-row {
+    display: flex; flex-wrap: wrap; gap: 40px;
+    justify-content: center; align-items: flex-start;
+    padding: 20px 0 60px;
+  }
+  .device-col { text-align: center; }
+  .device-col h3 {
+    font-size: 13px; font-weight: 700; color: var(--sand-600);
+    margin-bottom: 12px; letter-spacing: -0.3px;
+  }
+  .device-col h3 code {
+    background: var(--sand-200); padding: 2px 8px; border-radius: 6px;
+    font-size: 11px; font-family: 'SF Mono', monospace; color: var(--sand-700);
+  }
+  .device-frame {
+    width: 375px; height: 812px;
+    border: 6px solid #1a1a1a; border-radius: 44px;
+    overflow: hidden; position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.05);
+    background: white;
+  }
+  .device-frame::before {
+    content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 100px; height: 26px; background: #1a1a1a;
+    border-radius: 0 0 18px 18px; z-index: 50;
+  }
+  .device-frame::after {
+    content: '9:41'; position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+    color: white; font-size: 11px; font-weight: 600; z-index: 51;
+  }
+  .device-inner { height: 100%; overflow-y: auto; }
+  .device-inner::-webkit-scrollbar { width: 0; }
+
+  /* Annotation Labels */
+  .anno {
+    position: absolute; left: -8px; z-index: 10;
+    font-size: 9px; font-weight: 800; color: white;
+    padding: 3px 8px 3px 10px; border-radius: 0 6px 6px 0;
+    white-space: nowrap; letter-spacing: 0.3px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  }
+  .anno-red { background: #EF4444; }
+  .anno-green { background: var(--forest-500); }
+  .anno-indigo { background: #6366F1; }
+  .anno-amber { background: #D97706; }
+
+  /* Flow Arrows Between Devices */
+  .device-arrow {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; align-self: center; gap: 4px;
+  }
+  .device-arrow span:first-child { font-size: 28px; color: var(--forest-500); }
+  .device-arrow span:last-child { font-size: 10px; color: var(--sand-500); font-weight: 600; }
+
+  /* Community Bottom Section */
+  .community-section {
+    background: white; border-radius: 16px; padding: 32px;
+    border: 1px solid var(--sand-200); margin: 0 0 60px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .community-section h2 { font-size: 16px; font-weight: 800; color: var(--sand-800); margin-bottom: 8px; }
+  .community-section p { font-size: 13px; color: var(--sand-500); margin-bottom: 20px; }
+  .community-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .community-card {
+    border: 1px solid var(--sand-200); border-radius: 12px; padding: 20px;
+    background: var(--sand-50);
+  }
+  .community-card h4 { font-size: 14px; font-weight: 700; color: var(--sand-800); margin-bottom: 4px; }
+  .community-card p { font-size: 12px; color: var(--sand-500); margin: 0; }
+  .community-card .badge {
+    display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px;
+    border-radius: 6px; margin-bottom: 8px;
+  }
+
+  @media (max-width: 1200px) {
+    .device-arrow { display: none; }
+    .devices-row { gap: 24px; }
+  }
+  @media (max-width: 768px) {
+    .device-frame { width: 340px; height: 736px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== HEADER ========== -->
+<header class="page-header">
+  <div class="container">
+    <h1>ZipCheck 서브도메인 와이어프레임</h1>
+    <p>blog / review / report 서브도메인 + 커뮤니티 탭 구조 | 2안 비교</p>
+    <div class="tab-group">
+      <button onclick="switchDesign('A')" id="btn-A" class="tab-btn active-a">A안 - 노르딕 미니멀</button>
+      <button onclick="switchDesign('B')" id="btn-B" class="tab-btn inactive">B안 - 카드 매거진</button>
+    </div>
+  </div>
+</header>
+
+<!-- ========== FLOW DIAGRAM ========== -->
+<div class="container">
+  <div class="flow-diagram">
+    <h2>사용자 퍼널 흐름도</h2>
+    <div class="flow-row">
+      <div class="flow-item" style="background:#DBEAFE; color:#1E40AF;">
+        구글 검색
+        <small>SEO 유입</small>
+      </div>
+      <span class="flow-arrow-icon">&rarr;</span>
+      <div class="flow-item" style="background:#FEF3C7; color:#92400E;">
+        blog.zcheck.co.kr
+        <small>운영자 SEO 콘텐츠</small>
+      </div>
+      <span class="flow-arrow-icon">&rarr;</span>
+      <div class="flow-item" style="background:var(--forest-100); color:var(--forest-800);">
+        review / report
+        <small>방문자 작성 랜딩</small>
+      </div>
+      <span class="flow-arrow-icon">&rarr;</span>
+      <div class="flow-item" style="background:#EDE9FE; color:#5B21B6;">
+        DB 저장
+        <small>Supabase</small>
+      </div>
+      <span class="flow-arrow-icon">&rarr;</span>
+      <div class="flow-item" style="background:#FEE2E2; color:#991B1B;">
+        커뮤니티 + 메인
+        <small>동시 노출</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- ==================== DESIGN A : NORDIC MINIMAL ================= -->
+<!-- ================================================================ -->
+<div id="design-A" class="design-section active">
+  <div class="container">
+    <div style="margin-bottom: 20px;">
+      <span class="design-label" style="background:var(--forest-500);">A안</span>
+      <span class="design-title">노르딕 미니멀</span>
+      <p class="design-desc">현재 ZipCheck 톤앤매너 유지. 여백 중심, 깔끔한 타이포, 부드러운 전환.</p>
+    </div>
+
+    <div class="devices-row">
+
+      <!-- ===== BLOG A ===== -->
+      <div class="device-col">
+        <h3><code>blog.zcheck.co.kr</code></h3>
+        <div class="device-frame">
+          <div class="device-inner" style="background:var(--sand-50);">
+            <!-- Status Bar Space -->
+            <div style="height:48px;"></div>
+
+            <!-- Nav -->
+            <nav style="padding:16px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--sand-200);">
+              <span style="font-size:17px; font-weight:800; color:var(--sand-900); letter-spacing:-0.5px;">
+                zipcheck <span style="color:var(--forest-500);">blog</span>
+              </span>
+              <div style="display:flex; gap:16px; font-size:12px; color:var(--sand-500); font-weight:500;">
+                <span>후기</span><span>피해사례</span><span>가이드</span>
+              </div>
+            </nav>
+
+            <!-- Hero Article -->
+            <div style="position:relative; padding:20px;">
+              <div class="anno anno-red" style="top:8px;">SEO 콘텐츠</div>
+              <div style="background:var(--sand-200); border-radius:16px; height:180px; display:flex; align-items:center; justify-content:center; color:var(--sand-400); font-size:12px;">
+                대표 이미지 영역
+              </div>
+              <div style="margin-top:14px;">
+                <span style="font-size:11px; color:var(--forest-500); font-weight:700;">인테리어 가이드</span>
+                <h2 style="font-size:19px; font-weight:800; color:var(--sand-900); margin-top:4px; line-height:1.4; letter-spacing:-0.5px;">
+                  2026년 아파트 리모델링,<br>이것만은 꼭 확인하세요
+                </h2>
+                <p style="font-size:13px; color:var(--sand-500); margin-top:8px; line-height:1.6;">
+                  인테리어 견적 시 흔히 놓치는 5가지 항목과 적정 가격 범위를 알려드립니다...
+                </p>
+              </div>
+            </div>
+
+            <!-- Divider -->
+            <div style="height:1px; background:var(--sand-200); margin:0 20px;"></div>
+
+            <!-- Article List -->
+            <div style="padding:16px 20px;">
+              <div style="font-size:13px; font-weight:700; color:var(--sand-800); margin-bottom:12px;">최근 글</div>
+
+              <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px;">
+                <div style="width:72px; height:72px; background:var(--sand-200); border-radius:12px; flex-shrink:0;"></div>
+                <div>
+                  <span style="font-size:10px; color:var(--forest-500); font-weight:700;">시공 후기 팁</span>
+                  <h3 style="font-size:13px; font-weight:700; color:var(--sand-900); margin-top:2px; line-height:1.4;">욕실 리모델링 업체 선택 기준 4가지</h3>
+                  <p style="font-size:11px; color:var(--sand-400); margin-top:4px;">2026.01.28 &middot; 3분</p>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px;">
+                <div style="width:72px; height:72px; background:var(--sand-200); border-radius:12px; flex-shrink:0;"></div>
+                <div>
+                  <span style="font-size:10px; color:#EF4444; font-weight:700;">피해 예방</span>
+                  <h3 style="font-size:13px; font-weight:700; color:var(--sand-900); margin-top:2px; line-height:1.4;">계약 전 반드시 확인할 서류 3가지</h3>
+                  <p style="font-size:11px; color:var(--sand-400); margin-top:4px;">2026.01.25 &middot; 4분</p>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px;">
+                <div style="width:72px; height:72px; background:var(--sand-200); border-radius:12px; flex-shrink:0;"></div>
+                <div>
+                  <span style="font-size:10px; color:var(--forest-500); font-weight:700;">비용 가이드</span>
+                  <h3 style="font-size:13px; font-weight:700; color:var(--sand-900); margin-top:2px; line-height:1.4;">30평대 전체 리모델링 평균 비용은?</h3>
+                  <p style="font-size:11px; color:var(--sand-400); margin-top:4px;">2026.01.22 &middot; 5분</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- CTA Banner -->
+            <div style="position:relative; margin:0 20px 20px;">
+              <div class="anno anno-green" style="top:-4px;">CTA &rarr; 랜딩 이동</div>
+              <div style="background:var(--forest-700); border-radius:16px; padding:20px; margin-top:8px;">
+                <p style="font-size:14px; font-weight:700; color:white; margin-bottom:4px;">직접 경험한 인테리어 후기가 있나요?</p>
+                <p style="font-size:12px; color:var(--forest-200); margin-bottom:14px;">다른 분들의 현명한 선택을 도와주세요</p>
+                <div style="display:flex; gap:8px;">
+                  <div style="flex:1; background:white; color:var(--forest-700); text-align:center; padding:11px 0; border-radius:12px; font-size:12px; font-weight:700;">
+                    &#9733; 후기 작성하기
+                  </div>
+                  <div style="flex:1; background:var(--forest-600); color:white; text-align:center; padding:11px 0; border-radius:12px; font-size:12px; font-weight:700;">
+                    &#9888; 피해사례 등록
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Arrow -->
+      <div class="device-arrow">
+        <span>&rarr;</span>
+        <span>CTA 클릭</span>
+      </div>
+
+      <!-- ===== REVIEW A ===== -->
+      <div class="device-col">
+        <h3><code>review.zcheck.co.kr</code></h3>
+        <div class="device-frame">
+          <div class="device-inner" style="background:var(--sand-50);">
+            <div style="height:48px;"></div>
+
+            <!-- Nav -->
+            <nav style="padding:16px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--sand-200);">
+              <span style="font-size:17px; font-weight:800; color:var(--sand-900);">
+                집첵 <span style="color:var(--forest-500);">후기</span>
+              </span>
+              <div style="background:var(--forest-500); color:white; padding:8px 16px; border-radius:10px; font-size:11px; font-weight:700;">
+                후기 작성
+              </div>
+            </nav>
+
+            <!-- Hero -->
+            <div style="position:relative;">
+              <div class="anno anno-green" style="top:8px;">작성 유도 히어로</div>
+              <div style="background:linear-gradient(180deg, var(--forest-50), var(--sand-50)); padding:32px 20px; text-align:center;">
+                <div style="font-size:32px; margin-bottom:8px;">&#9733;</div>
+                <h1 style="font-size:22px; font-weight:800; color:var(--sand-900); margin-bottom:6px; letter-spacing:-0.5px;">인테리어 후기</h1>
+                <p style="font-size:13px; color:var(--sand-500); margin-bottom:20px;">솔직한 시공 경험을 공유해주세요</p>
+                <div style="background:var(--forest-500); color:white; padding:14px 0; border-radius:14px; font-weight:700; font-size:14px; margin:0 32px;">
+                  후기 작성하기
+                </div>
+              </div>
+            </div>
+
+            <!-- Stats -->
+            <div style="display:flex; justify-content:center; gap:40px; padding:16px 0; border-bottom:1px solid var(--sand-200);">
+              <div style="text-align:center;">
+                <p style="font-size:18px; font-weight:800; color:var(--forest-500);">127</p>
+                <p style="font-size:11px; color:var(--sand-400);">전체 후기</p>
+              </div>
+              <div style="text-align:center;">
+                <p style="font-size:18px; font-weight:800; color:var(--forest-500);">4.3</p>
+                <p style="font-size:11px; color:var(--sand-400);">평균 평점</p>
+              </div>
+              <div style="text-align:center;">
+                <p style="font-size:18px; font-weight:800; color:var(--forest-500);">52</p>
+                <p style="font-size:11px; color:var(--sand-400);">이번 달</p>
+              </div>
+            </div>
+
+            <!-- Sort -->
+            <div style="padding:12px 20px; display:flex; align-items:center; justify-content:space-between;">
+              <span style="font-size:13px; font-weight:700; color:var(--sand-800);">최근 후기</span>
+              <span style="font-size:11px; color:var(--sand-400); border:1px solid var(--sand-200); padding:4px 10px; border-radius:8px;">최신순 &#9662;</span>
+            </div>
+
+            <!-- Review Cards -->
+            <div style="position:relative; padding:0 20px 24px;">
+              <div class="anno anno-indigo" style="top:0px;">방문자 작성 글 노출</div>
+              <div style="padding-top:4px;"></div>
+
+              <!-- Card 1 -->
+              <div style="background:white; border-radius:14px; padding:16px; border:1px solid var(--sand-200); margin-bottom:10px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                  <span style="font-weight:700; font-size:13px; color:var(--sand-900);">서울**리어</span>
+                  <span style="color:#F59E0B; font-size:12px;">&#9733;&#9733;&#9733;&#9733;<span style="color:var(--sand-300);">&#9733;</span></span>
+                </div>
+                <p style="font-size:12px; color:var(--sand-600); line-height:1.5; margin-bottom:8px;">전체적으로 만족합니다. 시공 기간도 잘 지켜주셨고 마감도 깔끔했어요.</p>
+                <div style="display:flex; gap:4px;">
+                  <span style="font-size:10px; background:var(--sand-100); color:var(--sand-500); padding:3px 8px; border-radius:4px;">서울 강남구</span>
+                  <span style="font-size:10px; background:var(--sand-100); color:var(--sand-500); padding:3px 8px; border-radius:4px;">아파트 전체</span>
+                </div>
+              </div>
+
+              <!-- Card 2 -->
+              <div style="background:white; border-radius:14px; padding:16px; border:1px solid var(--sand-200); margin-bottom:10px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                  <span style="font-weight:700; font-size:13px; color:var(--sand-900);">강남**델링</span>
+                  <span style="color:#F59E0B; font-size:12px;">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+                </div>
+                <p style="font-size:12px; color:var(--sand-600); line-height:1.5; margin-bottom:8px;">가격 대비 퀄리티가 정말 좋았어요. 사장님이 꼼꼼하게 챙겨주셨습니다.</p>
+                <div style="display:flex; gap:4px;">
+                  <span style="font-size:10px; background:var(--sand-100); color:var(--sand-500); padding:3px 8px; border-radius:4px;">서울 서초구</span>
+                  <span style="font-size:10px; background:var(--sand-100); color:var(--sand-500); padding:3px 8px; border-radius:4px;">주방 리모델링</span>
+                </div>
+              </div>
+
+              <!-- Card 3 -->
+              <div style="background:white; border-radius:14px; padding:16px; border:1px solid var(--sand-200); margin-bottom:10px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                  <span style="font-weight:700; font-size:13px; color:var(--sand-900);">분당**공방</span>
+                  <span style="color:#F59E0B; font-size:12px;">&#9733;&#9733;&#9733;&#9733;<span style="color:var(--sand-300);">&#9733;</span></span>
+                </div>
+                <p style="font-size:12px; color:var(--sand-600); line-height:1.5; margin-bottom:8px;">만족스럽습니다. 일정이 조금 지연되었지만 마감은 깔끔하게 잘 해주셨어요.</p>
+                <div style="display:flex; gap:4px;">
+                  <span style="font-size:10px; background:var(--sand-100); color:var(--sand-500); padding:3px 8px; border-radius:4px;">경기 성남시</span>
+                  <span style="font-size:10px; background:var(--sand-100); color:var(--sand-500); padding:3px 8px; border-radius:4px;">욕실 리모델링</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Bottom CTA -->
+            <div style="padding:0 20px 32px;">
+              <div style="background:var(--sand-100); border-radius:14px; padding:16px; text-align:center;">
+                <p style="font-size:13px; font-weight:700; color:var(--sand-800); margin-bottom:10px;">나도 후기 남기기</p>
+                <div style="background:var(--forest-500); color:white; padding:13px 0; border-radius:12px; font-weight:700; font-size:13px;">
+                  후기 작성하기
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Arrow -->
+      <div class="device-arrow">
+        <span>&rarr;</span>
+        <span>동일 DB</span>
+      </div>
+
+      <!-- ===== REPORT A ===== -->
+      <div class="device-col">
+        <h3><code>report.zcheck.co.kr</code></h3>
+        <div class="device-frame">
+          <div class="device-inner" style="background:var(--sand-50);">
+            <div style="height:48px;"></div>
+
+            <!-- Nav -->
+            <nav style="padding:16px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--sand-200);">
+              <span style="font-size:17px; font-weight:800; color:var(--sand-900);">
+                집첵 <span style="color:#EF4444;">피해사례</span>
+              </span>
+              <div style="background:#EF4444; color:white; padding:8px 16px; border-radius:10px; font-size:11px; font-weight:700;">
+                사례 등록
+              </div>
+            </nav>
+
+            <!-- Hero -->
+            <div style="background:linear-gradient(180deg, #FEF2F2, var(--sand-50)); padding:32px 20px; text-align:center;">
+              <div style="font-size:32px; margin-bottom:8px;">&#9888;</div>
+              <h1 style="font-size:22px; font-weight:800; color:var(--sand-900); margin-bottom:6px;">피해사례 공유</h1>
+              <p style="font-size:13px; color:var(--sand-500); margin-bottom:20px;">동일한 피해를 예방합니다</p>
+              <div style="display:flex; gap:8px; margin:0 16px;">
+                <div style="flex:1; background:#EF4444; color:white; padding:13px 0; border-radius:14px; font-weight:700; font-size:13px;">
+                  사례 등록
+                </div>
+                <div style="flex:1; background:var(--sand-800); color:white; padding:13px 0; border-radius:14px; font-weight:700; font-size:13px;">
+                  블랙리스트 조회
+                </div>
+              </div>
+            </div>
+
+            <!-- Disclaimer -->
+            <div style="margin:16px 20px; background:#FFFBEB; border:1px solid #FDE68A; border-radius:12px; padding:12px;">
+              <p style="font-size:11px; color:#92400E; font-weight:700; margin-bottom:2px;">&#9888; 주의사항</p>
+              <p style="font-size:11px; color:#A16207; line-height:1.5;">업체 비방 목적이 아닙니다. 실제 피해 사례를 공유하여 동일 피해를 예방합니다.</p>
+            </div>
+
+            <!-- Case Cards -->
+            <div style="position:relative; padding:0 20px 24px;">
+              <div class="anno anno-indigo" style="top:0;">방문자 작성 글 노출</div>
+              <div style="padding-top:4px;"></div>
+
+              <div style="background:white; border-radius:14px; padding:16px; border:1px solid #FECACA; margin-bottom:10px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+                  <span style="font-weight:700; font-size:13px; color:var(--sand-900);">시공 중단 후 연락 두절된 업체</span>
+                  <span style="background:#FEE2E2; color:#DC2626; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:700;">심각</span>
+                </div>
+                <p style="font-size:12px; color:var(--sand-600); line-height:1.5; margin-bottom:8px;">계약금 500만원 입금 후 철거만 진행하고 2주째 연락이 안 됩니다...</p>
+                <div style="display:flex; gap:4px;">
+                  <span style="font-size:10px; background:var(--sand-100); color:var(--sand-500); padding:3px 8px; border-radius:4px;">서울 마포구</span>
+                  <span style="font-size:10px; background:var(--sand-100); color:var(--sand-500); padding:3px 8px; border-radius:4px;">시공 중단</span>
+                </div>
+              </div>
+
+              <div style="background:white; border-radius:14px; padding:16px; border:1px solid #FED7AA; margin-bottom:10px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+                  <span style="font-weight:700; font-size:13px; color:var(--sand-900);">견적 대비 추가 비용 과다 청구</span>
+                  <span style="background:#FEF3C7; color:#D97706; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:700;">보통</span>
+                </div>
+                <p style="font-size:12px; color:var(--sand-600); line-height:1.5; margin-bottom:8px;">처음 견적은 3천만원이었는데 추가 공사비라며 1천만원을 더 요구...</p>
+                <div style="display:flex; gap:4px;">
+                  <span style="font-size:10px; background:var(--sand-100); color:var(--sand-500); padding:3px 8px; border-radius:4px;">경기 수원시</span>
+                  <span style="font-size:10px; background:var(--sand-100); color:var(--sand-500); padding:3px 8px; border-radius:4px;">추가 비용</span>
+                </div>
+              </div>
+
+              <div style="background:white; border-radius:14px; padding:16px; border:1px solid #FED7AA; margin-bottom:10px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+                  <span style="font-weight:700; font-size:13px; color:var(--sand-900);">하자 보수 거부하는 업체</span>
+                  <span style="background:#FEF3C7; color:#D97706; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:700;">보통</span>
+                </div>
+                <p style="font-size:12px; color:var(--sand-600); line-height:1.5; margin-bottom:8px;">입주 2개월 만에 벽지가 들뜨고 바닥에 기포가 생겼는데 AS를 거부...</p>
+                <div style="display:flex; gap:4px;">
+                  <span style="font-size:10px; background:var(--sand-100); color:var(--sand-500); padding:3px 8px; border-radius:4px;">인천 남동구</span>
+                  <span style="font-size:10px; background:var(--sand-100); color:var(--sand-500); padding:3px 8px; border-radius:4px;">하자 보수</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Community Section A -->
+    <div class="community-section">
+      <h2>커뮤니티 탭 구조 (zcheck.co.kr/community)</h2>
+      <p>메인 사이트 내 탭으로 후기 + 피해사례가 통합 노출됩니다. 서브도메인에서 작성된 글이 이곳에 함께 표시됩니다.</p>
+      <div class="community-grid">
+        <div class="community-card">
+          <div class="badge" style="background:var(--forest-100); color:var(--forest-700);">업체 후기 탭</div>
+          <h4>CompanyReviewsTab</h4>
+          <p>review.zcheck.co.kr에서 작성된 업체 후기를 리스트로 노출. 별점 필터, 지역 필터, 최신순/평점순 정렬 지원.</p>
+        </div>
+        <div class="community-card">
+          <div class="badge" style="background:#FEE2E2; color:#DC2626;">피해사례 탭</div>
+          <h4>DamageCasesTab</h4>
+          <p>report.zcheck.co.kr에서 등록된 피해사례를 타임라인으로 노출. 심각도 필터, 카테고리별 분류.</p>
+        </div>
+        <div class="community-card">
+          <div class="badge" style="background:#EDE9FE; color:#5B21B6;">블랙리스트 연동</div>
+          <h4>BlacklistCheck</h4>
+          <p>피해사례 3건 이상 누적 업체를 블랙리스트에 자동 등록. 메인 사이트에서 업체명 조회 기능 제공.</p>
+        </div>
+        <div class="community-card">
+          <div class="badge" style="background:#DBEAFE; color:#1E40AF;">SEO 시너지</div>
+          <h4>Cross-Link 구조</h4>
+          <p>blog 콘텐츠 &rarr; 커뮤니티 후기/사례 링크. 커뮤니티 &rarr; blog 관련 가이드 링크. 내부 링크로 SEO 강화.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- ==================== DESIGN B : CARD MAGAZINE ================== -->
+<!-- ================================================================ -->
+<div id="design-B" class="design-section">
+  <div class="container">
+    <div style="margin-bottom: 20px;">
+      <span class="design-label" style="background:#4F46E5;">B안</span>
+      <span class="design-title">카드 매거진</span>
+      <p class="design-desc">대담한 헤드라인, 카드형 레이아웃, 강한 CTA 색상. 전환율 중심 설계.</p>
+    </div>
+
+    <div class="devices-row">
+
+      <!-- ===== BLOG B ===== -->
+      <div class="device-col">
+        <h3><code>blog.zcheck.co.kr</code></h3>
+        <div class="device-frame">
+          <div class="device-inner" style="background:#111510;">
+            <div style="height:48px;"></div>
+
+            <!-- Nav -->
+            <nav style="padding:16px 20px; display:flex; align-items:center; justify-content:space-between;">
+              <span style="font-size:17px; font-weight:800; color:white; letter-spacing:1px;">
+                ZIPCHECK <span style="color:var(--forest-400);">BLOG</span>
+              </span>
+              <div style="width:32px; height:32px; background:var(--sand-800); border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--sand-400); font-size:14px;">
+                &#9776;
+              </div>
+            </nav>
+
+            <!-- Featured Card -->
+            <div style="position:relative; margin:0 16px;">
+              <div class="anno anno-red" style="top:8px;">SEO 콘텐츠</div>
+              <div style="background:linear-gradient(135deg, var(--forest-700), var(--forest-900)); border-radius:16px; height:200px; display:flex; align-items:flex-end; padding:20px; overflow:hidden;">
+                <div>
+                  <span style="background:var(--forest-400); color:var(--forest-900); font-size:10px; font-weight:800; padding:3px 8px; border-radius:4px;">GUIDE</span>
+                  <h2 style="color:white; font-size:18px; font-weight:800; margin-top:8px; line-height:1.4; letter-spacing:-0.3px;">2026년 인테리어<br>트렌드 총정리</h2>
+                  <p style="color:var(--forest-300); font-size:11px; margin-top:4px;">3분 읽기</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Grid Cards -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:14px 16px;">
+              <div style="background:var(--sand-800); border-radius:14px; overflow:hidden;">
+                <div style="background:var(--sand-700); height:80px;"></div>
+                <div style="padding:10px;">
+                  <span style="color:var(--forest-400); font-size:10px; font-weight:700;">후기 팁</span>
+                  <h3 style="color:white; font-size:11px; font-weight:700; margin-top:4px; line-height:1.4;">업체 선택 시 꼭 물어봐야 할 질문</h3>
+                </div>
+              </div>
+              <div style="background:var(--sand-800); border-radius:14px; overflow:hidden;">
+                <div style="background:var(--sand-700); height:80px;"></div>
+                <div style="padding:10px;">
+                  <span style="color:#F87171; font-size:10px; font-weight:700;">피해 예방</span>
+                  <h3 style="color:white; font-size:11px; font-weight:700; margin-top:4px; line-height:1.4;">계약서 작성 전 체크리스트</h3>
+                </div>
+              </div>
+              <div style="background:var(--sand-800); border-radius:14px; overflow:hidden;">
+                <div style="background:var(--sand-700); height:80px;"></div>
+                <div style="padding:10px;">
+                  <span style="color:var(--forest-400); font-size:10px; font-weight:700;">비용</span>
+                  <h3 style="color:white; font-size:11px; font-weight:700; margin-top:4px; line-height:1.4;">30평대 리모델링 평균 비용</h3>
+                </div>
+              </div>
+              <div style="background:var(--sand-800); border-radius:14px; overflow:hidden;">
+                <div style="background:var(--sand-700); height:80px;"></div>
+                <div style="padding:10px;">
+                  <span style="color:#FBBF24; font-size:10px; font-weight:700;">시공기</span>
+                  <h3 style="color:white; font-size:11px; font-weight:700; margin-top:4px; line-height:1.4;">올바른 자재 선택법 A to Z</h3>
+                </div>
+              </div>
+            </div>
+
+            <!-- CTA -->
+            <div style="position:relative; margin:8px 16px 24px;">
+              <div class="anno anno-green" style="top:-4px;">CTA &rarr; 랜딩 이동</div>
+              <div style="background:linear-gradient(135deg, var(--forest-600), var(--forest-500)); border-radius:16px; padding:20px; margin-top:8px;">
+                <p style="color:white; font-weight:700; font-size:14px; margin-bottom:4px;">경험을 나눠주세요</p>
+                <p style="color:var(--forest-200); font-size:11px; margin-bottom:14px;">인테리어 후기 &amp; 피해사례 공유</p>
+                <div style="display:flex; gap:8px;">
+                  <div style="flex:1; background:white; color:var(--forest-700); text-align:center; padding:11px 0; border-radius:12px; font-size:12px; font-weight:700;">
+                    &#9733; 후기 작성
+                  </div>
+                  <div style="flex:1; background:#EF4444; color:white; text-align:center; padding:11px 0; border-radius:12px; font-size:12px; font-weight:700;">
+                    &#9888; 피해 등록
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Arrow -->
+      <div class="device-arrow">
+        <span>&rarr;</span>
+        <span>CTA 클릭</span>
+      </div>
+
+      <!-- ===== REVIEW B ===== -->
+      <div class="device-col">
+        <h3><code>review.zcheck.co.kr</code></h3>
+        <div class="device-frame">
+          <div class="device-inner" style="background:var(--sand-50);">
+            <div style="height:48px;"></div>
+
+            <!-- Nav -->
+            <nav style="padding:12px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--sand-200);">
+              <span style="font-size:16px; font-weight:800; color:var(--sand-900);">집첵 후기</span>
+              <div style="background:var(--forest-500); color:white; padding:8px 14px; border-radius:20px; font-size:11px; font-weight:700;">+ 작성</div>
+            </nav>
+
+            <!-- Hero -->
+            <div style="position:relative;">
+              <div class="anno anno-green" style="top:8px;">작성 유도 히어로</div>
+              <div style="background:var(--forest-700); padding:24px 20px;">
+                <h1 style="color:white; font-size:20px; font-weight:800; margin-bottom:4px;">나의 인테리어 경험,</h1>
+                <h1 style="color:var(--forest-300); font-size:20px; font-weight:800; margin-bottom:16px;">솔직하게 공유하기</h1>
+                <div style="display:flex; gap:10px; text-align:center; margin-bottom:16px;">
+                  <div style="flex:1; background:rgba(74,124,74,0.4); border-radius:12px; padding:10px 0;">
+                    <p style="font-size:18px; font-weight:800; color:white;">127</p>
+                    <p style="font-size:10px; color:var(--forest-300);">누적 후기</p>
+                  </div>
+                  <div style="flex:1; background:rgba(74,124,74,0.4); border-radius:12px; padding:10px 0;">
+                    <p style="font-size:18px; font-weight:800; color:white;">4.3</p>
+                    <p style="font-size:10px; color:var(--forest-300);">평균 평점</p>
+                  </div>
+                  <div style="flex:1; background:rgba(74,124,74,0.4); border-radius:12px; padding:10px 0;">
+                    <p style="font-size:18px; font-weight:800; color:white;">52</p>
+                    <p style="font-size:10px; color:var(--forest-300);">이번 달</p>
+                  </div>
+                </div>
+                <div style="background:white; color:var(--forest-700); padding:14px 0; border-radius:14px; font-weight:700; font-size:14px; text-align:center;">
+                  &#9733; 후기 작성하기
+                </div>
+              </div>
+            </div>
+
+            <!-- Filter Chips -->
+            <div style="padding:12px 20px; display:flex; gap:6px; overflow-x:auto;">
+              <span style="background:var(--forest-500); color:white; font-size:11px; padding:6px 14px; border-radius:20px; font-weight:600; white-space:nowrap;">전체</span>
+              <span style="background:var(--sand-100); color:var(--sand-600); font-size:11px; padding:6px 14px; border-radius:20px; white-space:nowrap;">아파트</span>
+              <span style="background:var(--sand-100); color:var(--sand-600); font-size:11px; padding:6px 14px; border-radius:20px; white-space:nowrap;">주방</span>
+              <span style="background:var(--sand-100); color:var(--sand-600); font-size:11px; padding:6px 14px; border-radius:20px; white-space:nowrap;">욕실</span>
+              <span style="background:var(--sand-100); color:var(--sand-600); font-size:11px; padding:6px 14px; border-radius:20px; white-space:nowrap;">거실</span>
+            </div>
+
+            <!-- Review Cards - Magazine -->
+            <div style="position:relative; padding:0 20px 24px;">
+              <div class="anno anno-indigo" style="top:0;">방문자 작성 글 노출</div>
+              <div style="padding-top:4px;"></div>
+
+              <div style="background:white; border-radius:14px; overflow:hidden; border:1px solid var(--sand-200); box-shadow:0 1px 3px rgba(0,0,0,0.06); margin-bottom:12px;">
+                <div style="background:var(--sand-200); height:120px; display:flex; align-items:center; justify-content:center; color:var(--sand-400); font-size:11px;">시공 사진</div>
+                <div style="padding:14px;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+                    <span style="font-weight:700; font-size:13px; color:var(--sand-900);">서울**리어</span>
+                    <span style="color:#F59E0B; font-size:13px; font-weight:700;">&#9733; 4.5</span>
+                  </div>
+                  <p style="font-size:12px; color:var(--sand-600); line-height:1.5; margin-bottom:8px;">전체적으로 만족합니다. 시공 기간도 잘 지켜주셨고 마감도 깔끔했어요.</p>
+                  <div style="display:flex; gap:4px;">
+                    <span style="font-size:10px; background:var(--forest-50); color:var(--forest-600); padding:3px 10px; border-radius:12px;">서울 강남</span>
+                    <span style="font-size:10px; background:var(--forest-50); color:var(--forest-600); padding:3px 10px; border-radius:12px;">전체 리모델링</span>
+                    <span style="font-size:10px; background:var(--forest-50); color:var(--forest-600); padding:3px 10px; border-radius:12px;">1억+</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="background:white; border-radius:14px; overflow:hidden; border:1px solid var(--sand-200); box-shadow:0 1px 3px rgba(0,0,0,0.06); margin-bottom:12px;">
+                <div style="background:var(--sand-200); height:120px; display:flex; align-items:center; justify-content:center; color:var(--sand-400); font-size:11px;">시공 사진</div>
+                <div style="padding:14px;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+                    <span style="font-weight:700; font-size:13px; color:var(--sand-900);">강남**델링</span>
+                    <span style="color:#F59E0B; font-size:13px; font-weight:700;">&#9733; 5.0</span>
+                  </div>
+                  <p style="font-size:12px; color:var(--sand-600); line-height:1.5; margin-bottom:8px;">가격 대비 퀄리티가 정말 좋았어요. 사장님이 꼼꼼하게 챙겨주셨습니다.</p>
+                  <div style="display:flex; gap:4px;">
+                    <span style="font-size:10px; background:var(--forest-50); color:var(--forest-600); padding:3px 10px; border-radius:12px;">서울 서초</span>
+                    <span style="font-size:10px; background:var(--forest-50); color:var(--forest-600); padding:3px 10px; border-radius:12px;">주방</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Arrow -->
+      <div class="device-arrow">
+        <span>&rarr;</span>
+        <span>동일 DB</span>
+      </div>
+
+      <!-- ===== REPORT B ===== -->
+      <div class="device-col">
+        <h3><code>report.zcheck.co.kr</code></h3>
+        <div class="device-frame">
+          <div class="device-inner" style="background:var(--sand-50);">
+            <div style="height:48px;"></div>
+
+            <!-- Nav -->
+            <nav style="padding:12px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--sand-200);">
+              <span style="font-size:16px; font-weight:800; color:var(--sand-900);">집첵 피해사례</span>
+              <div style="background:#EF4444; color:white; padding:8px 14px; border-radius:20px; font-size:11px; font-weight:700;">+ 등록</div>
+            </nav>
+
+            <!-- Hero -->
+            <div style="background:linear-gradient(180deg, #DC2626, #B91C1C); padding:24px 20px;">
+              <h1 style="color:white; font-size:20px; font-weight:800; margin-bottom:4px;">인테리어 피해,</h1>
+              <h1 style="color:#FCA5A5; font-size:20px; font-weight:800; margin-bottom:16px;">함께 예방합니다</h1>
+              <div style="display:flex; gap:8px;">
+                <div style="flex:1; background:white; color:#DC2626; padding:13px 0; border-radius:14px; font-weight:700; font-size:13px; text-align:center;">
+                  &#9888; 사례 등록
+                </div>
+                <div style="flex:1; background:rgba(0,0,0,0.2); color:white; padding:13px 0; border-radius:14px; font-weight:700; font-size:13px; text-align:center; border:1px solid rgba(255,255,255,0.2);">
+                  &#128269; 블랙리스트
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div style="display:flex; justify-content:center; gap:32px; padding:14px 0; background:#FEF2F2;">
+              <div style="text-align:center;">
+                <p style="font-size:18px; font-weight:800; color:#DC2626;">43</p>
+                <p style="font-size:10px; color:var(--sand-500);">등록 사례</p>
+              </div>
+              <div style="text-align:center;">
+                <p style="font-size:18px; font-weight:800; color:#DC2626;">12</p>
+                <p style="font-size:10px; color:var(--sand-500);">해결 완료</p>
+              </div>
+              <div style="text-align:center;">
+                <p style="font-size:18px; font-weight:800; color:#DC2626;">89%</p>
+                <p style="font-size:10px; color:var(--sand-500);">예방 도움</p>
+              </div>
+            </div>
+
+            <!-- Disclaimer -->
+            <div style="margin:14px 20px; background:#FFFBEB; border-left:3px solid #FBBF24; border-radius:0 10px 10px 0; padding:10px 12px;">
+              <p style="font-size:11px; color:#92400E; line-height:1.5;"><strong>&#9888;</strong> 업체 비방 목적이 아닙니다. 실제 피해 공유로 동일 피해를 예방합니다.</p>
+            </div>
+
+            <!-- Case Cards - Timeline -->
+            <div style="position:relative; padding:0 20px 24px;">
+              <div class="anno anno-indigo" style="top:0;">방문자 작성 글 노출</div>
+              <div style="padding-top:4px;"></div>
+
+              <div style="background:white; border-radius:14px; padding:16px; border-left:4px solid #EF4444; box-shadow:0 1px 3px rgba(0,0,0,0.06); margin-bottom:10px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+                  <span style="font-weight:700; font-size:13px; color:var(--sand-900);">시공 중단 후 연락 두절</span>
+                  <span style="background:#EF4444; color:white; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:700;">심각</span>
+                </div>
+                <p style="font-size:12px; color:var(--sand-600); line-height:1.5; margin-bottom:6px;">계약금 500만원 입금 후 철거만 진행하고 2주째 연락이...</p>
+                <div style="display:flex; gap:4px; align-items:center; font-size:10px; color:var(--sand-400);">
+                  <span>서울 마포구</span>
+                  <span style="color:var(--sand-300);">|</span>
+                  <span>시공 중단</span>
+                  <span style="color:var(--sand-300);">|</span>
+                  <span>2026.01.30</span>
+                </div>
+              </div>
+
+              <div style="background:white; border-radius:14px; padding:16px; border-left:4px solid #F97316; box-shadow:0 1px 3px rgba(0,0,0,0.06); margin-bottom:10px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+                  <span style="font-weight:700; font-size:13px; color:var(--sand-900);">추가 비용 과다 청구</span>
+                  <span style="background:#F97316; color:white; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:700;">보통</span>
+                </div>
+                <p style="font-size:12px; color:var(--sand-600); line-height:1.5; margin-bottom:6px;">처음 견적은 3천만원이었는데 추가 공사비라며 1천만원을...</p>
+                <div style="display:flex; gap:4px; align-items:center; font-size:10px; color:var(--sand-400);">
+                  <span>경기 수원시</span>
+                  <span style="color:var(--sand-300);">|</span>
+                  <span>추가 비용</span>
+                  <span style="color:var(--sand-300);">|</span>
+                  <span>2026.01.28</span>
+                </div>
+              </div>
+
+              <div style="background:white; border-radius:14px; padding:16px; border-left:4px solid #F97316; box-shadow:0 1px 3px rgba(0,0,0,0.06); margin-bottom:10px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+                  <span style="font-weight:700; font-size:13px; color:var(--sand-900);">하자 보수 거부</span>
+                  <span style="background:#F97316; color:white; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:700;">보통</span>
+                </div>
+                <p style="font-size:12px; color:var(--sand-600); line-height:1.5; margin-bottom:6px;">벽지 들뜸, 바닥 기포 발생. AS 거부...</p>
+                <div style="display:flex; gap:4px; align-items:center; font-size:10px; color:var(--sand-400);">
+                  <span>인천 남동구</span>
+                  <span style="color:var(--sand-300);">|</span>
+                  <span>하자 보수</span>
+                  <span style="color:var(--sand-300);">|</span>
+                  <span>2026.01.25</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Community Section B -->
+    <div class="community-section">
+      <h2>커뮤니티 탭 구조 (zcheck.co.kr/community)</h2>
+      <p>메인 사이트 내 탭으로 후기 + 피해사례가 통합 노출됩니다. 서브도메인에서 작성된 글이 이곳에 함께 표시됩니다.</p>
+      <div class="community-grid">
+        <div class="community-card">
+          <div class="badge" style="background:var(--forest-100); color:var(--forest-700);">업체 후기 탭</div>
+          <h4>CompanyReviewsTab</h4>
+          <p>review.zcheck.co.kr에서 작성된 업체 후기를 카드 매거진 스타일로 노출. 사진 포함, 평점 필터.</p>
+        </div>
+        <div class="community-card">
+          <div class="badge" style="background:#FEE2E2; color:#DC2626;">피해사례 탭</div>
+          <h4>DamageCasesTab</h4>
+          <p>report.zcheck.co.kr에서 등록된 피해사례를 타임라인으로 노출. 심각도 색상 코딩, 날짜순 정렬.</p>
+        </div>
+        <div class="community-card">
+          <div class="badge" style="background:#EDE9FE; color:#5B21B6;">블랙리스트 연동</div>
+          <h4>BlacklistCheck</h4>
+          <p>피해사례 3건 이상 누적 업체를 블랙리스트에 자동 등록. 메인 사이트에서 업체명 조회 기능 제공.</p>
+        </div>
+        <div class="community-card">
+          <div class="badge" style="background:#DBEAFE; color:#1E40AF;">SEO 시너지</div>
+          <h4>Cross-Link 구조</h4>
+          <p>blog 콘텐츠 &rarr; 커뮤니티 후기/사례 링크. 커뮤니티 &rarr; blog 관련 가이드 링크. 내부 링크로 SEO 강화.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchDesign(id) {
+  document.querySelectorAll('.design-section').forEach(el => el.classList.remove('active'));
+  document.getElementById('design-' + id).classList.add('active');
+
+  const btnA = document.getElementById('btn-A');
+  const btnB = document.getElementById('btn-B');
+
+  btnA.className = 'tab-btn ' + (id === 'A' ? 'active-a' : 'inactive');
+  btnB.className = 'tab-btn ' + (id === 'B' ? 'active-b' : 'inactive');
+}
+</script>
+
+</body>
+</html>

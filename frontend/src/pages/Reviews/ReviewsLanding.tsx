@@ -12,6 +12,8 @@ import { getSubdomain } from '../../lib/subdomain'
 
 const PAGE_SIZE = 12
 
+const FILTER_CHIPS = ['전체', '아파트', '주방', '욕실', '거실', '베란다', '원룸/오피스텔'] as const
+
 export default function ReviewsLanding() {
 	const navigate = useNavigate()
 	const [searchParams, setSearchParams] = useSearchParams()
@@ -27,6 +29,7 @@ export default function ReviewsLanding() {
 	const [hasMore, setHasMore] = useState(true)
 	const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
 	const [sortBy, setSortBy] = useState(searchParams.get('sort_by') || 'created_at')
+	const [activeChip, setActiveChip] = useState<string>('전체')
 
 	const observerRef = useRef<IntersectionObserver | null>(null)
 	const sentinelRef = useCallback(
@@ -49,11 +52,11 @@ export default function ReviewsLanding() {
 		setCurrentPage(1)
 		setHasMore(true)
 		setLoading(true)
-	}, [searchQuery, sortBy])
+	}, [searchQuery, sortBy, activeChip])
 
 	useEffect(() => {
 		loadReviews()
-	}, [currentPage, searchQuery, sortBy])
+	}, [currentPage, searchQuery, sortBy, activeChip])
 
 	const loadReviews = async () => {
 		try {
@@ -70,6 +73,7 @@ export default function ReviewsLanding() {
 				order: 'desc'
 			})
 			if (searchQuery) params.append('search', searchQuery)
+			if (activeChip !== '전체') params.append('project_type', activeChip)
 
 			const response = await fetch(getApiUrl(`/api/company-reviews?${params.toString()}`))
 			if (!response.ok) throw new Error('후기 목록을 불러올 수 없습니다.')
@@ -99,6 +103,15 @@ export default function ReviewsLanding() {
 		setSearchParams(newParams)
 	}
 
+	const handleChipClick = (chip: string) => {
+		setActiveChip(chip)
+		if (chip === '전체') {
+			updateParam('project_type', '')
+		} else {
+			updateParam('project_type', chip)
+		}
+	}
+
 	return (
 		<div className="min-h-screen bg-sand-50">
 			<PageSEO
@@ -126,75 +139,91 @@ export default function ReviewsLanding() {
 			/>
 			{subdomain === 'review' ? <SubdomainNavigation subdomain="review" /> : <NordicNavigation />}
 
-			{/* Hero */}
-			<div className="pt-28 pb-10 md:pt-36 md:pb-14 bg-gradient-to-b from-sand-100 to-sand-50">
-				<div className="max-w-4xl mx-auto px-5 md:px-8 text-center">
-					<div className="flex items-center justify-center gap-3 mb-6">
-						<div className="w-8 h-[2px] bg-forest-500" />
-						<span className="text-forest-600 font-medium text-xs tracking-widest uppercase">Reviews</span>
-						<div className="w-8 h-[2px] bg-forest-500" />
+			{/* Hero - Card Magazine Style */}
+			<div className="pt-24 md:pt-28">
+				<div className="bg-forest-700">
+					<div className="max-w-6xl mx-auto px-5 md:px-8 py-10 md:py-14">
+						<h1 className="text-white text-2xl md:text-3xl font-extrabold tracking-tight mb-1.5">
+							나의 인테리어 경험,
+						</h1>
+						<p className="text-forest-300 text-2xl md:text-3xl font-extrabold tracking-tight mb-6">
+							솔직하게 공유하기
+						</p>
+
+						{/* Stats */}
+						<div className="flex gap-3 mb-6">
+							<div className="flex-1 bg-forest-600/40 rounded-xl py-3 text-center">
+								<p className="text-xl md:text-2xl font-extrabold text-white">{totalCount > 0 ? totalCount.toLocaleString() : '-'}</p>
+								<p className="text-[11px] text-forest-300">누적 후기</p>
+							</div>
+							<div className="flex-1 bg-forest-600/40 rounded-xl py-3 text-center">
+								<p className="text-xl md:text-2xl font-extrabold text-white">4.3</p>
+								<p className="text-[11px] text-forest-300">평균 평점</p>
+							</div>
+							<div className="flex-1 bg-forest-600/40 rounded-xl py-3 text-center">
+								<p className="text-xl md:text-2xl font-extrabold text-white">-</p>
+								<p className="text-[11px] text-forest-300">이번 달</p>
+							</div>
+						</div>
+
+						{/* CTA */}
+						<button
+							onClick={() => navigate('/write/review')}
+							className="w-full md:w-auto px-10 py-3.5 bg-white text-forest-700 font-bold rounded-2xl text-sm hover:bg-sand-100 transition-colors flex items-center justify-center gap-2"
+						>
+							<Star size={16} className="fill-forest-500 text-forest-500" />
+							후기 작성하기
+						</button>
 					</div>
-					<h1 className="font-outfit text-3xl md:text-5xl font-bold text-sand-900 tracking-tight mb-4">
-						업체 후기
-					</h1>
-					<p className="text-sand-700 text-base md:text-lg max-w-lg mx-auto">
-						실제 고객들의 솔직한 인테리어 시공 경험을 확인하세요
-					</p>
-					{totalCount > 0 && (
-						<p className="text-sand-500 text-sm mt-3">총 {totalCount.toLocaleString()}개의 후기</p>
-					)}
 				</div>
+			</div>
+
+			{/* Filter Chips */}
+			<div className="max-w-6xl mx-auto px-5 md:px-8 py-4 flex gap-2 overflow-x-auto scrollbar-hide">
+				{FILTER_CHIPS.map((chip) => (
+					<button
+						key={chip}
+						onClick={() => handleChipClick(chip)}
+						className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+							activeChip === chip
+								? 'bg-forest-600 text-white'
+								: 'bg-sand-100 text-sand-600 hover:bg-sand-200'
+						}`}
+					>
+						{chip}
+					</button>
+				))}
 			</div>
 
 			{/* Content */}
 			<div className="max-w-6xl mx-auto px-5 md:px-8 pb-20">
-				{/* Filters */}
-				<div className="bg-white rounded-2xl p-5 mb-8 border border-sand-200">
-					<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-						<div className="md:col-span-2">
-							<label className="block text-sm font-semibold text-sand-700 mb-2 flex items-center gap-1.5">
-								<Search size={14} className="text-forest-500" />
-								검색
-							</label>
-							<input
-								type="text"
-								value={searchQuery}
-								onChange={(e) => {
-									setSearchQuery(e.target.value)
-									updateParam('search', e.target.value)
-								}}
-								placeholder="업체명, 지역, 시공유형 검색"
-								className="w-full px-4 py-2.5 bg-sand-50 border border-sand-200 rounded-lg text-sand-900 placeholder-sand-400 focus:outline-none focus:ring-2 focus:ring-forest-300 focus:border-forest-400 transition-all"
-							/>
-						</div>
-						<div>
-							<label className="block text-sm font-semibold text-sand-700 mb-2 flex items-center gap-1.5">
-								<SortDesc size={14} className="text-forest-500" />
-								정렬
-							</label>
-							<select
-								value={sortBy}
-								onChange={(e) => {
-									setSortBy(e.target.value)
-									updateParam('sort_by', e.target.value)
-								}}
-								className="w-full px-4 py-2.5 bg-sand-50 border border-sand-200 rounded-lg text-sand-900 focus:outline-none focus:ring-2 focus:ring-forest-300 focus:border-forest-400 transition-all"
-							>
-								<option value="created_at">최신순</option>
-								<option value="rating">평점순</option>
-								<option value="view_count">조회순</option>
-							</select>
-						</div>
-						<div className="flex items-end">
-							<button
-								onClick={() => navigate('/community/reviews/create')}
-								className="w-full px-5 py-2.5 bg-forest-600 hover:bg-forest-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 text-sm"
-							>
-								<PenLine size={16} />
-								후기 작성
-							</button>
-						</div>
+				{/* Search & Sort Row */}
+				<div className="flex flex-col sm:flex-row gap-3 mb-6">
+					<div className="flex-1 relative">
+						<Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sand-400" />
+						<input
+							type="text"
+							value={searchQuery}
+							onChange={(e) => {
+								setSearchQuery(e.target.value)
+								updateParam('search', e.target.value)
+							}}
+							placeholder="업체명, 지역, 시공유형 검색"
+							className="w-full pl-10 pr-4 py-2.5 bg-white border border-sand-200 rounded-xl text-sm text-sand-900 placeholder-sand-400 focus:outline-none focus:ring-2 focus:ring-forest-300 focus:border-forest-400 transition-all"
+						/>
 					</div>
+					<select
+						value={sortBy}
+						onChange={(e) => {
+							setSortBy(e.target.value)
+							updateParam('sort_by', e.target.value)
+						}}
+						className="px-4 py-2.5 bg-white border border-sand-200 rounded-xl text-sm text-sand-700 focus:outline-none focus:ring-2 focus:ring-forest-300 focus:border-forest-400 transition-all"
+					>
+						<option value="created_at">최신순</option>
+						<option value="rating">평점순</option>
+						<option value="view_count">조회순</option>
+					</select>
 				</div>
 
 				{/* Initial Loading */}
@@ -217,7 +246,7 @@ export default function ReviewsLanding() {
 						<Star className="mx-auto mb-4 text-sand-300" size={48} />
 						<p className="text-sand-500 text-lg mb-6">아직 등록된 후기가 없습니다.</p>
 						<button
-							onClick={() => navigate('/community/reviews/create')}
+							onClick={() => navigate('/write/review')}
 							className="px-8 py-3 bg-forest-600 hover:bg-forest-700 text-white font-semibold rounded-xl transition-colors"
 						>
 							첫 후기 작성하기

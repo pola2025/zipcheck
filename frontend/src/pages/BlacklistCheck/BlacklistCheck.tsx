@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Search, AlertTriangle, Building, Phone, FileText, User, Shield, Loader2 } from 'lucide-react'
+import { Search, AlertTriangle, Phone, FileText, User, Shield, Loader2 } from 'lucide-react'
 import SubdomainNavigation from 'components/SubdomainNavigation'
 import NordicFooter from 'components/nordic/NordicFooter'
 import PageSEO from 'components/PageSEO'
@@ -39,16 +39,15 @@ const severityLabels: Record<string, string> = {
 }
 
 export default function BlacklistCheck() {
+	const [businessNumber, setBusinessNumber] = useState('')
 	const [representativeName, setRepresentativeName] = useState('')
 	const [companyPhone, setCompanyPhone] = useState('')
-	const [companyName, setCompanyName] = useState('')
-	const [businessNumber, setBusinessNumber] = useState('')
 
 	const [results, setResults] = useState<MatchedCase[] | null>(null)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState('')
 
-	const filledCount = [representativeName, companyPhone, companyName, businessNumber].filter(v => v.trim()).length
+	const filledCount = [businessNumber, representativeName, companyPhone].filter(v => v.trim()).length
 
 	const handleSearch = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -64,10 +63,9 @@ export default function BlacklistCheck() {
 
 		try {
 			const body: Record<string, string> = {}
+			if (businessNumber.trim()) body.business_number = businessNumber.trim()
 			if (representativeName.trim()) body.representative_name = representativeName.trim()
 			if (companyPhone.trim()) body.company_phone = companyPhone.trim()
-			if (companyName.trim()) body.company_name = companyName.trim()
-			if (businessNumber.trim()) body.business_number = businessNumber.trim()
 
 			const response = await fetch(getApiUrl('/api/damage-cases/match'), {
 				method: 'POST',
@@ -105,37 +103,45 @@ export default function BlacklistCheck() {
 			/>
 			<SubdomainNavigation subdomain="report" />
 
-			{/* Hero */}
-			<div className="pt-28 pb-10 md:pt-36 md:pb-14 bg-gradient-to-b from-sand-100 to-sand-50">
-				<div className="max-w-4xl mx-auto px-5 md:px-8 text-center">
-					<div className="flex items-center justify-center gap-3 mb-6">
-						<div className="w-8 h-[2px] bg-red-400" />
-						<span className="text-red-500 font-medium text-xs tracking-widest uppercase">Blacklist Check</span>
-						<div className="w-8 h-[2px] bg-red-400" />
+			{/* Hero - Dark Red */}
+			<div className="pt-24 md:pt-28">
+				<div className="bg-gradient-to-b from-sand-900 to-sand-800">
+					<div className="max-w-4xl mx-auto px-5 md:px-8 py-10 md:py-14 text-center">
+						<Shield className="mx-auto mb-4 text-red-400" size={40} />
+						<h1 className="text-white text-2xl md:text-3xl font-extrabold tracking-tight mb-2">
+							블랙리스트 조회
+						</h1>
+						<p className="text-sand-400 text-sm md:text-base">
+							업체 정보를 입력하여 피해사례 이력을 확인하세요
+						</p>
 					</div>
-					<h1 className="font-outfit text-3xl md:text-5xl font-bold text-sand-900 tracking-tight mb-4">
-						블랙리스트 조회
-					</h1>
-					<p className="text-sand-700 text-base md:text-lg max-w-lg mx-auto">
-						업체 정보를 입력하여 피해사례 이력을 확인하세요
-					</p>
 				</div>
 			</div>
 
 			{/* Content */}
-			<div className="max-w-2xl mx-auto px-5 md:px-8 pb-20">
+			<div className="max-w-2xl mx-auto px-5 md:px-8 -mt-6 pb-20 relative z-10">
 				{/* Search Form */}
-				<form onSubmit={handleSearch} className="bg-white rounded-2xl p-6 md:p-8 border border-sand-200 mb-8">
-					<div className="flex items-center gap-2 mb-6">
-						<Shield className="w-5 h-5 text-red-500" />
-						<h2 className="text-lg font-bold text-sand-900">업체 정보 입력</h2>
-					</div>
-
+				<form onSubmit={handleSearch} className="bg-white rounded-2xl p-6 md:p-8 border border-sand-200 shadow-lg mb-8">
 					<p className="text-sm text-sand-500 mb-6">
 						아래 항목 중 <strong className="text-red-500">2개 이상</strong>을 입력하면 매칭된 피해사례를 조회할 수 있습니다.
 					</p>
 
 					<div className="space-y-4">
+						<div>
+							<label htmlFor="bl-biz" className="block text-sm font-semibold mb-2 text-sand-700 flex items-center gap-2">
+								<FileText className="w-4 h-4 text-sand-400" />
+								사업자등록번호
+							</label>
+							<input
+								id="bl-biz"
+								type="text"
+								value={businessNumber}
+								onChange={(e) => setBusinessNumber(e.target.value)}
+								placeholder="예: 123-45-67890"
+								className={inputClass}
+							/>
+						</div>
+
 						<div>
 							<label htmlFor="bl-name" className="block text-sm font-semibold mb-2 text-sand-700 flex items-center gap-2">
 								<User className="w-4 h-4 text-sand-400" />
@@ -154,7 +160,7 @@ export default function BlacklistCheck() {
 						<div>
 							<label htmlFor="bl-phone" className="block text-sm font-semibold mb-2 text-sand-700 flex items-center gap-2">
 								<Phone className="w-4 h-4 text-sand-400" />
-								업체 전화번호
+								연락처 (업체 전화번호)
 							</label>
 							<input
 								id="bl-phone"
@@ -162,36 +168,6 @@ export default function BlacklistCheck() {
 								value={companyPhone}
 								onChange={(e) => setCompanyPhone(e.target.value)}
 								placeholder="예: 02-1234-5678"
-								className={inputClass}
-							/>
-						</div>
-
-						<div>
-							<label htmlFor="bl-company" className="block text-sm font-semibold mb-2 text-sand-700 flex items-center gap-2">
-								<Building className="w-4 h-4 text-sand-400" />
-								상호명
-							</label>
-							<input
-								id="bl-company"
-								type="text"
-								value={companyName}
-								onChange={(e) => setCompanyName(e.target.value)}
-								placeholder="예: OO인테리어"
-								className={inputClass}
-							/>
-						</div>
-
-						<div>
-							<label htmlFor="bl-biz" className="block text-sm font-semibold mb-2 text-sand-700 flex items-center gap-2">
-								<FileText className="w-4 h-4 text-sand-400" />
-								사업자등록번호
-							</label>
-							<input
-								id="bl-biz"
-								type="text"
-								value={businessNumber}
-								onChange={(e) => setBusinessNumber(e.target.value)}
-								placeholder="예: 123-45-67890"
 								className={inputClass}
 							/>
 						</div>
@@ -205,7 +181,7 @@ export default function BlacklistCheck() {
 
 					<div className="mt-6 flex items-center justify-between">
 						<p className="text-sm text-sand-400">
-							입력됨: <span className={filledCount >= 2 ? 'text-forest-600 font-semibold' : 'text-sand-500'}>{filledCount}</span>/4
+							입력됨: <span className={filledCount >= 2 ? 'text-forest-600 font-semibold' : 'text-sand-500'}>{filledCount}</span>/3
 						</p>
 						<button
 							type="submit"
@@ -240,10 +216,9 @@ export default function BlacklistCheck() {
 								</div>
 
 								{results.map((item) => (
-									<a
+									<div
 										key={item.id}
-										href={item.slug ? `/damage-cases/${item.slug}` : `/damage-cases`}
-										className="block bg-white rounded-2xl p-5 border border-sand-200 hover:border-red-300 hover:shadow-md transition-all"
+										className="bg-white rounded-2xl p-5 border-l-4 border-red-400 shadow-sm"
 									>
 										<div className="flex items-start justify-between gap-3 mb-3">
 											<h4 className="text-base font-bold text-sand-900 line-clamp-2">{item.title}</h4>
@@ -261,11 +236,12 @@ export default function BlacklistCheck() {
 										<p className="text-sm text-sand-600 line-clamp-2 mb-3">{item.description}</p>
 										<div className="flex flex-wrap gap-3 text-xs text-sand-500">
 											{item.company_name && <span>업체: {item.company_name}</span>}
+											{item.representative_name && <span>대표: {item.representative_name}</span>}
 											{item.region && <span>지역: {item.region}</span>}
 											{item.damage_type && <span>유형: {item.damage_type}</span>}
 											<span>{new Date(item.created_at).toLocaleDateString('ko-KR')}</span>
 										</div>
-									</a>
+									</div>
 								))}
 							</div>
 						)}

@@ -282,9 +282,29 @@ app.post('/match', optionalAuth(), async (c) => {
 
 		const rows = await query(c.env.DATABASE_URL, sql, params) as Record<string, unknown>[]
 
-		// Strip ip_address and user_id but keep company info for matched results
+		// Strip sensitive fields and mask company info for privacy
 		const results = rows.map(row => {
 			const { ip_address, user_id, ...rest } = row
+
+			// Mask company_name: first char + "OO"
+			if (typeof rest.company_name === 'string' && rest.company_name.length > 0) {
+				rest.company_name = rest.company_name.charAt(0) + 'OO'
+			}
+			// Mask representative_name: first char + "OO"
+			if (typeof rest.representative_name === 'string' && rest.representative_name.length > 0) {
+				rest.representative_name = rest.representative_name.charAt(0) + 'OO'
+			}
+			// Mask company_phone: first 3 digits + "****" + last 4 digits
+			if (typeof rest.company_phone === 'string' && rest.company_phone.length >= 7) {
+				const digits = rest.company_phone.replace(/\D/g, '')
+				rest.company_phone = digits.slice(0, 3) + '****' + digits.slice(-4)
+			}
+			// Mask business_number: first 3 digits + "**-***" + last 2 digits
+			if (typeof rest.business_number === 'string' && rest.business_number.length >= 5) {
+				const digits = rest.business_number.replace(/\D/g, '')
+				rest.business_number = digits.slice(0, 3) + '**-***' + digits.slice(-2)
+			}
+
 			return rest
 		})
 

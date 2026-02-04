@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { AlertTriangle, Search, SortDesc, PenLine, Info, Loader2 } from 'lucide-react'
+import { AlertTriangle, Search, SortDesc, PenLine, Info, Loader2, Shield } from 'lucide-react'
 import NordicNavigation from 'components/nordic/NordicNavigation'
 import SubdomainNavigation from 'components/SubdomainNavigation'
 import NordicFooter from 'components/nordic/NordicFooter'
@@ -126,94 +126,92 @@ export default function DamageCasesLanding() {
 			/>
 			{subdomain === 'report' ? <SubdomainNavigation subdomain="report" /> : <NordicNavigation />}
 
-			{/* Hero */}
-			<div className="pt-28 pb-10 md:pt-36 md:pb-14 bg-gradient-to-b from-sand-100 to-sand-50">
-				<div className="max-w-4xl mx-auto px-5 md:px-8 text-center">
-					<div className="flex items-center justify-center gap-3 mb-6">
-						<div className="w-8 h-[2px] bg-forest-500" />
-						<span className="text-forest-600 font-medium text-xs tracking-widest uppercase">Damage Cases</span>
-						<div className="w-8 h-[2px] bg-forest-500" />
+			{/* Hero - Red Gradient Style */}
+			<div className="pt-24 md:pt-28">
+				<div className="bg-gradient-to-b from-red-600 to-red-700">
+					<div className="max-w-6xl mx-auto px-5 md:px-8 py-10 md:py-14">
+						<h1 className="text-white text-2xl md:text-3xl font-extrabold tracking-tight mb-1.5">
+							인테리어 피해,
+						</h1>
+						<p className="text-red-200 text-2xl md:text-3xl font-extrabold tracking-tight mb-6">
+							함께 예방합니다
+						</p>
+
+						{/* Dual CTA */}
+						<div className="flex gap-3 mb-6">
+							<button
+								onClick={() => navigate('/write/damage-case')}
+								className="flex-1 md:flex-none px-8 py-3.5 bg-white text-red-600 font-bold rounded-2xl text-sm hover:bg-sand-100 transition-colors flex items-center justify-center gap-2"
+							>
+								<AlertTriangle size={16} />
+								사례 등록
+							</button>
+							<button
+								onClick={() => navigate('/blacklist-check')}
+								className="flex-1 md:flex-none px-8 py-3.5 bg-red-800/50 text-white font-bold rounded-2xl text-sm hover:bg-red-800/70 transition-colors flex items-center justify-center gap-2 border border-white/20"
+							>
+								<Shield size={16} />
+								블랙리스트 조회
+							</button>
+						</div>
 					</div>
-					<h1 className="font-outfit text-3xl md:text-5xl font-bold text-sand-900 tracking-tight mb-4">
-						피해사례
-					</h1>
-					<p className="text-sand-700 text-base md:text-lg max-w-lg mx-auto">
-						인테리어 피해 사례를 공유하여 동일한 피해를 예방합니다
-					</p>
-					{totalCount > 0 && (
-						<p className="text-sand-500 text-sm mt-3">총 {totalCount.toLocaleString()}개의 사례</p>
-					)}
+				</div>
+
+				{/* Stats Bar */}
+				<div className="bg-red-50 border-b border-red-100">
+					<div className="max-w-6xl mx-auto px-5 md:px-8 py-3 flex justify-center gap-10 md:gap-16">
+						<div className="text-center">
+							<p className="text-lg md:text-xl font-extrabold text-red-600">{totalCount > 0 ? totalCount : '-'}</p>
+							<p className="text-[11px] text-sand-500">등록 사례</p>
+						</div>
+						<div className="text-center">
+							<p className="text-lg md:text-xl font-extrabold text-red-600">-</p>
+							<p className="text-[11px] text-sand-500">해결 완료</p>
+						</div>
+						<div className="text-center">
+							<p className="text-lg md:text-xl font-extrabold text-red-600">-</p>
+							<p className="text-[11px] text-sand-500">예방 도움</p>
+						</div>
+					</div>
 				</div>
 			</div>
 
 			{/* Content */}
-			<div className="max-w-6xl mx-auto px-5 md:px-8 pb-20">
+			<div className="max-w-6xl mx-auto px-5 md:px-8 pt-6 pb-20">
 				{/* Disclaimer */}
-				<div className="bg-amber-50 rounded-2xl p-5 border border-amber-200 mb-8">
-					<div className="flex items-start gap-3">
-						<Info size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
-						<div>
-							<h3 className="text-sm font-bold text-amber-800 mb-1.5">주의사항 (필독)</h3>
-							<div className="text-sm text-amber-700 leading-relaxed space-y-1">
-								<p className="font-semibold">본 게시판은 업체 비방을 하는 곳이 아닙니다.</p>
-								<p>
-									실제 인테리어 진행 시 피해를 본 내용과 사례를 공유하여
-									동일한 피해사례가 늘어나지 않기 위함입니다.
-								</p>
-								<p className="text-xs text-amber-600 font-medium pt-1.5 border-t border-amber-200 mt-2">
-									게시판 등록 내용으로 인한 법적 분쟁은 게시글 작성자에게 있음을 안내드립니다.
-								</p>
-							</div>
-						</div>
-					</div>
+				<div className="bg-amber-50 border-l-4 border-amber-400 rounded-r-xl p-4 mb-6">
+					<p className="text-xs text-amber-800 leading-relaxed">
+						<strong className="font-bold">&#9888; 주의사항</strong> &mdash; 본 게시판은 업체 비방 목적이 아닙니다. 실제 피해 사례를 공유하여 동일 피해를 예방합니다.
+						게시글 내용에 대한 법적 책임은 작성자에게 있습니다.
+					</p>
 				</div>
 
-				{/* Filters */}
-				<div className="bg-white rounded-2xl p-5 mb-8 border border-sand-200">
-					<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-						<div className="md:col-span-2">
-							<label className="block text-sm font-semibold text-sand-700 mb-2 flex items-center gap-1.5">
-								<Search size={14} className="text-red-400" />
-								검색
-							</label>
-							<input
-								type="text"
-								value={searchQuery}
-								onChange={(e) => {
-									setSearchQuery(e.target.value)
-									updateParam('search', e.target.value)
-								}}
-								placeholder="업체명, 지역, 피해유형 검색"
-								className="w-full px-4 py-2.5 bg-sand-50 border border-sand-200 rounded-lg text-sand-900 placeholder-sand-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-300 transition-all"
-							/>
-						</div>
-						<div>
-							<label className="block text-sm font-semibold text-sand-700 mb-2 flex items-center gap-1.5">
-								<SortDesc size={14} className="text-red-400" />
-								정렬
-							</label>
-							<select
-								value={sortBy}
-								onChange={(e) => {
-									setSortBy(e.target.value)
-									updateParam('sort_by', e.target.value)
-								}}
-								className="w-full px-4 py-2.5 bg-sand-50 border border-sand-200 rounded-lg text-sand-900 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-300 transition-all"
-							>
-								<option value="created_at">최신순</option>
-								<option value="severity">심각도순</option>
-							</select>
-						</div>
-						<div className="flex items-end">
-							<button
-								onClick={() => navigate('/community/damage-cases/create')}
-								className="w-full px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 text-sm"
-							>
-								<PenLine size={16} />
-								사례 등록
-							</button>
-						</div>
+				{/* Search & Sort Row */}
+				<div className="flex flex-col sm:flex-row gap-3 mb-6">
+					<div className="flex-1 relative">
+						<Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sand-400" />
+						<input
+							type="text"
+							value={searchQuery}
+							onChange={(e) => {
+								setSearchQuery(e.target.value)
+								updateParam('search', e.target.value)
+							}}
+							placeholder="업체명, 지역, 피해유형 검색"
+							className="w-full pl-10 pr-4 py-2.5 bg-white border border-sand-200 rounded-xl text-sm text-sand-900 placeholder-sand-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-300 transition-all"
+						/>
 					</div>
+					<select
+						value={sortBy}
+						onChange={(e) => {
+							setSortBy(e.target.value)
+							updateParam('sort_by', e.target.value)
+						}}
+						className="px-4 py-2.5 bg-white border border-sand-200 rounded-xl text-sm text-sand-700 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-300 transition-all"
+					>
+						<option value="created_at">최신순</option>
+						<option value="severity">심각도순</option>
+					</select>
 				</div>
 
 				{/* Initial Loading */}
@@ -236,7 +234,7 @@ export default function DamageCasesLanding() {
 						<AlertTriangle className="mx-auto mb-4 text-sand-300" size={48} />
 						<p className="text-sand-500 text-lg mb-6">아직 등록된 피해사례가 없습니다.</p>
 						<button
-							onClick={() => navigate('/community/damage-cases/create')}
+							onClick={() => navigate('/write/damage-case')}
 							className="px-8 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors"
 						>
 							첫 피해사례 등록하기

@@ -79,6 +79,9 @@ const NotFound = lazyWithRetry(async () => import('pages/NotFound'))
 // BlacklistCheck page
 const BlacklistCheck = lazyWithRetry(async () => import('pages/BlacklistCheck/BlacklistCheck'))
 
+// Blog page
+const BlogLanding = lazyWithRetry(async () => import('pages/Blog/BlogLanding'))
+
 // Admin pages
 const AdminLogin = lazyWithRetry(async () => import('pages/Admin/Login'))
 const AdminLayout = lazyWithRetry(async () => import('components/admin/AdminLayout'))
@@ -136,6 +139,15 @@ const reviewDomainRoutes = (
 	</>
 )
 
+const blogDomainRoutes = (
+	<>
+		<Route path='/' element={<BlogLanding />} />
+		<Route path='/privacy' element={<PrivacyPolicy />} />
+		<Route path='/terms' element={<TermsOfService />} />
+		<Route path='*' element={<NotFound />} />
+	</>
+)
+
 const reportDomainRoutes = (
 	<>
 		<Route path='/' element={<DamageCasesLanding />} />
@@ -168,6 +180,7 @@ const mainDomainRoutes = (
 		<Route path='/reviews/:slug' element={<ReviewSlugPage />} />
 		<Route path='/damage-cases' element={<DamageCasesLanding />} />
 		<Route path='/damage-cases/:slug' element={<DamageCaseSlugPage />} />
+		<Route path='/blog' element={<BlogLanding />} />
 		<Route path='/payment' element={<Payment />} />
 		<Route path='/quote-submission' element={<QuoteSubmission />} />
 		<Route path='/quote-status' element={<QuoteStatus />} />
@@ -194,6 +207,7 @@ function getRoutesForSubdomain() {
 		case 'admin': return adminDomainRoutes
 		case 'review': return reviewDomainRoutes
 		case 'report': return reportDomainRoutes
+		case 'blog': return blogDomainRoutes
 		default: return mainDomainRoutes
 	}
 }
