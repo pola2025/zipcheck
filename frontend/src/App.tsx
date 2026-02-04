@@ -5,7 +5,7 @@ import { useMediaQuery } from 'hooks'
 import { HelmetProvider } from 'react-helmet-async'
 import { UserAuthProvider } from 'contexts/UserAuthContext'
 
-import type { ReactElement } from 'react'
+import type { ComponentType, ReactElement } from 'react'
 import { lazy, Suspense, useEffect } from 'react'
 import {
 	createBrowserRouter,
@@ -20,24 +20,56 @@ import { useAtomValue } from 'jotai'
 import { DevTools } from 'jotai-devtools'
 import 'jotai-devtools/styles.css'
 
+// Retry wrapper for lazy imports - auto-reloads on chunk load failure
+function lazyWithRetry<T extends ComponentType<unknown>>(
+	importFn: () => Promise<{ default: T }>
+) {
+	return lazy(async () => {
+		try {
+			return await importFn()
+		} catch (error) {
+			const isChunkError =
+				error instanceof TypeError &&
+				(error.message.includes('Failed to fetch dynamically imported module') ||
+					error.message.includes('error loading dynamically imported module') ||
+					error.message.includes('Importing a module script failed'))
+
+			if (isChunkError) {
+				const reloadKey = 'chunk-reload-timestamp'
+				const lastReload = sessionStorage.getItem(reloadKey)
+				const now = Date.now()
+
+				// Only auto-reload if we haven't reloaded in the last 10 seconds
+				if (!lastReload || now - Number(lastReload) > 10_000) {
+					sessionStorage.setItem(reloadKey, String(now))
+					window.location.reload()
+					return new Promise(() => {}) as never
+				}
+				sessionStorage.removeItem(reloadKey)
+			}
+			throw error
+		}
+	})
+}
+
 // Public pages
-const AI = lazy(async () => import('pages/AI'))
-const ZipCheck = lazy(async () => import('pages/Marketing/ZipCheck'))
-const PlanSelection = lazy(async () => import('pages/PlanSelection'))
-const Community = lazy(async () => import('pages/Community'))
-const Payment = lazy(async () => import('pages/Payment'))
-const QuoteSubmission = lazy(async () => import('pages/QuoteSubmission'))
-const QuoteStatus = lazy(async () => import('pages/QuoteStatus'))
-const ReviewCreate = lazy(async () => import('pages/Community/ReviewCreate'))
-const ReviewDetail = lazy(async () => import('pages/Community/ReviewDetail'))
-const DamageCaseCreate = lazy(async () => import('pages/Community/DamageCaseCreate'))
-const DamageCaseDetail = lazy(async () => import('pages/Community/DamageCaseDetail'))
-const ReviewWrite = lazy(async () => import('pages/Write/ReviewWrite'))
-const DamageCaseWrite = lazy(async () => import('pages/Write/DamageCaseWrite'))
-const ReviewsLanding = lazy(async () => import('pages/Reviews/ReviewsLanding'))
-const ReviewSlugPage = lazy(async () => import('pages/Reviews/ReviewSlugPage'))
-const DamageCasesLanding = lazy(async () => import('pages/DamageCases/DamageCasesLanding'))
-const DamageCaseSlugPage = lazy(async () => import('pages/DamageCases/DamageCaseSlugPage'))
+const AI = lazyWithRetry(async () => import('pages/AI'))
+const ZipCheck = lazyWithRetry(async () => import('pages/Marketing/ZipCheck'))
+const PlanSelection = lazyWithRetry(async () => import('pages/PlanSelection'))
+const Community = lazyWithRetry(async () => import('pages/Community'))
+const Payment = lazyWithRetry(async () => import('pages/Payment'))
+const QuoteSubmission = lazyWithRetry(async () => import('pages/QuoteSubmission'))
+const QuoteStatus = lazyWithRetry(async () => import('pages/QuoteStatus'))
+const ReviewCreate = lazyWithRetry(async () => import('pages/Community/ReviewCreate'))
+const ReviewDetail = lazyWithRetry(async () => import('pages/Community/ReviewDetail'))
+const DamageCaseCreate = lazyWithRetry(async () => import('pages/Community/DamageCaseCreate'))
+const DamageCaseDetail = lazyWithRetry(async () => import('pages/Community/DamageCaseDetail'))
+const ReviewWrite = lazyWithRetry(async () => import('pages/Write/ReviewWrite'))
+const DamageCaseWrite = lazyWithRetry(async () => import('pages/Write/DamageCaseWrite'))
+const ReviewsLanding = lazyWithRetry(async () => import('pages/Reviews/ReviewsLanding'))
+const ReviewSlugPage = lazyWithRetry(async () => import('pages/Reviews/ReviewSlugPage'))
+const DamageCasesLanding = lazyWithRetry(async () => import('pages/DamageCases/DamageCasesLanding'))
+const DamageCaseSlugPage = lazyWithRetry(async () => import('pages/DamageCases/DamageCaseSlugPage'))
 const GoogleCallback = lazy(async () => import('pages/auth/GoogleCallback'))
 const NaverCallback = lazy(async () => import('pages/auth/NaverCallback'))
 const PrivacyPolicy = lazy(async () => import('pages/Legal/PrivacyPolicy'))

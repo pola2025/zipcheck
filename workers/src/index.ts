@@ -14,6 +14,7 @@ import googleServicesRoutes from './routes/admin/google-services'
 import dataManagementRoutes from './routes/admin/data-management'
 import companyReviewsAdminRoutes from './routes/admin/company-reviews-admin'
 import damageCasesAdminRoutes from './routes/admin/damage-cases-admin'
+import blacklistAdminRoutes from './routes/admin/blacklist-admin'
 import imageRoutes from './routes/images'
 import seoRoutes from './routes/seo'
 
@@ -45,6 +46,7 @@ app.route('/api/admin/google', googleServicesRoutes)
 app.route('/api/admin', dataManagementRoutes)
 app.route('/api/company-reviews/admin', companyReviewsAdminRoutes)
 app.route('/api/damage-cases/admin', damageCasesAdminRoutes)
+app.route('/api/admin/blacklist', blacklistAdminRoutes)
 app.route('/images', imageRoutes)
 app.route('/', seoRoutes)
 

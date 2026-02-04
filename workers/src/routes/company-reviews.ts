@@ -3,6 +3,7 @@ import type { Env, Variables } from '../types'
 import { query, findOne, findMany, insertOne } from '../lib/db'
 import { authenticateToken, optionalAuth } from '../middleware/auth'
 import { getClientIp, generateSlug } from '../lib/utils'
+import { isBlacklisted } from '../lib/blacklist'
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>()
 
@@ -198,6 +199,12 @@ app.post('/', authenticateToken(), async (c) => {
 
 		if (!userId) {
 			return c.json({ error: '로그인이 필요합니다.' }, 401)
+		}
+
+		// Check IP blacklist
+		const clientIp = getClientIp(c)
+		if (await isBlacklisted(c.env.DATABASE_URL, clientIp)) {
+			return c.json({ error: '차단된 IP입니다. 관리자에게 문의하세요.' }, 403)
 		}
 
 		const formData = await c.req.formData()
