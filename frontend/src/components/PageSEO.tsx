@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async'
 
 const SITE_NAME = 'ZipCheck'
 const BASE_URL = 'https://zcheck.co.kr'
-const DEFAULT_IMAGE = `${BASE_URL}/logo.png`
+const DEFAULT_IMAGE = `${BASE_URL}/api/og/home`
 
 interface PageSEOProps {
 	title: string

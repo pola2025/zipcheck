@@ -17,7 +17,7 @@ const STATIC_META: Record<string, {
 }> = {
 	'/': {
 		title: 'ZipCheck | AI 인테리어 견적 분석 서비스',
-		description: '인테리어 견적서를 AI가 항목별로 분석해 적정 가격을 알려드립니다. 3,000건+ 실제 시공 데이터 기반, 48시간 내 분석 리포트 제공.',
+		description: '인테리어 리모델링 견적이 적정한지 궁금하다면, 집첵에서 원가 기준으로 분석해보세요. 업체가 알려주지 않는 적정 견적을 확인할 수 있습니다.',
 		ogType: 'website',
 		jsonLdType: 'WebApplication',
 	},
@@ -177,10 +177,10 @@ app.get('/api/seo/meta', async (c) => {
 		// 4. Fallback
 		return c.json({
 			title: 'ZipCheck | AI 인테리어 견적 분석 서비스',
-			description: '인테리어 견적서를 AI가 항목별로 분석해 적정 가격을 알려드립니다.',
+			description: '인테리어 리모델링 견적이 적정한지 궁금하다면, 집첵에서 원가 기준으로 분석해보세요.',
 			canonical: `${frontendUrl}${normalizedPath}`,
 			ogType: 'website',
-			ogImage: `${frontendUrl}/logo.png`,
+			ogImage: `${frontendUrl}/api/og/home`,
 			jsonLdType: 'WebPage',
 		})
 

@@ -48,6 +48,7 @@
 		"@types/mdast": "^4.0.4",
 		"@uiw/copy-to-clipboard": "^1.0.17",
 		"@use-gesture/react": "^10.3.1",
+		"@vercel/og": "^0.8.6",
 		"browser-image-compression": "^2.0.2",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
@@ -91,7 +92,6 @@
 		"zod": "^3.23.8"
 	},
 	"devDependencies": {
-		"@vercel/node": "^3.0.0",
 		"@eslint/compat": "^1.2.9",
 		"@eslint/eslintrc": "^3.3.1",
 		"@eslint/js": "^9.27.0",
@@ -111,6 +111,7 @@
 		"@types/react-syntax-highlighter": "^15.5.13",
 		"@typescript-eslint/eslint-plugin": "^8.32.1",
 		"@typescript-eslint/parser": "^8.32.1",
+		"@vercel/node": "^3.0.0",
 		"@vitejs/plugin-react": "^4.4.0",
 		"@vitest/coverage-istanbul": "^1.6.1",
 		"autoprefixer": "^10.4.21",

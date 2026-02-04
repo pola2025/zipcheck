@@ -249,17 +249,17 @@ function buildFallbackHtml(path: string): string {
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>ZipCheck | AI 인테리어 견적 분석 서비스</title>
-<meta name="description" content="인테리어 견적서를 AI가 항목별로 분석해 적정 가격을 알려드립니다.">
+<title>ZipCheck | 내 인테리어 견적 분석</title>
+<meta name="description" content="인테리어 리모델링 견적이 적정한지 궁금하다면, 집첵에서 원가 기준으로 분석해보세요.">
 <link rel="canonical" href="${FRONTEND_URL}${path}">
-<meta property="og:title" content="ZipCheck | AI 인테리어 견적 분석 서비스">
-<meta property="og:description" content="인테리어 견적서를 AI가 항목별로 분석해 적정 가격을 알려드립니다.">
-<meta property="og:image" content="${FRONTEND_URL}/logo.png">
+<meta property="og:title" content="ZipCheck | 내 인테리어 견적 분석">
+<meta property="og:description" content="인테리어 리모델링 견적이 적정한지 궁금하다면, 집첵에서 원가 기준으로 분석해보세요.">
+<meta property="og:image" content="${FRONTEND_URL}/api/og/home">
 <meta property="og:url" content="${FRONTEND_URL}${path}">
 </head>
 <body>
-<h1>ZipCheck - AI 인테리어 견적 분석</h1>
-<p>인테리어 견적서를 AI가 항목별로 분석해 적정 가격을 알려드립니다.</p>
+<h1>집첵 - 내 인테리어 견적 분석</h1>
+<p>인테리어 리모델링 견적이 적정한지 궁금하다면, 집첵에서 원가 기준으로 분석해보세요.</p>
 </body>
 </html>`
 }
