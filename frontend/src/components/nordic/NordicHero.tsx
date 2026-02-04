@@ -24,7 +24,7 @@ export default function NordicHero() {
 						</h1>
 
 						<p className="text-base md:text-xl text-sand-700 leading-relaxed mb-8 md:mb-10 max-w-lg font-light">
-							3,000건 이상의 실제 공사 데이터와 유통망 가격을 기반으로
+							실제 공사 데이터와 유통망 가격을 기반으로
 							48시간 안에 꼼꼼하게 분석해 드립니다.
 						</p>
 

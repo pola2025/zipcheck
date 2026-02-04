@@ -410,7 +410,7 @@ export const nordicProcessSteps = [
 ]
 
 export const nordicFeatures = [
-	{ icon: 'BarChart3', title: '실데이터 비교', description: '3,000건 실제 시공 데이터와 비교 분석' },
+	{ icon: 'BarChart3', title: '실데이터 비교', description: '실제 시공 데이터와 비교 분석' },
 	{ icon: 'FileSearch', title: '항목별 분석', description: '모든 항목을 하나하나 쪼개어 확인' },
 	{ icon: 'MessageCircle', title: '상세 코멘트', description: '항목별 친절하고 상세한 분석 설명' },
 	{ icon: 'ShieldCheck', title: '투명한 리포트', description: '분석 근거와 비교 데이터를 모두 공개' }

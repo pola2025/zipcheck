@@ -8,7 +8,7 @@ export default function NordicFooter() {
 							<img src="/logo_white.png" alt="집첵" className="h-7 w-auto" />
 						</div>
 						<p className="text-sand-500 text-sm leading-relaxed max-w-sm">
-							인테리어 견적, 데이터로 편안하게. 3,000건의 실제 시공·유통 데이터를 기반으로
+							인테리어 견적, 데이터로 편안하게. 실제 시공·유통 데이터를 기반으로
 							당신의 견적서를 분석합니다.
 						</p>
 					</div>
