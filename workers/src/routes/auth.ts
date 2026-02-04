@@ -141,7 +141,6 @@ app.get('/naver/callback', async (c) => {
 				phone: naverUser.mobile,
 				profile_image: naverUser.profile_image,
 				oauth_provider: 'naver',
-				joined_at: new Date().toISOString(),
 			})
 			userId = newUser.id
 		}
@@ -202,16 +201,19 @@ app.get('/google/callback', async (c) => {
 		const { code, state, error: oauthError } = c.req.query()
 
 		if (oauthError) {
+			console.error('Google OAuth error:', oauthError)
 			return c.redirect(`${frontendUrl}?error=oauth_failed`)
 		}
 
 		if (!code || !state) {
+			console.error('Google OAuth: missing code or state')
 			return c.redirect(`${frontendUrl}?error=invalid_request`)
 		}
 
 		// Look up session data by state (no cookie needed - state comes via URL from Google)
 		const sessionRaw = await c.env.KV.get(`google_oauth:${state}`)
 		if (!sessionRaw) {
+			console.error('Google OAuth: session expired for state:', state?.slice(0, 8))
 			return c.redirect(`${frontendUrl}?error=session_expired`)
 		}
 
@@ -236,7 +238,11 @@ app.get('/google/callback', async (c) => {
 			}),
 		})
 
-		if (!tokenResponse.ok) throw new Error('Failed to get access token')
+		if (!tokenResponse.ok) {
+			const errBody = await tokenResponse.text()
+			console.error('Google OAuth token exchange failed:', tokenResponse.status, errBody)
+			throw new Error('Failed to get access token')
+		}
 		const tokenData = await tokenResponse.json() as { access_token: string; id_token?: string }
 
 		// Get user profile
@@ -289,9 +295,9 @@ app.get('/google/callback', async (c) => {
 					google_id: googleUser.id,
 					email: googleUser.email,
 					name: googleUser.name,
+					phone: '',
 					avatar_url: googleUser.picture,
 					auth_provider: 'google',
-					joined_at: new Date().toISOString(),
 				})
 				userId = newUser.id
 			}
@@ -317,9 +323,10 @@ app.get('/google/callback', async (c) => {
 		}
 
 		const redirectPath = redirectTo.startsWith('http') ? new URL(redirectTo).pathname : redirectTo
-		return c.redirect(`${finalRedirectBase}/auth/google/success?token=${jwtToken}&redirect_to=${encodeURIComponent(redirectPath)}`)
+		const finalUrl = `${finalRedirectBase}/auth/google/success?token=${jwtToken}&redirect_to=${encodeURIComponent(redirectPath)}`
+		return c.redirect(finalUrl)
 	} catch (err) {
-		console.error('Google OAuth callback error:', err)
+		console.error('Google OAuth callback error:', err instanceof Error ? err.message : err)
 		return c.redirect(`${frontendUrl}?error=oauth_failed`)
 	}
 })
@@ -342,7 +349,7 @@ app.get('/me', async (c) => {
 
 	const user = await findOne(
 		c.env.DATABASE_URL,
-		'SELECT id, email, name, phone, profile_image, avatar_url, oauth_provider, auth_provider, joined_at FROM users WHERE id = $1',
+		'SELECT id, email, name, phone, profile_image, avatar_url, oauth_provider, auth_provider, created_at FROM users WHERE id = $1',
 		[payload.userId]
 	)
 
