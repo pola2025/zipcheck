@@ -128,7 +128,7 @@ app.get('/naver/callback', async (c) => {
 		if (existingUser) {
 			const rows = await query(
 				c.env.DATABASE_URL,
-				`UPDATE users SET email = $1, name = $2, phone = $3, profile_image = $4, updated_at = $5
+				`UPDATE users SET email = $1, name = $2, phone = $3, avatar_url = $4, updated_at = $5
 				WHERE naver_id = $6 RETURNING id`,
 				[naverUser.email, naverUser.name, naverUser.mobile, naverUser.profile_image, new Date().toISOString(), naverUser.id]
 			)
@@ -139,7 +139,7 @@ app.get('/naver/callback', async (c) => {
 				email: naverUser.email,
 				name: naverUser.name,
 				phone: naverUser.mobile,
-				profile_image: naverUser.profile_image,
+				avatar_url: naverUser.profile_image,
 				oauth_provider: 'naver',
 			})
 			userId = newUser.id
@@ -349,7 +349,7 @@ app.get('/me', async (c) => {
 
 	const user = await findOne(
 		c.env.DATABASE_URL,
-		'SELECT id, email, name, phone, profile_image, avatar_url, oauth_provider, auth_provider, created_at FROM users WHERE id = $1',
+		'SELECT id, email, name, phone, avatar_url, oauth_provider, auth_provider, created_at FROM users WHERE id = $1',
 		[payload.userId]
 	)
 
