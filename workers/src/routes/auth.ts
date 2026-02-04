@@ -138,9 +138,9 @@ app.get('/naver/callback', async (c) => {
 				naver_id: naverUser.id,
 				email: naverUser.email,
 				name: naverUser.name,
-				phone: naverUser.mobile,
+				phone: naverUser.mobile || `naver:${naverUser.id}`,
 				avatar_url: naverUser.profile_image,
-				oauth_provider: 'naver',
+				auth_provider: 'naver',
 			})
 			userId = newUser.id
 		}
@@ -295,7 +295,7 @@ app.get('/google/callback', async (c) => {
 					google_id: googleUser.id,
 					email: googleUser.email,
 					name: googleUser.name,
-					phone: '',
+					phone: `google:${googleUser.id}`,
 					avatar_url: googleUser.picture,
 					auth_provider: 'google',
 				})
@@ -349,7 +349,7 @@ app.get('/me', async (c) => {
 
 	const user = await findOne(
 		c.env.DATABASE_URL,
-		'SELECT id, email, name, phone, avatar_url, oauth_provider, auth_provider, created_at FROM users WHERE id = $1',
+		'SELECT id, email, name, phone, avatar_url, auth_provider, created_at FROM users WHERE id = $1',
 		[payload.userId]
 	)
 
