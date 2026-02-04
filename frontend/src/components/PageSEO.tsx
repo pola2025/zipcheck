@@ -23,7 +23,7 @@ export default function PageSEO({
 	ogType = 'website',
 	jsonLd
 }: PageSEOProps) {
-	const fullTitle = path === '/' ? `${SITE_NAME} | AI 인테리어 견적 분석 서비스` : `${title} | ${SITE_NAME}`
+	const fullTitle = path === '/' ? '원가 기준 인테리어 견적 분석' : `${title} | ${SITE_NAME}`
 	const url = `${BASE_URL}${path}`
 	const imageUrl = ogImage || `${BASE_URL}/api/og${path === '/' ? '/home' : path}`
 

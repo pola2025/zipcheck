@@ -249,10 +249,10 @@ function buildFallbackHtml(path: string): string {
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>ZipCheck | 내 인테리어 견적 분석</title>
+<title>원가 기준 인테리어 견적 분석</title>
 <meta name="description" content="인테리어 리모델링 견적이 적정한지 궁금하다면, 집첵에서 원가 기준으로 분석해보세요.">
 <link rel="canonical" href="${FRONTEND_URL}${path}">
-<meta property="og:title" content="ZipCheck | 내 인테리어 견적 분석">
+<meta property="og:title" content="원가 기준 인테리어 견적 분석">
 <meta property="og:description" content="인테리어 리모델링 견적이 적정한지 궁금하다면, 집첵에서 원가 기준으로 분석해보세요.">
 <meta property="og:image" content="${FRONTEND_URL}/api/og/home">
 <meta property="og:url" content="${FRONTEND_URL}${path}">

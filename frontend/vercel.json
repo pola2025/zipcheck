@@ -9,7 +9,7 @@
 			"destination": "/api/robots"
 		},
 		{
-			"source": "/(.*)",
+			"source": "/((?!api/).*)",
 			"has": [
 				{
 					"type": "header",
@@ -20,7 +20,7 @@
 			"destination": "/api/seo/render?path=/$1"
 		},
 		{
-			"source": "/(.*)",
+			"source": "/((?!api/).*)",
 			"destination": "/index.html"
 		}
 	],
