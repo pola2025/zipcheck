@@ -2,6 +2,7 @@
 // 참고: backend/src/routes/company-reviews.ts
 export interface Review {
 	id: string
+	slug?: string
 	user_id: string
 	company_name: string
 	company_phone: string | null

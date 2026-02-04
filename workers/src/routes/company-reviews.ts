@@ -238,6 +238,10 @@ app.post('/', authenticateToken(), async (c) => {
 		const imageEntries = formData.getAll('images') as unknown as (string | File)[]
 		const imageFiles = imageEntries.filter((entry): entry is File => typeof entry !== 'string' && entry instanceof File)
 
+		if (imageFiles.length > 10) {
+			return c.json({ error: '이미지는 최대 10장까지 업로드 가능합니다.' }, 400)
+		}
+
 		if (imageFiles.length > 0) {
 			console.log(`Uploading ${imageFiles.length} images...`)
 			for (const file of imageFiles) {
@@ -503,6 +507,13 @@ app.delete('/:id', authenticateToken(), async (c) => {
 
 		console.log(`Deleting review ${id} by user ${userId}`)
 
+		// Get existing review to clean up R2 images
+		const existing = await findOne<any>(
+			c.env.DATABASE_URL,
+			'SELECT images, before_images, after_images FROM company_reviews WHERE id = $1 AND user_id = $2',
+			[id, userId]
+		)
+
 		// Soft delete (change status to 'deleted')
 		const rows = await query(
 			c.env.DATABASE_URL,
@@ -515,6 +526,21 @@ app.delete('/:id', authenticateToken(), async (c) => {
 
 		if (!rows || rows.length === 0) {
 			return c.json({ error: '후기를 찾을 수 없거나 삭제 권한이 없습니다.' }, 404)
+		}
+
+		// Clean up R2 images
+		if (existing) {
+			const allKeys: string[] = []
+			for (const field of ['images', 'before_images', 'after_images']) {
+				try {
+					const parsed = JSON.parse(existing[field] || '[]')
+					if (Array.isArray(parsed)) allKeys.push(...parsed)
+				} catch {}
+			}
+			for (const key of allKeys) {
+				try { await c.env.R2.delete(key) } catch {}
+			}
+			if (allKeys.length > 0) console.log(`Cleaned up ${allKeys.length} R2 images`)
 		}
 
 		console.log(`Review deleted: ${id}`)

@@ -1,5 +1,6 @@
 export interface DamageCase {
 	id: string
+	slug?: string
 	company_name: string
 	region: string
 	title: string

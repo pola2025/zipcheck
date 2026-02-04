@@ -18,7 +18,7 @@ const CompanyReviewsTab: React.FC = () => {
 	const [currentPage, setCurrentPage] = useState(1)
 	const [totalPages, setTotalPages] = useState(1)
 
-	// Filters - 검색과 정렬만
+	// Filters
 	const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
 	const [sortBy, setSortBy] = useState(searchParams.get('sort_by') || 'created_at')
 
@@ -80,7 +80,7 @@ const CompanyReviewsTab: React.FC = () => {
 	if (loading && reviews.length === 0) {
 		return (
 			<div className='flex justify-center py-12'>
-				<div className='animate-spin rounded-full h-16 w-16 border-b-2 border-cyan-400 glow-cyan'></div>
+				<div className='w-10 h-10 border-2 border-sand-200 border-t-forest-500 rounded-full animate-spin' />
 			</div>
 		)
 	}
@@ -96,24 +96,24 @@ const CompanyReviewsTab: React.FC = () => {
 
 			{/* Error Message */}
 			{error && (
-				<div className='glass-strong border-2 border-red-500/50 bg-red-900/20 text-red-300 px-6 py-4 rounded-xl mb-6'>
+				<div className='bg-red-50 border border-red-200 text-red-700 px-5 py-3 rounded-xl mb-6 text-sm'>
 					{error}
 				</div>
 			)}
 
 			{/* Reviews List */}
 			{reviews.length === 0 ? (
-				<div className='glass-neon rounded-2xl p-12 text-center border border-cyan-500/30'>
-					<p className='text-gray-300 text-xl mb-6'>아직 등록된 후기가 없습니다.</p>
+				<div className='bg-white rounded-2xl p-12 text-center border border-sand-200'>
+					<p className='text-sand-500 text-lg mb-6'>아직 등록된 후기가 없습니다.</p>
 					<button
 						onClick={() => navigate('/community/reviews/create')}
-						className='px-8 py-4 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-bold rounded-xl shadow-lg shadow-cyan-500/30 hover:shadow-cyan-400/40 transition-all glow-cyan'
+						className='px-8 py-3 bg-forest-600 hover:bg-forest-700 text-white font-semibold rounded-xl transition-colors'
 					>
 						첫 후기 작성하기
 					</button>
 				</div>
 			) : (
-				<div className='space-y-6'>
+				<div className='space-y-4'>
 					{reviews.map((review) => (
 						<ReviewCard
 							key={review.id}
@@ -129,7 +129,7 @@ const CompanyReviewsTab: React.FC = () => {
 				currentPage={currentPage}
 				totalPages={totalPages}
 				onPageChange={setCurrentPage}
-				theme='cyan'
+				theme='forest'
 			/>
 		</>
 	)

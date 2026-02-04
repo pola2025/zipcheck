@@ -4,7 +4,7 @@
 
 import { Hono } from 'hono'
 import type { Env, Variables } from '../../types'
-import { query } from '../../lib/db'
+import { query, findOne } from '../../lib/db'
 import { authenticateToken, requireAdmin } from '../../middleware/auth'
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>()
@@ -129,6 +129,13 @@ app.delete('/:id', async (c) => {
 
 		console.log(`[Admin] Permanently deleting review ${id}`)
 
+		// Get images to clean up from R2
+		const existing = await findOne<any>(
+			c.env.DATABASE_URL,
+			'SELECT images, before_images, after_images FROM company_reviews WHERE id = $1',
+			[id]
+		)
+
 		const rows = await query(
 			c.env.DATABASE_URL,
 			'DELETE FROM company_reviews WHERE id = $1 RETURNING *',
@@ -137,6 +144,21 @@ app.delete('/:id', async (c) => {
 
 		if (!rows || rows.length === 0) {
 			return c.json({ error: '후기를 찾을 수 없습니다.' }, 404)
+		}
+
+		// Clean up R2 images
+		if (existing) {
+			const allKeys: string[] = []
+			for (const field of ['images', 'before_images', 'after_images']) {
+				try {
+					const parsed = JSON.parse(existing[field] || '[]')
+					if (Array.isArray(parsed)) allKeys.push(...parsed)
+				} catch {}
+			}
+			for (const key of allKeys) {
+				try { await c.env.R2.delete(key) } catch {}
+			}
+			if (allKeys.length > 0) console.log(`[Admin] Cleaned up ${allKeys.length} R2 images`)
 		}
 
 		console.log(`[Admin] Review permanently deleted: ${id}`)

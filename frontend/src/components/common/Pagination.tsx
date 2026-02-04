@@ -1,65 +1,91 @@
 import React from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface PaginationProps {
 	currentPage: number
 	totalPages: number
 	onPageChange: (page: number) => void
-	theme?: 'cyan' | 'red'
+	theme?: 'forest' | 'red'
 }
 
 const Pagination: React.FC<PaginationProps> = ({
 	currentPage,
 	totalPages,
 	onPageChange,
-	theme = 'cyan'
+	theme = 'forest'
 }) => {
 	if (totalPages <= 1) return null
 
 	const themeColors = {
-		cyan: {
-			border: 'border-cyan-500/30',
-			hover: 'hover:border-cyan-400/50 hover:bg-cyan-500/10',
-			active: 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-500/30 glow-cyan'
+		forest: {
+			active: 'bg-forest-600 text-white shadow-sm',
+			inactive: 'bg-white text-sand-700 border border-sand-200 hover:bg-forest-50 hover:border-forest-300 hover:text-forest-700',
+			disabled: 'bg-sand-50 text-sand-300 border border-sand-200 cursor-not-allowed'
 		},
 		red: {
-			border: 'border-red-500/30',
-			hover: 'hover:border-red-400/50 hover:bg-red-500/10',
-			active: 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30'
+			active: 'bg-red-500 text-white shadow-sm',
+			inactive: 'bg-white text-sand-700 border border-sand-200 hover:bg-red-50 hover:border-red-300 hover:text-red-600',
+			disabled: 'bg-sand-50 text-sand-300 border border-sand-200 cursor-not-allowed'
 		}
 	}
 
 	const colors = themeColors[theme]
 
+	// Show max 5 page buttons with ellipsis
+	const getPageNumbers = () => {
+		const pages: (number | 'ellipsis')[] = []
+		if (totalPages <= 5) {
+			for (let i = 1; i <= totalPages; i++) pages.push(i)
+		} else {
+			pages.push(1)
+			if (currentPage > 3) pages.push('ellipsis')
+			const start = Math.max(2, currentPage - 1)
+			const end = Math.min(totalPages - 1, currentPage + 1)
+			for (let i = start; i <= end; i++) pages.push(i)
+			if (currentPage < totalPages - 2) pages.push('ellipsis')
+			pages.push(totalPages)
+		}
+		return pages
+	}
+
 	return (
-		<div className='flex justify-center gap-3 mt-8'>
+		<div className='flex justify-center items-center gap-2 mt-10'>
 			<button
 				onClick={() => onPageChange(Math.max(1, currentPage - 1))}
 				disabled={currentPage === 1}
-				className={`px-5 py-3 glass-dark border ${colors.border} rounded-xl ${colors.hover} disabled:opacity-30 disabled:cursor-not-allowed transition-all font-semibold`}
+				className={`p-2.5 rounded-lg transition-all ${
+					currentPage === 1 ? colors.disabled : colors.inactive
+				}`}
+				aria-label="이전 페이지"
 			>
-				이전
+				<ChevronLeft size={18} />
 			</button>
 
-			{[...Array(totalPages)].map((_, i) => (
-				<button
-					key={i + 1}
-					onClick={() => onPageChange(i + 1)}
-					className={`px-5 py-3 rounded-xl font-semibold transition-all ${
-						currentPage === i + 1
-							? colors.active
-							: `glass-dark border ${colors.border} ${colors.hover} text-gray-300`
-					}`}
-				>
-					{i + 1}
-				</button>
-			))}
+			{getPageNumbers().map((page, i) =>
+				page === 'ellipsis' ? (
+					<span key={`ellipsis-${i}`} className="px-2 text-sand-400">...</span>
+				) : (
+					<button
+						key={page}
+						onClick={() => onPageChange(page)}
+						className={`min-w-[40px] h-10 rounded-lg text-sm font-medium transition-all ${
+							currentPage === page ? colors.active : colors.inactive
+						}`}
+					>
+						{page}
+					</button>
+				)
+			)}
 
 			<button
 				onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
 				disabled={currentPage === totalPages}
-				className={`px-5 py-3 glass-dark border ${colors.border} rounded-xl ${colors.hover} disabled:opacity-30 disabled:cursor-not-allowed transition-all font-semibold`}
+				className={`p-2.5 rounded-lg transition-all ${
+					currentPage === totalPages ? colors.disabled : colors.inactive
+				}`}
+				aria-label="다음 페이지"
 			>
-				다음
+				<ChevronRight size={18} />
 			</button>
 		</div>
 	)

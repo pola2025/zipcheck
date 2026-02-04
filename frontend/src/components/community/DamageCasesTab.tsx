@@ -81,7 +81,7 @@ const DamageCasesTab: React.FC = () => {
 	if (loading && cases.length === 0) {
 		return (
 			<div className='flex justify-center py-12'>
-				<div className='animate-spin rounded-full h-16 w-16 border-b-2 border-red-400 shadow-[0_0_30px_rgba(239,68,68,0.5)]'></div>
+				<div className='w-10 h-10 border-2 border-sand-200 border-t-red-400 rounded-full animate-spin' />
 			</div>
 		)
 	}
@@ -97,25 +97,25 @@ const DamageCasesTab: React.FC = () => {
 
 			{/* Error Message */}
 			{error && (
-				<div className='glass-strong border-2 border-red-500/50 bg-red-900/20 text-red-300 px-6 py-4 rounded-xl mb-6'>
+				<div className='bg-red-50 border border-red-200 text-red-700 px-5 py-3 rounded-xl mb-6 text-sm'>
 					{error}
 				</div>
 			)}
 
 			{/* Cases List */}
 			{cases.length === 0 ? (
-				<div className='glass-neon rounded-2xl p-12 text-center border border-red-500/30'>
-					<AlertTriangle className='mx-auto mb-4 text-red-400' size={48} />
-					<p className='text-gray-300 text-xl mb-6'>아직 등록된 피해사례가 없습니다.</p>
+				<div className='bg-white rounded-2xl p-12 text-center border border-sand-200'>
+					<AlertTriangle className='mx-auto mb-4 text-sand-300' size={48} />
+					<p className='text-sand-500 text-lg mb-6'>아직 등록된 피해사례가 없습니다.</p>
 					<button
 						onClick={() => navigate('/community/damage-cases/create')}
-						className='px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white font-bold rounded-xl shadow-lg shadow-red-500/30 hover:shadow-red-400/40 transition-all'
+						className='px-8 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors'
 					>
 						첫 피해사례 등록하기
 					</button>
 				</div>
 			) : (
-				<div className='space-y-6'>
+				<div className='space-y-4'>
 					{cases.map((damageCase) => (
 						<DamageCaseCard
 							key={damageCase.id}

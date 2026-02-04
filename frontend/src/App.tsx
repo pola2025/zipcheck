@@ -34,7 +34,9 @@ const DamageCaseCreate = lazy(async () => import('pages/Community/DamageCaseCrea
 const DamageCaseDetail = lazy(async () => import('pages/Community/DamageCaseDetail'))
 const ReviewWrite = lazy(async () => import('pages/Write/ReviewWrite'))
 const DamageCaseWrite = lazy(async () => import('pages/Write/DamageCaseWrite'))
+const ReviewsLanding = lazy(async () => import('pages/Reviews/ReviewsLanding'))
 const ReviewSlugPage = lazy(async () => import('pages/Reviews/ReviewSlugPage'))
+const DamageCasesLanding = lazy(async () => import('pages/DamageCases/DamageCasesLanding'))
 const DamageCaseSlugPage = lazy(async () => import('pages/DamageCases/DamageCaseSlugPage'))
 const GoogleCallback = lazy(async () => import('pages/auth/GoogleCallback'))
 const NaverCallback = lazy(async () => import('pages/auth/NaverCallback'))
@@ -92,7 +94,9 @@ const mainDomainRoutes = (
 		<Route path='/community/damage-cases/:id' element={<DamageCaseDetail />} />
 		<Route path='/write/review' element={<ReviewWrite />} />
 		<Route path='/write/damage-case' element={<DamageCaseWrite />} />
+		<Route path='/reviews' element={<ReviewsLanding />} />
 		<Route path='/reviews/:slug' element={<ReviewSlugPage />} />
+		<Route path='/damage-cases' element={<DamageCasesLanding />} />
 		<Route path='/damage-cases/:slug' element={<DamageCaseSlugPage />} />
 		<Route path='/payment' element={<Payment />} />
 		<Route path='/quote-submission' element={<QuoteSubmission />} />

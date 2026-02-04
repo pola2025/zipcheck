@@ -4,7 +4,7 @@
 
 import { Hono } from 'hono'
 import type { Env, Variables } from '../../types'
-import { query } from '../../lib/db'
+import { query, findOne } from '../../lib/db'
 import { authenticateToken, requireAdmin } from '../../middleware/auth'
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>()
@@ -141,6 +141,13 @@ app.delete('/:id', async (c) => {
 
 		console.log(`[Admin] Permanently deleting damage case ${id}`)
 
+		// Get images to clean up from R2
+		const existing = await findOne<any>(
+			c.env.DATABASE_URL,
+			'SELECT images FROM damage_cases WHERE id = $1',
+			[id]
+		)
+
 		const rows = await query(
 			c.env.DATABASE_URL,
 			'DELETE FROM damage_cases WHERE id = $1 RETURNING *',
@@ -149,6 +156,19 @@ app.delete('/:id', async (c) => {
 
 		if (!rows || rows.length === 0) {
 			return c.json({ error: '피해사례를 찾을 수 없습니다.' }, 404)
+		}
+
+		// Clean up R2 images
+		if (existing) {
+			try {
+				const imageKeys = JSON.parse(existing.images || '[]')
+				if (Array.isArray(imageKeys)) {
+					for (const key of imageKeys) {
+						try { await c.env.R2.delete(key) } catch {}
+					}
+					if (imageKeys.length > 0) console.log(`[Admin] Cleaned up ${imageKeys.length} R2 images`)
+				}
+			} catch {}
 		}
 
 		console.log(`[Admin] Damage case permanently deleted: ${id}`)

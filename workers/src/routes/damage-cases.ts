@@ -114,10 +114,10 @@ app.get('/', optionalAuth(), async (c) => {
 
 		console.log(`Fetching damage cases (page: ${page}, limit: ${limit})`)
 
-		// Build query dynamically
-		let queryText = 'SELECT * FROM damage_cases WHERE status != $1'
-		let countText = 'SELECT COUNT(*) as count FROM damage_cases WHERE status != $1'
-		const params: unknown[] = ['deleted']
+		// Build query dynamically - only show approved posts (not pending/deleted/closed)
+		let queryText = "SELECT * FROM damage_cases WHERE status IN ('open', 'in_progress', 'resolved')"
+		let countText = "SELECT COUNT(*) as count FROM damage_cases WHERE status IN ('open', 'in_progress', 'resolved')"
+		const params: unknown[] = []
 
 		// Unified search
 		if (search) {
@@ -177,7 +177,7 @@ app.get('/slug/:slug', optionalAuth(), async (c) => {
 
 		const data = await findOne<any>(
 			c.env.DATABASE_URL,
-			"SELECT * FROM damage_cases WHERE slug = $1 AND status != 'deleted'",
+			"SELECT * FROM damage_cases WHERE slug = $1 AND status IN ('open', 'in_progress', 'resolved')",
 			[slug]
 		)
 
@@ -212,8 +212,8 @@ app.get('/:id', optionalAuth(), async (c) => {
 
 		const data = await findOne<any>(
 			c.env.DATABASE_URL,
-			'SELECT * FROM damage_cases WHERE id = $1 AND status != $2',
-			[id, 'deleted']
+			"SELECT * FROM damage_cases WHERE id = $1 AND status IN ('open', 'in_progress', 'resolved')",
+			[id]
 		)
 
 		if (!data) {
@@ -280,6 +280,10 @@ app.post('/', authenticateToken(), async (c) => {
 		let imageUrls: string[] = []
 		const imageEntries = formData.getAll('evidence_images') as unknown as (string | File)[]
 		const imageFiles = imageEntries.filter((entry): entry is File => typeof entry !== 'string' && entry instanceof File)
+
+		if (imageFiles.length > 10) {
+			return c.json({ error: '이미지는 최대 10장까지 업로드 가능합니다.' }, 400)
+		}
 
 		if (imageFiles.length > 0) {
 			console.log(`Uploading ${imageFiles.length} images...`)
@@ -529,6 +533,13 @@ app.delete('/:id', authenticateToken(), async (c) => {
 
 		console.log(`Deleting damage case ${id} by user ${userId}`)
 
+		// Get existing case to clean up R2 images
+		const existing = await findOne<any>(
+			c.env.DATABASE_URL,
+			'SELECT images FROM damage_cases WHERE id = $1 AND user_id = $2',
+			[id, userId]
+		)
+
 		// Soft delete (change status to 'closed')
 		const rows = await query(
 			c.env.DATABASE_URL,
@@ -541,6 +552,19 @@ app.delete('/:id', authenticateToken(), async (c) => {
 
 		if (!rows || rows.length === 0) {
 			return c.json({ error: '피해 사례를 찾을 수 없거나 삭제 권한이 없습니다.' }, 404)
+		}
+
+		// Clean up R2 images
+		if (existing) {
+			try {
+				const imageKeys = JSON.parse(existing.images || '[]')
+				if (Array.isArray(imageKeys)) {
+					for (const key of imageKeys) {
+						try { await c.env.R2.delete(key) } catch {}
+					}
+					if (imageKeys.length > 0) console.log(`Cleaned up ${imageKeys.length} R2 images`)
+				}
+			} catch {}
 		}
 
 		console.log(`Damage case deleted: ${id}`)

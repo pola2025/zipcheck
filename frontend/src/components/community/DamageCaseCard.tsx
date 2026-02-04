@@ -1,5 +1,5 @@
 import React from 'react'
-import { ThumbsUp, MessageCircle, Eye, MapPin, DollarSign, CheckCircle, Clock, XCircle } from 'lucide-react'
+import { Eye, MapPin, DollarSign, CheckCircle, Clock, XCircle, ArrowRight } from 'lucide-react'
 import { DamageCase } from 'types/damageCase'
 
 interface DamageCaseCardProps {
@@ -10,17 +10,17 @@ interface DamageCaseCardProps {
 const DamageCaseCard: React.FC<DamageCaseCardProps> = ({ damageCase, onClick }) => {
 	const getResolutionBadge = (status: string) => {
 		const badges: Record<string, { icon: any; color: string; text: string }> = {
-			unresolved: { icon: XCircle, color: 'bg-red-100 text-red-700', text: '미해결' },
-			in_progress: { icon: Clock, color: 'bg-yellow-100 text-yellow-700', text: '진행중' },
-			resolved: { icon: CheckCircle, color: 'bg-green-100 text-green-700', text: '해결됨' }
+			unresolved: { icon: XCircle, color: 'bg-red-50 text-red-700 border-red-200', text: '미해결' },
+			in_progress: { icon: Clock, color: 'bg-amber-50 text-amber-700 border-amber-200', text: '진행중' },
+			resolved: { icon: CheckCircle, color: 'bg-green-50 text-green-700 border-green-200', text: '해결됨' }
 		}
 
 		const badge = badges[status] || badges.unresolved
 		const Icon = badge.icon
 
 		return (
-			<span className={`px-3 py-1 ${badge.color} rounded-full text-xs font-medium flex items-center gap-1`}>
-				<Icon size={14} />
+			<span className={`px-2.5 py-0.5 ${badge.color} border rounded-full text-xs font-medium flex items-center gap-1`}>
+				<Icon size={12} />
 				{badge.text}
 			</span>
 		)
@@ -28,85 +28,79 @@ const DamageCaseCard: React.FC<DamageCaseCardProps> = ({ damageCase, onClick }) 
 
 	const getDamageTypeColor = (type: string) => {
 		const colors: Record<string, string> = {
-			사기: 'bg-red-500/20 text-red-400 border-red-500/40',
-			부실시공: 'bg-orange-500/20 text-orange-400 border-orange-500/40',
-			계약위반: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40',
-			추가비용: 'bg-blue-500/20 text-blue-400 border-blue-500/40',
-			기타: 'bg-gray-500/20 text-gray-400 border-gray-500/40'
+			사기: 'bg-red-50 text-red-700 border-red-200',
+			부실시공: 'bg-orange-50 text-orange-700 border-orange-200',
+			계약위반: 'bg-amber-50 text-amber-700 border-amber-200',
+			추가비용: 'bg-blue-50 text-blue-700 border-blue-200',
+			기타: 'bg-sand-100 text-sand-700 border-sand-200'
 		}
-		return colors[type] || colors.기타
+		return colors[type] || colors['기타']
 	}
 
 	return (
-		<div
+		<article
 			onClick={onClick}
-			className='glass-neon rounded-2xl p-6 border-l-4 border-red-500 hover:border-red-400 hover:shadow-[0_0_30px_rgba(239,68,68,0.3)] transition-all cursor-pointer'
+			className='bg-white rounded-2xl p-6 border-l-4 border-l-red-400 border border-sand-200 hover:border-red-200 hover:shadow-md transition-all cursor-pointer group'
 		>
 			{/* Header */}
-			<div className='flex items-start justify-between mb-4'>
-				<div className='flex-1'>
-					<div className='flex items-center gap-3 mb-2'>
-						<h3 className='text-xl font-bold text-white'>{damageCase.title}</h3>
+			<div className='flex items-start justify-between mb-3'>
+				<div className='flex-1 min-w-0'>
+					<div className='flex flex-wrap items-center gap-2 mb-1.5'>
+						<h3 className='text-lg font-bold text-sand-900 truncate group-hover:text-red-600 transition-colors'>
+							{damageCase.title}
+						</h3>
 						{getResolutionBadge(damageCase.resolution_status)}
 						{damageCase.legal_action && (
-							<span className='px-3 py-1 bg-purple-500/20 text-purple-400 border border-purple-500/40 text-xs font-semibold rounded-full'>
+							<span className='px-2.5 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 text-xs font-medium rounded-full'>
 								법적 조치
 							</span>
 						)}
 					</div>
-					<div className='flex items-center gap-4 text-sm text-gray-400'>
+					<div className='flex flex-wrap items-center gap-3 text-sm text-sand-500'>
 						{damageCase.company_name && (
-							<>
-								<span className='font-semibold text-red-400'>{damageCase.company_name}</span>
-								<span className='text-gray-600'>|</span>
-							</>
+							<span className='font-semibold text-red-500'>{damageCase.company_name}</span>
 						)}
 						{damageCase.region && (
 							<div className='flex items-center gap-1'>
-								<MapPin size={14} className='text-red-400' />
-								<span className='text-gray-300'>{damageCase.region}</span>
+								<MapPin size={14} className='text-sand-400' />
+								<span>{damageCase.region}</span>
 							</div>
 						)}
-						<span className='text-gray-600'>|</span>
-						<span>{damageCase.author_name}</span>
-						<span className='text-gray-600'>|</span>
+						<span className='text-sand-300'>|</span>
 						<span>{new Date(damageCase.created_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}</span>
 					</div>
 				</div>
 			</div>
 
 			{/* Damage Info */}
-			<div className='flex items-center gap-3 mb-4'>
-				<span className={`px-3 py-1 ${getDamageTypeColor(damageCase.damage_type)} border rounded-full text-sm font-semibold`}>
+			<div className='flex flex-wrap items-center gap-3 mb-3'>
+				<span className={`px-3 py-1 ${getDamageTypeColor(damageCase.damage_type)} border rounded-full text-xs font-semibold`}>
 					{damageCase.damage_type}
 				</span>
 				{damageCase.damage_amount && (
-					<div className='flex items-center gap-1 text-red-400 font-bold'>
-						<DollarSign size={16} />
+					<div className='flex items-center gap-1 text-red-500 text-sm font-bold'>
+						<DollarSign size={14} />
 						<span>피해금액: {damageCase.damage_amount.toLocaleString()}만원</span>
 					</div>
 				)}
 			</div>
 
 			{/* Content Preview */}
-			<p className='text-gray-300 mb-4 line-clamp-2 leading-relaxed'>{damageCase.content}</p>
+			<p className='text-sand-600 mb-4 line-clamp-2 leading-relaxed text-sm'>{damageCase.content}</p>
 
-			{/* Stats */}
-			<div className='flex items-center gap-6 text-sm text-gray-400 pt-4 border-t border-gray-700/50'>
-				<div className='flex items-center gap-1'>
-					<Eye size={16} className='text-red-400' />
-					<span>{damageCase.view_count}</span>
+			{/* Footer */}
+			<div className='flex items-center justify-between pt-3 border-t border-sand-100'>
+				<div className='flex items-center gap-4 text-xs text-sand-400'>
+					<div className='flex items-center gap-1'>
+						<Eye size={14} />
+						<span>{damageCase.view_count || 0}</span>
+					</div>
 				</div>
-				<div className='flex items-center gap-1'>
-					<ThumbsUp size={16} className='text-red-400' />
-					<span>{damageCase.like_count}</span>
-				</div>
-				<div className='flex items-center gap-1'>
-					<MessageCircle size={16} className='text-red-400' />
-					<span>{damageCase.comment_count}</span>
-				</div>
+				<span className='text-xs text-red-500 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity'>
+					자세히 보기 <ArrowRight size={14} />
+				</span>
 			</div>
-		</div>
+		</article>
 	)
 }
 
