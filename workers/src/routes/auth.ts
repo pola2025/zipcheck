@@ -44,13 +44,13 @@ app.get('/naver', async (c) => {
 		return c.json({ error: '네이버 로그인이 설정되지 않았습니다.' }, 500)
 	}
 
-	// Generate state and store in KV
+	// Generate state token - used as KV key (no cookie needed)
 	const stateArr = new Uint8Array(16)
 	crypto.getRandomValues(stateArr)
 	const state = Array.from(stateArr).map(b => b.toString(16).padStart(2, '0')).join('')
-	const sessionId = crypto.randomUUID()
 
-	await c.env.KV.put(`naver_state:${sessionId}`, state, { expirationTtl: 600 })
+	// Store session data in KV keyed by state (Naver returns state via URL param)
+	await c.env.KV.put(`naver_oauth:${state}`, JSON.stringify({ valid: true }), { expirationTtl: 600 })
 
 	const apiOrigin = new URL(c.req.url).origin
 	const callbackUrl = `${apiOrigin}/api/auth/naver/callback`
@@ -60,14 +60,7 @@ app.get('/naver', async (c) => {
 	naverAuthUrl.searchParams.set('redirect_uri', callbackUrl)
 	naverAuthUrl.searchParams.set('state', state)
 
-	// Set session cookie and redirect
-	return new Response(null, {
-		status: 302,
-		headers: {
-			Location: naverAuthUrl.toString(),
-			'Set-Cookie': `naver_session_id=${sessionId}; HttpOnly; Max-Age=600; SameSite=Lax; Path=/`,
-		},
-	})
+	return c.redirect(naverAuthUrl.toString())
 })
 
 // Naver OAuth callback
@@ -84,23 +77,14 @@ app.get('/naver/callback', async (c) => {
 			return c.redirect(`${frontendUrl}?error=invalid_request`)
 		}
 
-		// Get session ID from cookie
-		const cookies = c.req.header('Cookie') || ''
-		const sessionMatch = cookies.match(/naver_session_id=([^;]+)/)
-		const sessionId = sessionMatch?.[1]
-
-		if (!sessionId) {
+		// Verify state by looking up KV (no cookie needed - state comes via URL from Naver)
+		const sessionRaw = await c.env.KV.get(`naver_oauth:${state}`)
+		if (!sessionRaw) {
 			return c.redirect(`${frontendUrl}?error=session_expired`)
 		}
 
-		// Verify state from KV
-		const storedState = await c.env.KV.get(`naver_state:${sessionId}`)
-		if (!storedState || storedState !== state) {
-			return c.redirect(`${frontendUrl}?error=invalid_state`)
-		}
-
-		// Clean up KV state
-		await c.env.KV.delete(`naver_state:${sessionId}`)
+		// Clean up KV
+		await c.env.KV.delete(`naver_oauth:${state}`)
 
 		// Exchange code for access token
 		const tokenResponse = await fetch('https://nid.naver.com/oauth2.0/token', {
@@ -186,19 +170,16 @@ app.get('/google', async (c) => {
 		return c.json({ error: 'Google 로그인이 설정되지 않았습니다.' }, 500)
 	}
 
-	// Generate state and store in KV
+	// Generate state token - used as KV key (no cookie needed)
 	const stateArr = new Uint8Array(16)
 	crypto.getRandomValues(stateArr)
 	const state = Array.from(stateArr).map(b => b.toString(16).padStart(2, '0')).join('')
-	const sessionId = crypto.randomUUID()
-
-	await c.env.KV.put(`google_state:${sessionId}`, state, { expirationTtl: 600 })
 
 	// Get redirect_to from query params (for post-login redirect)
 	const redirectTo = c.req.query('redirect_to') || '/'
 
-	// Store redirect_to in KV along with state
-	await c.env.KV.put(`google_redirect:${sessionId}`, redirectTo, { expirationTtl: 600 })
+	// Store redirect_to in KV keyed by state (Google returns state via URL param)
+	await c.env.KV.put(`google_oauth:${state}`, JSON.stringify({ redirectTo }), { expirationTtl: 600 })
 
 	const apiOrigin = new URL(c.req.url).origin
 	const callbackUrl = `${apiOrigin}/api/auth/google/callback`
@@ -211,14 +192,7 @@ app.get('/google', async (c) => {
 	googleAuthUrl.searchParams.set('access_type', 'offline')
 	googleAuthUrl.searchParams.set('prompt', 'consent')
 
-	// Set session cookie and redirect
-	return new Response(null, {
-		status: 302,
-		headers: {
-			Location: googleAuthUrl.toString(),
-			'Set-Cookie': `google_session_id=${sessionId}; HttpOnly; Max-Age=600; SameSite=Lax; Path=/`,
-		},
-	})
+	return c.redirect(googleAuthUrl.toString())
 })
 
 // Google OAuth callback
@@ -235,27 +209,17 @@ app.get('/google/callback', async (c) => {
 			return c.redirect(`${frontendUrl}?error=invalid_request`)
 		}
 
-		// Get session ID from cookie
-		const cookies = c.req.header('Cookie') || ''
-		const sessionMatch = cookies.match(/google_session_id=([^;]+)/)
-		const sessionId = sessionMatch?.[1]
-
-		if (!sessionId) {
+		// Look up session data by state (no cookie needed - state comes via URL from Google)
+		const sessionRaw = await c.env.KV.get(`google_oauth:${state}`)
+		if (!sessionRaw) {
 			return c.redirect(`${frontendUrl}?error=session_expired`)
 		}
 
-		// Verify state from KV
-		const storedState = await c.env.KV.get(`google_state:${sessionId}`)
-		if (!storedState || storedState !== state) {
-			return c.redirect(`${frontendUrl}?error=invalid_state`)
-		}
+		const sessionData = JSON.parse(sessionRaw) as { redirectTo: string }
+		const redirectTo = sessionData.redirectTo || '/'
 
-		// Get stored redirect_to
-		const redirectTo = await c.env.KV.get(`google_redirect:${sessionId}`) || '/'
-
-		// Clean up KV state
-		await c.env.KV.delete(`google_state:${sessionId}`)
-		await c.env.KV.delete(`google_redirect:${sessionId}`)
+		// Clean up KV
+		await c.env.KV.delete(`google_oauth:${state}`)
 
 		// Exchange code for access token (redirect_uri must match the one used in /google init)
 		const apiOrigin = new URL(c.req.url).origin
