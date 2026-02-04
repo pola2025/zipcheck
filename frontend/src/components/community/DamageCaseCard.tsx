@@ -88,6 +88,13 @@ const DamageCaseCard: React.FC<DamageCaseCardProps> = ({ damageCase, onClick }) 
 
 			{/* Content */}
 			<div className='p-4'>
+				{/* Company name (masked) */}
+				{damageCase.company_name && (
+					<p className='text-sm font-bold text-red-600 truncate mb-1'>
+						{damageCase.company_name}
+					</p>
+				)}
+
 				{/* Title */}
 				<h3 className='text-base font-extrabold text-gray-900 truncate mb-2.5 group-hover:text-red-600 transition-colors'>
 					{damageCase.title}

@@ -70,7 +70,6 @@ export function maskReview<T extends Record<string, unknown>>(row: T): Record<st
 	const stripped = stripSensitiveFields(row)
 	return {
 		...stripped,
-		company_name: maskCompanyName(row.company_name as string | null),
 		representative_name: maskName(row.representative_name as string | null),
 	}
 }
