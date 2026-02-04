@@ -180,6 +180,7 @@ const mainDomainRoutes = (
 		<Route path='/reviews/:slug' element={<ReviewSlugPage />} />
 		<Route path='/damage-cases' element={<DamageCasesLanding />} />
 		<Route path='/damage-cases/:slug' element={<DamageCaseSlugPage />} />
+		<Route path='/blacklist-check' element={<BlacklistCheck />} />
 		<Route path='/blog' element={<BlogLanding />} />
 		<Route path='/payment' element={<Payment />} />
 		<Route path='/quote-submission' element={<QuoteSubmission />} />
