@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-import { AlertTriangle, Building, Phone, Calendar, Eye, ThumbsUp, ArrowLeft, Share2, Banknote, Scale, MapPin, ShieldAlert, Flag, Info } from 'lucide-react'
+import { AlertTriangle, Calendar, Eye, ThumbsUp, ArrowLeft, Share2, ShieldAlert, Flag, Info } from 'lucide-react'
 import NordicNavigation from 'components/nordic/NordicNavigation'
 import NordicFooter from 'components/nordic/NordicFooter'
 import BeforeAfterGallery from 'components/community/BeforeAfterGallery'
@@ -15,28 +15,19 @@ const IMAGE_BASE_URL = getApiUrl('/images/')
 
 interface DamageCaseData {
 	id: string
-	slug: string
-	user_id: string
-	author_name: string
-	company_name: string
-	company_phone: string | null
-	business_number: string | null
-	damage_type: string
-	region: string | null
-	damage_amount: string | null
-	severity: string | null
+	slug?: string
+	user_id?: string
 	title: string
-	case_description: string
-	images: string | null
-	evidence_images: string[] | null
-	resolution_status: string
-	legal_action: boolean
+	description: string
+	images: string | string[] | null
+	category?: string
+	severity?: string
 	status: string
-	view_count: number
-	like_count: number
-	comment_count: number
+	view_count?: number
+	like_count?: number
+	comment_count?: number
 	created_at: string
-	updated_at: string
+	updated_at?: string
 }
 
 const SEVERITY_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
@@ -46,7 +37,14 @@ const SEVERITY_CONFIG: Record<string, { label: string; color: string; bg: string
 	critical: { label: '매우 심각', color: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200' },
 }
 
-const DAMAGE_TYPE_COLORS: Record<string, string> = {
+const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+	open: { label: '미해결', className: 'bg-red-50 text-red-700 border-red-200' },
+	in_progress: { label: '진행중', className: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+	resolved: { label: '해결됨', className: 'bg-green-50 text-green-700 border-green-200' },
+	closed: { label: '종결', className: 'bg-gray-50 text-gray-700 border-gray-200' },
+}
+
+const CATEGORY_COLORS: Record<string, string> = {
 	'시공불량': 'bg-orange-50 text-orange-700',
 	'시공 불량': 'bg-orange-50 text-orange-700',
 	'계약위반': 'bg-red-50 text-red-700',
@@ -101,7 +99,7 @@ export default function DamageCaseSlugPage() {
 		const url = `${BASE_URL}/damage-cases/${slug}`
 		if (navigator.share) {
 			try {
-				await navigator.share({ title: damageCase?.title || `${damageCase?.company_name} 피해사례`, url })
+				await navigator.share({ title: damageCase?.title || '피해사례', url })
 			} catch { /* user cancelled */ }
 		} else {
 			await navigator.clipboard.writeText(url)
@@ -109,58 +107,32 @@ export default function DamageCaseSlugPage() {
 		}
 	}
 
-	const getStatusBadge = (status: string) => {
-		switch (status) {
-			case 'resolved': return { label: '해결됨', className: 'bg-green-50 text-green-700 border-green-200' }
-			case 'in_progress': return { label: '진행중', className: 'bg-yellow-50 text-yellow-700 border-yellow-200' }
-			default: return { label: '미해결', className: 'bg-red-50 text-red-700 border-red-200' }
-		}
-	}
-
-	const getDamageTypeBadge = (type: string) => {
-		return DAMAGE_TYPE_COLORS[type] || 'bg-sand-100 text-sand-700'
-	}
-
-	const getSeverityBadge = (sev: string | null) => {
-		if (!sev) return null
-		return SEVERITY_CONFIG[sev] || null
-	}
-
-	// Parse images from JSON string or use evidence_images array
 	const parseImages = (): string[] => {
 		if (!damageCase) return []
-
-		// Try evidence_images array first
-		if (damageCase.evidence_images && Array.isArray(damageCase.evidence_images) && damageCase.evidence_images.length > 0) {
-			return damageCase.evidence_images
+		const { images } = damageCase
+		if (!images) return []
+		if (Array.isArray(images)) return images
+		try {
+			const parsed = JSON.parse(images)
+			if (Array.isArray(parsed)) return parsed
+		} catch {
+			if (images.trim()) return [images]
 		}
-
-		// Fall back to parsing images JSON string
-		if (damageCase.images) {
-			try {
-				const parsed = JSON.parse(damageCase.images)
-				if (Array.isArray(parsed)) return parsed
-			} catch {
-				// If not valid JSON, treat as single image filename
-				if (damageCase.images.trim()) return [damageCase.images]
-			}
-		}
-
 		return []
 	}
+
+	const statusBadge = damageCase ? (STATUS_CONFIG[damageCase.status] || STATUS_CONFIG.open) : STATUS_CONFIG.open
+	const severityBadge = damageCase?.severity ? SEVERITY_CONFIG[damageCase.severity] : null
+	const categoryColor = damageCase?.category ? (CATEGORY_COLORS[damageCase.category] || 'bg-sand-100 text-sand-700') : null
 
 	// JSON-LD structured data
 	const jsonLd = damageCase ? {
 		'@context': 'https://schema.org',
 		'@type': 'Article',
-		headline: damageCase.title || `${damageCase.company_name} 피해사례`,
-		description: damageCase.case_description.substring(0, 200),
-		author: {
-			'@type': 'Person',
-			name: damageCase.author_name || '익명'
-		},
+		headline: damageCase.title,
+		description: damageCase.description.substring(0, 200),
 		datePublished: damageCase.created_at,
-		dateModified: damageCase.updated_at,
+		dateModified: damageCase.updated_at || damageCase.created_at,
 		publisher: {
 			'@type': 'Organization',
 			name: '집첵',
@@ -178,11 +150,11 @@ export default function DamageCaseSlugPage() {
 	} : null
 
 	const pageTitle = damageCase
-		? `${damageCase.title || damageCase.company_name} | 피해사례 | 집첵`
+		? `${damageCase.title} | 피해사례 | 집첵`
 		: '피해사례 | 집첵'
 
 	const pageDescription = damageCase
-		? damageCase.case_description.substring(0, 160)
+		? damageCase.description.substring(0, 160)
 		: '인테리어 피해사례를 확인하세요.'
 
 	const ogImageUrl = (() => {
@@ -233,8 +205,6 @@ export default function DamageCaseSlugPage() {
 		)
 	}
 
-	const statusBadge = getStatusBadge(damageCase.resolution_status)
-	const severityBadge = getSeverityBadge(damageCase.severity)
 	const evidenceImages = parseImages()
 
 	return (
@@ -290,28 +260,25 @@ export default function DamageCaseSlugPage() {
 
 					{/* Badges */}
 					<div className="flex items-center justify-center gap-2 mb-4 flex-wrap">
-						<span className={`px-3 py-1 text-xs font-semibold rounded-full ${getDamageTypeBadge(damageCase.damage_type)}`}>
-							{damageCase.damage_type}
-						</span>
+						{categoryColor && damageCase.category && (
+							<span className={`px-3 py-1 text-xs font-semibold rounded-full ${categoryColor}`}>
+								{damageCase.category}
+							</span>
+						)}
 						{severityBadge && (
 							<span className={`px-3 py-1 text-xs font-semibold rounded-full border ${severityBadge.bg} ${severityBadge.color} ${severityBadge.border}`}>
+								<ShieldAlert className="w-3 h-3 inline mr-1" />
 								{severityBadge.label}
 							</span>
 						)}
 						<span className={`px-3 py-1 text-xs font-semibold rounded-full border ${statusBadge.className}`}>
 							{statusBadge.label}
 						</span>
-						{damageCase.legal_action && (
-							<span className="px-3 py-1 text-xs font-semibold rounded-full bg-purple-50 text-purple-700 flex items-center gap-1">
-								<Scale className="w-3 h-3" />
-								법적 조치
-							</span>
-						)}
 					</div>
 
 					{/* Title */}
 					<h1 className="font-outfit text-2xl md:text-4xl font-bold text-sand-900 tracking-tight text-center mb-3">
-						{damageCase.title || damageCase.company_name}
+						{damageCase.title}
 					</h1>
 
 					{/* Meta info */}
@@ -322,11 +289,11 @@ export default function DamageCaseSlugPage() {
 						</span>
 						<span className="flex items-center gap-1">
 							<Eye className="w-3.5 h-3.5" />
-							{damageCase.view_count}
+							{damageCase.view_count || 0}
 						</span>
 						<span className="flex items-center gap-1">
 							<ThumbsUp className="w-3.5 h-3.5" />
-							{damageCase.like_count}
+							{damageCase.like_count || 0}
 						</span>
 					</div>
 				</div>
@@ -335,49 +302,10 @@ export default function DamageCaseSlugPage() {
 			{/* Content */}
 			<div className="max-w-3xl mx-auto px-5 md:px-8 pb-20">
 				<article className="nordic-card rounded-2xl p-6 md:p-10 mb-8">
-					{/* Company Info Card */}
-					<div className="bg-sand-50 rounded-xl p-5 mb-8 border border-sand-100">
-						<h3 className="text-xs font-bold text-sand-500 uppercase tracking-wider mb-3">업체 정보</h3>
-						<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-							<div className="flex items-center gap-2 text-sm text-sand-700">
-								<Building className="w-4 h-4 text-forest-500 shrink-0" />
-								<span className="font-semibold">{damageCase.company_name}</span>
-							</div>
-							{damageCase.company_phone && (
-								<div className="flex items-center gap-2 text-sm text-sand-600">
-									<Phone className="w-4 h-4 text-forest-500 shrink-0" />
-									<span>{damageCase.company_phone}</span>
-								</div>
-							)}
-							{damageCase.region && (
-								<div className="flex items-center gap-2 text-sm text-sand-600">
-									<MapPin className="w-4 h-4 text-forest-500 shrink-0" />
-									<span>{damageCase.region}</span>
-								</div>
-							)}
-							{damageCase.damage_amount && (
-								<div className="flex items-center gap-2 text-sm text-sand-600">
-									<Banknote className="w-4 h-4 text-forest-500 shrink-0" />
-									<span>피해금액: {damageCase.damage_amount}{!isNaN(Number(damageCase.damage_amount)) ? '만원' : ''}</span>
-								</div>
-							)}
-							<div className="flex items-center gap-2 text-sm text-sand-600">
-								<AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
-								<span>{damageCase.damage_type}</span>
-							</div>
-							{severityBadge && (
-								<div className="flex items-center gap-2 text-sm text-sand-600">
-									<ShieldAlert className="w-4 h-4 text-orange-500 shrink-0" />
-									<span>심각도: {severityBadge.label}</span>
-								</div>
-							)}
-						</div>
-					</div>
-
 					{/* Case Description */}
 					<div className="prose prose-sand max-w-none mb-8">
 						<p className="text-sand-800 leading-relaxed whitespace-pre-wrap text-base">
-							{damageCase.case_description}
+							{damageCase.description}
 						</p>
 					</div>
 
@@ -389,21 +317,15 @@ export default function DamageCaseSlugPage() {
 						</div>
 					)}
 
-					{/* Resolution & Legal Info */}
+					{/* Status Info */}
 					<div className="flex flex-wrap items-center gap-3 mb-6 pt-4 border-t border-sand-100">
 						<div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold ${statusBadge.className}`}>
 							{statusBadge.label}
 						</div>
-						{damageCase.legal_action && (
-							<div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-xs font-semibold">
-								<Scale className="w-3 h-3" />
-								법적 조치 진행 중
-							</div>
-						)}
-						{damageCase.damage_amount && (
-							<div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sand-100 text-sand-700 text-xs font-semibold">
-								<Banknote className="w-3 h-3" />
-								{damageCase.damage_amount}{!isNaN(Number(damageCase.damage_amount)) ? '만원' : ''}
+						{severityBadge && (
+							<div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold ${severityBadge.bg} ${severityBadge.color} ${severityBadge.border}`}>
+								<ShieldAlert className="w-3 h-3" />
+								심각도: {severityBadge.label}
 							</div>
 						)}
 					</div>
@@ -414,7 +336,7 @@ export default function DamageCaseSlugPage() {
 							<LikeButton
 								targetType="damage_case"
 								targetId={damageCase.id}
-								initialLikeCount={damageCase.like_count}
+								initialLikeCount={damageCase.like_count || 0}
 								size="md"
 							/>
 							<button

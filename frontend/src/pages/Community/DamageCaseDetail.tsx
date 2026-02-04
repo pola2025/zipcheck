@@ -1,23 +1,68 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { AlertTriangle, Building, Phone, FileText, ArrowLeft, Calendar, User, DollarSign, Image as ImageIcon, X } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Calendar, Eye, ShieldAlert, Image as ImageIcon, X } from 'lucide-react'
 import NordicNavigation from 'components/nordic/NordicNavigation'
 import NordicFooter from 'components/nordic/NordicFooter'
 import { getApiUrl } from '../../lib/api-config'
 
 interface DamageCase {
 	id: string
-	company_name: string
-	company_phone?: string
-	business_number?: string
-	damage_type: string
-	damage_amount?: string
-	case_description: string
-	evidence_urls?: string[]
-	status: 'pending' | 'approved' | 'rejected'
+	title: string
+	description: string
+	images: string | string[] | null
+	category?: string
+	severity?: string
+	status: string
+	view_count?: number
 	created_at: string
-	reporter_name?: string
-	view_count: number
+}
+
+const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+	open: { label: '미해결', className: 'text-red-600 bg-red-50 border-red-200' },
+	pending: { label: '심사중', className: 'text-amber-600 bg-amber-50 border-amber-200' },
+	in_progress: { label: '진행중', className: 'text-yellow-600 bg-yellow-50 border-yellow-200' },
+	resolved: { label: '해결됨', className: 'text-green-600 bg-green-50 border-green-200' },
+	closed: { label: '종결', className: 'text-gray-600 bg-gray-50 border-gray-200' },
+}
+
+const CATEGORY_COLORS: Record<string, string> = {
+	'시공불량': 'text-red-600 bg-red-50 border-red-200',
+	'시공 불량': 'text-red-600 bg-red-50 border-red-200',
+	'계약위반': 'text-orange-600 bg-orange-50 border-orange-200',
+	'계약 위반': 'text-orange-600 bg-orange-50 border-orange-200',
+	'금전사기': 'text-pink-600 bg-pink-50 border-pink-200',
+	'금전 사기': 'text-pink-600 bg-pink-50 border-pink-200',
+	'자재불량': 'text-amber-600 bg-amber-50 border-amber-200',
+	'자재 불량': 'text-amber-600 bg-amber-50 border-amber-200',
+	'공사지연': 'text-blue-600 bg-blue-50 border-blue-200',
+	'공사 지연': 'text-blue-600 bg-blue-50 border-blue-200',
+	'사후서비스불이행': 'text-purple-600 bg-purple-50 border-purple-200',
+	'사후 서비스 불이행': 'text-purple-600 bg-purple-50 border-purple-200',
+	'기타': 'text-sand-600 bg-sand-100 border-sand-200'
+}
+
+const SEVERITY_CONFIG: Record<string, { label: string; className: string }> = {
+	low: { label: '경미', className: 'text-green-600 bg-green-50 border-green-200' },
+	medium: { label: '보통', className: 'text-yellow-600 bg-yellow-50 border-yellow-200' },
+	high: { label: '심각', className: 'text-orange-600 bg-orange-50 border-orange-200' },
+	critical: { label: '매우 심각', className: 'text-red-600 bg-red-50 border-red-200' },
+}
+
+function parseImageField(field: string | string[] | null): string[] {
+	if (!field) return []
+	if (Array.isArray(field)) return field
+	try {
+		const parsed = JSON.parse(field)
+		return Array.isArray(parsed) ? parsed : []
+	} catch {
+		if (typeof field === 'string' && field.trim()) return [field]
+		return []
+	}
+}
+
+function resolveImageUrl(src: string): string {
+	if (src.startsWith('http://') || src.startsWith('https://')) return src
+	return getApiUrl('/images/') + src
 }
 
 export default function DamageCaseDetail() {
@@ -45,19 +90,6 @@ export default function DamageCaseDetail() {
 			setError(err instanceof Error ? err.message : '피해사례를 불러오는 중 오류가 발생했습니다.')
 			setLoading(false)
 		}
-	}
-
-	const getDamageTypeColor = (type: string) => {
-		const colors: Record<string, string> = {
-			'시공 불량': 'text-red-600 bg-red-50 border-red-200',
-			'계약 위반': 'text-orange-600 bg-orange-50 border-orange-200',
-			'금전 사기': 'text-pink-600 bg-pink-50 border-pink-200',
-			'자재 불량': 'text-amber-600 bg-amber-50 border-amber-200',
-			'공사 지연': 'text-blue-600 bg-blue-50 border-blue-200',
-			'사후 서비스 불이행': 'text-purple-600 bg-purple-50 border-purple-200',
-			'기타': 'text-sand-600 bg-sand-100 border-sand-200'
-		}
-		return colors[type] || 'text-sand-600 bg-sand-100 border-sand-200'
 	}
 
 	if (loading) {
@@ -94,7 +126,10 @@ export default function DamageCaseDetail() {
 		)
 	}
 
-	const typeClass = getDamageTypeColor(damageCase.damage_type)
+	const images = parseImageField(damageCase.images)
+	const statusInfo = STATUS_CONFIG[damageCase.status] || STATUS_CONFIG.open
+	const categoryInfo = damageCase.category ? (CATEGORY_COLORS[damageCase.category] || CATEGORY_COLORS['기타']) : null
+	const severityInfo = damageCase.severity ? SEVERITY_CONFIG[damageCase.severity] : null
 
 	return (
 		<div className="min-h-screen bg-sand-50">
@@ -120,44 +155,27 @@ export default function DamageCaseDetail() {
 									<AlertTriangle className="w-7 h-7 text-red-500" />
 								</div>
 								<div>
-									<div className="flex items-center gap-3 mb-2">
-										<span className={`px-3 py-1 rounded-full text-xs font-bold border ${typeClass}`}>
-											{damageCase.damage_type}
-										</span>
-										{damageCase.damage_amount && (
-											<div className="flex items-center gap-1 text-amber-600 text-sm font-medium">
-												<DollarSign className="w-4 h-4" />
-												<span>{damageCase.damage_amount}</span>
-											</div>
+									<div className="flex items-center gap-2 mb-2 flex-wrap">
+										{categoryInfo && damageCase.category && (
+											<span className={`px-3 py-1 rounded-full text-xs font-bold border ${categoryInfo}`}>
+												{damageCase.category}
+											</span>
 										)}
+										{severityInfo && (
+											<span className={`px-3 py-1 rounded-full text-xs font-bold border ${severityInfo.className}`}>
+												<ShieldAlert className="w-3 h-3 inline mr-1" />
+												{severityInfo.label}
+											</span>
+										)}
+										<span className={`px-3 py-1 rounded-full text-xs font-bold border ${statusInfo.className}`}>
+											{statusInfo.label}
+										</span>
 									</div>
 									<h1 className="text-2xl md:text-3xl font-bold text-sand-900">
-										{damageCase.company_name}
+										{damageCase.title}
 									</h1>
 								</div>
 							</div>
-						</div>
-
-						{/* Company Info */}
-						<div className="grid md:grid-cols-2 gap-4 mb-6 pb-6 border-b border-sand-200">
-							{damageCase.company_phone && (
-								<div className="flex items-center gap-3 text-sand-600">
-									<Phone className="w-5 h-5 text-forest-500" />
-									<div>
-										<p className="text-xs text-sand-400">업체 전화번호</p>
-										<p className="font-medium">{damageCase.company_phone}</p>
-									</div>
-								</div>
-							)}
-							{damageCase.business_number && (
-								<div className="flex items-center gap-3 text-sand-600">
-									<FileText className="w-5 h-5 text-forest-500" />
-									<div>
-										<p className="text-xs text-sand-400">사업자번호</p>
-										<p className="font-medium">{damageCase.business_number}</p>
-									</div>
-								</div>
-							)}
 						</div>
 
 						{/* Case Description */}
@@ -168,27 +186,27 @@ export default function DamageCaseDetail() {
 							</h2>
 							<div className="bg-sand-50 rounded-xl p-5 border border-sand-200">
 								<p className="text-sand-700 leading-relaxed whitespace-pre-wrap">
-									{damageCase.case_description}
+									{damageCase.description}
 								</p>
 							</div>
 						</div>
 
 						{/* Evidence Images */}
-						{damageCase.evidence_urls && damageCase.evidence_urls.length > 0 && (
+						{images.length > 0 && (
 							<div className="mb-6">
 								<h2 className="text-lg font-bold text-sand-900 mb-3 flex items-center gap-2">
 									<ImageIcon className="w-5 h-5 text-forest-500" />
 									증거 사진
 								</h2>
 								<div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-									{damageCase.evidence_urls.map((url, index) => (
+									{images.map((url, index) => (
 										<div
 											key={index}
 											className="cursor-pointer hover:opacity-90 transition-opacity"
-											onClick={() => setSelectedImage(url)}
+											onClick={() => setSelectedImage(resolveImageUrl(url))}
 										>
 											<img
-												src={url}
+												src={resolveImageUrl(url)}
 												alt={`증거 ${index + 1}`}
 												className="w-full h-44 object-cover rounded-xl border border-sand-200 hover:border-forest-500 transition-colors"
 											/>
@@ -203,24 +221,15 @@ export default function DamageCaseDetail() {
 							<div className="flex items-center gap-3 text-sand-600">
 								<Calendar className="w-5 h-5 text-forest-500" />
 								<div>
-									<p className="text-xs text-sand-400">제보일</p>
+									<p className="text-xs text-sand-400">등록일</p>
 									<p className="font-medium">{new Date(damageCase.created_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}</p>
 								</div>
 							</div>
-							{damageCase.reporter_name && (
-								<div className="flex items-center gap-3 text-sand-600">
-									<User className="w-5 h-5 text-forest-500" />
-									<div>
-										<p className="text-xs text-sand-400">제보자</p>
-										<p className="font-medium">{damageCase.reporter_name}</p>
-									</div>
-								</div>
-							)}
 							<div className="flex items-center gap-3 text-sand-600">
-								<Building className="w-5 h-5 text-forest-500" />
+								<Eye className="w-5 h-5 text-forest-500" />
 								<div>
 									<p className="text-xs text-sand-400">조회수</p>
-									<p className="font-medium">{damageCase.view_count}회</p>
+									<p className="font-medium">{damageCase.view_count || 0}회</p>
 								</div>
 							</div>
 						</div>

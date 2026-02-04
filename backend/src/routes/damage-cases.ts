@@ -155,7 +155,9 @@ router.post('/', authenticateToken, upload.array('evidence_images', 20), async (
 			business_number,
 			damage_type,
 			damage_amount,
-			case_description
+			case_description,
+			title: formTitle,
+			severity: formSeverity
 		} = req.body
 
 		// Validation - 업체명, 연락처, 사업자번호 모두 필수
@@ -206,15 +208,20 @@ router.post('/', authenticateToken, upload.array('evidence_images', 20), async (
 
 		// Generate title from available info
 		const titlePrefix = company_name || company_phone || business_number || '업체 정보 미상'
+		const finalTitle = formTitle?.trim() || `${titlePrefix} - ${damage_type}`
+
+		// Validate severity
+		const validSeverities = ['low', 'medium', 'high', 'critical']
+		const finalSeverity = validSeverities.includes(formSeverity) ? formSeverity : 'medium'
 
 		// Insert damage case
 		const data = await insertOne<any>('damage_cases', {
 			user_id: userId,
-			title: `${titlePrefix} - ${damage_type}`,
+			title: finalTitle,
 			description: fullDescription,
 			images: JSON.stringify(imageUrls),
 			category: damage_type,
-			severity: 'medium',
+			severity: finalSeverity,
 			status: 'pending' // 관리자 승인 대기
 		})
 

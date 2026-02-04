@@ -18,7 +18,7 @@ const SEVERITY_OPTIONS = [
 	{ value: 'critical', label: '매우 심각', description: '매우 심각한 수준의 피해' },
 ]
 const RESOLUTION_OPTIONS = [
-	{ value: 'unresolved', label: '미해결' },
+	{ value: 'open', label: '미해결' },
 	{ value: 'in_progress', label: '진행중' },
 	{ value: 'resolved', label: '해결됨' },
 ]
@@ -40,7 +40,7 @@ export default function DamageCaseWrite() {
 	const [title, setTitle] = useState('')
 	const [caseDescription, setCaseDescription] = useState('')
 	const [evidenceImages, setEvidenceImages] = useState<File[]>([])
-	const [resolutionStatus, setResolutionStatus] = useState('unresolved')
+	const [resolutionStatus, setResolutionStatus] = useState('open')
 	const [legalAction, setLegalAction] = useState(false)
 
 	const handleSubmit = async (e: React.FormEvent) => {
