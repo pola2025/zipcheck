@@ -101,6 +101,11 @@ export function UserAuthProvider({ children }: { children: ReactNode }) {
 	}, [refreshUser])
 
 	const loginWithGoogle = useCallback((redirectTo?: string) => {
+		// Save redirect destination to localStorage as fallback
+		// (in case backend cookie/KV flow loses it)
+		if (redirectTo) {
+			localStorage.setItem('auth_redirect_to', redirectTo)
+		}
 		// For subdomain support: pass full URL so backend can redirect back correctly
 		const fullRedirect = redirectTo ? `${window.location.origin}${redirectTo}` : window.location.origin
 		const params = `?redirect_to=${encodeURIComponent(fullRedirect)}`

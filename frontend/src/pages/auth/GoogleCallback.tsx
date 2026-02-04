@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { getApiUrl } from '../../lib/api-config'
-import { useUser } from '../../contexts/UserAuthContext'
 
 const GoogleCallback: React.FC = () => {
 	const [searchParams] = useSearchParams()
-	const navigate = useNavigate()
-	const { refreshUser } = useUser()
 	const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing')
 	const [errorMessage, setErrorMessage] = useState<string>('')
 
@@ -15,13 +12,15 @@ const GoogleCallback: React.FC = () => {
 			try {
 				const token = searchParams.get('token')
 				const error = searchParams.get('error')
-				const redirectTo = searchParams.get('redirect_to') || '/'
+				// Use URL param first, fallback to localStorage (saved before Google redirect)
+				const redirectTo = searchParams.get('redirect_to') || localStorage.getItem('auth_redirect_to') || '/'
+				localStorage.removeItem('auth_redirect_to')
 
 				if (error) {
 					console.error('OAuth error:', error)
 					setErrorMessage(getErrorMessage(error))
 					setStatus('error')
-					setTimeout(() => navigate('/'), 3000)
+					setTimeout(() => { window.location.href = '/' }, 3000)
 					return
 				}
 
@@ -29,7 +28,7 @@ const GoogleCallback: React.FC = () => {
 					console.error('No token found in callback URL')
 					setErrorMessage('인증 토큰을 찾을 수 없습니다.')
 					setStatus('error')
-					setTimeout(() => navigate('/'), 3000)
+					setTimeout(() => { window.location.href = '/' }, 3000)
 					return
 				}
 
@@ -48,24 +47,22 @@ const GoogleCallback: React.FC = () => {
 				const user = await response.json()
 				localStorage.setItem('user', JSON.stringify(user))
 
-				// Update auth context state so navigation target sees isLoggedIn=true
-				await refreshUser()
-
 				setStatus('success')
 
+				// Full page reload to ensure UserAuthProvider picks up token from localStorage
 				setTimeout(() => {
-					navigate(redirectTo)
-				}, 1000)
+					window.location.href = redirectTo
+				}, 800)
 			} catch (error) {
 				console.error('Callback processing error:', error)
 				setErrorMessage('로그인 처리 중 오류가 발생했습니다.')
 				setStatus('error')
-				setTimeout(() => navigate('/'), 3000)
+				setTimeout(() => { window.location.href = '/' }, 3000)
 			}
 		}
 
 		handleCallback()
-	}, [searchParams, navigate])
+	}, [searchParams])
 
 	const getErrorMessage = (errorCode: string): string => {
 		const errorMessages: Record<string, string> = {

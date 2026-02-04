@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { getApiUrl } from '../../lib/api-config'
-import { useUser } from '../../contexts/UserAuthContext'
 
 /**
  * Naver OAuth Callback Page
@@ -9,8 +8,6 @@ import { useUser } from '../../contexts/UserAuthContext'
  */
 const NaverCallback: React.FC = () => {
 	const [searchParams] = useSearchParams()
-	const navigate = useNavigate()
-	const { refreshUser } = useUser()
 	const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing')
 	const [errorMessage, setErrorMessage] = useState<string>('')
 
@@ -20,14 +17,15 @@ const NaverCallback: React.FC = () => {
 				// Get token from URL query parameter
 				const token = searchParams.get('token')
 				const error = searchParams.get('error')
-				const redirectTo = searchParams.get('redirect_to') || '/'
+				const redirectTo = searchParams.get('redirect_to') || localStorage.getItem('auth_redirect_to') || '/'
+				localStorage.removeItem('auth_redirect_to')
 
 				// Check for errors
 				if (error) {
 					console.error('OAuth error:', error)
 					setErrorMessage(getErrorMessage(error))
 					setStatus('error')
-					setTimeout(() => navigate('/'), 3000)
+					setTimeout(() => { window.location.href = '/' }, 3000)
 					return
 				}
 
@@ -35,7 +33,7 @@ const NaverCallback: React.FC = () => {
 					console.error('No token found in callback URL')
 					setErrorMessage('인증 토큰을 찾을 수 없습니다.')
 					setStatus('error')
-					setTimeout(() => navigate('/'), 3000)
+					setTimeout(() => { window.location.href = '/' }, 3000)
 					return
 				}
 
@@ -58,25 +56,23 @@ const NaverCallback: React.FC = () => {
 				// Store user info
 				localStorage.setItem('user', JSON.stringify(user))
 
-				// Update auth context state
-				await refreshUser()
-
-				console.log('✅ Naver login successful:', user.email)
+				console.log('Naver login successful:', user.email)
 				setStatus('success')
 
+				// Full page reload to ensure UserAuthProvider picks up token
 				setTimeout(() => {
-					navigate(redirectTo)
-				}, 1000)
+					window.location.href = redirectTo
+				}, 800)
 			} catch (error) {
 				console.error('Callback processing error:', error)
 				setErrorMessage('로그인 처리 중 오류가 발생했습니다.')
 				setStatus('error')
-				setTimeout(() => navigate('/'), 3000)
+				setTimeout(() => { window.location.href = '/' }, 3000)
 			}
 		}
 
 		handleCallback()
-	}, [searchParams, navigate])
+	}, [searchParams])
 
 	const getErrorMessage = (errorCode: string): string => {
 		const errorMessages: Record<string, string> = {
@@ -119,7 +115,7 @@ const NaverCallback: React.FC = () => {
 							</svg>
 						</div>
 						<h2 className='text-2xl font-bold text-gray-800 mb-2'>로그인 성공!</h2>
-						<p className='text-gray-600'>메인 페이지로 이동합니다...</p>
+						<p className='text-gray-600'>페이지로 이동합니다...</p>
 					</>
 				)}
 
