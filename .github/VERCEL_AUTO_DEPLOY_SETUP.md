@@ -50,7 +50,7 @@ git push
 - frontend/ 디렉토리에 변경사항이 있을 때
 - .github/workflows/deploy-production.yml 파일이 변경될 때
 
-**백엔드 변경은 자동 배포하지 않습니다.** (Railway가 자동으로 배포합니다)
+**백엔드 변경은 자동 배포하지 않습니다.** (Cloudflare Workers에서 별도 배포)
 
 ## 트러블슈팅
 

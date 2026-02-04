@@ -14,6 +14,8 @@ export interface Review {
 	rating: number
 	review_text: string  // Backend 실제 필드명
 	images: string | null  // JSON stringified array
+	before_images: string | null  // JSON stringified array
+	after_images: string | null   // JSON stringified array
 	verified: boolean
 	status: string  // 'published' | 'pending' | 'deleted'
 	view_count: number

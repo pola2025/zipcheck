@@ -33,7 +33,7 @@ export function getGoogleAuth(scopes: string[]) {
 			keyFile: resolvedPath,
 			scopes,
 		})
-	// Option 2: Environment variables (Railway production)
+	// Option 2: Environment variables (production)
 	} else {
 		const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL
 		const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY

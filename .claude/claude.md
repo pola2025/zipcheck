@@ -77,9 +77,12 @@ fetch(`${API_URL}/api/auth/admin/login`)
 
 ## 🚀 배포 환경
 
-### Railway (Backend)
-- URL: `https://zipcheck-production.up.railway.app`
-- 환경 변수는 Railway 대시보드에서 설정
+> **Railway는 이 프로젝트에서 사용하지 않습니다. 관련 CLI/문서/설정 일체 금지.**
+
+### Cloudflare Workers (Backend API)
+- URL: `https://zipcheck-api.zipcheck2025.workers.dev`
+- 환경 변수는 Cloudflare 대시보드 또는 `wrangler secret` 으로 설정
+- DB: Neon PostgreSQL (Serverless)
 
 ### Vercel (Frontend)
 - Production URL: `https://zcheck.co.kr` (커스텀 도메인)
@@ -95,14 +98,13 @@ fetch(`${API_URL}/api/auth/admin/login`)
 ### ✅ 자체 진행해야 하는 작업:
 - `git` 명령어 (status, log, diff, add, commit, push)
 - `npm` / `yarn` 명령어 (install, build, test)
-- `railway` CLI 명령어 (logs, status)
 - `vercel` CLI 명령어 (ls, logs, inspect)
+- `wrangler` CLI 명령어 (deploy, secret, tail)
 - 파일 읽기/검색 (grep, read, glob)
 - 로컬 빌드 및 테스트
 
 ### ❌ 사용자 확인이 필요한 경우:
 - 3회 이상 반복 실패한 작업
-- 인터랙티브 입력이 필요한 명령어 (railway link, railway service 등)
 - 사용자 의사결정이 필요한 작업 (배포 승인, 설정 변경 등)
 - 웹 대시보드에서만 확인 가능한 설정
 
@@ -122,18 +124,15 @@ fetch(`${API_URL}/api/auth/admin/login`)
 
 **사용자에게 스크린샷을 요청하기 전에 반드시 다음 단계를 수행:**
 
-### Railway CLI 우선 사용
+### Backend (Cloudflare Workers) 상태 확인
 
-**Railway 배포 상태 확인:**
 ```bash
-cd backend
-railway logs              # 실시간 로그
-railway status           # 서비스 상태
-```
+# healthcheck 엔드포인트로 확인
+curl https://zipcheck-api.zipcheck2025.workers.dev/health
 
-**Railway CLI 실패 시 대안:**
-- WebFetch로 healthcheck 엔드포인트 확인
-- 사용자에게 대시보드 스크린샷 요청
+# 로그 확인
+wrangler tail
+```
 
 ### 1. Vercel 배포 상태 확인
 
@@ -292,7 +291,7 @@ const response = await fetch(getApiUrl('/api/auth/admin/login'), {
 ### 새로운 환경 변수 추가 시
 1. 로컬 `.env` 파일에 추가
 2. `.env.example` 템플릿에 추가 (값 제외)
-3. Railway/Vercel 대시보드에 추가
+3. Cloudflare/Vercel 대시보드에 추가
 4. 문서 업데이트
 
 ---
@@ -501,4 +500,4 @@ YYYY-MM-DD
 
 **모든 Claude Code 에이전트는 이 규칙을 코드 생성 시 자동으로 준수합니다.**
 
-마지막 업데이트: 2025-10-12
+마지막 업데이트: 2026-02-04

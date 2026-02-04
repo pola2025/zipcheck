@@ -39,7 +39,7 @@ credentials.json
    - JWT_SECRET
 
 4. **Third-party Services**
-   - Railway tokens
+   - Cloudflare API tokens
    - Vercel tokens
    - Any OAuth credentials
 
@@ -90,10 +90,9 @@ const API_URL = import.meta.env.VITE_API_URL || process.env.API_URL
 
 ## 4. 배포 시 주의사항
 
-### Railway 배포
-- 환경 변수는 Railway 대시보드에서 직접 설정
-- `railway variables` 명령어로 확인 가능
-- .env 파일은 절대 Railway에 업로드하지 않음
+### Cloudflare Workers 배포
+- 환경 변수는 Cloudflare 대시보드 또는 `wrangler secret` 으로 설정
+- .env 파일은 절대 Workers에 업로드하지 않음
 
 ### Vercel 배포
 - 환경 변수는 Vercel 대시보드에서 설정

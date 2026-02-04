@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Star, Search, SortDesc, PenLine, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Star, Search, SortDesc, PenLine, Loader2 } from 'lucide-react'
 import NordicNavigation from 'components/nordic/NordicNavigation'
 import NordicFooter from 'components/nordic/NordicFooter'
 import PageSEO from 'components/PageSEO'
@@ -8,19 +8,45 @@ import ReviewCard from 'components/community/ReviewCard'
 import { Review } from 'types/review'
 import { getApiUrl } from '../../lib/api-config'
 
+const PAGE_SIZE = 12
+
 export default function ReviewsLanding() {
 	const navigate = useNavigate()
 	const [searchParams, setSearchParams] = useSearchParams()
 
 	const [reviews, setReviews] = useState<Review[]>([])
 	const [loading, setLoading] = useState(true)
+	const [loadingMore, setLoadingMore] = useState(false)
 	const [error, setError] = useState('')
 
-	const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page') || '1'))
-	const [totalPages, setTotalPages] = useState(1)
+	const [currentPage, setCurrentPage] = useState(1)
 	const [totalCount, setTotalCount] = useState(0)
+	const [hasMore, setHasMore] = useState(true)
 	const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
 	const [sortBy, setSortBy] = useState(searchParams.get('sort_by') || 'created_at')
+
+	const observerRef = useRef<IntersectionObserver | null>(null)
+	const sentinelRef = useCallback(
+		(node: HTMLDivElement | null) => {
+			if (loading || loadingMore) return
+			if (observerRef.current) observerRef.current.disconnect()
+			observerRef.current = new IntersectionObserver((entries) => {
+				if (entries[0].isIntersecting && hasMore) {
+					setCurrentPage((prev) => prev + 1)
+				}
+			}, { rootMargin: '200px' })
+			if (node) observerRef.current.observe(node)
+		},
+		[loading, loadingMore, hasMore]
+	)
+
+	// Reset when filters change
+	useEffect(() => {
+		setReviews([])
+		setCurrentPage(1)
+		setHasMore(true)
+		setLoading(true)
+	}, [searchQuery, sortBy])
 
 	useEffect(() => {
 		loadReviews()
@@ -28,10 +54,15 @@ export default function ReviewsLanding() {
 
 	const loadReviews = async () => {
 		try {
-			setLoading(true)
+			if (currentPage === 1) {
+				setLoading(true)
+			} else {
+				setLoadingMore(true)
+			}
+
 			const params = new URLSearchParams({
 				page: currentPage.toString(),
-				limit: '12',
+				limit: PAGE_SIZE.toString(),
 				sort_by: sortBy,
 				order: 'desc'
 			})
@@ -41,13 +72,16 @@ export default function ReviewsLanding() {
 			if (!response.ok) throw new Error('후기 목록을 불러올 수 없습니다.')
 
 			const data = await response.json()
-			setReviews(data.data)
-			setTotalPages(data.pagination.total_pages)
+			const newReviews: Review[] = data.data
+
+			setReviews((prev) => currentPage === 1 ? newReviews : [...prev, ...newReviews])
 			setTotalCount(data.pagination.total)
+			setHasMore(currentPage < data.pagination.total_pages)
 		} catch (err) {
 			setError(err instanceof Error ? err.message : '오류 발생')
 		} finally {
 			setLoading(false)
+			setLoadingMore(false)
 		}
 	}
 
@@ -60,15 +94,6 @@ export default function ReviewsLanding() {
 		}
 		newParams.delete('page')
 		setSearchParams(newParams)
-		setCurrentPage(1)
-	}
-
-	const handlePageChange = (page: number) => {
-		setCurrentPage(page)
-		const newParams = new URLSearchParams(searchParams)
-		newParams.set('page', page.toString())
-		setSearchParams(newParams)
-		window.scrollTo({ top: 0, behavior: 'smooth' })
 	}
 
 	return (
@@ -91,17 +116,17 @@ export default function ReviewsLanding() {
 					<h1 className="font-outfit text-3xl md:text-5xl font-bold text-sand-900 tracking-tight mb-4">
 						업체 후기
 					</h1>
-					<p className="text-sand-600 text-base md:text-lg max-w-lg mx-auto">
+					<p className="text-sand-700 text-base md:text-lg max-w-lg mx-auto">
 						실제 고객들의 솔직한 인테리어 시공 경험을 확인하세요
 					</p>
 					{totalCount > 0 && (
-						<p className="text-sand-400 text-sm mt-3">총 {totalCount.toLocaleString()}개의 후기</p>
+						<p className="text-sand-500 text-sm mt-3">총 {totalCount.toLocaleString()}개의 후기</p>
 					)}
 				</div>
 			</div>
 
 			{/* Content */}
-			<div className="max-w-5xl mx-auto px-5 md:px-8 pb-20">
+			<div className="max-w-6xl mx-auto px-5 md:px-8 pb-20">
 				{/* Filters */}
 				<div className="bg-white rounded-2xl p-5 mb-8 border border-sand-200">
 					<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -151,7 +176,7 @@ export default function ReviewsLanding() {
 					</div>
 				</div>
 
-				{/* Loading */}
+				{/* Initial Loading */}
 				{loading && reviews.length === 0 && (
 					<div className="flex justify-center py-16">
 						<div className="w-10 h-10 border-2 border-sand-200 border-t-forest-500 rounded-full animate-spin" />
@@ -165,8 +190,8 @@ export default function ReviewsLanding() {
 					</div>
 				)}
 
-				{/* Reviews List */}
-				{!loading && reviews.length === 0 ? (
+				{/* Empty State */}
+				{!loading && reviews.length === 0 && !error && (
 					<div className="bg-white rounded-2xl p-16 text-center border border-sand-200">
 						<Star className="mx-auto mb-4 text-sand-300" size={48} />
 						<p className="text-sand-500 text-lg mb-6">아직 등록된 후기가 없습니다.</p>
@@ -177,8 +202,11 @@ export default function ReviewsLanding() {
 							첫 후기 작성하기
 						</button>
 					</div>
-				) : (
-					<div className="space-y-4">
+				)}
+
+				{/* Reviews Grid */}
+				{reviews.length > 0 && (
+					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 						{reviews.map((review) => (
 							<ReviewCard
 								key={review.id}
@@ -189,49 +217,20 @@ export default function ReviewsLanding() {
 					</div>
 				)}
 
-				{/* Pagination */}
-				{totalPages > 1 && (
-					<div className="flex justify-center items-center gap-2 mt-10">
-						<button
-							onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-							disabled={currentPage === 1}
-							className="p-2.5 rounded-lg transition-all bg-white text-sand-700 border border-sand-200 hover:bg-forest-50 hover:border-forest-300 disabled:bg-sand-50 disabled:text-sand-300 disabled:cursor-not-allowed"
-						>
-							<ChevronLeft size={18} />
-						</button>
-						{Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-							let page: number
-							if (totalPages <= 5) {
-								page = i + 1
-							} else if (currentPage <= 3) {
-								page = i + 1
-							} else if (currentPage >= totalPages - 2) {
-								page = totalPages - 4 + i
-							} else {
-								page = currentPage - 2 + i
-							}
-							return (
-								<button
-									key={page}
-									onClick={() => handlePageChange(page)}
-									className={`min-w-[40px] h-10 rounded-lg text-sm font-medium transition-all ${
-										currentPage === page
-											? 'bg-forest-600 text-white shadow-sm'
-											: 'bg-white text-sand-700 border border-sand-200 hover:bg-forest-50 hover:border-forest-300'
-									}`}
-								>
-									{page}
-								</button>
-							)
-						})}
-						<button
-							onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-							disabled={currentPage === totalPages}
-							className="p-2.5 rounded-lg transition-all bg-white text-sand-700 border border-sand-200 hover:bg-forest-50 hover:border-forest-300 disabled:bg-sand-50 disabled:text-sand-300 disabled:cursor-not-allowed"
-						>
-							<ChevronRight size={18} />
-						</button>
+				{/* Infinite scroll sentinel */}
+				{hasMore && reviews.length > 0 && (
+					<div ref={sentinelRef} className="flex justify-center py-10">
+						{loadingMore && (
+							<Loader2 size={24} className="text-forest-500 animate-spin" />
+						)}
 					</div>
+				)}
+
+				{/* End of list */}
+				{!hasMore && reviews.length > 0 && (
+					<p className="text-center text-sand-400 text-sm py-8">
+						모든 후기를 불러왔습니다
+					</p>
 				)}
 			</div>
 

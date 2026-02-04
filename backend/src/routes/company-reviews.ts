@@ -149,7 +149,11 @@ router.get('/:id', optionalAuthenticateToken, async (req, res) => {
  * POST /api/company-reviews
  * Create a new company review (requires authentication)
  */
-router.post('/', authenticateToken, upload.array('images', 10), async (req, res) => {
+router.post('/', authenticateToken, upload.fields([
+	{ name: 'before_images', maxCount: 5 },
+	{ name: 'after_images', maxCount: 5 },
+	{ name: 'images', maxCount: 5 }
+]), async (req, res) => {
 	try {
 		const userId = (req as any).user?.userId
 
@@ -191,16 +195,32 @@ router.post('/', authenticateToken, upload.array('images', 10), async (req, res)
 
 		console.log(`📝 Creating new company review: ${company_name} by user ${userId}`)
 
-		// Handle image uploads
-		let imageUrls: string[] = []
-		const files = req.files as Express.Multer.File[]
+		// Handle image uploads per field
+		const fileFields = req.files as { [fieldname: string]: Express.Multer.File[] }
 
-		if (files && files.length > 0) {
-			console.log(`📸 Uploading ${files.length} images...`)
-			const uploadResults = await uploadImages(files, 'reviews')
-			imageUrls = uploadResults.map((r) => r.url)
-			console.log(`✅ Uploaded ${imageUrls.length} images`)
+		let beforeImageUrls: string[] = []
+		let afterImageUrls: string[] = []
+		let imageUrls: string[] = []
+
+		if (fileFields?.before_images?.length) {
+			console.log(`📸 Uploading ${fileFields.before_images.length} before images...`)
+			const results = await uploadImages(fileFields.before_images, 'reviews')
+			beforeImageUrls = results.map((r) => r.url)
 		}
+
+		if (fileFields?.after_images?.length) {
+			console.log(`📸 Uploading ${fileFields.after_images.length} after images...`)
+			const results = await uploadImages(fileFields.after_images, 'reviews')
+			afterImageUrls = results.map((r) => r.url)
+		}
+
+		if (fileFields?.images?.length) {
+			console.log(`📸 Uploading ${fileFields.images.length} general images...`)
+			const results = await uploadImages(fileFields.images, 'reviews')
+			imageUrls = results.map((r) => r.url)
+		}
+
+		console.log(`✅ Uploaded: before=${beforeImageUrls.length}, after=${afterImageUrls.length}, general=${imageUrls.length}`)
 
 		// Insert review
 		const data = await insertOne<any>('company_reviews', {
@@ -215,6 +235,8 @@ router.post('/', authenticateToken, upload.array('images', 10), async (req, res)
 			rating: Number(rating),
 			review_text: review_text,
 			images: JSON.stringify(imageUrls),
+			before_images: JSON.stringify(beforeImageUrls),
+			after_images: JSON.stringify(afterImageUrls),
 			verified: false,
 			status: 'pending' // 관리자 승인 대기
 		})
@@ -241,7 +263,11 @@ router.post('/', authenticateToken, upload.array('images', 10), async (req, res)
  * PATCH /api/company-reviews/:id
  * Update a review (only by author)
  */
-router.patch('/:id', authenticateToken, upload.array('images', 10), async (req, res) => {
+router.patch('/:id', authenticateToken, upload.fields([
+	{ name: 'before_images', maxCount: 5 },
+	{ name: 'after_images', maxCount: 5 },
+	{ name: 'images', maxCount: 5 }
+]), async (req, res) => {
 	try {
 		const userId = (req as any).user?.userId
 		const { id } = req.params
@@ -262,23 +288,39 @@ router.patch('/:id', authenticateToken, upload.array('images', 10), async (req, 
 			return res.status(404).json({ error: '후기를 찾을 수 없거나 수정 권한이 없습니다.' })
 		}
 
-		// Handle image uploads
+		// Handle image uploads per field
+		const fileFields = req.files as { [fieldname: string]: Express.Multer.File[] }
+
 		let imageUrls: string[] = []
+		let beforeImageUrls: string[] = []
+		let afterImageUrls: string[] = []
 
 		// Get existing images from request body
 		const existingImages = req.body.existing_images
 		if (existingImages) {
 			imageUrls = Array.isArray(existingImages) ? existingImages : [existingImages]
 		}
+		const existingBefore = req.body.existing_before_images
+		if (existingBefore) {
+			beforeImageUrls = Array.isArray(existingBefore) ? existingBefore : [existingBefore]
+		}
+		const existingAfter = req.body.existing_after_images
+		if (existingAfter) {
+			afterImageUrls = Array.isArray(existingAfter) ? existingAfter : [existingAfter]
+		}
 
-		// Upload new images if any
-		const files = req.files as Express.Multer.File[]
-		if (files && files.length > 0) {
-			console.log(`📸 Uploading ${files.length} new images...`)
-			const uploadResults = await uploadImages(files, 'reviews')
-			const newImageUrls = uploadResults.map((r) => r.url)
-			imageUrls = [...imageUrls, ...newImageUrls]
-			console.log(`✅ Total images: ${imageUrls.length}`)
+		// Upload new files per field
+		if (fileFields?.images?.length) {
+			const results = await uploadImages(fileFields.images, 'reviews')
+			imageUrls = [...imageUrls, ...results.map((r) => r.url)]
+		}
+		if (fileFields?.before_images?.length) {
+			const results = await uploadImages(fileFields.before_images, 'reviews')
+			beforeImageUrls = [...beforeImageUrls, ...results.map((r) => r.url)]
+		}
+		if (fileFields?.after_images?.length) {
+			const results = await uploadImages(fileFields.after_images, 'reviews')
+			afterImageUrls = [...afterImageUrls, ...results.map((r) => r.url)]
 		}
 
 		// Build update query dynamically
@@ -303,10 +345,20 @@ router.patch('/:id', authenticateToken, upload.array('images', 10), async (req, 
 			}
 		})
 
-		// Update images if there are any
+		// Update images
 		if (imageUrls.length > 0) {
 			updateFields.push(`images = $${paramIndex}`)
 			updateValues.push(JSON.stringify(imageUrls))
+			paramIndex++
+		}
+		if (beforeImageUrls.length > 0) {
+			updateFields.push(`before_images = $${paramIndex}`)
+			updateValues.push(JSON.stringify(beforeImageUrls))
+			paramIndex++
+		}
+		if (afterImageUrls.length > 0) {
+			updateFields.push(`after_images = $${paramIndex}`)
+			updateValues.push(JSON.stringify(afterImageUrls))
 			paramIndex++
 		}
 

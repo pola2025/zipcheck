@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>커뮤니티 게시판 구조 기획서 - 4가지 안</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Pretendard', -apple-system, sans-serif; background: #f8f8f6; }
+  .wire { border: 2px dashed #bbb; background: #f0f0ee; border-radius: 8px; }
+  .wire-solid { border: 1.5px solid #ccc; background: #fff; border-radius: 8px; }
+  .wire-img { background: repeating-linear-gradient(45deg, #e5e5e3, #e5e5e3 10px, #ededeb 10px, #ededeb 20px); border-radius: 6px; display:flex; align-items:center; justify-content:center; color:#999; font-size:12px; }
+  .wire-text { background: #e8e8e6; border-radius: 4px; height: 10px; }
+  .wire-text-long { width: 80%; }
+  .wire-text-med { width: 55%; }
+  .wire-text-short { width: 30%; }
+  .selected { outline: 3px solid #2d6a4f; outline-offset: 4px; }
+  .option-card { transition: all 0.2s; cursor:pointer; }
+  .option-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+  .tag { display:inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+</style>
+</head>
+<body class="p-6 md:p-10 max-w-7xl mx-auto">
+
+<!-- Header -->
+<div class="mb-10">
+  <div class="flex items-center gap-3 mb-2">
+    <div class="w-8 h-1 bg-green-700 rounded"></div>
+    <span class="text-green-700 text-xs font-bold tracking-widest uppercase">Wireframe Proposal</span>
+  </div>
+  <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3">커뮤니티 게시판 구조 기획서</h1>
+  <p class="text-gray-600 text-lg">후기 & 피해사례 게시판의 4가지 구조안. 각 안의 <strong>목록 → 상세 → 작성</strong> 흐름을 비교합니다.</p>
+  <div class="flex gap-3 mt-4 text-sm">
+    <span class="tag bg-green-100 text-green-800">본문 내 사진 삽입</span>
+    <span class="tag bg-blue-100 text-blue-800">구조화된 정보</span>
+    <span class="tag bg-amber-100 text-amber-800">게시글 형태</span>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- OPTION A -->
+<!-- ============================================ -->
+<div class="option-card bg-white rounded-2xl border border-gray-200 p-6 md:p-8 mb-8" id="optA">
+  <div class="flex items-start justify-between mb-6">
+    <div>
+      <div class="flex items-center gap-3 mb-2">
+        <span class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-lg">A</span>
+        <div>
+          <h2 class="text-xl font-bold text-gray-900">클래식 게시판형</h2>
+          <p class="text-sm text-gray-500">네이버 카페 / 디시인사이드 스타일</p>
+        </div>
+      </div>
+    </div>
+    <span class="tag bg-blue-50 text-blue-700">전통적 · 익숙함</span>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- List View -->
+    <div>
+      <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+        <span class="w-5 h-5 bg-gray-200 rounded flex items-center justify-center text-xs">1</span>
+        목록 (테이블형)
+      </h3>
+      <div class="wire-solid p-4 text-xs">
+        <!-- Table Header -->
+        <div class="grid grid-cols-12 gap-1 pb-2 border-b border-gray-200 text-gray-500 font-bold">
+          <div class="col-span-1 text-center">#</div>
+          <div class="col-span-5">제목</div>
+          <div class="col-span-2">업체</div>
+          <div class="col-span-1 text-center">★</div>
+          <div class="col-span-1 text-center">날짜</div>
+          <div class="col-span-1 text-center">조회</div>
+          <div class="col-span-1 text-center">추천</div>
+        </div>
+        <!-- Rows -->
+        <div class="divide-y divide-gray-100">
+          <div class="grid grid-cols-12 gap-1 py-2.5 items-center hover:bg-blue-50 rounded">
+            <div class="col-span-1 text-center text-gray-400">1</div>
+            <div class="col-span-5">
+              <span class="font-medium text-gray-900">한솔인테리어 전체시공 후기</span>
+              <span class="text-blue-500 ml-1">[3]</span>
+              <span class="ml-1 text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded">NEW</span>
+            </div>
+            <div class="col-span-2 text-gray-600">한솔인테리어</div>
+            <div class="col-span-1 text-center text-amber-500">★5</div>
+            <div class="col-span-1 text-center text-gray-400">01.05</div>
+            <div class="col-span-1 text-center text-gray-400">234</div>
+            <div class="col-span-1 text-center text-gray-400">12</div>
+          </div>
+          <div class="grid grid-cols-12 gap-1 py-2.5 items-center">
+            <div class="col-span-1 text-center text-gray-400">2</div>
+            <div class="col-span-5">
+              <span class="text-gray-800">강남 아파트 욕실리모델링 후기</span>
+              <span class="text-blue-500 ml-1">[1]</span>
+            </div>
+            <div class="col-span-2 text-gray-600">대림바스</div>
+            <div class="col-span-1 text-center text-amber-500">★4</div>
+            <div class="col-span-1 text-center text-gray-400">01.03</div>
+            <div class="col-span-1 text-center text-gray-400">89</div>
+            <div class="col-span-1 text-center text-gray-400">5</div>
+          </div>
+          <div class="grid grid-cols-12 gap-1 py-2.5 items-center">
+            <div class="col-span-1 text-center text-gray-400">3</div>
+            <div class="col-span-5">
+              <span class="text-gray-800">도배+장판 교체 후기입니다</span>
+            </div>
+            <div class="col-span-2 text-gray-600">미래홈</div>
+            <div class="col-span-1 text-center text-amber-500">★3</div>
+            <div class="col-span-1 text-center text-gray-400">12.28</div>
+            <div class="col-span-1 text-center text-gray-400">45</div>
+            <div class="col-span-1 text-center text-gray-400">2</div>
+          </div>
+        </div>
+        <!-- Write Button -->
+        <div class="mt-3 pt-3 border-t border-gray-200 flex justify-end">
+          <div class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold">글쓰기</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail View -->
+    <div>
+      <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+        <span class="w-5 h-5 bg-gray-200 rounded flex items-center justify-center text-xs">2</span>
+        상세 (게시글 뷰)
+      </h3>
+      <div class="wire-solid p-4 text-xs space-y-3">
+        <!-- Title Area -->
+        <div class="pb-3 border-b border-gray-200">
+          <div class="text-base font-bold text-gray-900 mb-1">한솔인테리어 전체시공 후기</div>
+          <div class="flex items-center gap-3 text-gray-400">
+            <span>작성자</span>
+            <span>2026.01.05</span>
+            <span>조회 234</span>
+            <span>추천 12</span>
+          </div>
+        </div>
+        <!-- Company Info Box -->
+        <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+          <div class="grid grid-cols-2 gap-2 text-gray-600">
+            <div><span class="text-gray-400">업체:</span> 한솔인테리어</div>
+            <div><span class="text-gray-400">평점:</span> ★★★★★</div>
+            <div><span class="text-gray-400">지역:</span> 서울 강남</div>
+            <div><span class="text-gray-400">시공:</span> 전체 리모델링</div>
+          </div>
+        </div>
+        <!-- Body with inline images -->
+        <div class="space-y-2">
+          <div class="wire-text wire-text-long"></div>
+          <div class="wire-text wire-text-med"></div>
+          <div class="wire-text wire-text-long"></div>
+          <div class="wire-img h-24 my-2">📷 시공 전 사진</div>
+          <div class="wire-text wire-text-long"></div>
+          <div class="wire-text wire-text-med"></div>
+          <div class="wire-img h-24 my-2">📷 시공 후 사진</div>
+          <div class="wire-text wire-text-long"></div>
+        </div>
+        <!-- Actions -->
+        <div class="flex items-center justify-center gap-2 pt-3 border-t border-gray-200">
+          <div class="border border-blue-300 text-blue-600 px-4 py-1.5 rounded-lg text-xs font-bold">👍 추천 12</div>
+          <div class="border border-gray-300 text-gray-600 px-4 py-1.5 rounded-lg text-xs font-bold">🚨 신고</div>
+        </div>
+        <!-- Comments -->
+        <div class="pt-3 border-t border-gray-200">
+          <div class="font-bold text-gray-700 mb-2">댓글 3</div>
+          <div class="space-y-2">
+            <div class="bg-gray-50 rounded p-2"><span class="font-medium">user1</span> 좋은 후기 감사합니다</div>
+            <div class="bg-gray-50 rounded p-2"><span class="font-medium">user2</span> 비용 얼마 들었나요?</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Write View -->
+    <div>
+      <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+        <span class="w-5 h-5 bg-gray-200 rounded flex items-center justify-center text-xs">3</span>
+        작성 (에디터)
+      </h3>
+      <div class="wire-solid p-4 text-xs space-y-3">
+        <div class="font-bold text-gray-900 text-sm">후기 작성</div>
+        <!-- Structured fields -->
+        <div class="space-y-2">
+          <input class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50" placeholder="제목 입력" />
+          <div class="grid grid-cols-2 gap-2">
+            <input class="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50" placeholder="업체명" />
+            <input class="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50" placeholder="지역" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <input class="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50" placeholder="시공 유형" />
+            <div class="flex items-center gap-1 text-amber-400 text-lg px-3">★★★★★</div>
+          </div>
+        </div>
+        <!-- Text Editor with toolbar -->
+        <div class="border border-gray-300 rounded-lg overflow-hidden">
+          <div class="bg-gray-100 px-3 py-1.5 border-b border-gray-300 flex gap-2 text-gray-500">
+            <span class="font-bold">B</span>
+            <span class="italic">I</span>
+            <span>📷</span>
+            <span>🔗</span>
+            <span class="text-[10px] border border-gray-400 px-1 rounded">이미지</span>
+          </div>
+          <div class="p-3 min-h-[100px] text-gray-400">
+            본문 내용을 자유롭게 작성...<br><br>
+            <div class="wire-img h-16 my-2">📷 이미지 삽입 위치</div>
+            <br>텍스트 계속...
+          </div>
+        </div>
+        <div class="flex justify-end gap-2">
+          <div class="bg-gray-200 text-gray-600 px-4 py-1.5 rounded-lg font-bold">취소</div>
+          <div class="bg-blue-600 text-white px-4 py-1.5 rounded-lg font-bold">등록</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pros/Cons -->
+  <div class="mt-5 pt-5 border-t border-gray-100 grid grid-cols-2 gap-4 text-sm">
+    <div>
+      <span class="font-bold text-green-700">장점</span>
+      <ul class="mt-1 text-gray-600 space-y-1">
+        <li>• 한국 사용자에게 익숙한 게시판 UX</li>
+        <li>• 목록에서 많은 글을 빠르게 스캔 가능</li>
+        <li>• 댓글, 추천 등 커뮤니티 기능 자연스러움</li>
+      </ul>
+    </div>
+    <div>
+      <span class="font-bold text-red-600">단점</span>
+      <ul class="mt-1 text-gray-600 space-y-1">
+        <li>• 목록에서 시각적 임팩트 부족 (텍스트 위주)</li>
+        <li>• 모바일에서 테이블 레이아웃 대응 필요</li>
+        <li>• 사진/평점 등 리뷰 특화 정보가 묻힘</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- OPTION B -->
+<!-- ============================================ -->
+<div class="option-card bg-white rounded-2xl border border-gray-200 p-6 md:p-8 mb-8 selected" id="optB">
+  <div class="flex items-start justify-between mb-6">
+    <div>
+      <div class="flex items-center gap-3 mb-2">
+        <span class="w-10 h-10 bg-green-700 text-white rounded-xl flex items-center justify-center font-bold text-lg">B</span>
+        <div>
+          <h2 class="text-xl font-bold text-gray-900">구조화 리뷰 + Before/After 비교형</h2>
+          <p class="text-sm text-gray-500">오늘의집 스타일 + 시공 전/후 나란히 비교 (추천)</p>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-col items-end gap-1">
+      <span class="tag bg-green-50 text-green-700">리뷰 특화 · 정보 구조화</span>
+      <span class="tag bg-teal-50 text-teal-700">Before/After 비교 뷰</span>
+    </div>
+  </div>
+
+  <!-- B Style Key Feature Highlight -->
+  <div class="bg-gradient-to-r from-green-50 to-teal-50 border border-green-200 rounded-xl p-4 mb-6">
+    <div class="flex items-start gap-3">
+      <span class="text-2xl">🔄</span>
+      <div>
+        <div class="font-bold text-green-800 mb-1">핵심 차별점: Before/After 자동 비교</div>
+        <ul class="text-sm text-green-700 space-y-1">
+          <li>• 사진 업로드 시 <strong>"시공 전" / "시공 후"</strong> 체크하여 분류</li>
+          <li>• 상세 페이지에서 Before | After 사진이 <strong>나란히 자동 배치</strong></li>
+          <li>• 방문자가 시공 전후를 한눈에 비교 → <strong>후기 신뢰도 상승</strong></li>
+          <li>• 목록 썸네일에 <strong>전/후 스플릿 프리뷰</strong>로 시각적 임팩트</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- List View -->
+    <div>
+      <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+        <span class="w-5 h-5 bg-gray-200 rounded flex items-center justify-center text-xs">1</span>
+        목록 (Before/After 스플릿 썸네일)
+      </h3>
+      <div class="wire-solid overflow-hidden text-xs">
+        <!-- Header -->
+        <div class="bg-gray-50 px-4 py-2.5 border-b border-gray-200 flex justify-between items-center">
+          <span class="font-bold text-gray-700">업체 후기 <span class="text-green-600">128</span></span>
+          <div class="flex gap-1">
+            <span class="text-gray-400 px-2 py-0.5 rounded bg-white border border-gray-200">최신순</span>
+            <span class="text-gray-400 px-2 py-0.5 rounded bg-white border border-gray-200">평점순</span>
+          </div>
+        </div>
+        <!-- Row 1: With Before/After split thumbnail -->
+        <div class="divide-y divide-gray-100">
+          <div class="p-4 flex gap-3 hover:bg-green-50 cursor-pointer">
+            <!-- Split thumbnail: Before|After -->
+            <div class="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 relative">
+              <div class="absolute inset-0 grid grid-cols-2">
+                <div class="bg-gray-300 flex items-center justify-center text-[8px] text-gray-600 border-r border-white/50">Before</div>
+                <div class="bg-teal-200 flex items-center justify-center text-[8px] text-teal-700">After</div>
+              </div>
+              <div class="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[7px] text-center py-0.5">전/후 3장</div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-bold text-gray-900 truncate">한솔인테리어 전체시공 후기</span>
+                <span class="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold flex-shrink-0">★ 5.0</span>
+              </div>
+              <div class="text-gray-700 line-clamp-1 mb-1">깔끔하게 잘 해주셨습니다. 특히 화장실 시공이...</div>
+              <div class="flex items-center gap-2 text-gray-400 text-[10px]">
+                <span class="bg-teal-50 text-teal-600 px-1 rounded">📷 전/후 비교</span>
+                <span>·</span>
+                <span>서울 강남</span>
+                <span>·</span>
+                <span>전체 리모델링</span>
+                <span>·</span>
+                <span>3일 전</span>
+              </div>
+            </div>
+          </div>
+          <!-- Row 2: With normal thumbnail -->
+          <div class="p-4 flex gap-3">
+            <div class="wire-img w-16 h-16 flex-shrink-0 rounded-lg text-[10px]">📷</div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-bold text-gray-900 truncate">욕실 리모델링 2주 완료</span>
+                <span class="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold flex-shrink-0">★ 4.0</span>
+              </div>
+              <div class="text-gray-700 line-clamp-1 mb-1">비용 대비 만족스러운 결과였습니다...</div>
+              <div class="flex items-center gap-2 text-gray-400 text-[10px]">
+                <span>경기 분당</span>
+                <span>·</span>
+                <span>욕실</span>
+                <span>·</span>
+                <span>5일 전</span>
+                <span>·</span>
+                <span>조회 89</span>
+              </div>
+            </div>
+          </div>
+          <!-- Row 3: No image -->
+          <div class="p-4 flex gap-3">
+            <div class="w-16 h-16 flex-shrink-0 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-[10px]">No img</div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-bold text-gray-900 truncate">도배+장판 교체 후기</span>
+                <span class="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold flex-shrink-0">★ 3.0</span>
+              </div>
+              <div class="text-gray-700 line-clamp-1 mb-1">가격은 저렴했지만 마감이 아쉬웠어요</div>
+              <div class="flex items-center gap-2 text-gray-400 text-[10px]">
+                <span>인천</span>
+                <span>·</span>
+                <span>도배/장판</span>
+                <span>·</span>
+                <span>1주 전</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="p-3 border-t border-gray-200 flex justify-end">
+          <div class="bg-green-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold">후기 작성</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail View -->
+    <div>
+      <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+        <span class="w-5 h-5 bg-gray-200 rounded flex items-center justify-center text-xs">2</span>
+        상세 (Before/After 비교 뷰)
+      </h3>
+      <div class="wire-solid p-4 text-xs space-y-3">
+        <!-- Title + Meta -->
+        <div>
+          <div class="text-base font-bold text-gray-900 mb-1">한솔인테리어 전체시공 후기</div>
+          <div class="text-gray-400 text-[10px]">작성자 · 2026.01.05 · 조회 234</div>
+        </div>
+        <!-- Structured Info Card -->
+        <div class="bg-green-50 rounded-xl p-3 border border-green-200">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-bold text-green-800">업체 정보</span>
+            <span class="text-amber-500 font-bold">★★★★★ 5.0</span>
+          </div>
+          <div class="grid grid-cols-2 gap-1.5 text-green-900">
+            <div>📍 서울 강남</div>
+            <div>🔨 전체 리모델링</div>
+            <div>📐 32평 (105m²)</div>
+            <div>💰 4,500만원</div>
+          </div>
+          <!-- Sub Ratings -->
+          <div class="grid grid-cols-4 gap-2 mt-2 pt-2 border-t border-green-200 text-center">
+            <div><div class="text-green-700 font-bold">5.0</div><div class="text-[9px] text-green-600">시공품질</div></div>
+            <div><div class="text-green-700 font-bold">4.5</div><div class="text-[9px] text-green-600">가격</div></div>
+            <div><div class="text-green-700 font-bold">5.0</div><div class="text-[9px] text-green-600">소통</div></div>
+            <div><div class="text-green-700 font-bold">4.0</div><div class="text-[9px] text-green-600">일정</div></div>
+          </div>
+        </div>
+
+        <!-- ★ Before/After Comparison Gallery -->
+        <div class="border border-teal-200 rounded-xl overflow-hidden">
+          <div class="bg-teal-50 px-3 py-2 border-b border-teal-200">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-teal-800">🔄 시공 전/후 비교</span>
+              <div class="flex gap-1">
+                <span class="bg-white text-teal-700 text-[9px] px-2 py-0.5 rounded-full border border-teal-200 font-bold">Before</span>
+                <span class="bg-white text-teal-700 text-[9px] px-2 py-0.5 rounded-full border border-teal-200">After</span>
+                <span class="bg-teal-600 text-white text-[9px] px-2 py-0.5 rounded-full font-bold">비교</span>
+              </div>
+            </div>
+          </div>
+          <!-- Comparison Pairs: side by side -->
+          <div class="p-3 space-y-2">
+            <!-- Pair 1: 거실 -->
+            <div class="grid grid-cols-2 gap-1.5">
+              <div class="relative">
+                <div class="wire-img h-16 rounded-lg text-[9px]">📷 거실</div>
+                <span class="absolute top-1 left-1 bg-gray-700/75 text-white text-[7px] px-1.5 py-0.5 rounded-full font-bold">BEFORE</span>
+              </div>
+              <div class="relative">
+                <div class="bg-teal-100 h-16 rounded-lg flex items-center justify-center text-[9px] text-teal-700 border border-teal-200">📷 거실</div>
+                <span class="absolute top-1 left-1 bg-teal-600/85 text-white text-[7px] px-1.5 py-0.5 rounded-full font-bold">AFTER</span>
+              </div>
+            </div>
+            <!-- Pair 2: 욕실 -->
+            <div class="grid grid-cols-2 gap-1.5">
+              <div class="relative">
+                <div class="wire-img h-16 rounded-lg text-[9px]">📷 욕실</div>
+                <span class="absolute top-1 left-1 bg-gray-700/75 text-white text-[7px] px-1.5 py-0.5 rounded-full font-bold">BEFORE</span>
+              </div>
+              <div class="relative">
+                <div class="bg-teal-100 h-16 rounded-lg flex items-center justify-center text-[9px] text-teal-700 border border-teal-200">📷 욕실</div>
+                <span class="absolute top-1 left-1 bg-teal-600/85 text-white text-[7px] px-1.5 py-0.5 rounded-full font-bold">AFTER</span>
+              </div>
+            </div>
+            <!-- Pair 3: 주방 -->
+            <div class="grid grid-cols-2 gap-1.5">
+              <div class="relative">
+                <div class="wire-img h-16 rounded-lg text-[9px]">📷 주방</div>
+                <span class="absolute top-1 left-1 bg-gray-700/75 text-white text-[7px] px-1.5 py-0.5 rounded-full font-bold">BEFORE</span>
+              </div>
+              <div class="relative">
+                <div class="bg-teal-100 h-16 rounded-lg flex items-center justify-center text-[9px] text-teal-700 border border-teal-200">📷 주방</div>
+                <span class="absolute top-1 left-1 bg-teal-600/85 text-white text-[7px] px-1.5 py-0.5 rounded-full font-bold">AFTER</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Body text (separate from comparison) -->
+        <div class="space-y-2">
+          <div class="font-bold text-gray-800">📝 상세 후기</div>
+          <div class="wire-text wire-text-long"></div>
+          <div class="wire-text wire-text-med"></div>
+          <div class="wire-text wire-text-long"></div>
+          <div class="wire-text wire-text-med"></div>
+        </div>
+        <!-- Actions + Comments -->
+        <div class="flex items-center gap-2 pt-2 border-t border-gray-200">
+          <div class="border border-green-300 text-green-700 px-3 py-1 rounded-lg font-bold">👍 12</div>
+          <div class="border border-gray-200 text-gray-500 px-3 py-1 rounded-lg font-bold">💬 3</div>
+          <div class="border border-gray-200 text-gray-500 px-3 py-1 rounded-lg font-bold">📤</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Write View -->
+    <div>
+      <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+        <span class="w-5 h-5 bg-gray-200 rounded flex items-center justify-center text-xs">3</span>
+        작성 (Before/After 업로드 + 에디터)
+      </h3>
+      <div class="wire-solid p-4 text-xs space-y-3">
+        <!-- Step indicator -->
+        <div class="flex items-center gap-2 text-[10px]">
+          <span class="bg-green-700 text-white w-5 h-5 rounded-full flex items-center justify-center font-bold">1</span>
+          <span class="text-green-700 font-bold">업체 정보</span>
+          <div class="flex-1 h-px bg-gray-200"></div>
+          <span class="bg-gray-300 text-white w-5 h-5 rounded-full flex items-center justify-center font-bold">2</span>
+          <span class="text-gray-400">평점</span>
+          <div class="flex-1 h-px bg-gray-200"></div>
+          <span class="bg-gray-300 text-white w-5 h-5 rounded-full flex items-center justify-center font-bold">3</span>
+          <span class="text-gray-400">사진 & 후기</span>
+        </div>
+        <!-- Step 1: Company Info -->
+        <div class="space-y-2">
+          <input class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50" placeholder="업체명 *" />
+          <div class="grid grid-cols-2 gap-2">
+            <input class="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50" placeholder="지역" />
+            <input class="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50" placeholder="시공 유형" />
+          </div>
+        </div>
+        <!-- Step 2: Ratings -->
+        <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+          <div class="font-bold text-gray-700 mb-2">평점</div>
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between"><span class="text-gray-600">종합</span><span class="text-amber-400">★★★★★</span></div>
+            <div class="flex items-center justify-between"><span class="text-gray-400">시공품질</span><span class="text-amber-400">★★★★☆</span></div>
+            <div class="flex items-center justify-between"><span class="text-gray-400">가격만족</span><span class="text-amber-400">★★★★★</span></div>
+          </div>
+        </div>
+
+        <!-- ★ Step 3: Before/After Photo Upload -->
+        <div>
+          <div class="font-bold text-gray-700 mb-2">📷 시공 전/후 사진</div>
+          <div class="text-[10px] text-gray-400 mb-2">전/후 사진을 올리면 방문자에게 나란히 비교 표시됩니다</div>
+          <!-- Before Upload Zone -->
+          <div class="border-2 border-dashed border-gray-300 rounded-lg p-2.5 mb-2 hover:border-gray-400 transition-colors">
+            <div class="flex items-center gap-2 mb-1.5">
+              <span class="bg-gray-700 text-white text-[8px] px-2 py-0.5 rounded-full font-bold">BEFORE</span>
+              <span class="text-gray-500">시공 전 사진</span>
+            </div>
+            <div class="grid grid-cols-3 gap-1.5">
+              <div class="wire-img aspect-square rounded text-[8px]">📷</div>
+              <div class="wire-img aspect-square rounded text-[8px]">📷</div>
+              <div class="aspect-square rounded border border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-lg">+</div>
+            </div>
+          </div>
+          <!-- After Upload Zone -->
+          <div class="border-2 border-dashed border-teal-300 rounded-lg p-2.5 hover:border-teal-400 transition-colors bg-teal-50/30">
+            <div class="flex items-center gap-2 mb-1.5">
+              <span class="bg-teal-600 text-white text-[8px] px-2 py-0.5 rounded-full font-bold">AFTER</span>
+              <span class="text-teal-700">시공 후 사진</span>
+            </div>
+            <div class="grid grid-cols-3 gap-1.5">
+              <div class="bg-teal-100 aspect-square rounded flex items-center justify-center text-[8px] text-teal-600 border border-teal-200">📷</div>
+              <div class="aspect-square rounded border border-dashed border-teal-300 flex items-center justify-center text-teal-400 text-lg">+</div>
+              <div></div>
+            </div>
+          </div>
+          <!-- Auto-pair hint -->
+          <div class="bg-teal-50 rounded-lg p-2 mt-2 border border-teal-100 flex items-center gap-2">
+            <span class="text-teal-600">💡</span>
+            <span class="text-[10px] text-teal-700">같은 순서대로 매칭됩니다 (Before 1번 ↔ After 1번)</span>
+          </div>
+        </div>
+
+        <!-- Rich Editor for body text -->
+        <div>
+          <div class="font-bold text-gray-700 mb-2">상세 후기</div>
+          <input class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 mb-2" placeholder="제목 *" />
+          <div class="border border-gray-300 rounded-lg overflow-hidden">
+            <div class="bg-gray-100 px-3 py-1.5 border-b border-gray-300 flex gap-3 text-gray-500">
+              <span class="font-bold">B</span>
+              <span class="italic">I</span>
+              <span>📷 추가 사진</span>
+            </div>
+            <div class="p-3 min-h-[40px] text-gray-400">
+              본문을 자유롭게 작성...
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end">
+          <div class="bg-green-700 text-white px-5 py-1.5 rounded-lg font-bold">등록</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-5 pt-5 border-t border-gray-100 grid grid-cols-2 gap-4 text-sm">
+    <div>
+      <span class="font-bold text-green-700">장점</span>
+      <ul class="mt-1 text-gray-600 space-y-1">
+        <li>• <strong>Before/After 나란히 비교</strong>로 시공 결과 한눈에 파악</li>
+        <li>• 목록 썸네일에 전/후 스플릿으로 클릭 유도 높음</li>
+        <li>• 리뷰에 최적화된 구조 (업체정보 + 평점 + 비교사진 + 본문)</li>
+        <li>• 정보가 체계적으로 정리되어 업체 비교 용이</li>
+        <li>• 모바일 대응 자연스러움 (세로 스택)</li>
+        <li>• 이미 구현된 BeforeAfterGallery 컴포넌트 활용 가능</li>
+      </ul>
+    </div>
+    <div>
+      <span class="font-bold text-red-600">단점</span>
+      <ul class="mt-1 text-gray-600 space-y-1">
+        <li>• 작성 스텝이 다소 많음 (3단계)</li>
+        <li>• Before/After 사진을 따로 올려야 하는 추가 노력</li>
+        <li>• 전/후 사진이 없는 경우 일반 갤러리로 폴백 필요</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- OPTION C -->
+<!-- ============================================ -->
+<div class="option-card bg-white rounded-2xl border border-gray-200 p-6 md:p-8 mb-8" id="optC">
+  <div class="flex items-start justify-between mb-6">
+    <div>
+      <div class="flex items-center gap-3 mb-2">
+        <span class="w-10 h-10 bg-purple-600 text-white rounded-xl flex items-center justify-center font-bold text-lg">C</span>
+        <div>
+          <h2 class="text-xl font-bold text-gray-900">블로그 아티클형</h2>
+          <p class="text-sm text-gray-500">브런치 / Medium 스타일</p>
+        </div>
+      </div>
+    </div>
+    <span class="tag bg-purple-50 text-purple-700">자유로운 · 풍부한 콘텐츠</span>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- List View -->
+    <div>
+      <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+        <span class="w-5 h-5 bg-gray-200 rounded flex items-center justify-center text-xs">1</span>
+        목록 (아티클 피드)
+      </h3>
+      <div class="wire-solid overflow-hidden text-xs space-y-0 divide-y divide-gray-100">
+        <!-- Article item 1 -->
+        <div class="p-4 hover:bg-purple-50 cursor-pointer">
+          <div class="flex items-center gap-2 mb-2 text-[10px] text-gray-400">
+            <div class="w-5 h-5 rounded-full bg-gray-200"></div>
+            <span class="text-gray-600 font-medium">김*진</span>
+            <span>·</span>
+            <span>3일 전</span>
+          </div>
+          <div class="flex gap-3">
+            <div class="flex-1">
+              <div class="font-bold text-gray-900 mb-1">30평 아파트 전체 리모델링, 4개월의 기록</div>
+              <div class="text-gray-600 line-clamp-2 leading-relaxed">처음 인테리어를 시작할 때 가장 고민이 되었던 건 업체 선정이었습니다. 여러 곳을 비교하다가...</div>
+              <div class="flex items-center gap-2 mt-2">
+                <span class="tag bg-green-50 text-green-700 text-[10px]">한솔인테리어</span>
+                <span class="tag bg-amber-50 text-amber-700 text-[10px]">★ 5.0</span>
+              </div>
+            </div>
+            <div class="wire-img w-20 h-20 flex-shrink-0 rounded-lg text-[10px]">📷</div>
+          </div>
+        </div>
+        <!-- Article item 2 -->
+        <div class="p-4">
+          <div class="flex items-center gap-2 mb-2 text-[10px] text-gray-400">
+            <div class="w-5 h-5 rounded-full bg-gray-200"></div>
+            <span class="text-gray-600 font-medium">이*수</span>
+            <span>·</span>
+            <span>5일 전</span>
+          </div>
+          <div class="flex gap-3">
+            <div class="flex-1">
+              <div class="font-bold text-gray-900 mb-1">욕실 리모델링 후기 - 대림바스 선택한 이유</div>
+              <div class="text-gray-600 line-clamp-2 leading-relaxed">아파트 입주 10년차, 드디어 욕실 리모델링을 결심했습니다...</div>
+              <div class="flex items-center gap-2 mt-2">
+                <span class="tag bg-green-50 text-green-700 text-[10px]">대림바스</span>
+                <span class="tag bg-amber-50 text-amber-700 text-[10px]">★ 4.0</span>
+              </div>
+            </div>
+            <div class="wire-img w-20 h-20 flex-shrink-0 rounded-lg text-[10px]">📷</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail View -->
+    <div>
+      <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+        <span class="w-5 h-5 bg-gray-200 rounded flex items-center justify-center text-xs">2</span>
+        상세 (풀 아티클)
+      </h3>
+      <div class="wire-solid p-4 text-xs space-y-3">
+        <!-- Hero Image -->
+        <div class="wire-img h-28 -mx-4 -mt-4 rounded-t-lg rounded-b-none text-sm">📷 대표 이미지</div>
+        <!-- Title -->
+        <div class="text-lg font-bold text-gray-900 leading-tight">30평 아파트 전체 리모델링, 4개월의 기록</div>
+        <div class="flex items-center gap-3 text-gray-400 text-[10px] pb-2 border-b border-gray-100">
+          <div class="w-6 h-6 rounded-full bg-gray-200"></div>
+          <span>김*진</span>
+          <span>2026.01.05</span>
+          <span>조회 234</span>
+        </div>
+        <!-- Company tag -->
+        <div class="flex gap-2">
+          <span class="tag bg-green-50 text-green-700 border border-green-200">한솔인테리어 · ★5.0</span>
+          <span class="tag bg-gray-100 text-gray-600">서울 강남 · 32평</span>
+        </div>
+        <!-- Article body -->
+        <div class="space-y-2 text-gray-700 leading-relaxed">
+          <div class="wire-text wire-text-long"></div>
+          <div class="wire-text wire-text-long"></div>
+          <div class="wire-text wire-text-med"></div>
+          <p class="font-bold text-gray-800 mt-3">시공 과정</p>
+          <div class="wire-text wire-text-long"></div>
+          <div class="wire-img h-20 my-1">📷 시공 중 사진</div>
+          <div class="wire-text wire-text-long"></div>
+          <div class="wire-text wire-text-med"></div>
+          <div class="wire-img h-20 my-1">📷 완성 사진</div>
+          <div class="wire-text wire-text-long"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Write View -->
+    <div>
+      <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+        <span class="w-5 h-5 bg-gray-200 rounded flex items-center justify-center text-xs">3</span>
+        작성 (WYSIWYG)
+      </h3>
+      <div class="wire-solid p-4 text-xs space-y-3">
+        <!-- Minimal top fields -->
+        <div class="grid grid-cols-2 gap-2">
+          <input class="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50" placeholder="업체명 *" />
+          <div class="flex items-center gap-1 text-amber-400 text-lg px-3">★★★★☆</div>
+        </div>
+        <!-- Full WYSIWYG -->
+        <div class="border border-gray-300 rounded-lg overflow-hidden">
+          <div class="bg-gray-100 px-3 py-2 border-b border-gray-300 flex flex-wrap gap-2 text-gray-500">
+            <span class="font-bold px-1">H1</span>
+            <span class="font-bold px-1">H2</span>
+            <span class="font-bold">B</span>
+            <span class="italic">I</span>
+            <span>—</span>
+            <span>📷</span>
+            <span>🔗</span>
+            <span>「」</span>
+          </div>
+          <div class="p-4 min-h-[150px]">
+            <div class="text-xl font-bold text-gray-900 mb-3">제목을 입력하세요</div>
+            <div class="text-gray-400 leading-relaxed">
+              자유롭게 글을 작성하세요...<br><br>
+              사진은 본문 어디든 삽입 가능합니다.<br><br>
+              <div class="wire-img h-16 my-2 w-3/4">📷 드래그&드롭</div>
+              <br>글 계속 작성...
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end">
+          <div class="bg-purple-600 text-white px-5 py-1.5 rounded-lg font-bold">발행</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-5 pt-5 border-t border-gray-100 grid grid-cols-2 gap-4 text-sm">
+    <div>
+      <span class="font-bold text-green-700">장점</span>
+      <ul class="mt-1 text-gray-600 space-y-1">
+        <li>• 가장 자유로운 콘텐츠 작성 (WYSIWYG)</li>
+        <li>• 사진+텍스트 혼합이 자연스러움</li>
+        <li>• 읽는 경험이 좋음 (스토리텔링)</li>
+      </ul>
+    </div>
+    <div>
+      <span class="font-bold text-red-600">단점</span>
+      <ul class="mt-1 text-gray-600 space-y-1">
+        <li>• WYSIWYG 에디터 구현 복잡 (TipTap 등 필요)</li>
+        <li>• 구조화된 정보 수집이 어려움</li>
+        <li>• 업체 비교가 어려움 (자유 양식이므로)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- OPTION D -->
+<!-- ============================================ -->
+<div class="option-card bg-white rounded-2xl border border-gray-200 p-6 md:p-8 mb-8" id="optD">
+  <div class="flex items-start justify-between mb-6">
+    <div>
+      <div class="flex items-center gap-3 mb-2">
+        <span class="w-10 h-10 bg-orange-500 text-white rounded-xl flex items-center justify-center font-bold text-lg">D</span>
+        <div>
+          <h2 class="text-xl font-bold text-gray-900">하이브리드형 (A+B 결합)</h2>
+          <p class="text-sm text-gray-500">게시판 목록 + 구조화 상세</p>
+        </div>
+      </div>
+    </div>
+    <span class="tag bg-orange-50 text-orange-700">균형잡힌 · 실용적</span>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- List View -->
+    <div>
+      <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+        <span class="w-5 h-5 bg-gray-200 rounded flex items-center justify-center text-xs">1</span>
+        목록 (게시판 + 미니 정보)
+      </h3>
+      <div class="wire-solid overflow-hidden text-xs">
+        <div class="bg-gray-50 px-4 py-2.5 border-b border-gray-200 flex justify-between items-center">
+          <span class="font-bold text-gray-700">업체 후기</span>
+          <div class="bg-orange-500 text-white px-3 py-1 rounded-lg font-bold text-[10px]">후기 작성</div>
+        </div>
+        <!-- Compact board rows with key info -->
+        <div class="divide-y divide-gray-100">
+          <div class="px-4 py-3 hover:bg-orange-50 cursor-pointer">
+            <div class="flex items-center justify-between mb-1">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-gray-900">한솔인테리어 전체시공 후기</span>
+                <span class="text-amber-500 text-[10px] font-bold">★5.0</span>
+              </div>
+              <span class="text-gray-400 text-[10px]">3일 전</span>
+            </div>
+            <div class="flex items-center gap-3 text-[10px]">
+              <span class="bg-green-50 text-green-700 px-1.5 py-0.5 rounded font-medium">서울 강남</span>
+              <span class="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-medium">전체 리모델링</span>
+              <span class="text-gray-400">조회 234</span>
+              <span class="text-gray-400">댓글 3</span>
+              <span class="text-gray-400">📷 5</span>
+            </div>
+          </div>
+          <div class="px-4 py-3">
+            <div class="flex items-center justify-between mb-1">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-gray-900">욕실 리모델링 2주 완료</span>
+                <span class="text-amber-500 text-[10px] font-bold">★4.0</span>
+              </div>
+              <span class="text-gray-400 text-[10px]">5일 전</span>
+            </div>
+            <div class="flex items-center gap-3 text-[10px]">
+              <span class="bg-green-50 text-green-700 px-1.5 py-0.5 rounded font-medium">경기 분당</span>
+              <span class="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-medium">욕실</span>
+              <span class="text-gray-400">조회 89</span>
+              <span class="text-gray-400">댓글 1</span>
+            </div>
+          </div>
+          <div class="px-4 py-3">
+            <div class="flex items-center justify-between mb-1">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-gray-900">도배+장판 교체 후기</span>
+                <span class="text-amber-500 text-[10px] font-bold">★3.0</span>
+              </div>
+              <span class="text-gray-400 text-[10px]">1주 전</span>
+            </div>
+            <div class="flex items-center gap-3 text-[10px]">
+              <span class="bg-green-50 text-green-700 px-1.5 py-0.5 rounded font-medium">인천</span>
+              <span class="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-medium">도배/장판</span>
+              <span class="text-gray-400">조회 45</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail View (same as B) -->
+    <div>
+      <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+        <span class="w-5 h-5 bg-gray-200 rounded flex items-center justify-center text-xs">2</span>
+        상세 (B안과 동일 구조)
+      </h3>
+      <div class="wire-solid p-4 text-xs space-y-3">
+        <div class="text-base font-bold text-gray-900">한솔인테리어 전체시공 후기</div>
+        <div class="text-gray-400 text-[10px]">작성자 · 2026.01.05 · 조회 234</div>
+        <!-- Structured Card -->
+        <div class="bg-orange-50 rounded-xl p-3 border border-orange-200">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-bold text-orange-800">업체 정보</span>
+            <span class="text-amber-500 font-bold">★★★★★</span>
+          </div>
+          <div class="grid grid-cols-2 gap-1.5 text-orange-900 text-[11px]">
+            <div>📍 서울 강남</div>
+            <div>🔨 전체 리모델링</div>
+            <div>📐 32평</div>
+            <div>💰 4,500만원</div>
+          </div>
+        </div>
+        <!-- Body -->
+        <div class="space-y-2">
+          <div class="wire-text wire-text-long"></div>
+          <div class="wire-text wire-text-med"></div>
+          <div class="wire-img h-20 my-1">📷 사진</div>
+          <div class="wire-text wire-text-long"></div>
+          <div class="wire-img h-20 my-1">📷 사진</div>
+          <div class="wire-text wire-text-long"></div>
+        </div>
+        <div class="flex items-center gap-2 pt-2 border-t border-gray-200">
+          <div class="border border-orange-300 text-orange-700 px-3 py-1 rounded-lg font-bold">👍 12</div>
+          <div class="border border-gray-200 text-gray-500 px-3 py-1 rounded-lg font-bold">💬 3</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Write View -->
+    <div>
+      <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+        <span class="w-5 h-5 bg-gray-200 rounded flex items-center justify-center text-xs">3</span>
+        작성 (단일 페이지 폼)
+      </h3>
+      <div class="wire-solid p-4 text-xs space-y-3">
+        <div class="font-bold text-gray-900 text-sm">후기 작성</div>
+        <!-- All in one page -->
+        <input class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50" placeholder="제목 *" />
+        <div class="grid grid-cols-2 gap-2">
+          <input class="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50" placeholder="업체명 *" />
+          <input class="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50" placeholder="지역" />
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <input class="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50" placeholder="시공유형" />
+          <input class="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50" placeholder="면적(평)" />
+          <input class="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50" placeholder="비용(만원)" />
+        </div>
+        <!-- Rating inline -->
+        <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 flex items-center justify-between">
+          <span class="font-medium text-gray-700">종합 평점</span>
+          <span class="text-amber-400 text-lg">★★★★★</span>
+        </div>
+        <!-- Editor -->
+        <div class="border border-gray-300 rounded-lg overflow-hidden">
+          <div class="bg-gray-100 px-3 py-1.5 border-b border-gray-300 flex gap-2 text-gray-500">
+            <span class="font-bold">B</span>
+            <span class="italic">I</span>
+            <span>📷 사진</span>
+          </div>
+          <div class="p-3 min-h-[80px] text-gray-400">
+            후기 내용...<br>
+            <div class="wire-img h-14 my-2 w-3/4 text-[10px]">📷</div>
+          </div>
+        </div>
+        <div class="flex justify-end">
+          <div class="bg-orange-500 text-white px-5 py-1.5 rounded-lg font-bold">등록</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-5 pt-5 border-t border-gray-100 grid grid-cols-2 gap-4 text-sm">
+    <div>
+      <span class="font-bold text-green-700">장점</span>
+      <ul class="mt-1 text-gray-600 space-y-1">
+        <li>• 게시판 목록의 스캔성 + 구조화된 상세 정보</li>
+        <li>• 작성 폼이 한 페이지로 간결</li>
+        <li>• 현재 코드에서 변경 최소 (기존 구조 활용)</li>
+        <li>• 모바일 대응 용이</li>
+      </ul>
+    </div>
+    <div>
+      <span class="font-bold text-red-600">단점</span>
+      <ul class="mt-1 text-gray-600 space-y-1">
+        <li>• 목록에 이미지 미노출 (텍스트 위주)</li>
+        <li>• A안과 B안의 절충으로 특색 부족</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- Comparison Table -->
+<!-- ============================================ -->
+<div class="bg-white rounded-2xl border border-gray-200 p-6 md:p-8 mb-8">
+  <h2 class="text-xl font-bold text-gray-900 mb-6">비교 요약</h2>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b-2 border-gray-200">
+          <th class="text-left py-3 px-2 text-gray-500 font-medium">항목</th>
+          <th class="text-center py-3 px-2"><span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg font-bold">A 클래식</span></th>
+          <th class="text-center py-3 px-2"><span class="bg-green-100 text-green-700 px-3 py-1 rounded-lg font-bold">B 구조화</span></th>
+          <th class="text-center py-3 px-2"><span class="bg-purple-100 text-purple-700 px-3 py-1 rounded-lg font-bold">C 블로그</span></th>
+          <th class="text-center py-3 px-2"><span class="bg-orange-100 text-orange-700 px-3 py-1 rounded-lg font-bold">D 하이브리드</span></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <tr>
+          <td class="py-3 px-2 font-medium text-gray-700">목록 형태</td>
+          <td class="py-3 px-2 text-center">테이블</td>
+          <td class="py-3 px-2 text-center">리스트+썸네일</td>
+          <td class="py-3 px-2 text-center">아티클 피드</td>
+          <td class="py-3 px-2 text-center">게시판 로우</td>
+        </tr>
+        <tr>
+          <td class="py-3 px-2 font-medium text-gray-700">본문 내 사진</td>
+          <td class="py-3 px-2 text-center">✅</td>
+          <td class="py-3 px-2 text-center">✅</td>
+          <td class="py-3 px-2 text-center">✅</td>
+          <td class="py-3 px-2 text-center">✅</td>
+        </tr>
+        <tr>
+          <td class="py-3 px-2 font-medium text-gray-700">정보 구조화</td>
+          <td class="py-3 px-2 text-center">⚠️ 약함</td>
+          <td class="py-3 px-2 text-center">✅ 강함</td>
+          <td class="py-3 px-2 text-center">❌ 자유양식</td>
+          <td class="py-3 px-2 text-center">✅ 강함</td>
+        </tr>
+        <tr>
+          <td class="py-3 px-2 font-medium text-gray-700">업체 비교 용이</td>
+          <td class="py-3 px-2 text-center">⚠️ 보통</td>
+          <td class="py-3 px-2 text-center">✅ 우수</td>
+          <td class="py-3 px-2 text-center">❌ 어려움</td>
+          <td class="py-3 px-2 text-center">✅ 우수</td>
+        </tr>
+        <tr>
+          <td class="py-3 px-2 font-medium text-gray-700">모바일 대응</td>
+          <td class="py-3 px-2 text-center">⚠️ 추가작업</td>
+          <td class="py-3 px-2 text-center">✅ 자연스러움</td>
+          <td class="py-3 px-2 text-center">✅ 우수</td>
+          <td class="py-3 px-2 text-center">✅ 자연스러움</td>
+        </tr>
+        <tr>
+          <td class="py-3 px-2 font-medium text-gray-700">구현 난이도</td>
+          <td class="py-3 px-2 text-center">⭐⭐</td>
+          <td class="py-3 px-2 text-center">⭐⭐⭐</td>
+          <td class="py-3 px-2 text-center">⭐⭐⭐⭐</td>
+          <td class="py-3 px-2 text-center">⭐⭐</td>
+        </tr>
+        <tr>
+          <td class="py-3 px-2 font-medium text-gray-700">에디터 필요</td>
+          <td class="py-3 px-2 text-center">간단 에디터</td>
+          <td class="py-3 px-2 text-center">간단 에디터</td>
+          <td class="py-3 px-2 text-center">WYSIWYG(TipTap)</td>
+          <td class="py-3 px-2 text-center">간단 에디터</td>
+        </tr>
+        <tr>
+          <td class="py-3 px-2 font-medium text-gray-700">기존 코드 변경</td>
+          <td class="py-3 px-2 text-center">중간</td>
+          <td class="py-3 px-2 text-center">중간</td>
+          <td class="py-3 px-2 text-center">대규모</td>
+          <td class="py-3 px-2 text-center text-green-700 font-bold">최소</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="text-center text-gray-400 text-sm py-6">
+  GOI (ZipCheck) 커뮤니티 게시판 구조 기획서 · 2026-02-04
+</div>
+
+</body>
+</html>

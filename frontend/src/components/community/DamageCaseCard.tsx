@@ -1,104 +1,118 @@
 import React from 'react'
-import { Eye, MapPin, DollarSign, CheckCircle, Clock, XCircle, ArrowRight } from 'lucide-react'
+import { Eye, CheckCircle, Clock, XCircle, ArrowRight, AlertTriangle, ShieldAlert } from 'lucide-react'
 import { DamageCase } from 'types/damageCase'
+import { getApiUrl } from '../../lib/api-config'
 
 interface DamageCaseCardProps {
 	damageCase: DamageCase
 	onClick: () => void
 }
 
+function parseImageField(field: string | string[] | null): string[] {
+	if (!field) return []
+	if (Array.isArray(field)) return field
+	try {
+		const parsed = JSON.parse(field)
+		return Array.isArray(parsed) ? parsed : []
+	} catch {
+		return []
+	}
+}
+
+function resolveImageUrl(src: string): string {
+	if (src.startsWith('http://') || src.startsWith('https://')) return src
+	return getApiUrl('/images/') + src
+}
+
+const statusConfig: Record<string, { icon: any; label: string; bg: string }> = {
+	open: { icon: XCircle, label: '미해결', bg: 'bg-red-500' },
+	in_progress: { icon: Clock, label: '진행중', bg: 'bg-amber-500' },
+	resolved: { icon: CheckCircle, label: '해결됨', bg: 'bg-green-500' },
+	closed: { icon: CheckCircle, label: '종결', bg: 'bg-gray-500' },
+}
+
+const severityConfig: Record<string, { label: string; color: string }> = {
+	critical: { label: '심각', color: 'bg-red-600' },
+	high: { label: '높음', color: 'bg-orange-500' },
+	medium: { label: '보통', color: 'bg-amber-500' },
+	low: { label: '낮음', color: 'bg-gray-400' },
+}
+
 const DamageCaseCard: React.FC<DamageCaseCardProps> = ({ damageCase, onClick }) => {
-	const getResolutionBadge = (status: string) => {
-		const badges: Record<string, { icon: any; color: string; text: string }> = {
-			unresolved: { icon: XCircle, color: 'bg-red-50 text-red-700 border-red-200', text: '미해결' },
-			in_progress: { icon: Clock, color: 'bg-amber-50 text-amber-700 border-amber-200', text: '진행중' },
-			resolved: { icon: CheckCircle, color: 'bg-green-50 text-green-700 border-green-200', text: '해결됨' }
-		}
-
-		const badge = badges[status] || badges.unresolved
-		const Icon = badge.icon
-
-		return (
-			<span className={`px-2.5 py-0.5 ${badge.color} border rounded-full text-xs font-medium flex items-center gap-1`}>
-				<Icon size={12} />
-				{badge.text}
-			</span>
-		)
-	}
-
-	const getDamageTypeColor = (type: string) => {
-		const colors: Record<string, string> = {
-			사기: 'bg-red-50 text-red-700 border-red-200',
-			부실시공: 'bg-orange-50 text-orange-700 border-orange-200',
-			계약위반: 'bg-amber-50 text-amber-700 border-amber-200',
-			추가비용: 'bg-blue-50 text-blue-700 border-blue-200',
-			기타: 'bg-sand-100 text-sand-700 border-sand-200'
-		}
-		return colors[type] || colors['기타']
-	}
+	const images = parseImageField(damageCase.images)
+	const statusInfo = statusConfig[damageCase.status] || statusConfig.open
+	const StatusIcon = statusInfo.icon
+	const severityInfo = damageCase.severity ? severityConfig[damageCase.severity] : null
 
 	return (
 		<article
 			onClick={onClick}
-			className='bg-white rounded-2xl p-6 border-l-4 border-l-red-400 border border-sand-200 hover:border-red-200 hover:shadow-md transition-all cursor-pointer group'
+			className='bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-red-400 transition-all cursor-pointer group'
 		>
-			{/* Header */}
-			<div className='flex items-start justify-between mb-3'>
-				<div className='flex-1 min-w-0'>
-					<div className='flex flex-wrap items-center gap-2 mb-1.5'>
-						<h3 className='text-lg font-bold text-sand-900 truncate group-hover:text-red-600 transition-colors'>
-							{damageCase.title}
-						</h3>
-						{getResolutionBadge(damageCase.resolution_status)}
-						{damageCase.legal_action && (
-							<span className='px-2.5 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 text-xs font-medium rounded-full'>
-								법적 조치
-							</span>
-						)}
+			{/* Thumbnail */}
+			<div className='relative aspect-[4/3] bg-red-50 overflow-hidden'>
+				{images.length > 0 ? (
+					<img
+						src={resolveImageUrl(images[0])}
+						alt={damageCase.title}
+						className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-300'
+					/>
+				) : (
+					<div className='w-full h-full flex flex-col items-center justify-center bg-red-50 text-red-300 gap-1.5'>
+						<AlertTriangle size={28} strokeWidth={1.5} />
+						<span className='text-[11px] font-medium'>증거사진 없음</span>
 					</div>
-					<div className='flex flex-wrap items-center gap-3 text-sm text-sand-500'>
-						{damageCase.company_name && (
-							<span className='font-semibold text-red-500'>{damageCase.company_name}</span>
-						)}
-						{damageCase.region && (
-							<div className='flex items-center gap-1'>
-								<MapPin size={14} className='text-sand-400' />
-								<span>{damageCase.region}</span>
-							</div>
-						)}
-						<span className='text-sand-300'>|</span>
-						<span>{new Date(damageCase.created_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}</span>
-					</div>
-				</div>
-			</div>
+				)}
 
-			{/* Damage Info */}
-			<div className='flex flex-wrap items-center gap-3 mb-3'>
-				<span className={`px-3 py-1 ${getDamageTypeColor(damageCase.damage_type)} border rounded-full text-xs font-semibold`}>
-					{damageCase.damage_type}
-				</span>
-				{damageCase.damage_amount && (
-					<div className='flex items-center gap-1 text-red-500 text-sm font-bold'>
-						<DollarSign size={14} />
-						<span>피해금액: {damageCase.damage_amount.toLocaleString()}만원</span>
+				{/* Status badge */}
+				<div className={`absolute top-2 left-2 flex items-center gap-1 px-2.5 py-1 ${statusInfo.bg} rounded-lg shadow-md`}>
+					<StatusIcon size={11} className='text-white' />
+					<span className='text-white text-[10px] font-bold'>{statusInfo.label}</span>
+				</div>
+
+				{/* Category badge */}
+				{damageCase.category && (
+					<div className='absolute bottom-2 left-2 px-2.5 py-1 bg-gray-900/80 rounded-lg shadow-md'>
+						<span className='text-white text-xs font-bold'>{damageCase.category}</span>
+					</div>
+				)}
+
+				{/* Severity badge */}
+				{severityInfo && (
+					<div className={`absolute top-2 right-2 flex items-center gap-1 px-2.5 py-1 ${severityInfo.color} rounded-lg shadow-md`}>
+						<ShieldAlert size={11} className='text-white' />
+						<span className='text-white text-[10px] font-bold'>{severityInfo.label}</span>
 					</div>
 				)}
 			</div>
 
-			{/* Content Preview */}
-			<p className='text-sand-600 mb-4 line-clamp-2 leading-relaxed text-sm'>{damageCase.content}</p>
+			{/* Content */}
+			<div className='p-4'>
+				{/* Title */}
+				<h3 className='text-base font-extrabold text-gray-900 truncate mb-2.5 group-hover:text-red-600 transition-colors'>
+					{damageCase.title}
+				</h3>
 
-			{/* Footer */}
-			<div className='flex items-center justify-between pt-3 border-t border-sand-100'>
-				<div className='flex items-center gap-4 text-xs text-sand-400'>
-					<div className='flex items-center gap-1'>
-						<Eye size={14} />
-						<span>{damageCase.view_count || 0}</span>
+				{/* Content preview */}
+				<p className='text-sm text-gray-700 line-clamp-2 leading-relaxed mb-3'>
+					{damageCase.description}
+				</p>
+
+				{/* Footer */}
+				<div className='flex items-center justify-between pt-3 border-t border-gray-100'>
+					<div className='flex items-center gap-3 text-xs text-gray-500'>
+						<span className='inline-flex items-center gap-1'>
+							<Eye size={12} />
+							{damageCase.view_count || 0}
+						</span>
+						<span>
+							{new Date(damageCase.created_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}
+						</span>
 					</div>
+					<span className='text-xs text-red-500 font-bold flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity'>
+						자세히 <ArrowRight size={12} />
+					</span>
 				</div>
-				<span className='text-xs text-red-500 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity'>
-					자세히 보기 <ArrowRight size={14} />
-				</span>
 			</div>
 		</article>
 	)
