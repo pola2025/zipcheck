@@ -79,3 +79,7 @@ NEXT_SESSION_REQUEST.md
 
 # Claude project guide
 .claude/PROJECT_START_GUIDE.md
+
+# Claude local settings (contains tokens/permissions - NEVER commit)
+.claude/settings.local.json
+**/settings.local.json
