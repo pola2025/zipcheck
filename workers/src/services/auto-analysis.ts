@@ -16,6 +16,8 @@ type StdCategory =
 
 type DeviationBracket = 'dump_risk' | 'under_warning' | 'good' | 'fair' | 'slightly_high' | 'high'
 
+type MarginBracket = 'dump_risk' | 'low_margin' | 'fair' | 'slightly_high' | 'excessive' | 'abnormal'
+
 type Grade = '가성비' | '중급' | '고급' | '프리미엄'
 
 interface AdjustmentFactors {
@@ -68,6 +70,12 @@ interface AnalyzedItem {
 	adjustment_factors: AdjustmentFactors
 	is_bundled: boolean
 	confidence: number
+	// 마진율 분석 (v2)
+	margin_rate: number | null
+	margin_bracket: MarginBracket | null
+	estimated_cost: number | null
+	fair_price_min: number | null
+	fair_price_max: number | null
 }
 
 interface CategoryMapping {
@@ -225,6 +233,70 @@ function applyAdjustments(basePrice: number, factors: AdjustmentFactors): number
 	adjusted *= factors.season
 	adjusted *= factors.exclusive
 	return Math.round(adjusted)
+}
+
+// ============================================
+// 면적 환산 계수 (일식 항목 → 원가 추정용)
+// ============================================
+
+// 면적 기반 카테고리: propertySizeSqm × factor × 벤치마크 단가 = 추정 원가
+const AREA_CONVERSION_FACTORS: Record<string, number> = {
+	'도배': 2.8,     // 벽(전용×1.8) + 천장(전용×1.0)
+	'바닥': 0.85,    // 전용면적×0.85 (가구/벽 제외)
+	'페인트': 2.8,   // 벽(전용×1.8) + 천장(전용×1.0)
+	'철거': 1.85,    // 바닥+벽 환산
+}
+
+// 세트 기반 카테고리: 면적 무관, 기본 1세트로 추정
+const SET_BASED_CATEGORIES = new Set(['욕실', '주방', '가구', '전기', '창호'])
+
+// ============================================
+// 마진율 계산 헬퍼
+// ============================================
+
+function getMarginBracket(marginRate: number): MarginBracket {
+	if (marginRate < 5) return 'dump_risk'
+	if (marginRate < 15) return 'low_margin'
+	if (marginRate <= 25) return 'fair'
+	if (marginRate <= 40) return 'slightly_high'
+	if (marginRate <= 80) return 'excessive'
+	return 'abnormal'
+}
+
+function marginToScore(marginRate: number): number {
+	if (marginRate < 5) return 40          // 덤핑 위험
+	if (marginRate < 15) return 70         // 저마진
+	if (marginRate <= 25) return 95        // 적정
+	if (marginRate <= 40) return 70        // 약간 높음
+	if (marginRate <= 80) return 45        // 과다
+	return 20                              // 비정상
+}
+
+function calculateEstimatedCost(
+	adjustedBenchmarkPrice: number,
+	stdCategory: string,
+	propertySizeSqm: number | null,
+	quantity: number | null,
+): number | null {
+	// 면적 기반 카테고리
+	const areaFactor = AREA_CONVERSION_FACTORS[stdCategory]
+	if (areaFactor != null) {
+		if (!propertySizeSqm || propertySizeSqm <= 0) return null
+		return Math.round(propertySizeSqm * areaFactor * adjustedBenchmarkPrice)
+	}
+
+	// 세트 기반 카테고리
+	if (SET_BASED_CATEGORIES.has(stdCategory)) {
+		const qty = (quantity && quantity > 0) ? quantity : 1
+		return Math.round(adjustedBenchmarkPrice * qty)
+	}
+
+	// 기타: 수량이 있으면 수량 기반
+	if (quantity && quantity > 0) {
+		return Math.round(adjustedBenchmarkPrice * quantity)
+	}
+
+	return null
 }
 
 // ============================================
@@ -527,6 +599,12 @@ export async function runAutoAnalysis(
 		let deviationPercent: number | null = null
 		let deviationBracket: DeviationBracket | null = null
 		let unitMismatch = false
+		// 마진율 분석 필드
+		let marginRate: number | null = null
+		let marginBracket: MarginBracket | null = null
+		let estimatedCost: number | null = null
+		let fairPriceMin: number | null = null
+		let fairPriceMax: number | null = null
 
 		if (mapped) {
 			const bench = findBenchmark(mapped.stdCategory, mapped.stdItem, benchmarks, targetGrade)
@@ -543,19 +621,44 @@ export async function runAutoAnalysis(
 					|| (!unitPrice && quantity === 1)
 
 				if (benchIsAreaBased && quoteIsLumpSum) {
-					// 단위 불일치: 벤치마크는 면적 단가, 견적은 합산 총액
-					// → 편차 계산 스킵, 프론트엔드에서 "면적 확인 필요" 표시
+					// 단위 불일치: 면적 환산으로 원가 추정 → 마진율 계산
 					unitMismatch = true
 					deviationPercent = null
 					deviationBracket = null
+
+					// 면적 환산 기반 원가 추정
+					estimatedCost = calculateEstimatedCost(
+						adjustedBenchmarkPrice, mapped.stdCategory,
+						input.propertySizeSqm, quantity
+					)
+					if (estimatedCost && totalPrice && estimatedCost > 0) {
+						marginRate = Math.round(
+							((totalPrice - estimatedCost) / estimatedCost) * 10000
+						) / 100
+						marginBracket = getMarginBracket(marginRate)
+						fairPriceMin = Math.round(estimatedCost * 1.15)
+						fairPriceMax = Math.round(estimatedCost * 1.25)
+					}
 				} else {
-					// Calculate deviation (기존 로직)
+					// 단가 비교 가능 항목
 					const comparePrice = unitPrice || (totalPrice && quantity ? totalPrice / quantity : null)
 					if (comparePrice && adjustedBenchmarkPrice > 0) {
+						// 기존 deviation 계산 (하위호환)
 						deviationPercent = Math.round(
 							((comparePrice - adjustedBenchmarkPrice) / adjustedBenchmarkPrice) * 10000
 						) / 100
 						deviationBracket = getDeviationBracket(deviationPercent)
+
+						// 마진율 계산 (단가 기반)
+						marginRate = deviationPercent // 원가 대비 견적가 차이 = 마진율
+						marginBracket = getMarginBracket(marginRate)
+
+						// 추정 원가 총액
+						estimatedCost = (quantity && quantity > 0)
+							? Math.round(adjustedBenchmarkPrice * quantity)
+							: adjustedBenchmarkPrice
+						fairPriceMin = Math.round(estimatedCost * 1.15)
+						fairPriceMax = Math.round(estimatedCost * 1.25)
 					}
 				}
 			}
@@ -579,6 +682,11 @@ export async function runAutoAnalysis(
 			adjustment_factors: adjustmentFactors,
 			is_bundled: isBundled,
 			confidence: mapped ? 0.8 : 0.3,
+			margin_rate: marginRate,
+			margin_bracket: marginBracket,
+			estimated_cost: estimatedCost,
+			fair_price_min: fairPriceMin,
+			fair_price_max: fairPriceMax,
 		}
 	})
 
@@ -593,18 +701,37 @@ export async function runAutoAnalysis(
 	const categoryScores: CategoryScore[] = []
 	for (const [category, catItems] of categoryMap) {
 		const weight = CATEGORY_WEIGHTS[category] || 0.03
+
+		// 마진율 기반 스코어링 (우선), 없으면 deviation 폴백
+		const margins = catItems
+			.filter(i => i.margin_rate != null)
+			.map(i => i.margin_rate!)
 		const deviations = catItems
 			.filter(i => i.deviation_percent != null)
 			.map(i => i.deviation_percent!)
-		const avgDeviation = deviations.length > 0
-			? deviations.reduce((a, b) => a + b, 0) / deviations.length
-			: 0
-		const score = deviations.length > 0 ? deviationToScore(avgDeviation) : 70
+
+		let avgDeviation: number
+		let score: number
+
+		if (margins.length > 0) {
+			// 마진율 기반 (primary)
+			const avgMargin = margins.reduce((a, b) => a + b, 0) / margins.length
+			avgDeviation = Math.round(avgMargin * 100) / 100
+			score = marginToScore(avgMargin)
+		} else if (deviations.length > 0) {
+			// deviation 폴백
+			avgDeviation = deviations.reduce((a, b) => a + b, 0) / deviations.length
+			avgDeviation = Math.round(avgDeviation * 100) / 100
+			score = deviationToScore(avgDeviation)
+		} else {
+			avgDeviation = 0
+			score = 70
+		}
 
 		categoryScores.push({
 			category: category as StdCategory,
 			weight,
-			avg_deviation: Math.round(avgDeviation * 100) / 100,
+			avg_deviation: avgDeviation,
 			item_count: catItems.length,
 			score,
 		})
@@ -736,6 +863,23 @@ export async function runAutoAnalysis(
 			totalItems: analyzedItems.length,
 			mappedItems: analyzedItems.filter(i => i.std_category).length,
 			benchmarkedItems: analyzedItems.filter(i => i.benchmark_unit_price != null).length,
+			// 마진율 요약
+			marginAnalysis: (() => {
+				const withMargin = analyzedItems.filter(i => i.margin_rate != null)
+				if (withMargin.length === 0) return null
+				const avgMargin = withMargin.reduce((s, i) => s + i.margin_rate!, 0) / withMargin.length
+				const totalEstimatedCost = withMargin.reduce((s, i) => s + (i.estimated_cost || 0), 0)
+				const totalQuotePrice = withMargin.reduce((s, i) => s + (i.original_total_price || 0), 0)
+				return {
+					avgMarginRate: Math.round(avgMargin * 100) / 100,
+					totalEstimatedCost,
+					totalQuotePrice,
+					overallMarginRate: totalEstimatedCost > 0
+						? Math.round(((totalQuotePrice - totalEstimatedCost) / totalEstimatedCost) * 10000) / 100
+						: null,
+					itemCount: withMargin.length,
+				}
+			})(),
 		}), input.quoteRequestId]
 	)
 

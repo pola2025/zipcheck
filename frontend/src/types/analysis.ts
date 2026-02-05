@@ -8,6 +8,8 @@ export type AnalysisStatus = 'draft' | 'in_progress' | 'review' | 'completed'
 
 export type DeviationBracket = 'dump_risk' | 'under_warning' | 'good' | 'fair' | 'slightly_high' | 'high'
 
+export type MarginBracket = 'dump_risk' | 'low_margin' | 'fair' | 'slightly_high' | 'excessive' | 'abnormal'
+
 export type Grade = '가성비' | '중급' | '고급' | '프리미엄'
 
 export type StdCategory =
@@ -114,6 +116,13 @@ export interface AnalysisItem {
 	deviation_percent: number | null
 	deviation_bracket: DeviationBracket | null
 	unit_mismatch: boolean
+
+	// 마진율 분석 (v2)
+	margin_rate: number | null
+	margin_bracket: MarginBracket | null
+	estimated_cost: number | null
+	fair_price_min: number | null
+	fair_price_max: number | null
 
 	// VAT
 	is_vat_override: boolean
