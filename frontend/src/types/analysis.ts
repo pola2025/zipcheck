@@ -108,10 +108,12 @@ export interface AnalysisItem {
 	// 벤치마크
 	benchmark_price_id: string | null
 	benchmark_unit_price: number | null
+	benchmark_unit: string | null
 	adjusted_benchmark_price: number | null
 	adjustment_factors: AdjustmentFactors
 	deviation_percent: number | null
 	deviation_bracket: DeviationBracket | null
+	unit_mismatch: boolean
 
 	// VAT
 	is_vat_override: boolean

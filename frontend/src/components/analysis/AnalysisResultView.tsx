@@ -247,8 +247,11 @@ export default function AnalysisResultView({
 		.sort((a, b) => b.total - a.total)
 
 	// 적정가 비교 데이터
+	// 단위 불일치 항목 (벤치마크 있지만 단가 비교 불가)
+	const unitMismatchItems = (items || []).filter(i => i.unit_mismatch && i.benchmark_unit_price != null)
+
 	const comparisonItems = (items || [])
-		.filter(i => i.adjusted_benchmark_price != null && i.deviation_percent != null)
+		.filter(i => i.adjusted_benchmark_price != null && i.deviation_percent != null && !i.unit_mismatch)
 		.map(item => {
 			const quoteTotal = item.original_total_price
 				|| ((item.original_unit_price || 0) * (item.original_quantity || 0))
@@ -739,6 +742,43 @@ export default function AnalysisResultView({
 								</tfoot>
 							</table>
 						</div>
+
+						{/* 단위 불일치 항목 안내 */}
+						{unitMismatchItems.length > 0 && (
+							<div className="mt-4 rounded-xl bg-amber-50 border border-amber-200 p-4">
+								<div className="flex items-start gap-3">
+									<Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+									<div>
+										<p className="text-sm font-bold text-amber-800 mb-1">
+											면적·수량 확인 필요 {unitMismatchItems.length}건
+										</p>
+										<p className="text-sm text-amber-700 break-keep mb-3">
+											아래 항목은 견적서에 합산 금액으로 기재되어 있어 면적 기반 단가와 직접 비교가 어렵습니다.
+											정확한 면적·수량을 확인하면 적정가 비교가 가능합니다.
+										</p>
+										<div className="space-y-2">
+											{unitMismatchItems.map((item, i) => {
+												const total = item.original_total_price || 0
+												return (
+													<div key={i} className="text-xs text-amber-800 bg-amber-100/50 rounded-lg p-2.5">
+														<div className="flex items-center justify-between gap-2 mb-1">
+															<span className="font-bold">{item.std_category || item.original_category} — {item.std_item || item.original_item_name}</span>
+															<span className="font-bold">{formatManWon(total)}</span>
+														</div>
+														<span className="text-amber-600">
+															기준 단가: {item.benchmark_unit_price?.toLocaleString()}원/{item.benchmark_unit || '㎡'}
+															{item.benchmark_unit_price && total > 0 && (
+																<> · 역산 면적: 약 {(total / item.benchmark_unit_price).toFixed(1)}{item.benchmark_unit || '㎡'}</>
+															)}
+														</span>
+													</div>
+												)
+											})}
+										</div>
+									</div>
+								</div>
+							</div>
+						)}
 
 						{/* 비정상 가격 확인 요청 */}
 						{abnormalItems.length > 0 && (

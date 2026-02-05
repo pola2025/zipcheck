@@ -60,9 +60,11 @@ interface AnalyzedItem {
 	std_category: StdCategory | null
 	std_item: string | null
 	benchmark_unit_price: number | null
+	benchmark_unit: string | null
 	adjusted_benchmark_price: number | null
 	deviation_percent: number | null
 	deviation_bracket: DeviationBracket | null
+	unit_mismatch: boolean
 	adjustment_factors: AdjustmentFactors
 	is_bundled: boolean
 	confidence: number
@@ -520,23 +522,41 @@ export async function runAutoAnalysis(
 
 		// Find benchmark
 		let benchmarkUnitPrice: number | null = null
+		let benchmarkUnit: string | null = null
 		let adjustedBenchmarkPrice: number | null = null
 		let deviationPercent: number | null = null
 		let deviationBracket: DeviationBracket | null = null
+		let unitMismatch = false
 
 		if (mapped) {
 			const bench = findBenchmark(mapped.stdCategory, mapped.stdItem, benchmarks, targetGrade)
 			if (bench) {
 				benchmarkUnitPrice = bench.unit_price
+				benchmarkUnit = bench.unit
 				adjustedBenchmarkPrice = applyAdjustments(bench.unit_price, adjustmentFactors)
 
-				// Calculate deviation
-				const comparePrice = unitPrice || (totalPrice && quantity ? totalPrice / quantity : null)
-				if (comparePrice && adjustedBenchmarkPrice > 0) {
-					deviationPercent = Math.round(
-						((comparePrice - adjustedBenchmarkPrice) / adjustedBenchmarkPrice) * 10000
-					) / 100
-					deviationBracket = getDeviationBracket(deviationPercent)
+				// 단위 기반 비교 — 면적 단위(㎡, m2, 평) 벤치마크 vs 합산 총액 견적 감지
+				const areaUnits = ['㎡', 'm2', 'm²', '평', '자']
+				const lumpUnits = ['식', '일식', '세트', '개소', '조']
+				const benchIsAreaBased = areaUnits.some(u => bench.unit?.includes(u))
+				const quoteIsLumpSum = isBundled || lumpUnits.some(u => unit?.includes(u) || false)
+					|| (!unitPrice && quantity === 1)
+
+				if (benchIsAreaBased && quoteIsLumpSum) {
+					// 단위 불일치: 벤치마크는 면적 단가, 견적은 합산 총액
+					// → 편차 계산 스킵, 프론트엔드에서 "면적 확인 필요" 표시
+					unitMismatch = true
+					deviationPercent = null
+					deviationBracket = null
+				} else {
+					// Calculate deviation (기존 로직)
+					const comparePrice = unitPrice || (totalPrice && quantity ? totalPrice / quantity : null)
+					if (comparePrice && adjustedBenchmarkPrice > 0) {
+						deviationPercent = Math.round(
+							((comparePrice - adjustedBenchmarkPrice) / adjustedBenchmarkPrice) * 10000
+						) / 100
+						deviationBracket = getDeviationBracket(deviationPercent)
+					}
 				}
 			}
 		}
@@ -551,9 +571,11 @@ export async function runAutoAnalysis(
 			std_category: mapped?.stdCategory || null,
 			std_item: mapped?.stdItem || null,
 			benchmark_unit_price: benchmarkUnitPrice,
+			benchmark_unit: benchmarkUnit,
 			adjusted_benchmark_price: adjustedBenchmarkPrice,
 			deviation_percent: deviationPercent,
 			deviation_bracket: deviationBracket,
+			unit_mismatch: unitMismatch,
 			adjustment_factors: adjustmentFactors,
 			is_bundled: isBundled,
 			confidence: mapped ? 0.8 : 0.3,
@@ -657,12 +679,12 @@ export async function runAutoAnalysis(
 		const placeholders: string[] = []
 
 		batch.forEach((item, idx) => {
-			const offset = idx * 14
+			const offset = idx * 16
 			placeholders.push(`(
 				$${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4},
 				$${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8},
 				$${offset + 9}, $${offset + 10}, $${offset + 11}, $${offset + 12},
-				$${offset + 13}, $${offset + 14}
+				$${offset + 13}, $${offset + 14}, $${offset + 15}, $${offset + 16}
 			)`)
 			values.push(
 				crypto.randomUUID(),        // id
@@ -676,9 +698,11 @@ export async function runAutoAnalysis(
 				item.std_category,           // std_category
 				item.std_item,               // std_item
 				item.benchmark_unit_price,   // benchmark_unit_price
+				item.benchmark_unit,         // benchmark_unit
 				item.adjusted_benchmark_price, // adjusted_benchmark_price
 				item.deviation_percent,      // deviation_percent
 				item.is_bundled,             // is_bundled
+				item.unit_mismatch,          // unit_mismatch
 			)
 		})
 
@@ -687,8 +711,8 @@ export async function runAutoAnalysis(
 			`INSERT INTO analysis_items (
 				id, analysis_id, original_category, original_item_name,
 				original_quantity, original_unit, original_unit_price, original_total_price,
-				std_category, std_item, benchmark_unit_price, adjusted_benchmark_price,
-				deviation_percent, is_bundled
+				std_category, std_item, benchmark_unit_price, benchmark_unit, adjusted_benchmark_price,
+				deviation_percent, is_bundled, unit_mismatch
 			) VALUES ${placeholders.join(', ')}`,
 			values
 		)
