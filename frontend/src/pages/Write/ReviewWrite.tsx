@@ -17,7 +17,7 @@ import {
 	ChevronRight,
 	User,
 } from 'lucide-react'
-import GoogleLoginButton from '../../components/auth/GoogleLoginButton'
+import AuthGate from '../../components/auth/AuthGate'
 import ImageUploader from '../../components/community/ImageUploader'
 import LegalDisclaimer from '../../components/community/LegalDisclaimer'
 import { useUser } from '../../contexts/UserAuthContext'
@@ -426,19 +426,18 @@ export default function ReviewWrite() {
 					/>
 				</Helmet>
 				<div className="min-h-screen bg-gray-50 flex items-center justify-center px-5">
-					<div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
-						<div
-							className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
-							style={{ backgroundColor: `${BRAND}15` }}
-						>
-							<Star className="w-8 h-8" style={{ color: BRAND }} />
-						</div>
-						<h1 className="text-xl font-bold text-gray-900 mb-2">로그인이 필요합니다</h1>
-						<p className="text-sm text-gray-500 mb-6">
-							후기를 작성하려면 Google 계정으로 로그인해주세요.
-						</p>
-						<GoogleLoginButton size="lg" redirectTo="/write/review" className="mx-auto" />
-					</div>
+					<AuthGate
+						redirectTo="/write/review"
+						icon={
+							<div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: `${BRAND}15` }}>
+								<Star className="w-8 h-8" style={{ color: BRAND }} />
+							</div>
+						}
+						title="로그인이 필요합니다"
+						description="후기를 작성하려면 로그인해주세요."
+					>
+						{null}
+					</AuthGate>
 				</div>
 			</>
 		)
@@ -936,7 +935,7 @@ export default function ReviewWrite() {
 							</section>
 
 							{/* Legal disclaimer */}
-							<LegalDisclaimer agreed={agreed} onAgreeChange={setAgreed} />
+							<LegalDisclaimer agreed={agreed} onAgreeChange={setAgreed} title="후기 작성 주의사항" />
 
 							{/* Submission error */}
 							{submitResult === 'error' && submitError && (

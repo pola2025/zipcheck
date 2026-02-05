@@ -49,8 +49,11 @@ app.get('/naver', async (c) => {
 	crypto.getRandomValues(stateArr)
 	const state = Array.from(stateArr).map(b => b.toString(16).padStart(2, '0')).join('')
 
+	// Get redirect_to from query params (for post-login redirect)
+	const redirectTo = c.req.query('redirect_to') || '/'
+
 	// Store session data in KV keyed by state (Naver returns state via URL param)
-	await c.env.KV.put(`naver_oauth:${state}`, JSON.stringify({ valid: true }), { expirationTtl: 600 })
+	await c.env.KV.put(`naver_oauth:${state}`, JSON.stringify({ redirectTo }), { expirationTtl: 600 })
 
 	const apiOrigin = new URL(c.req.url).origin
 	const callbackUrl = `${apiOrigin}/api/auth/naver/callback`
@@ -82,6 +85,9 @@ app.get('/naver/callback', async (c) => {
 		if (!sessionRaw) {
 			return c.redirect(`${frontendUrl}?error=session_expired`)
 		}
+
+		const sessionData = JSON.parse(sessionRaw) as { redirectTo?: string }
+		const redirectTo = sessionData.redirectTo || '/'
 
 		// Clean up KV
 		await c.env.KV.delete(`naver_oauth:${state}`)
@@ -151,7 +157,22 @@ app.get('/naver/callback', async (c) => {
 			c.env.JWT_SECRET
 		)
 
-		return c.redirect(`${frontendUrl}/auth/naver/success?token=${jwtToken}`)
+		// Support subdomain redirects (*.zcheck.co.kr)
+		let finalRedirectBase = frontendUrl
+		if (redirectTo.startsWith('http')) {
+			try {
+				const redirectUrl = new URL(redirectTo)
+				if (redirectUrl.hostname.endsWith('.zcheck.co.kr') || redirectUrl.hostname === 'zcheck.co.kr') {
+					finalRedirectBase = redirectUrl.origin
+				}
+			} catch {
+				// Invalid URL, use default
+			}
+		}
+
+		const redirectPath = redirectTo.startsWith('http') ? new URL(redirectTo).pathname : redirectTo
+		const finalUrl = `${finalRedirectBase}/auth/naver/success?token=${jwtToken}&redirect_to=${encodeURIComponent(redirectPath)}`
+		return c.redirect(finalUrl)
 	} catch (err) {
 		console.error('OAuth callback error:', err)
 		return c.redirect(`${frontendUrl}?error=oauth_failed`)

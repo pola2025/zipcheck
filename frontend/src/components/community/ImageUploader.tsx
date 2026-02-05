@@ -202,7 +202,7 @@ export default function ImageUploader({
 				</span>
 			</label>
 			<p className="text-xs text-gray-400 mb-3">
-				JPG, PNG, WebP 형식 / 최대 5MB / WebP 자동 압축 적용
+				JPG, PNG, WebP 형식 / 최대 5MB
 			</p>
 
 			{/* Hidden file input */}

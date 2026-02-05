@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { Play, User, Home, FileText, Calendar, Phone, Mail, MapPin, MessageSquare, Save, AlertTriangle, ChevronDown, ChevronUp, Edit, X } from 'lucide-react'
+import { Play, User, Home, FileText, Calendar, Phone, Mail, MapPin, MessageSquare, Save, AlertTriangle, ChevronDown, ChevronUp, Edit, X, ClipboardCheck } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import QuoteAnalysisVisual from 'components/QuoteAnalysis/QuoteAnalysisVisual'
 import QuoteAnalysisRealistic from 'components/QuoteAnalysis/QuoteAnalysisRealistic'
@@ -267,6 +267,30 @@ export default function QuoteRequestDetail() {
 						>
 							{statusLabels[request.status]}
 						</span>
+
+						<button
+							onClick={async () => {
+								try {
+									const res = await fetch(getApiUrl('/api/admin/analyses'), {
+										method: 'POST',
+										headers: {
+											'Content-Type': 'application/json',
+											'Authorization': `Bearer ${token}`,
+										},
+										body: JSON.stringify({ quoteRequestId: id }),
+									})
+									if (!res.ok) throw new Error('분석 생성 실패')
+									const result = await res.json()
+									navigate(adminPath(`/analyses/${result.data.id}`))
+								} catch (e) {
+									alert('분석 생성 실패: ' + (e instanceof Error ? e.message : String(e)))
+								}
+							}}
+							className="px-5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+						>
+							<ClipboardCheck className="w-4 h-4" />
+							견적 분석 시작
+						</button>
 
 						{request.status === 'pending' && (
 							<button

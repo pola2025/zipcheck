@@ -15,6 +15,12 @@ import dataManagementRoutes from './routes/admin/data-management'
 import companyReviewsAdminRoutes from './routes/admin/company-reviews-admin'
 import damageCasesAdminRoutes from './routes/admin/damage-cases-admin'
 import blacklistAdminRoutes from './routes/admin/blacklist-admin'
+import analysesRoutes from './routes/admin/analyses'
+import conflictRulesRoutes from './routes/admin/conflict-rules'
+import benchmarksRoutes from './routes/admin/benchmarks'
+import categoryMappingsRoutes from './routes/admin/category-mappings'
+import blogRoutes from './routes/blog'
+import blogAdminRoutes from './routes/admin/blog-admin'
 import imageRoutes from './routes/images'
 import seoRoutes from './routes/seo'
 
@@ -47,6 +53,12 @@ app.route('/api/admin', dataManagementRoutes)
 app.route('/api/company-reviews/admin', companyReviewsAdminRoutes)
 app.route('/api/damage-cases/admin', damageCasesAdminRoutes)
 app.route('/api/admin/blacklist', blacklistAdminRoutes)
+app.route('/api/admin/analyses', analysesRoutes)
+app.route('/api/admin/conflict-rules', conflictRulesRoutes)
+app.route('/api/admin/benchmarks', benchmarksRoutes)
+app.route('/api/admin/category-mappings', categoryMappingsRoutes)
+app.route('/api/blog', blogRoutes)
+app.route('/api/admin/blog', blogAdminRoutes)
 app.route('/images', imageRoutes)
 app.route('/', seoRoutes)  // sitemap.xml, robots.txt, /api/seo/meta
 

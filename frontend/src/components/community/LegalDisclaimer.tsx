@@ -3,11 +3,14 @@ import { Shield, AlertTriangle } from 'lucide-react'
 interface LegalDisclaimerProps {
 	agreed: boolean
 	onAgreeChange: (agreed: boolean) => void
+	/** Header title – defaults to "등록 주의사항" */
+	title?: string
 }
 
 const DISCLAIMER_ITEMS = [
-	'본 게시물에 기재된 피해사례는 작성자 개인의 주관적 경험 및 의견이며, 집첵의 공식 입장이나 서비스 의견과는 무관합니다.',
+	'본 게시물에 기재된 내용은 작성자 개인의 주관적 경험 및 의견이며, 집첵의 공식 입장이나 서비스 의견과는 무관합니다.',
 	'본 게시물의 모든 내용에 대한 법적 책임은 작성자 본인에게 있습니다.',
+	'제목 또는 본문에 업체명·연락처(전화번호, 이메일 등)를 직접 공개하면 해당 글은 즉시 비공개 처리됩니다.',
 	'집첵은 게시물의 사실 여부를 보증하지 않으며, 정보통신망법 제44조의2에 따른 임시조치(게시물 접근차단) 요청이 있을 경우 해당 절차를 진행합니다.',
 	'타인의 명예를 훼손하거나 허위사실을 유포하는 경우 형법 제307조(명예훼손) 및 정보통신망법 제70조에 따라 법적 처벌을 받을 수 있습니다.',
 	'권리침해를 주장하는 자의 게재제한 요청 시, 작성자에게 소명 기회를 부여하며 30일 이내 소명이 없을 경우 게시물이 비공개 처리됩니다.',
@@ -17,13 +20,14 @@ const DISCLAIMER_ITEMS = [
 export default function LegalDisclaimer({
 	agreed,
 	onAgreeChange,
+	title = '등록 주의사항',
 }: LegalDisclaimerProps) {
 	return (
 		<div className="bg-amber-50 border border-amber-200 rounded-xl overflow-hidden">
 			{/* Header */}
 			<div className="flex items-center gap-2.5 px-5 pt-5 pb-3">
 				<Shield className="w-5 h-5 text-amber-600 shrink-0" />
-				<h4 className="text-sm font-bold text-amber-800">[면책 안내]</h4>
+				<h4 className="text-sm font-bold text-amber-800">[{title}]</h4>
 			</div>
 
 			{/* Scrollable legal text */}
@@ -31,7 +35,7 @@ export default function LegalDisclaimer({
 				className="mx-5 mb-4 max-h-[200px] overflow-y-auto border border-amber-200/60 rounded-lg bg-white/60 p-4"
 				tabIndex={0}
 				role="region"
-				aria-label="면책 안내 내용"
+				aria-label={`${title} 내용`}
 			>
 				<ol className="space-y-3">
 					{DISCLAIMER_ITEMS.map((item, idx) => (

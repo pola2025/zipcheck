@@ -4,7 +4,7 @@ import { AlertTriangle, Building, Phone, FileText, Send, ArrowLeft, Banknote, Ma
 import NordicNavigation from 'components/nordic/NordicNavigation'
 import NordicFooter from 'components/nordic/NordicFooter'
 import PageSEO from 'components/PageSEO'
-import GoogleLoginButton from 'components/auth/GoogleLoginButton'
+import AuthGate from 'components/auth/AuthGate'
 import ImageUploader from 'components/community/ImageUploader'
 import LegalDisclaimer from 'components/community/LegalDisclaimer'
 import { useUser } from '../../contexts/UserAuthContext'
@@ -175,13 +175,19 @@ export default function DamageCaseWrite() {
 			<div className="max-w-3xl mx-auto px-5 md:px-8 pb-20">
 				{/* Login Gate */}
 				{!isLoggedIn ? (
-					<div className="nordic-card rounded-2xl p-8 md:p-12 text-center">
-						<div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
-							<AlertTriangle className="w-8 h-8 text-red-500" />
-						</div>
-						<h2 className="font-outfit text-xl font-bold text-sand-900 mb-2">로그인이 필요합니다</h2>
-						<p className="text-sand-600 text-sm mb-6">피해사례를 등록하려면 Google 계정으로 로그인해주세요.</p>
-						<GoogleLoginButton size="lg" className="mx-auto" redirectTo="/write/damage-case" />
+					<div className="flex justify-center">
+						<AuthGate
+							redirectTo="/write/damage-case"
+							icon={
+								<div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center">
+									<AlertTriangle className="w-8 h-8 text-red-500" />
+								</div>
+							}
+							title="로그인이 필요합니다"
+							description="피해사례를 등록하려면 로그인해주세요."
+						>
+							{null}
+						</AuthGate>
 					</div>
 				) : (
 					<form onSubmit={handleSubmit} className="nordic-card rounded-2xl p-6 md:p-10">

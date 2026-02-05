@@ -19,6 +19,7 @@ interface UserAuthContextType {
 	isLoggedIn: boolean
 	loading: boolean
 	loginWithGoogle: (redirectTo?: string) => void
+	loginWithNaver: (redirectTo?: string) => void
 	logout: () => void
 	refreshUser: () => Promise<void>
 }
@@ -112,6 +113,15 @@ export function UserAuthProvider({ children }: { children: ReactNode }) {
 		window.location.href = getApiUrl(`/api/auth/google${params}`)
 	}, [])
 
+	const loginWithNaver = useCallback((redirectTo?: string) => {
+		if (redirectTo) {
+			localStorage.setItem('auth_redirect_to', redirectTo)
+		}
+		const fullRedirect = redirectTo ? `${window.location.origin}${redirectTo}` : window.location.origin
+		const params = `?redirect_to=${encodeURIComponent(fullRedirect)}`
+		window.location.href = getApiUrl(`/api/auth/naver${params}`)
+	}, [])
+
 	const logout = useCallback(() => {
 		localStorage.removeItem(STORAGE_KEYS.token)
 		localStorage.removeItem(STORAGE_KEYS.user)
@@ -125,6 +135,7 @@ export function UserAuthProvider({ children }: { children: ReactNode }) {
 		isLoggedIn: !!token && !!user,
 		loading,
 		loginWithGoogle,
+		loginWithNaver,
 		logout,
 		refreshUser
 	}
