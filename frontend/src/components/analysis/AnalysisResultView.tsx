@@ -289,6 +289,12 @@ export default function AnalysisResultView({
 	const underQuantityPenalties = scoreBreakdown.penalties.filter(p => p.type === 'under_quantity')
 	const hasRisks = dumpRiskItems.length > 0 || underQuantityPenalties.length > 0 || licenseUnverified
 
+	// 비정상 가격 항목 (편차 > +80% 이상 고가 또는 < -40% 이상 저가)
+	const abnormalItems = comparisonItems.filter(i => {
+		const dev = i.deviation_percent || 0
+		return dev > 80 || dev < -40
+	})
+
 	// 협상 스크립트
 	const topSavings = savingsItems.slice(0, 3)
 	const negotiationLines = topSavings.map(item =>
@@ -369,7 +375,7 @@ export default function AnalysisResultView({
 							</div>
 							<p className="text-sand-600 text-sm sm:text-base">{grade.description}</p>
 							{customerName && (
-								<p className="text-xs text-sand-500 mt-1 truncate">
+								<p className="text-xs text-sand-700 mt-1 truncate">
 									{customerName}{propertyInfo ? ` | ${propertyInfo}` : ''}
 								</p>
 							)}
@@ -377,13 +383,13 @@ export default function AnalysisResultView({
 							{/* Stats: 2x2 on mobile, inline on desktop — 설계서 매칭 */}
 							<div className="mt-4 grid grid-cols-2 md:flex gap-3 justify-center md:justify-start">
 								<div className="bg-sand-50 rounded-xl px-4 py-2.5 border border-sand-200 text-center md:text-left">
-									<div className="text-[11px] sm:text-xs text-sand-500">총 견적액</div>
+									<div className="text-[11px] sm:text-xs text-sand-700">총 견적액</div>
 									<div className="text-lg sm:text-xl font-bold text-sand-900">
 										{formatManWon(totalQuoteAmount)}
 									</div>
 								</div>
 								<div className="bg-sand-50 rounded-xl px-4 py-2.5 border border-sand-200 text-center md:text-left">
-									<div className="text-[11px] sm:text-xs text-sand-500">시장 평균가</div>
+									<div className="text-[11px] sm:text-xs text-sand-700">시장 평균가</div>
 									<div className="text-lg sm:text-xl font-bold text-sand-700">
 										{totalFairAmount > 0 ? formatManWon(totalFairAmount) : '—'}
 									</div>
@@ -405,7 +411,7 @@ export default function AnalysisResultView({
 									</div>
 								</div>
 								<div className="bg-sand-50 rounded-xl px-4 py-2.5 border border-sand-200 text-center md:text-left">
-									<div className="text-[11px] sm:text-xs text-sand-500">항목 수</div>
+									<div className="text-[11px] sm:text-xs text-sand-700">항목 수</div>
 									<div className="text-lg sm:text-xl font-bold text-sand-900">{totalItems}건</div>
 								</div>
 							</div>
@@ -504,7 +510,7 @@ export default function AnalysisResultView({
 							<div className="flex flex-wrap items-center gap-4 sm:gap-6">
 								{/* VAT */}
 								<div className="flex items-center gap-2">
-									<Info className="w-4 h-4 text-sand-500 shrink-0" />
+									<Info className="w-4 h-4 text-sand-700 shrink-0" />
 									<span className="text-sm text-sand-600">VAT:</span>
 									{isVatIncluded === true && (
 										<span className="px-2 py-0.5 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">포함</span>
@@ -520,7 +526,7 @@ export default function AnalysisResultView({
 								</div>
 								{/* 완전성 */}
 								<div className="flex items-center gap-2">
-									<CheckCircle className="w-4 h-4 text-sand-500 shrink-0" />
+									<CheckCircle className="w-4 h-4 text-sand-700 shrink-0" />
 									<span className="text-sm text-sand-600">완전성:</span>
 									{completeness === 'full' && <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">완전</span>}
 									{completeness === 'partial' && <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-orange-50 text-orange-700 border border-orange-200">부분</span>}
@@ -529,7 +535,7 @@ export default function AnalysisResultView({
 								</div>
 								{/* 면허 */}
 								<div className="flex items-center gap-2">
-									<Shield className="w-4 h-4 text-sand-500 shrink-0" />
+									<Shield className="w-4 h-4 text-sand-700 shrink-0" />
 									<span className="text-sm text-sand-600">면허:</span>
 									{licenseUnverified ? (
 										<span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">미확인</span>
@@ -540,7 +546,7 @@ export default function AnalysisResultView({
 								{/* 벤치마크 커버리지 */}
 								{totalItems > 0 && (
 									<div className="flex items-center gap-2">
-										<Database className="w-4 h-4 text-sand-500 shrink-0" />
+										<Database className="w-4 h-4 text-sand-700 shrink-0" />
 										<span className="text-sm text-sand-600">벤치마크:</span>
 										<span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${
 											benchmarkCoverage >= 0.7
@@ -580,7 +586,7 @@ export default function AnalysisResultView({
 											</span>
 										</div>
 										<div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-											<span className="text-xs text-sand-500 hidden sm:inline">
+											<span className="text-xs text-sand-700 hidden sm:inline">
 												시장 평균 {cat.benchmark > 0 ? formatManWon(cat.benchmark) : '—'}
 											</span>
 											<span className={`px-2 py-0.5 rounded-full text-xs font-bold border whitespace-nowrap ${deviationBadgeStyle(cat.deviation)}`}>
@@ -591,7 +597,7 @@ export default function AnalysisResultView({
 											</span>
 										</div>
 									</div>
-									<div className="sm:hidden text-xs text-sand-500 mb-1.5">
+									<div className="sm:hidden text-xs text-sand-700 mb-1.5">
 										시장 평균 {cat.benchmark > 0 ? formatManWon(cat.benchmark) : '—'}
 									</div>
 									<div className="w-full bg-sand-100 rounded-full h-2.5 mb-2">
@@ -648,12 +654,12 @@ export default function AnalysisResultView({
 							<table className="w-full text-sm min-w-[600px]">
 								<thead>
 									<tr className="border-b-2 border-sand-200">
-										<th className="text-left py-2.5 px-3 text-xs font-semibold text-sand-500 uppercase tracking-wider">카테고리</th>
-										<th className="text-left py-2.5 px-3 text-xs font-semibold text-sand-500 uppercase tracking-wider">주요 항목</th>
-										<th className="text-right py-2.5 px-3 text-xs font-semibold text-sand-500 uppercase tracking-wider">현재 견적가</th>
-										<th className="text-right py-2.5 px-3 text-xs font-semibold text-sand-500 uppercase tracking-wider">벤치마크 적정가</th>
-										<th className="text-right py-2.5 px-3 text-xs font-semibold text-sand-500 uppercase tracking-wider">차이</th>
-										<th className="text-center py-2.5 px-3 text-xs font-semibold text-sand-500 uppercase tracking-wider">판정</th>
+										<th className="text-left py-2.5 px-3 text-xs font-semibold text-sand-600 uppercase tracking-wider">카테고리</th>
+										<th className="text-left py-2.5 px-3 text-xs font-semibold text-sand-600 uppercase tracking-wider">주요 항목</th>
+										<th className="text-right py-2.5 px-3 text-xs font-semibold text-sand-600 uppercase tracking-wider">현재 견적가</th>
+										<th className="text-right py-2.5 px-3 text-xs font-semibold text-sand-600 uppercase tracking-wider">벤치마크 적정가</th>
+										<th className="text-right py-2.5 px-3 text-xs font-semibold text-sand-600 uppercase tracking-wider">차이</th>
+										<th className="text-center py-2.5 px-3 text-xs font-semibold text-sand-600 uppercase tracking-wider">판정</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -662,35 +668,57 @@ export default function AnalysisResultView({
 										const isHigh = dev > 25
 										const isWarn = dev > 10 && dev <= 25
 										const isGood = dev < -5
+										const isAbnormal = dev > 80 || dev < -40
 										return (
-											<tr key={idx} className={`border-b border-sand-100 transition-colors ${
-												isHigh ? 'bg-red-50/30' : isWarn ? 'bg-amber-50/20' : isGood ? 'bg-green-50/20' : 'hover:bg-sand-50'
-											}`}>
-												<td className="py-3 px-3">
-													<span className={`px-2 py-0.5 rounded text-xs font-bold ${CATEGORY_BADGE[item.std_category || ''] || 'bg-sand-100 text-sand-700'}`}>
-														{item.std_category || '—'}
-													</span>
-												</td>
-												<td className="py-3 px-3 text-sand-700">
-													{item.std_item || item.original_item_name || '—'}
-												</td>
-												<td className={`py-3 px-3 text-right font-semibold ${isHigh ? 'text-red-700' : 'text-sand-800'}`}>
-													{formatManWon(item.quoteTotal)}
-												</td>
-												<td className="py-3 px-3 text-right text-sand-600">
-													{formatManWon(item.fairTotal)}
-												</td>
-												<td className={`py-3 px-3 text-right font-semibold ${
-													dev > 10 ? 'text-red-600' : dev > 0 ? 'text-amber-600' : 'text-green-600'
+											<>
+												<tr key={idx} className={`border-b ${isAbnormal ? 'border-b-0' : ''} border-sand-100 transition-colors ${
+													isAbnormal ? 'bg-purple-50/40' : isHigh ? 'bg-red-50/30' : isWarn ? 'bg-amber-50/20' : isGood ? 'bg-green-50/20' : 'hover:bg-sand-50'
 												}`}>
-													{dev > 0 ? '+' : ''}{dev.toFixed(1)}%
-												</td>
-												<td className="py-3 px-3 text-center">
-													<span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${deviationBadgeStyle(dev)}`}>
-														{deviationBadgeLabel(dev)}
-													</span>
-												</td>
-											</tr>
+													<td className="py-3 px-3">
+														<div className="flex items-center gap-1">
+															<span className={`px-2 py-0.5 rounded text-xs font-bold ${CATEGORY_BADGE[item.std_category || ''] || 'bg-sand-100 text-sand-700'}`}>
+																{item.std_category || '—'}
+															</span>
+															{isAbnormal && <span className="text-purple-600 text-xs">⚠</span>}
+														</div>
+													</td>
+													<td className="py-3 px-3 text-sand-800">
+														{item.std_item || item.original_item_name || '—'}
+													</td>
+													<td className={`py-3 px-3 text-right font-semibold ${isAbnormal ? 'text-purple-700' : isHigh ? 'text-red-700' : 'text-sand-800'}`}>
+														{formatManWon(item.quoteTotal)}
+													</td>
+													<td className="py-3 px-3 text-right text-sand-700">
+														{formatManWon(item.fairTotal)}
+													</td>
+													<td className={`py-3 px-3 text-right font-semibold ${
+														isAbnormal ? 'text-purple-600' : dev > 10 ? 'text-red-600' : dev > 0 ? 'text-amber-600' : 'text-green-600'
+													}`}>
+														{dev > 0 ? '+' : ''}{dev.toFixed(1)}%
+													</td>
+													<td className="py-3 px-3 text-center">
+														<span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+															isAbnormal
+																? 'bg-purple-100 text-purple-700 border border-purple-300'
+																: deviationBadgeStyle(dev)
+														}`}>
+															{isAbnormal ? (dev > 0 ? '확인필요↑' : '확인필요↓') : deviationBadgeLabel(dev)}
+														</span>
+													</td>
+												</tr>
+												{isAbnormal && (
+													<tr key={`${idx}-note`} className="border-b border-sand-100 bg-purple-50/30">
+														<td colSpan={6} className="px-4 py-2">
+															<p className="text-xs text-purple-700 break-keep">
+																{dev > 0
+																	? `💡 시장 평균 대비 ${dev.toFixed(0)}% 높은 금액입니다. 프리미엄 자재·특수 시공 등 차별화 요소가 포함되었을 수 있습니다. 업체에 해당 항목의 상세 사양을 확인해주세요.`
+																	: `💡 시장 평균 대비 ${Math.abs(dev).toFixed(0)}% 낮은 금액입니다. 자재 등급 하향·일부 공정 미포함 등의 가능성이 있습니다. 업체에 포함 범위를 확인해주세요.`
+																}
+															</p>
+														</td>
+													</tr>
+												)}
+											</>
 										)
 									})}
 								</tbody>
@@ -712,6 +740,42 @@ export default function AnalysisResultView({
 							</table>
 						</div>
 
+						{/* 비정상 가격 확인 요청 */}
+						{abnormalItems.length > 0 && (
+							<div className="mt-4 rounded-xl bg-purple-50 border border-purple-200 p-4">
+								<div className="flex items-start gap-3">
+									<AlertTriangle className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
+									<div>
+										<p className="text-sm font-bold text-purple-800 mb-1">
+											가격 확인이 필요한 항목 {abnormalItems.length}건
+										</p>
+										<p className="text-sm text-purple-700 break-keep mb-3">
+											아래 항목은 시장 평균과 큰 차이가 있어 별도의 사유가 있을 수 있습니다.
+											인테리어 업체와 협의된 특이사항(프리미엄 자재, 특수 시공, 공정 범위 등)이 있는지 확인해주세요.
+										</p>
+										<ul className="space-y-1.5">
+											{abnormalItems.map((item, i) => {
+												const dev = item.deviation_percent || 0
+												return (
+													<li key={i} className="text-xs text-purple-800 flex items-start gap-2">
+														<span className="shrink-0 mt-0.5">{dev > 0 ? '🔺' : '🔻'}</span>
+														<span>
+															<strong>{item.std_category || item.original_category}</strong> — {item.std_item || item.original_item_name}:
+															견적 {formatManWon(item.quoteTotal)} / 적정가 {formatManWon(item.fairTotal)}
+															<span className="font-bold"> ({dev > 0 ? '+' : ''}{dev.toFixed(0)}%)</span>
+														</span>
+													</li>
+												)
+											})}
+										</ul>
+										<p className="text-xs text-purple-600 mt-3 italic break-keep">
+											※ 확인된 사유가 있다면 관리자에게 알려주시면 분석 결과에 반영합니다.
+										</p>
+									</div>
+								</div>
+							</div>
+						)}
+
 						{/* ROI callout — 설계서 매칭 */}
 						{totalSavings > 0 && (
 							<div className="mt-4 rounded-xl bg-forest-50 border border-forest-200 p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
@@ -720,8 +784,7 @@ export default function AnalysisResultView({
 									<span className="text-sm font-bold text-forest-800">ROI</span>
 								</div>
 								<p className="text-sm text-sand-700 break-keep">
-									이 리포트의 권장 절감 항목만 적용해도 <strong className="text-forest-700">{formatManWon(totalSavings)} 절감 가능</strong>
-									{' '}— 분석 비용(3만원)의 <strong className="text-forest-700">약 {Math.round(totalSavings / 30000)}배</strong> 투자 수익률입니다.
+									이 리포트의 권장 절감 항목만 적용해도 <strong className="text-forest-700">{formatManWon(totalSavings)} 절감 가능</strong>합니다.
 								</p>
 							</div>
 						)}
@@ -747,7 +810,7 @@ export default function AnalysisResultView({
 									<span className="font-outfit text-xl md:text-2xl font-bold text-sand-900">
 										{Math.round(totalQuoteAmount / 10000).toLocaleString()}
 									</span>
-									<span className="text-[10px] md:text-xs text-sand-500">만원</span>
+									<span className="text-[10px] md:text-xs text-sand-700">만원</span>
 								</div>
 							</div>
 							<div className="grid grid-cols-2 gap-x-5 sm:gap-x-8 gap-y-1.5 text-sm flex-1">
@@ -845,7 +908,7 @@ export default function AnalysisResultView({
 								{copiedScript ? '복사 완료!' : '전체 복사'}
 							</button>
 						</div>
-						<p className="text-sm text-sand-400 mb-5 break-keep">
+						<p className="text-sm text-sand-600 mb-5 break-keep">
 							아래 멘트를 시공사에 그대로 전달하시면 됩니다. 자연스럽게 단가 재검토를 유도합니다.
 						</p>
 						<div className="space-y-4">
@@ -873,7 +936,7 @@ export default function AnalysisResultView({
 							))}
 						</div>
 						<div className="mt-4 rounded-lg bg-white/5 border border-white/10 p-3">
-							<p className="text-xs text-sand-400 break-keep">
+							<p className="text-xs text-sand-600 break-keep">
 								<strong className="text-sand-300">TIP:</strong>{' '}
 								협상은 "깎아주세요"가 아니라{' '}
 								<strong className="text-sand-200">"시장 데이터 기반으로 확인하고 싶다"</strong>는 톤으로 접근하면 시공사도 부담 없이 응합니다.
@@ -891,7 +954,7 @@ export default function AnalysisResultView({
 							<svg className="w-5 h-5 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
 							미포함 항목 포함 시 예상 총액
 						</h3>
-						<p className="text-sm text-sand-500 mb-5 break-keep">아래 항목을 체크하면 실제 예상 총 공사비를 확인할 수 있습니다.</p>
+						<p className="text-sm text-sand-700 mb-5 break-keep">아래 항목을 체크하면 실제 예상 총 공사비를 확인할 수 있습니다.</p>
 						<div className="space-y-3 mb-5">
 							{missingCats.map((cat) => {
 								const key = `missing-${cat}`
@@ -906,7 +969,7 @@ export default function AnalysisResultView({
 										/>
 										<div className="flex-1 min-w-0">
 											<span className="text-sm font-semibold text-sand-800 break-keep">{cat} 추가</span>
-											<span className="text-xs text-sand-500 ml-2">+{formatManWon(estimatedCost)}</span>
+											<span className="text-xs text-sand-700 ml-2">+{formatManWon(estimatedCost)}</span>
 										</div>
 									</label>
 								)
@@ -927,9 +990,9 @@ export default function AnalysisResultView({
 							)}
 						</div>
 						<div className="rounded-xl bg-sand-900 text-white p-5 text-center">
-							<div className="text-xs text-sand-400 mb-1">예상 총 공사비</div>
+							<div className="text-xs text-sand-600 mb-1">예상 총 공사비</div>
 							<div className="font-outfit text-3xl sm:text-4xl font-bold">{formatManWon(simTotal)}</div>
-							<div className="text-xs text-sand-400 mt-1">
+							<div className="text-xs text-sand-600 mt-1">
 								{simTotal === totalQuoteAmount
 									? '현재 견적 기준'
 									: simTotal > totalQuoteAmount
@@ -949,7 +1012,7 @@ export default function AnalysisResultView({
 						<svg className="w-5 h-5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
 						공사 전 필수 체크리스트
 					</h3>
-					<p className="text-sm text-sand-500 mb-5 break-keep">
+					<p className="text-sm text-sand-700 mb-5 break-keep">
 						{formatManWon(totalQuoteAmount)} 규모 {propertySizePyeong ? `${Math.round(propertySizePyeong)}평` : ''} {propertyType || '인테리어'} 기준, 계약 전 반드시 확인해야 할 사항입니다.
 					</p>
 					<div className="grid md:grid-cols-2 gap-4">
@@ -960,7 +1023,7 @@ export default function AnalysisResultView({
 							</h4>
 							<div className="flex items-center gap-3 mb-2">
 								<span className="font-outfit text-2xl font-bold text-sand-900">4~5주</span>
-								<span className="text-xs text-sand-500">(약 28~35일)</span>
+								<span className="text-xs text-sand-700">(약 28~35일)</span>
 							</div>
 							<p className="text-xs text-sand-600 break-keep">철거 3~4일 → 배관/전기 5~7일 → 타일/방수 7~10일 → 목공/도배 7~10일 → 마감/청소 3~5일</p>
 						</div>
@@ -1012,7 +1075,7 @@ export default function AnalysisResultView({
 							<svg className="w-5 h-5 text-forest-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
 							안전 결제 스케줄
 						</h3>
-						<p className="text-sm text-sand-500 mb-5 break-keep">
+						<p className="text-sm text-sand-700 mb-5 break-keep">
 							{formatManWon(totalQuoteAmount)} 기준 권장 지급 일정입니다. 각 단계별 시공 완료를 확인한 후 결제하세요.
 						</p>
 
@@ -1073,7 +1136,7 @@ export default function AnalysisResultView({
 						<svg className="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
 						이런 추가 비용이 발생할 수 있어요
 					</h3>
-					<p className="text-sm text-sand-500 mb-4 break-keep">
+					<p className="text-sm text-sand-700 mb-4 break-keep">
 						견적서에 포함되지 않지만 거의 모든 인테리어 공사에서 발생하는 비용입니다. 미리 알면 당황하지 않습니다.
 					</p>
 					<div className="grid sm:grid-cols-2 gap-3">
@@ -1240,7 +1303,7 @@ export default function AnalysisResultView({
 				    15. 데이터 출처 푸터 (설계서 매칭)
 				    ═══════════════════════════════════════════════════════ */}
 				<div className="border-t-2 border-sand-200 pt-5">
-					<div className="text-center text-xs text-sand-500 space-y-1">
+					<div className="text-center text-xs text-sand-700 space-y-1">
 						<p>
 							본 분석은{' '}
 							{region && <>{region} </>}
@@ -1251,7 +1314,7 @@ export default function AnalysisResultView({
 							벤치마크 적정가는 면적/지역/계절/등급 보정계수 적용 후 산출됩니다.
 							{totalFactor !== 1 && ` (종합 보정계수: ${totalFactor.toFixed(2)})`}
 						</p>
-						<p className="text-sand-400">
+						<p className="text-sand-600">
 							ZipCheck 견적 분석 시스템 v1.7 | zcheck.co.kr
 						</p>
 					</div>

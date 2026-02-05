@@ -23,6 +23,8 @@ interface QuoteSet {
 	vendorPhone: string
 	vendorRepresentative: string
 	vendorBusinessNumber: string
+	vendorLicenseStatus: 'yes' | 'no' | 'unknown'
+	vendorWarrantyInsurance: 'yes' | 'no' | 'unknown'
 	uploadType: 'excel' | 'image'
 	images: string[] // base64 previews
 	imageFileNames: string[]
@@ -75,6 +77,8 @@ export default function QuoteSubmission() {
 			vendorPhone: '',
 			vendorRepresentative: '',
 			vendorBusinessNumber: '',
+			vendorLicenseStatus: 'unknown' as const,
+			vendorWarrantyInsurance: 'unknown' as const,
 			uploadType: 'excel' as const,
 			images: [],
 			imageFileNames: [],
@@ -274,6 +278,10 @@ export default function QuoteSubmission() {
 				alert(`견적서 ${String.fromCharCode(65 + i)} - 업체명을 입력해주세요.`)
 				return
 			}
+			if (!set.vendorBusinessNumber.trim()) {
+				alert(`견적서 ${String.fromCharCode(65 + i)} - 사업자등록번호를 입력해주세요.`)
+				return
+			}
 			if (set.items.length === 0) {
 				alert(`견적서 ${String.fromCharCode(65 + i)} - 견적 항목을 업로드해주세요.`)
 				return
@@ -308,6 +316,8 @@ export default function QuoteSubmission() {
 						vendor_phone: set.vendorPhone || undefined,
 						vendor_representative: set.vendorRepresentative || undefined,
 						vendor_business_number: set.vendorBusinessNumber || undefined,
+						vendor_license_status: set.vendorLicenseStatus,
+						vendor_warranty_insurance: set.vendorWarrantyInsurance,
 						upload_type: set.uploadType,
 						images: set.images,
 						items: set.items
@@ -698,8 +708,8 @@ export default function QuoteSubmission() {
 									/>
 								</div>
 								<div>
-									<label htmlFor="qs-vendor-biz" className="block text-sm font-semibold mb-2 text-sand-500">
-										사업자번호 (선택)
+									<label htmlFor="qs-vendor-biz" className="block text-sm font-semibold mb-2 text-sand-700">
+										사업자등록번호 <span className="text-red-500">*</span>
 									</label>
 									<input
 										id="qs-vendor-biz"
@@ -711,8 +721,63 @@ export default function QuoteSubmission() {
 									/>
 								</div>
 							</div>
-							<p className="text-xs text-sand-400 mt-3">
-								업체 정보를 입력하면 커뮤니티의 업체 후기 및 피해사례와 자동 연계됩니다
+
+							{/* 면허 및 보험 */}
+							<div className="grid md:grid-cols-2 gap-4 mt-4">
+								<div>
+									<label className="block text-sm font-semibold mb-2 text-sand-700">
+										실내건축 건설업면허 보유 여부
+									</label>
+									<div className="flex gap-2">
+										{([['yes', '보유'], ['no', '미보유'], ['unknown', '확인중']] as const).map(([val, label]) => (
+											<button
+												key={val}
+												type="button"
+												onClick={() => updateQuoteSet(currentSetIndex, { vendorLicenseStatus: val })}
+												className={`flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all border ${
+													quoteSets[currentSetIndex].vendorLicenseStatus === val
+														? val === 'yes'
+															? 'bg-forest-600 text-white border-forest-600'
+															: val === 'no'
+															? 'bg-red-500 text-white border-red-500'
+															: 'bg-amber-500 text-white border-amber-500'
+														: 'bg-white text-sand-600 border-sand-200 hover:border-sand-400'
+												}`}
+											>
+												{label}
+											</button>
+										))}
+									</div>
+								</div>
+								<div>
+									<label className="block text-sm font-semibold mb-2 text-sand-700">
+										하자보증보험 가입 여부
+									</label>
+									<div className="flex gap-2">
+										{([['yes', '가입'], ['no', '미가입'], ['unknown', '확인중']] as const).map(([val, label]) => (
+											<button
+												key={val}
+												type="button"
+												onClick={() => updateQuoteSet(currentSetIndex, { vendorWarrantyInsurance: val })}
+												className={`flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all border ${
+													quoteSets[currentSetIndex].vendorWarrantyInsurance === val
+														? val === 'yes'
+															? 'bg-forest-600 text-white border-forest-600'
+															: val === 'no'
+															? 'bg-red-500 text-white border-red-500'
+															: 'bg-amber-500 text-white border-amber-500'
+														: 'bg-white text-sand-600 border-sand-200 hover:border-sand-400'
+												}`}
+											>
+												{label}
+											</button>
+										))}
+									</div>
+								</div>
+							</div>
+
+							<p className="text-xs text-sand-600 mt-3">
+								업체 정보를 정확히 입력하면 분석 결과의 신뢰성이 높아지고, 커뮤니티의 업체 후기 및 피해사례와 자동 연계됩니다
 							</p>
 						</div>
 

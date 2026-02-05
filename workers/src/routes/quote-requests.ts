@@ -1054,6 +1054,8 @@ app.post('/submit-multiple', async (c) => {
 				vendor_phone?: string
 				vendor_representative?: string
 				vendor_business_number?: string
+				vendor_license_status?: string
+				vendor_warranty_insurance?: string
 				upload_type: string
 				images?: string[]
 				items: Array<Record<string, unknown>>
@@ -1245,6 +1247,8 @@ app.post('/submit-multiple', async (c) => {
 					vendor_phone: set.vendor_phone || null,
 					vendor_representative: set.vendor_representative || null,
 					vendor_business_number: set.vendor_business_number || null,
+					vendor_license_status: set.vendor_license_status || 'unknown',
+					vendor_warranty_insurance: set.vendor_warranty_insurance || 'unknown',
 					upload_type: set.upload_type,
 					images: JSON.stringify(set.images || []),
 					items: JSON.stringify(set.items),
