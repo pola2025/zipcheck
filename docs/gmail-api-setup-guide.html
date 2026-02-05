@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZipCheck Gmail API 설정 가이드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .step-card { transition: all 0.2s; }
+        .step-card.completed { opacity: 0.6; }
+        .step-card.completed .step-badge { background: #10B981; }
+        .copy-btn:active { transform: scale(0.95); }
+        .path-arrow { display: inline-flex; align-items: center; gap: 4px; }
+        .path-arrow span { background: #F3F4F6; padding: 2px 8px; border-radius: 4px; font-size: 13px; font-weight: 600; }
+        .path-arrow::after { content: '→'; margin: 0 4px; color: #9CA3AF; }
+        .path-arrow:last-child::after { content: ''; }
+        .warning-box { background: #FEF3C7; border-left: 4px solid #F59E0B; }
+        .danger-box { background: #FEE2E2; border-left: 4px solid #EF4444; }
+        .info-box { background: #DBEAFE; border-left: 4px solid #3B82F6; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-3xl mx-auto py-8 px-4">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-emerald-700 to-emerald-500 rounded-2xl p-8 mb-8 text-white">
+            <h1 class="text-2xl font-bold mb-2">ZipCheck Gmail API 설정 가이드</h1>
+            <p class="opacity-90">hello@zcheck.co.kr에서 자동 메일 발송을 위한 OAuth2 설정</p>
+            <div class="mt-4 flex gap-4 text-sm">
+                <span class="bg-white/20 px-3 py-1 rounded-full">예상 시간: 15~20분</span>
+                <span class="bg-white/20 px-3 py-1 rounded-full">난이도: 중간</span>
+            </div>
+        </div>
+
+        <!-- Checklist -->
+        <div class="bg-white rounded-xl p-6 mb-8 shadow-sm border">
+            <h2 class="font-bold text-lg mb-4">진행 체크리스트</h2>
+            <div class="space-y-2">
+                <label class="flex items-center gap-3 cursor-pointer" id="check-1">
+                    <input type="checkbox" class="w-5 h-5 rounded" onchange="toggleStep(1)">
+                    <span>Step 1: Google Cloud Console 프로젝트 생성</span>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer" id="check-2">
+                    <input type="checkbox" class="w-5 h-5 rounded" onchange="toggleStep(2)">
+                    <span>Step 2: Gmail API 활성화</span>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer" id="check-3">
+                    <input type="checkbox" class="w-5 h-5 rounded" onchange="toggleStep(3)">
+                    <span>Step 3: OAuth 동의 화면 설정</span>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer" id="check-4">
+                    <input type="checkbox" class="w-5 h-5 rounded" onchange="toggleStep(4)">
+                    <span>Step 4: OAuth2 클라이언트 ID 생성</span>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer" id="check-5">
+                    <input type="checkbox" class="w-5 h-5 rounded" onchange="toggleStep(5)">
+                    <span>Step 5: Refresh Token 발급</span>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer" id="check-6">
+                    <input type="checkbox" class="w-5 h-5 rounded" onchange="toggleStep(6)">
+                    <span>Step 6: Cloudflare Workers 환경변수 설정</span>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer" id="check-7">
+                    <input type="checkbox" class="w-5 h-5 rounded" onchange="toggleStep(7)">
+                    <span>Step 7: 테스트 발송</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="step-card bg-white rounded-xl p-6 mb-6 shadow-sm border" id="step-1">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="step-badge w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-sm">1</div>
+                <h3 class="font-bold text-lg">Google Cloud Console 프로젝트 생성</h3>
+            </div>
+            <ol class="space-y-3 text-gray-700">
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">1.</span>
+                    <div>
+                        <a href="https://console.cloud.google.com" target="_blank" class="text-blue-600 underline font-medium">console.cloud.google.com</a> 접속
+                        <div class="text-sm text-gray-500 mt-1">Google Workspace 계정 (hello@zcheck.co.kr)으로 로그인</div>
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">2.</span>
+                    <div>
+                        상단 프로젝트 선택 드롭다운 클릭 → <strong>"새 프로젝트"</strong> 클릭
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">3.</span>
+                    <div>
+                        프로젝트 이름: <code class="bg-gray-100 px-2 py-0.5 rounded text-sm">ZipCheck</code> 입력 → <strong>"만들기"</strong>
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">4.</span>
+                    <div>생성 완료 후 해당 프로젝트가 선택되어 있는지 확인</div>
+                </li>
+            </ol>
+            <div class="info-box rounded-lg p-3 mt-4 text-sm">
+                이미 프로젝트가 있다면 기존 프로젝트를 사용해도 됩니다.
+            </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card bg-white rounded-xl p-6 mb-6 shadow-sm border" id="step-2">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="step-badge w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-sm">2</div>
+                <h3 class="font-bold text-lg">Gmail API 활성화</h3>
+            </div>
+            <ol class="space-y-3 text-gray-700">
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">1.</span>
+                    <div>
+                        좌측 메뉴 → <strong>"API 및 서비스"</strong> → <strong>"라이브러리"</strong>
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">2.</span>
+                    <div>
+                        검색창에 <code class="bg-gray-100 px-2 py-0.5 rounded text-sm">Gmail API</code> 검색
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">3.</span>
+                    <div>
+                        "Gmail API" 클릭 → <strong>"사용" 버튼</strong> 클릭
+                    </div>
+                </li>
+            </ol>
+            <div class="mt-4">
+                <a href="https://console.cloud.google.com/apis/library/gmail.googleapis.com" target="_blank" class="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100">
+                    직접 링크로 이동 →
+                </a>
+            </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-card bg-white rounded-xl p-6 mb-6 shadow-sm border" id="step-3">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="step-badge w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-sm">3</div>
+                <h3 class="font-bold text-lg">OAuth 동의 화면 설정</h3>
+            </div>
+            <ol class="space-y-3 text-gray-700">
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">1.</span>
+                    <div>
+                        좌측 → <strong>"API 및 서비스"</strong> → <strong>"OAuth 동의 화면"</strong>
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">2.</span>
+                    <div>
+                        User Type: <strong>"내부"</strong> 선택 (Workspace 계정이므로)
+                        <div class="text-sm text-gray-500 mt-1">"내부"가 없으면 "외부" 선택</div>
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">3.</span>
+                    <div>
+                        앱 정보 입력:
+                        <ul class="mt-2 space-y-1 text-sm">
+                            <li>• 앱 이름: <code class="bg-gray-100 px-2 py-0.5 rounded">ZipCheck Mail</code></li>
+                            <li>• 사용자 지원 이메일: <code class="bg-gray-100 px-2 py-0.5 rounded">hello@zcheck.co.kr</code></li>
+                            <li>• 개발자 연락처: <code class="bg-gray-100 px-2 py-0.5 rounded">hello@zcheck.co.kr</code></li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">4.</span>
+                    <div>
+                        범위(Scopes) → <strong>"범위 추가 또는 삭제"</strong> 클릭
+                        <div class="mt-2">
+                            <code class="bg-gray-100 px-2 py-1 rounded text-sm block">https://www.googleapis.com/auth/gmail.send</code>
+                        </div>
+                        <div class="text-sm text-gray-500 mt-1">검색해서 체크하거나, 수동으로 위 URL 입력</div>
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">5.</span>
+                    <div><strong>"저장 후 계속"</strong> 클릭하여 완료</div>
+                </li>
+            </ol>
+            <div class="warning-box rounded-lg p-3 mt-4 text-sm">
+                <strong>"외부"</strong>를 선택한 경우: "테스트 사용자" 단계에서 <code>hello@zcheck.co.kr</code>을 추가해야 합니다. 게시(프로덕션)하지 않으면 테스트 사용자만 사용 가능합니다.
+            </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step-card bg-white rounded-xl p-6 mb-6 shadow-sm border" id="step-4">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="step-badge w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-sm">4</div>
+                <h3 class="font-bold text-lg">OAuth2 클라이언트 ID 생성</h3>
+            </div>
+            <ol class="space-y-3 text-gray-700">
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">1.</span>
+                    <div>
+                        좌측 → <strong>"API 및 서비스"</strong> → <strong>"사용자 인증 정보"</strong>
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">2.</span>
+                    <div>
+                        상단 <strong>"+ 사용자 인증 정보 만들기"</strong> → <strong>"OAuth 클라이언트 ID"</strong>
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">3.</span>
+                    <div>
+                        애플리케이션 유형: <strong>"웹 애플리케이션"</strong>
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">4.</span>
+                    <div>
+                        이름: <code class="bg-gray-100 px-2 py-0.5 rounded text-sm">ZipCheck Gmail</code>
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">5.</span>
+                    <div>
+                        <strong>"승인된 리디렉션 URI"</strong> 추가:
+                        <div class="flex items-center gap-2 mt-2">
+                            <code id="redirect-uri" class="bg-gray-100 px-3 py-1.5 rounded text-sm flex-1">https://developers.google.com/oauthplayground</code>
+                            <button onclick="copyText('redirect-uri')" class="copy-btn bg-emerald-600 text-white px-3 py-1.5 rounded text-sm hover:bg-emerald-700">복사</button>
+                        </div>
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">6.</span>
+                    <div>
+                        <strong>"만들기"</strong> 클릭 → Client ID와 Client Secret이 표시됨
+                    </div>
+                </li>
+            </ol>
+
+            <div class="bg-gray-50 rounded-lg p-4 mt-4">
+                <p class="font-medium text-sm mb-3">여기에 값을 기록하세요 (이 페이지에서만 사용, 서버로 전송되지 않음):</p>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-sm text-gray-600 block mb-1">Client ID</label>
+                        <input type="text" id="input-client-id" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="xxx.apps.googleusercontent.com">
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-600 block mb-1">Client Secret</label>
+                        <input type="text" id="input-client-secret" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="GOCSPX-xxx">
+                    </div>
+                </div>
+            </div>
+
+            <div class="danger-box rounded-lg p-3 mt-4 text-sm">
+                <strong>Client ID와 Secret을 안전한 곳에 메모하세요.</strong> 나중에 다시 확인할 수 있지만, Secret은 재생성해야 할 수 있습니다.
+            </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="step-card bg-white rounded-xl p-6 mb-6 shadow-sm border" id="step-5">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="step-badge w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-sm">5</div>
+                <h3 class="font-bold text-lg">Refresh Token 발급</h3>
+            </div>
+            <div class="info-box rounded-lg p-3 mb-4 text-sm">
+                Google OAuth Playground를 사용하여 Refresh Token을 발급받습니다. 이 토큰으로 앱이 자동으로 메일을 보낼 수 있습니다.
+            </div>
+            <ol class="space-y-4 text-gray-700">
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">1.</span>
+                    <div>
+                        <a href="https://developers.google.com/oauthplayground" target="_blank" class="text-blue-600 underline font-medium">OAuth 2.0 Playground</a> 접속
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">2.</span>
+                    <div>
+                        우측 상단 <strong>톱니바퀴(Settings)</strong> 클릭:
+                        <ul class="mt-2 space-y-1 text-sm bg-gray-50 rounded-lg p-3">
+                            <li>• <strong>OAuth flow</strong>: Server-side</li>
+                            <li>• <strong>Access type</strong>: Offline</li>
+                            <li>• <strong>"Use your own OAuth credentials"</strong> 체크</li>
+                            <li>• <strong>OAuth Client ID</strong>: Step 4에서 받은 Client ID 입력</li>
+                            <li>• <strong>OAuth Client Secret</strong>: Step 4에서 받은 Client Secret 입력</li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">3.</span>
+                    <div>
+                        좌측 "Step 1" 섹션에서 스코프 입력:
+                        <div class="flex items-center gap-2 mt-2">
+                            <code id="scope-url" class="bg-gray-100 px-3 py-1.5 rounded text-sm flex-1">https://www.googleapis.com/auth/gmail.send</code>
+                            <button onclick="copyText('scope-url')" class="copy-btn bg-emerald-600 text-white px-3 py-1.5 rounded text-sm hover:bg-emerald-700">복사</button>
+                        </div>
+                        <div class="text-sm text-gray-500 mt-1">"Input your own scopes" 필드에 붙여넣기 → <strong>"Authorize APIs"</strong> 클릭</div>
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">4.</span>
+                    <div>
+                        Google 로그인 화면 → <strong>hello@zcheck.co.kr</strong> 계정으로 로그인 → 권한 허용
+                        <div class="warning-box rounded-lg p-2 mt-2 text-sm">
+                            "이 앱은 확인되지 않았습니다" 경고가 나오면 → "고급" → "ZipCheck Mail(으)로 이동(안전하지 않음)" 클릭
+                        </div>
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">5.</span>
+                    <div>
+                        "Step 2" 섹션에서 <strong>"Exchange authorization code for tokens"</strong> 클릭
+                    </div>
+                </li>
+                <li class="flex gap-2">
+                    <span class="font-bold text-emerald-600">6.</span>
+                    <div>
+                        <strong>Refresh Token</strong>이 표시됨 → 복사하여 아래에 기록
+                    </div>
+                </li>
+            </ol>
+
+            <div class="bg-gray-50 rounded-lg p-4 mt-4">
+                <label class="text-sm text-gray-600 block mb-1">Refresh Token</label>
+                <input type="text" id="input-refresh-token" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="1//0xxx...">
+            </div>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="step-card bg-white rounded-xl p-6 mb-6 shadow-sm border" id="step-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="step-badge w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-sm">6</div>
+                <h3 class="font-bold text-lg">Cloudflare Workers 환경변수 설정</h3>
+            </div>
+            <p class="text-gray-600 mb-4">아래 명령어를 터미널에서 실행하거나, Cloudflare 대시보드에서 직접 설정합니다.</p>
+
+            <div class="space-y-4">
+                <div>
+                    <p class="text-sm font-medium mb-2">방법 A: wrangler CLI (터미널)</p>
+                    <div class="bg-gray-900 rounded-lg p-4 text-green-400 text-sm font-mono space-y-2 overflow-x-auto">
+                        <div>cd workers</div>
+                        <div>echo "<span class="text-yellow-300">CLIENT_ID값</span>" | npx wrangler secret put GMAIL_CLIENT_ID</div>
+                        <div>echo "<span class="text-yellow-300">CLIENT_SECRET값</span>" | npx wrangler secret put GMAIL_CLIENT_SECRET</div>
+                        <div>echo "<span class="text-yellow-300">REFRESH_TOKEN값</span>" | npx wrangler secret put GMAIL_REFRESH_TOKEN</div>
+                        <div>echo "<span class="text-yellow-300">hello@zcheck.co.kr</span>" | npx wrangler secret put GMAIL_SENDER_EMAIL</div>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="text-sm font-medium mb-2">방법 B: Cloudflare 대시보드</p>
+                    <ol class="text-sm text-gray-700 space-y-1">
+                        <li>1. <a href="https://dash.cloudflare.com" target="_blank" class="text-blue-600 underline">dash.cloudflare.com</a> → Workers & Pages</li>
+                        <li>2. <strong>zipcheck-api</strong> 선택 → Settings → Variables</li>
+                        <li>3. "Edit variables" → 아래 4개 추가 (Encrypt 체크)</li>
+                    </ol>
+                </div>
+
+                <table class="w-full text-sm border-collapse mt-2">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="text-left p-2 rounded-tl-lg">변수명</th>
+                            <th class="text-left p-2 rounded-tr-lg">값</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-t"><td class="p-2 font-mono text-xs">GMAIL_CLIENT_ID</td><td class="p-2 text-gray-500">Step 4의 Client ID</td></tr>
+                        <tr class="border-t"><td class="p-2 font-mono text-xs">GMAIL_CLIENT_SECRET</td><td class="p-2 text-gray-500">Step 4의 Client Secret</td></tr>
+                        <tr class="border-t"><td class="p-2 font-mono text-xs">GMAIL_REFRESH_TOKEN</td><td class="p-2 text-gray-500">Step 5의 Refresh Token</td></tr>
+                        <tr class="border-t"><td class="p-2 font-mono text-xs">GMAIL_SENDER_EMAIL</td><td class="p-2">hello@zcheck.co.kr</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Auto-generate commands -->
+            <div class="bg-emerald-50 rounded-lg p-4 mt-4">
+                <p class="text-sm font-medium mb-2 text-emerald-800">위에서 값을 입력했다면 자동 생성된 명령어:</p>
+                <div id="auto-commands" class="bg-gray-900 rounded-lg p-4 text-green-400 text-xs font-mono overflow-x-auto">
+                    <div class="text-gray-500">-- Step 4, 5에서 값을 입력하면 여기에 명령어가 자동 생성됩니다 --</div>
+                </div>
+                <button onclick="copyCommands()" class="copy-btn mt-2 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-emerald-700">명령어 전체 복사</button>
+            </div>
+        </div>
+
+        <!-- Step 7 -->
+        <div class="step-card bg-white rounded-xl p-6 mb-6 shadow-sm border" id="step-7">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="step-badge w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-sm">7</div>
+                <h3 class="font-bold text-lg">테스트 발송</h3>
+            </div>
+            <p class="text-gray-600 mb-4">환경변수 설정 후 Workers를 재배포하고 테스트합니다.</p>
+            <div class="bg-gray-900 rounded-lg p-4 text-green-400 text-sm font-mono space-y-2 overflow-x-auto">
+                <div class="text-gray-500"># Workers 재배포</div>
+                <div>cd workers && npx wrangler deploy</div>
+                <div></div>
+                <div class="text-gray-500"># 테스트: 견적 제출 시 이메일이 발송되는지 확인</div>
+                <div class="text-gray-500"># 또는 Claude에게 테스트 API 호출을 요청하세요</div>
+            </div>
+            <div class="info-box rounded-lg p-3 mt-4 text-sm">
+                설정 완료 후 Claude에게 <strong>"Gmail API 테스트 발송해줘"</strong>라고 요청하면 테스트 엔드포인트를 만들어 확인할 수 있습니다.
+            </div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="bg-white rounded-xl p-6 mb-6 shadow-sm border">
+            <h3 class="font-bold text-lg mb-4">자주 발생하는 문제</h3>
+            <div class="space-y-4">
+                <div>
+                    <p class="font-medium text-red-600">Gmail token refresh failed</p>
+                    <p class="text-sm text-gray-600 mt-1">→ Client ID, Secret, Refresh Token 중 하나가 잘못됨. 값 앞뒤 공백/줄바꿈 확인.</p>
+                </div>
+                <div>
+                    <p class="font-medium text-red-600">Gmail send failed (403)</p>
+                    <p class="text-sm text-gray-600 mt-1">→ Gmail API가 활성화되지 않았거나, OAuth 동의 화면에서 gmail.send 스코프를 추가하지 않음.</p>
+                </div>
+                <div>
+                    <p class="font-medium text-red-600">Refresh Token이 만료됨</p>
+                    <p class="text-sm text-gray-600 mt-1">→ "외부" 앱이 테스트 모드이면 7일 후 만료. <strong>앱을 "게시"하면 영구 토큰</strong>이 됩니다. 또는 "내부" 앱은 만료 없음.</p>
+                </div>
+                <div>
+                    <p class="font-medium text-red-600">"이 앱은 확인되지 않았습니다"</p>
+                    <p class="text-sm text-gray-600 mt-1">→ 정상입니다. "고급" → "이동" 클릭. 본인 앱이므로 안전합니다.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Complete -->
+        <div id="complete-section" class="bg-emerald-50 border border-emerald-200 rounded-xl p-6 text-center hidden">
+            <div class="text-4xl mb-3">&#10003;</div>
+            <h3 class="font-bold text-lg text-emerald-800">설정 완료!</h3>
+            <p class="text-emerald-700 mt-2">Gmail API가 정상적으로 설정되었습니다.</p>
+            <p class="text-sm text-emerald-600 mt-1">이제 견적 제출 시 hello@zcheck.co.kr에서 자동으로 확인 메일이 발송됩니다.</p>
+        </div>
+    </div>
+
+    <script>
+        function copyText(elementId) {
+            const text = document.getElementById(elementId).textContent || document.getElementById(elementId).value;
+            navigator.clipboard.writeText(text.trim());
+            event.target.textContent = '복사됨!';
+            setTimeout(() => { event.target.textContent = '복사'; }, 1500);
+        }
+
+        function toggleStep(step) {
+            const card = document.getElementById(`step-${step}`);
+            const checkbox = document.querySelector(`#check-${step} input`);
+            if (checkbox.checked) {
+                card.classList.add('completed');
+            } else {
+                card.classList.remove('completed');
+            }
+            checkAllComplete();
+        }
+
+        function checkAllComplete() {
+            const all = document.querySelectorAll('[id^="check-"] input');
+            const allChecked = [...all].every(cb => cb.checked);
+            document.getElementById('complete-section').classList.toggle('hidden', !allChecked);
+        }
+
+        // Auto-generate wrangler commands
+        function updateCommands() {
+            const clientId = document.getElementById('input-client-id').value.trim();
+            const clientSecret = document.getElementById('input-client-secret').value.trim();
+            const refreshToken = document.getElementById('input-refresh-token').value.trim();
+            const container = document.getElementById('auto-commands');
+
+            if (!clientId && !clientSecret && !refreshToken) {
+                container.innerHTML = '<div class="text-gray-500">-- Step 4, 5에서 값을 입력하면 여기에 명령어가 자동 생성됩니다 --</div>';
+                return;
+            }
+
+            let cmds = 'cd workers\n';
+            if (clientId) cmds += `printf "${clientId}" | npx wrangler secret put GMAIL_CLIENT_ID\n`;
+            if (clientSecret) cmds += `printf "${clientSecret}" | npx wrangler secret put GMAIL_CLIENT_SECRET\n`;
+            if (refreshToken) cmds += `printf "${refreshToken}" | npx wrangler secret put GMAIL_REFRESH_TOKEN\n`;
+            cmds += `printf "hello@zcheck.co.kr" | npx wrangler secret put GMAIL_SENDER_EMAIL`;
+
+            container.textContent = cmds;
+        }
+
+        function copyCommands() {
+            const text = document.getElementById('auto-commands').textContent;
+            navigator.clipboard.writeText(text);
+            event.target.textContent = '복사됨!';
+            setTimeout(() => { event.target.textContent = '명령어 전체 복사'; }, 1500);
+        }
+
+        document.getElementById('input-client-id').addEventListener('input', updateCommands);
+        document.getElementById('input-client-secret').addEventListener('input', updateCommands);
+        document.getElementById('input-refresh-token').addEventListener('input', updateCommands);
+    </script>
+</body>
+</html>

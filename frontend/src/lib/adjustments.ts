@@ -10,10 +10,10 @@ import type { AdjustmentFactors, Grade, DeviationBracket } from '../types/analys
 
 const AREA_TABLE: [number, number][] = [
 	[10, 1.35],
-	[15, 1.25],
-	[20, 1.15],
-	[25, 1.08],
-	[30, 1.03],
+	[15, 1.20],
+	[20, 1.10],
+	[25, 1.03],
+	[30, 1.00],
 	[34, 1.00],
 	[40, 0.95],
 	[50, 0.88],
@@ -61,7 +61,7 @@ export function getYearFactor(quoteDate: string | null, referenceDate: string | 
 	const qd = new Date(quoteDate)
 	const rd = new Date(referenceDate)
 	const yearDiff = (qd.getTime() - rd.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
-	return Math.pow(1.04, yearDiff)
+	return 1 + yearDiff * 0.04
 }
 
 // ============================================

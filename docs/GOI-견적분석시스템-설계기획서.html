@@ -1,0 +1,2148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOI 견적 분석 시스템 설계기획서</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/variable/pretendardvariable.css');
+        body { font-family: 'Pretendard Variable', sans-serif; }
+        .phase-card { transition: all 0.2s ease; }
+        .phase-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .algo-step { counter-increment: step; }
+        .algo-step::before { content: counter(step); display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: #4f46e5; color: white; font-weight: 700; font-size: 14px; margin-right: 10px; flex-shrink: 0; }
+        .learning-loop { background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0f9ff 100%); }
+        pre { background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+        .review-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .priority-critical { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+        .priority-high { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+        .priority-medium { background: #fefce8; color: #ca8a04; border: 1px solid #fef08a; }
+        .priority-low { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+        .priority-p0 { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+        .priority-p1 { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+        .priority-p2 { background: #fefce8; color: #ca8a04; border: 1px solid #fef08a; }
+        .new-section { border-left: 4px solid #ef4444; }
+        .updated-section { border-left: 4px solid #f59e0b; }
+        .v12-new { border-left: 4px solid #7c3aed; }
+        .v13-new { border-left: 4px solid #059669; }
+        .v14-new { border-left: 4px solid #0284c7; }
+        .v15-new { border-left: 4px solid #dc2626; }
+        .v16-new { border-left: 4px solid #d97706; }
+        .priority-p0-new { background: #ecfdf5; color: #059669; border: 1px solid #6ee7b7; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+<!-- Header -->
+<header class="bg-gradient-to-r from-indigo-600 to-violet-600 text-white py-12">
+    <div class="max-w-5xl mx-auto px-6">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">GOI / ZipCheck</span>
+            <span class="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">v1.6 설계기획서</span>
+            <span class="bg-amber-400/30 px-3 py-1 rounded-full text-sm font-medium">Consumer Advocate Review #6 반영</span>
+        </div>
+        <h1 class="text-3xl font-bold mb-2">견적 분석 시스템 설계기획서</h1>
+        <p class="text-indigo-100 text-lg">수동 분석 → 데이터 학습 → 자동화까지의 전체 로드맵</p>
+        <div class="mt-6 flex flex-wrap gap-4 text-sm text-indigo-200">
+            <span>최초 작성: 2026-02-04</span>
+            <span>|</span>
+            <span>v1.6 업데이트: 2026-02-05</span>
+            <span>|</span>
+            <span>프로젝트: F:\GOI</span>
+            <span>|</span>
+            <span>데이터: Dash 지식DB (PostgreSQL + pgvector)</span>
+        </div>
+    </div>
+</header>
+
+<!-- Table of Contents -->
+<nav class="bg-white border-b sticky top-0 z-10">
+    <div class="max-w-5xl mx-auto px-6 py-3 flex gap-6 text-sm overflow-x-auto">
+        <a href="#vision" class="text-indigo-600 font-medium hover:underline whitespace-nowrap">1. 비전</a>
+        <a href="#architecture" class="text-gray-600 hover:text-indigo-600 whitespace-nowrap">2. 시스템 구조</a>
+        <a href="#algorithm" class="text-gray-600 hover:text-indigo-600 whitespace-nowrap">3. 분석 알고리즘</a>
+        <a href="#labeling" class="text-red-600 font-medium hover:underline whitespace-nowrap">4. 레이블링 전략</a>
+        <a href="#manual" class="text-gray-600 hover:text-indigo-600 whitespace-nowrap">5. 수동 분석 Phase</a>
+        <a href="#learning" class="text-gray-600 hover:text-indigo-600 whitespace-nowrap">6. 학습 루프</a>
+        <a href="#normalization" class="text-gray-600 hover:text-indigo-600 whitespace-nowrap">7. 항목 정규화</a>
+        <a href="#scoring" class="text-gray-600 hover:text-indigo-600 whitespace-nowrap">8. 점수 산출</a>
+        <a href="#domain-risks" class="text-gray-600 hover:text-indigo-600 whitespace-nowrap">9. 도메인 리스크</a>
+        <a href="#roadmap" class="text-gray-600 hover:text-indigo-600 whitespace-nowrap">10. 자동화 로드맵</a>
+        <a href="#data-status" class="text-gray-600 hover:text-indigo-600 whitespace-nowrap">11. 데이터 현황</a>
+        <a href="#rejected" class="text-amber-600 font-medium hover:underline whitespace-nowrap">12. 미채택 사유</a>
+    </div>
+</nav>
+
+<!-- Review Summary Banner -->
+<div class="max-w-5xl mx-auto px-6 mt-6 space-y-4">
+    <!-- v1.6 Consumer Advocate Review -->
+    <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+        <h3 class="font-bold text-amber-800 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+            v1.6 Consumer Advocate Review #6 반영 사항 — "견적 뷰어에서 재무 보디가드로"
+        </h3>
+        <div class="grid md:grid-cols-2 gap-3 text-sm">
+            <div class="flex items-start gap-2">
+                <span class="review-badge priority-p0">P0</span>
+                <span><strong>비대칭 스코어링</strong> — 저가(덤핑) 견적을 "양호"가 아닌 "고위험"으로 분류. deviationToScore 음수 편차 분리 (Section 3-3, 3-4)</span>
+            </div>
+            <div class="flex items-start gap-2">
+                <span class="review-badge priority-p0">P0</span>
+                <span><strong>수량-면적 교차검증</strong> — 바닥/도배 수량 vs 실제 평수 비교. 15%+ 부족 시 "과소산량 경고" (Section 3-6 신규)</span>
+            </div>
+            <div class="flex items-start gap-2">
+                <span class="review-badge priority-p0">P0</span>
+                <span><strong>개별 일식 고액 패널티</strong> — 500만원 이상 단일 "1식" 항목에 항목별 -5점 (Section 3-4)</span>
+            </div>
+            <div class="flex items-start gap-2">
+                <span class="review-badge priority-p0">P0</span>
+                <span><strong>적정가 비교표</strong> — 항목별 "현재가 vs 벤치마크 적정가" 2컬럼 테이블 리포트 필수 포함 (Section 8)</span>
+            </div>
+            <div class="flex items-start gap-2">
+                <span class="review-badge priority-p1">P1</span>
+                <span><strong>안전 결제 스케줄</strong> — 계약금10%/착공30%/중간30%/준공20%/하자보수10% 가이드 (Section 8)</span>
+            </div>
+            <div class="flex items-start gap-2">
+                <span class="review-badge priority-p1">P1</span>
+                <span><strong>데이터 권위 협상 스크립트</strong> — "시장 95백분위" 등 실제 수치 기반 협상 멘트 (Section 8)</span>
+            </div>
+            <div class="flex items-start gap-2">
+                <span class="review-badge priority-p1">P1</span>
+                <span><strong>데이터 출처 푸터</strong> — "경기도 34평 기준 N건 계약 데이터 기반" 투명성 표시 (Section 8)</span>
+            </div>
+            <div class="flex items-start gap-2">
+                <span class="review-badge priority-p2">P2</span>
+                <span><strong>미채택 사유 문서화</strong> — 8개 추천 중 미반영 항목의 구체적 사유 기록 (Section 12 신규)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- v1.5 Review -->
+    <div class="bg-red-50 border border-red-200 rounded-xl p-5">
+        <h3 class="font-bold text-red-800 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            v1.5 Expert Review #5 반영 사항
+        </h3>
+        <div class="grid md:grid-cols-2 gap-3 text-sm">
+            <div class="flex items-start gap-2">
+                <span class="review-badge priority-p0">P0</span>
+                <span>Global Conflict Hierarchy — Decision Log 규칙 간 충돌 방지 계층 구조 (Section 5)</span>
+            </div>
+            <div class="flex items-start gap-2">
+                <span class="review-badge priority-p0">P0</span>
+                <span>Blind Labeling — 첫 20건 successReasonCode 블라인드 선택으로 IRR 극대화 (Section 4, 5)</span>
+            </div>
+            <div class="flex items-start gap-2">
+                <span class="review-badge priority-p0">P0</span>
+                <span>VAT Null 해소 의무화 — 50건 파일럿 기간 null 금지, 업체/고객 확인 필수 (Section 4)</span>
+            </div>
+            <div class="flex items-start gap-2">
+                <span class="review-badge priority-p1">P1</span>
+                <span>Labor-Material Split — MISSING_LABOR_[공종] / MISSING_MATERIAL_[공종] 태그 분리 (Section 4)</span>
+            </div>
+            <div class="flex items-start gap-2">
+                <span class="review-badge priority-p1">P1</span>
+                <span>Uncertainty Buffer — estimatedRatio에 variance_estimate(±%) 추가 (Section 3-2, 3-5)</span>
+            </div>
+            <div class="flex items-start gap-2">
+                <span class="review-badge priority-p1">P1</span>
+                <span>아파트 단지 전속 프리미엄 — regionFactor에 Apartment-Specific Premium 태그 (Section 9)</span>
+            </div>
+            <div class="flex items-start gap-2">
+                <span class="review-badge priority-p1">P1</span>
+                <span>Material-Only 감지 — "자재만" 견적의 Low-Ball 패턴 식별 강화 (Section 9)</span>
+            </div>
+            <div class="flex items-start gap-2">
+                <span class="review-badge priority-p2">P2</span>
+                <span>PPI Data Source — Master Price Pulse 5대 자재별 공식 URL/출처 명시 (Section 6)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- v1.4 Review (collapsed) -->
+    <details class="bg-sky-50 border border-sky-200 rounded-xl">
+        <summary class="p-4 cursor-pointer font-bold text-sky-600 text-sm">v1.4 반영 사항 보기 (Review #4)</summary>
+        <div class="px-5 pb-4 grid md:grid-cols-2 gap-2 text-sm text-gray-500">
+            <div class="flex items-start gap-2"><span class="review-badge priority-p0">P0</span><span>Reviewer ID 태깅 — reviewedBy + reviewerConfidence (Section 3-2, 4)</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-p0">P0</span><span>공사 착공월 수집 — constructionStartMonth (Section 4)</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-p1">P1</span><span>De-bundling Evidence — debundling_logic 필드 (Section 3-5)</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-p1">P1</span><span>Missing Item Tags — MISSING_* 표준 태그 (Section 4)</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-p1">P1</span><span>Success Code 세분화 — AREA_SCALING / SEASONAL (Section 3-2)</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-p1">P1</span><span>이사철 시차 리스크 (Section 9)</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-p1">P1</span><span>자기선택 편향 대응 (Section 9)</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-p2">P2</span><span>Zip-to-Logistics (Section 10)</span></div>
+        </div>
+    </details>
+        </h3>
+    </details>
+
+    <!-- v1.3 Review (collapsed) -->
+    <details class="bg-emerald-50 border border-emerald-200 rounded-xl">
+        <summary class="p-4 cursor-pointer font-bold text-emerald-600 text-sm">v1.3 반영 사항 보기 (Review #3)</summary>
+        <div class="px-5 pb-4 grid md:grid-cols-2 gap-2 text-sm text-gray-500">
+            <div class="flex items-start gap-2"><span class="review-badge priority-p0">P0</span><span>VAT Toggle (Section 4)</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-p0">P0</span><span>Reasoning Taxonomy — Success Codes (Section 3-2)</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-p1">P1</span><span>Master Price Pulse (Section 6)</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-p1">P1</span><span>Completeness Tag (Section 4)</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-p1">P1</span><span>De-bundling 정확도 + 동적 면허 패널티 + Low-Ball Trap</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-p2">P2</span><span>Zip Code 매핑 (Section 10)</span></div>
+        </div>
+    </details>
+
+    <!-- v1.2 Review (collapsed) -->
+    <details class="bg-violet-50 border border-violet-200 rounded-xl">
+        <summary class="p-4 cursor-pointer font-bold text-violet-600 text-sm">v1.2 반영 사항 보기 (Review #2)</summary>
+        <div class="px-5 pb-4 grid md:grid-cols-2 gap-2 text-sm text-gray-500">
+            <div class="flex items-start gap-2"><span class="review-badge priority-p0">P0</span><span>feature_evidence 필드 추가 (Section 3-2)</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-p0">P0</span><span>업체 면허/보험 검증 필드 (Section 4)</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-p1">P1</span><span>단위 불일치 Hard Gate (Section 3-3)</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-p1">P1</span><span>Consensus Decision Log (Section 5)</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-p2">P2</span><span>견적서 발행일 수집 (Section 4)</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-p1">P1</span><span>표준 에러 코드 + Brand-Grade Matrix + 계절 보정</span></div>
+        </div>
+    </details>
+
+    <!-- v1.1 Review (collapsed) -->
+    <details class="bg-gray-50 border border-gray-200 rounded-xl">
+        <summary class="p-4 cursor-pointer font-bold text-gray-600 text-sm">v1.1 반영 사항 보기 (이전 리뷰)</summary>
+        <div class="px-5 pb-4 grid md:grid-cols-2 gap-2 text-sm text-gray-500">
+            <div class="flex items-start gap-2"><span class="review-badge priority-critical">CRITICAL</span><span>Gold Standard 레이블링 스키마</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-high">HIGH</span><span>일식 항목 분해(De-bundling) 로직</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-high">HIGH</span><span>비선형 면적 보정 모델</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-medium">MEDIUM</span><span>평가자 간 신뢰도(IRR) 합의 프로세스</span></div>
+            <div class="flex items-start gap-2"><span class="review-badge priority-low">LOW</span><span>실시간 물가지수(PPI) API 연동</span></div>
+        </div>
+    </details>
+</div>
+
+<main class="max-w-5xl mx-auto px-6 py-10 space-y-16">
+
+<!-- 1. Vision -->
+<section id="vision">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+        <span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold">1</span>
+        비전 및 목표
+    </h2>
+    <div class="bg-white rounded-xl p-6 shadow-sm border">
+        <h3 class="font-bold text-lg mb-4">핵심 목표</h3>
+        <p class="text-gray-700 mb-6">고객이 받은 인테리어 견적서를 입력하면, <strong>축적된 실제 원가 데이터</strong>를 기반으로 항목별 적정가 판단, 비용 절감 포인트, 주의사항을 자동 분석하는 시스템</p>
+        <div class="grid md:grid-cols-3 gap-4">
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div class="font-bold text-amber-700 mb-2">Phase 1: 수동 분석</div>
+                <p class="text-sm text-gray-600">사람 + AI가 함께 견적서 분석. Gold Standard 레이블링 + 근거 기반 판단으로 고품질 데이터 축적</p>
+                <div class="mt-2"><span class="tag bg-amber-100 text-amber-700">현재 단계</span></div>
+            </div>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="font-bold text-blue-700 mb-2">Phase 2: 반자동</div>
+                <p class="text-sm text-gray-600">파싱/정규화 자동화, 비선형 보정 + PPI 연동, 사람 최종 검증</p>
+                <div class="mt-2"><span class="tag bg-blue-100 text-blue-700">50건+ 분석 후</span></div>
+            </div>
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div class="font-bold text-green-700 mb-2">Phase 3: 완전 자동</div>
+                <p class="text-sm text-gray-600">견적서 업로드 → Feature 자동 추출 → 리포트 API. 면허 검증 포함</p>
+                <div class="mt-2"><span class="tag bg-green-100 text-green-700">200건+ 분석 후</span></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 2. System Architecture -->
+<section id="architecture">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+        <span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold">2</span>
+        시스템 전체 구조
+    </h2>
+    <div class="bg-white rounded-xl p-6 shadow-sm border">
+        <pre class="text-sm leading-relaxed">
+<span style="color:#89b4fa">[ 견적서 입력 ]</span>
+  이미지(JPG/PNG) | PDF | 엑셀(XLSX) | 직접입력(JSON)
+  + <span style="color:#cba6f7">메타데이터: 발행일, 업체명, 면허번호</span>
+        |
+        v
+<span style="color:#f9e2af">[ 1. 파싱 엔진 ]</span> ─────────────────────────────────────────
+  OCR(이미지) | 텍스트추출(PDF) | 시트파싱(XLSX)
+  → 구조화: { category, itemName, quantity, unit, unitPrice, totalPrice, notes }
+  → <span style="color:#f38ba8">에러 분류: parsing_error(OCR 오독) vs reasoning_error(분류 오류)</span>
+        |
+        v
+<span style="color:#a6e3a1">[ 2. 정규화 엔진 ]</span> ────────────────────────────────────────
+  항목명 → 표준 카테고리 + subCategory 매핑
+  → <span style="color:#f38ba8">Gold Standard 속성: { brand, grade, model } + feature_evidence</span>
+        |
+        v
+<span style="color:#fab387">[ 2.5. 일식 분해 엔진 ]</span> ──────────────────────────────────
+  "일식" 단가 감지 → 구성요소 분해 추정 (De-bundling)
+        |
+        v
+<span style="color:#cba6f7">[ 2.7. 단위 검증 게이트 ]</span> ─────────────────────────────────
+  <span style="color:#f38ba8">단위 불일치 Hard Gate: ㎡ vs 식 → 비교 차단 + "High Uncertainty" 플래그</span>
+        |
+        v
+<span style="color:#a6e3a1">[ 2.8. VAT 정규화 게이트 ]</span> ──────────────────────────────────
+  <span style="color:#a6e3a1">isVatIncluded 확인 → false면 ×1.1 보정 → null이면 경고 플래그</span>
+        |
+        v
+<span style="color:#89dceb">[ 3. 벤치마크 비교 엔진 ]</span> ──────────────────────────────────
+  Dash 지식DB 조회 → 비선형 면적보정 + Feature가중 검색 + <span style="color:#cba6f7">계절 보정</span>
+  → 적정가 범위 산출
+        |
+        v
+<span style="color:#cba6f7">[ 4. 점수 산출 엔진 ]</span> ──────────────────────────────────────
+  카테고리별 점수 → 가중 평균 → 종합 점수(0~100)
+  + <span style="color:#cba6f7">면허 미확인 리스크 가감</span>
+        |
+        v
+<span style="color:#f38ba8">[ 5. 리포트 생성 ]</span>
+  종합 점수 | 카테고리별 분석 | 일식 분해 | 권장사항 | 유사사례
+        |
+        v
+<span style="color:#fab387">[ 6. 학습 저장 ]</span>
+  분석 결과 + Hallucination Log(analysisId 연결) → Dash 저장
+        </pre>
+    </div>
+</section>
+
+<!-- 3. Algorithm -->
+<section id="algorithm">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+        <span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold">3</span>
+        분석 알고리즘 상세
+    </h2>
+
+    <!-- 3-1 파싱 -->
+    <div class="bg-white rounded-xl p-6 shadow-sm border mb-6">
+        <h3 class="font-bold text-lg mb-4 text-amber-700">3-1. 견적서 파싱 알고리즘</h3>
+        <div class="space-y-3 text-sm" style="counter-reset: step;">
+            <div class="algo-step flex items-start p-3 bg-gray-50 rounded-lg">
+                <div><strong>입력 형식 감지</strong> — 파일 확장자 + MIME 타입으로 파싱 전략 결정</div>
+            </div>
+            <div class="algo-step flex items-start p-3 bg-gray-50 rounded-lg">
+                <div><strong>테이블 구조 추출</strong> — 행/열 감지, 헤더 식별, 병합 셀 처리</div>
+            </div>
+            <div class="algo-step flex items-start p-3 bg-gray-50 rounded-lg">
+                <div><strong>항목 필드 매핑</strong> — 컬럼을 { category, itemName, qty, unit, unitPrice, total } 에 매핑</div>
+            </div>
+            <div class="algo-step flex items-start p-3 bg-gray-50 rounded-lg">
+                <div><strong>메타데이터 추출</strong> — 고객명, 평수, 주소, 건물유형, 공사기간, <strong class="text-violet-700">견적서 발행일, 업체명</strong></div>
+            </div>
+            <div class="algo-step flex items-start p-3 bg-gray-50 rounded-lg">
+                <div><strong>검증</strong> — 합계 교차검증 (항목 합 = 총액), 누락 필드 감지</div>
+            </div>
+            <div class="algo-step flex items-start p-3 bg-gray-50 rounded-lg border border-amber-200">
+                <div><strong>에러 분류</strong> — 파싱 실패를 두 유형으로 분리:
+                    <span class="tag bg-red-100 text-red-700 ml-1">parsing_error</span> OCR 오독 |
+                    <span class="tag bg-orange-100 text-orange-700 ml-1">reasoning_error</span> 분류 오류
+                </div>
+            </div>
+        </div>
+        <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm">
+            <strong>Phase 1(수동):</strong> Claude가 파싱 → 사람이 검증 + 에러 유형 레이블링 + <strong>발행일 수집</strong><br>
+            <strong>Phase 2(반자동):</strong> 스크립트 1차 추출 → AI 보정 → 사람 최종 확인
+        </div>
+    </div>
+
+    <!-- 3-2 정규화 (Updated v1.2) -->
+    <div class="bg-white rounded-xl p-6 shadow-sm border mb-6 v12-new">
+        <h3 class="font-bold text-lg mb-4 text-blue-700">3-2. 항목 정규화 알고리즘 <span class="review-badge priority-p0">v1.2</span></h3>
+        <pre class="text-xs">
+<span style="color:#89b4fa">입력:</span> "LG하우시스 강화마루 12T 시공 (몰딩포함)"
+
+<span style="color:#f9e2af">Step 1: 토큰 분리</span>
+  → ["LG하우시스", "강화마루", "12T", "시공", "몰딩포함"]
+
+<span style="color:#a6e3a1">Step 2: 매핑 테이블 조회 (exact match)</span>
+  "강화마루" → { stdCategory: "바닥", stdItem: "강화마루" } ✅ HIT
+
+<span style="color:#89dceb">Step 3: 매핑 실패 시 → 유사도 매칭</span>
+  Dash search_knowledge("강화마루") → 벡터 유사도 검색
+
+<span style="color:#cba6f7">Step 4: 매칭 실패 시 → 수동 매핑 요청</span>
+  사람에게 확인 → 매핑 테이블 저장
+  → <span style="color:#f38ba8">correctionReasonCode 선택 + 자유 텍스트 보충</span>
+
+<span style="color:#f38ba8">Step 5: Gold Standard 속성 추출</span>
+  → brand: "LG하우시스"
+  → grade: "중급"
+  → <span style="color:#cba6f7">feature_evidence: "LG하우시스 Z:IN 라인 → 중급 판정"</span>  <span style="color:#6c7086">// NEW v1.2</span>
+  → bundled: true
+  → components: ["마루시공", "몰딩시공"]
+
+<span style="color:#fab387">Step 6: 서브 카테고리 매핑</span>
+  대분류 "욕실" → 세부 공종: 방수, 타일, 도기, 배관
+        </pre>
+
+        <!-- Gold Standard Schema v1.2 -->
+        <div class="mt-4 p-4 bg-violet-50 border border-violet-200 rounded-lg">
+            <h4 class="font-bold text-violet-800 mb-2 flex items-center gap-2">
+                <span class="review-badge priority-p0">P0</span>
+                Gold Standard JSON 스키마 (v1.5)
+            </h4>
+            <pre class="text-xs">
+{
+  "analysisId": "GOI-001",               <span style="color:#6c7086">// 분석 건 고유 ID</span>
+  "itemName": "LG하우시스 강화마루 12T 시공 (몰딩포함)",
+  "stdCategory": "바닥",
+  "stdItem": "강화마루",
+  "subCategory": "Material+Install",
+  "attributes": {
+    "brand": "LG하우시스",
+    "grade": "중급",                      <span style="color:#6c7086">// 가성비 | 중급 | 고급 | 프리미엄</span>
+    "unit_type": "㎡",
+    "model": "Z:IN 컬렉션",
+    "thickness": "12T",
+    "material": "강화마루"
+  },
+  <span style="color:#cba6f7">"feature_evidence": "LG하우시스 Z:IN 컬렉션은 브랜드 가격표 기준 중급 라인",</span>  <span style="color:#6c7086">// NEW v1.2</span>
+  "bundled": true,
+  "components": [
+    { "name": "마루시공", "estimatedRatio": 0.85, <span style="color:#ef4444">"variance_estimate": 0.05</span> },  <span style="color:#6c7086">// v1.5: ±5% 불확실성 범위</span>
+    { "name": "몰딩시공", "estimatedRatio": 0.15, <span style="color:#ef4444">"variance_estimate": 0.05</span> }
+  ],
+  "correctionReasonCode": null,           <span style="color:#6c7086">// 표준 에러 코드 (v1.2)</span>
+  "correctionReasonText": null,           <span style="color:#6c7086">// 자유 텍스트 보충</span>
+  <span style="color:#a6e3a1">"successReasonCode": "MATCH_BY_BRAND",</span>   <span style="color:#6c7086">// AI가 맞았을 때의 근거 코드 (v1.3)</span>
+  "errorType": null,
+  "confidence": 0.92,
+  <span style="color:#7dd3fc">"reviewedBy": "admin_A",</span>                 <span style="color:#6c7086">// v1.4 P0: 평가자 ID (편향 추적)</span>
+  <span style="color:#7dd3fc">"reviewerConfidence": 0.85</span>               <span style="color:#6c7086">// v1.4 P0: 평가자 확신도 (0~1)</span>
+}
+            </pre>
+        </div>
+
+        <!-- Standardized Reason Codes (NEW v1.2) -->
+        <div class="mt-4 p-4 bg-violet-50 border border-violet-200 rounded-lg">
+            <h4 class="font-bold text-violet-800 mb-2 flex items-center gap-2">
+                <span class="review-badge priority-p1">P1</span>
+                표준 에러 코드 (correctionReasonCode) — v1.2 추가
+            </h4>
+            <p class="text-sm text-gray-700 mb-3">자유 텍스트만으로는 50건 분석 후 패턴 추출이 어려움. 7개 표준 코드 중 선택 + 자유 텍스트 보충 방식.</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                <div class="bg-white p-2 rounded border"><code class="text-violet-700 font-bold">WRONG_GRADE</code><br><span class="text-gray-500">자재등급 오판</span></div>
+                <div class="bg-white p-2 rounded border"><code class="text-violet-700 font-bold">WRONG_CATEGORY</code><br><span class="text-gray-500">카테고리 분류 오류</span></div>
+                <div class="bg-white p-2 rounded border"><code class="text-violet-700 font-bold">WRONG_UNIT</code><br><span class="text-gray-500">단위 변환 오류</span></div>
+                <div class="bg-white p-2 rounded border"><code class="text-violet-700 font-bold">MISSING_LOGISTICS</code><br><span class="text-gray-500">물류/운반비 미반영</span></div>
+                <div class="bg-white p-2 rounded border"><code class="text-violet-700 font-bold">BUNDLED_MISSED</code><br><span class="text-gray-500">번들 항목 미감지</span></div>
+                <div class="bg-white p-2 rounded border"><code class="text-violet-700 font-bold">BRAND_CONFUSED</code><br><span class="text-gray-500">브랜드 라인 혼동</span></div>
+                <div class="bg-white p-2 rounded border"><code class="text-violet-700 font-bold">OCR_MISREAD</code><br><span class="text-gray-500">OCR 오독</span></div>
+                <div class="bg-white p-2 rounded border"><code class="text-violet-700 font-bold">OTHER</code><br><span class="text-gray-500">기타 (텍스트 필수)</span></div>
+            </div>
+        </div>
+
+        <!-- Reasoning Taxonomy - Success Codes (NEW v1.3) -->
+        <div class="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+            <h4 class="font-bold text-emerald-800 mb-2 flex items-center gap-2">
+                <span class="review-badge priority-p0">P0 v1.3</span>
+                Reasoning Taxonomy — Success Codes (successReasonCode)
+            </h4>
+            <p class="text-sm text-gray-700 mb-3">AI가 <strong>올바른 판단</strong>을 했을 때 "왜 맞았는지" 추적. correctionReasonCode(오류)와 대칭 구조. 50건 후 검색 가중치 검증의 핵심 데이터.</p>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                <div class="bg-white p-2 rounded border border-emerald-200"><code class="text-emerald-700 font-bold">MATCH_BY_BRAND</code><br><span class="text-gray-500">브랜드+라인 일치로 정확한 등급 판정</span></div>
+                <div class="bg-white p-2 rounded border border-emerald-200"><code class="text-emerald-700 font-bold">MATCH_BY_MARKET_AVG</code><br><span class="text-gray-500">시장 평균 단가와 일치하여 적정 판단</span></div>
+                <div class="bg-white p-2 rounded border border-emerald-200"><code class="text-emerald-700 font-bold">MATCH_BY_SIMILAR_CASE</code><br><span class="text-gray-500">유사 사례(Dash 검색) 기반 정확한 비교</span></div>
+                <div class="bg-white p-2 rounded border border-sky-200"><code class="text-sky-700 font-bold">MATCH_BY_AREA_SCALING</code><br><span class="text-gray-500">비선형 면적 보정 적용 후 정확 <span class="text-sky-500 text-[10px]">v1.4</span></span></div>
+                <div class="bg-white p-2 rounded border border-sky-200"><code class="text-sky-700 font-bold">MATCH_BY_SEASONAL</code><br><span class="text-gray-500">계절/지역 보정 적용 후 정확 <span class="text-sky-500 text-[10px]">v1.4</span></span></div>
+                <div class="bg-white p-2 rounded border border-emerald-200"><code class="text-emerald-700 font-bold">MATCH_BY_DEBUNDLE</code><br><span class="text-gray-500">일식 분해 후 개별 항목 비교 정확</span></div>
+            </div>
+            <p class="mt-3 text-xs text-gray-500">* AI가 맞았을 때 반드시 하나 선택. 50건 축적 후 어떤 매칭 전략이 가장 신뢰할 수 있는지 통계 분석 → Feature 가중 검색 가중치 튜닝에 활용.</p>
+            <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p class="text-xs font-bold text-red-700 flex items-center gap-1"><span class="review-badge priority-p0">P0 v1.5</span> Blind Labeling 프로토콜</p>
+                <p class="text-xs text-gray-700 mt-1"><strong>첫 20건</strong>: 관리자가 AI 제안을 보지 않고 successReasonCode와 grade를 <strong>빈 필드에서 직접 선택</strong>. "Confirm" 버튼 클릭 방식 금지 → <strong>Lazy Confirmation Bias</strong> 방지.</p>
+                <p class="text-xs text-gray-500 mt-1">목적: Inter-Rater Reliability(IRR) 극대화. 20건 후 AI 제안 + 관리자 확인 방식으로 전환.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3-3 벤치마크 비교 (Updated v1.2: Unit Gate + Seasonal) -->
+    <div class="bg-white rounded-xl p-6 shadow-sm border mb-6 v12-new">
+        <h3 class="font-bold text-lg mb-4 text-cyan-700">3-3. 벤치마크 비교 알고리즘 <span class="review-badge priority-p1">v1.2</span></h3>
+        <div class="grid md:grid-cols-2 gap-4 mb-4">
+            <div class="p-4 bg-gray-50 rounded-lg">
+                <h4 class="font-bold mb-2">보정 계수 (Adjustment Factors)</h4>
+                <table class="w-full text-sm">
+                    <tr class="border-b"><td class="py-1 font-medium">평수 보정</td><td>비선형 계수 모델 (173현장 기반)</td></tr>
+                    <tr class="border-b"><td class="py-1 font-medium">지역 보정</td><td>우편번호 기반 (Phase 1: 3단계)</td></tr>
+                    <tr class="border-b"><td class="py-1 font-medium">연도 보정</td><td>PPI 연동 (Phase 1: 연 4%)</td></tr>
+                    <tr class="border-b"><td class="py-1 font-medium text-violet-700">계절 보정</td><td class="text-violet-700">이사철(3~5월, 9~10월) +5~8%</td></tr>
+                    <tr><td class="py-1 font-medium">자재등급 보정</td><td>가성비 0.7 / 중급 1.0 / 고급 1.4 / 프리미엄 1.8</td></tr>
+                    <tr class="text-red-700"><td class="py-1 font-medium">전속 업체 보정</td><td>아파트 단지 전속 업체 +10~15% (v1.5)</td></tr>
+                </table>
+            </div>
+            <div class="p-4 bg-gray-50 rounded-lg">
+                <h4 class="font-bold mb-2">적정가 판단 기준 <span class="review-badge priority-p0">v1.6 비대칭</span></h4>
+                <table class="w-full text-sm">
+                    <tr class="border-b bg-red-50"><td class="py-1"><span class="tag bg-red-100 text-red-700">덤핑 위험</span></td><td class="text-red-700 font-medium">벤치마크 대비 -25% 이하 <span class="text-xs">(공사중단/저품질 위험)</span></td></tr>
+                    <tr class="border-b bg-amber-50"><td class="py-1"><span class="tag bg-amber-100 text-amber-700">과소 주의</span></td><td class="text-amber-700">벤치마크 대비 -25% ~ -15%</td></tr>
+                    <tr class="border-b"><td class="py-1"><span class="tag bg-green-100 text-green-700">양호</span></td><td>벤치마크 대비 -15% ~ -5%</td></tr>
+                    <tr class="border-b"><td class="py-1"><span class="tag bg-blue-100 text-blue-700">적정</span></td><td>벤치마크 대비 -5% ~ +10%</td></tr>
+                    <tr class="border-b"><td class="py-1"><span class="tag bg-amber-100 text-amber-700">약간높음</span></td><td>벤치마크 대비 +10% ~ +25%</td></tr>
+                    <tr><td class="py-1"><span class="tag bg-red-100 text-red-700">높음</span></td><td>벤치마크 대비 +25% 초과</td></tr>
+                </table>
+                <p class="text-xs text-red-600 mt-2 font-medium">v1.6 변경: 저가 = "양호"에서 → 비대칭 6단계로 전환. 한국 시장에서 과소 가격은 과대 가격보다 더 위험 (공사중단, 추가금 요구, 저품질 시공)</p>
+            </div>
+        </div>
+
+        <!-- Unit-Type Hard Gate (NEW v1.2) -->
+        <div class="p-4 bg-violet-50 border border-violet-200 rounded-lg mb-4">
+            <h4 class="font-bold text-violet-800 mb-2 flex items-center gap-2">
+                <span class="review-badge priority-p1">P1</span>
+                단위 불일치 Hard Gate (v1.2 추가)
+            </h4>
+            <p class="text-sm text-gray-700 mb-2">㎡ 단가와 "식" 단가를 가중치로 비교하는 것은 100% 무효. 단위 불일치는 가중치가 아니라 <strong>비교 자체를 차단</strong>하는 게이트로 작동.</p>
+            <pre class="text-xs">
+<span style="color:#f38ba8">// 비교 전 단위 검증 (Hard Gate)</span>
+if (customerUnit !== benchmarkUnit) {
+  if (canConvert(customerUnit, benchmarkUnit)) {
+    <span style="color:#a6e3a1">// 변환 가능: ㎡ ↔ 평, m ↔ cm 등</span>
+    customerPrice = convert(customerPrice, customerUnit, benchmarkUnit)
+  } else {
+    <span style="color:#f38ba8">// 변환 불가: ㎡ vs 식, 개 vs LOT 등</span>
+    rating = "HIGH_UNCERTAINTY"
+    comparisonBlocked = true
+    <span style="color:#6c7086">// 리포트에 "단위가 달라 직접 비교 불가" 표기</span>
+    <span style="color:#6c7086">// De-bundling 시도 → 실패 시 수동 판단 요청</span>
+  }
+}
+            </pre>
+        </div>
+
+        <!-- Non-linear + Seasonal -->
+        <pre class="text-xs">
+<span style="color:#89b4fa">비교 공식 (v1.2):</span>
+
+<span style="color:#f38ba8">// 비선형 면적 보정 계수 (173현장 데이터 기반)</span>
+areaCoefficient = {
+  "10평(33㎡) 이하":  1.35,
+  "15평(50㎡)":       1.20,
+  "20평(66㎡)":       1.10,
+  "25평(83㎡)":       1.03,
+  "30평(99㎡)":       1.00,
+  "34평(112㎡)":      1.00,    <span style="color:#6c7086">// 기준</span>
+  "40평(132㎡)":      0.95,
+  "50평(165㎡) 이상": 0.88
+}
+
+<span style="color:#cba6f7">// 계절 보정 계수 (v1.2 추가)</span>
+seasonFactor = {
+  "1~2월":   0.95,   <span style="color:#6c7086">// 비수기 → 인건비 낮음</span>
+  "3~5월":   1.07,   <span style="color:#6c7086">// 봄 이사철 → 인건비 상승</span>
+  "6~8월":   1.00,   <span style="color:#6c7086">// 평시</span>
+  "9~10월":  1.05,   <span style="color:#6c7086">// 가을 이사철</span>
+  "11~12월": 0.97    <span style="color:#6c7086">// 비수기</span>
+}
+
+adjustedBenchmark = baseBenchmark
+  × areaCoefficient(customerArea)
+  × regionFactor
+  × (1 + yearDiff × inflationRate)
+  × gradeFactor
+  × <span style="color:#cba6f7">seasonFactor(quoteMonth)</span>           <span style="color:#6c7086">// v1.2 추가</span>
+  × <span style="color:#ef4444">exclusivePremium</span>                   <span style="color:#6c7086">// v1.5 추가: 전속 업체 1.10~1.15, 일반 1.0</span>
+        </pre>
+
+        <!-- Feature-weighted search (Updated) -->
+        <div class="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+            <h4 class="font-bold text-orange-800 mb-2">Feature 가중 벤치마크 검색 (v1.2 수정)</h4>
+            <p class="text-sm text-gray-700 mb-2">unitTypeMatch를 가중치에서 제거하고 Hard Gate로 전환. 단위가 통과한 후에만 나머지 가중치로 검색.</p>
+            <pre class="text-xs">
+<span style="color:#f38ba8">// STEP 1: Unit-Type Hard Gate (통과해야 STEP 2 진행)</span>
+if (!unitTypeCompatible(customer, benchmark)) → SKIP
+
+<span style="color:#89b4fa">// STEP 2: Feature 가중 검색 (단위 통과 후)</span>
+searchScore = semanticSimilarity × 0.45   <span style="color:#6c7086">// 텍스트 유사도</span>
+            + gradeMatch × 0.35            <span style="color:#6c7086">// 자재등급 일치</span>
+            + brandMatch × 0.20            <span style="color:#6c7086">// 브랜드 일치</span>
+            </pre>
+        </div>
+    </div>
+
+    <!-- 3-4 점수 산출 -->
+    <div class="bg-white rounded-xl p-6 shadow-sm border mb-6 v16-new">
+        <h3 class="font-bold text-lg mb-4 text-violet-700">3-4. 종합 점수 산출 알고리즘 <span class="review-badge priority-p0">v1.6 비대칭</span></h3>
+        <pre class="text-xs">
+<span style="color:#89b4fa">카테고리별 가중치:</span>
+
+weights = {
+  "욕실": 0.18,  "바닥": 0.17,  "주방": 0.14,  "목공": 0.12,
+  "전기": 0.08,  "도배": 0.07,  "철거": 0.06,  "가구": 0.06,
+  "창호": 0.05,  "페인트": 0.04,  "기타": 0.03
+}
+
+<span style="color:#f9e2af">카테고리 점수 — 비대칭 스코어링 (v1.6):</span>
+
+<span style="color:#d97706">// ★ 과대 가격 (양수 편차) — 비싸지만 서비스는 받음</span>
+  deviation ≤ +5%  → 95   <span style="color:#6c7086">// 거의 적정</span>
+  deviation ≤ +10% → 85   <span style="color:#6c7086">// 약간 비쌈</span>
+  deviation ≤ +15% → 75
+  deviation ≤ +25% → 55
+  deviation ≤ +35% → 35
+  deviation > +35% → 20
+
+<span style="color:#ef4444">// ★ 과소 가격 (음수 편차) — 싸지만 공사중단/저품질 위험</span>
+  deviation ≥ -5%  → 95   <span style="color:#6c7086">// 적정 할인</span>
+  deviation ≥ -15% → 80   <span style="color:#6c7086">// 주의 관찰 (v1.6: 85→80)</span>
+  deviation ≥ -25% → 55   <span style="color:#6c7086">// ★ 과소 주의 (v1.6 NEW: 이전엔 95점이었음!)</span>
+  deviation < -25% → 30   <span style="color:#6c7086">// ★ 덤핑 위험 (v1.6 NEW: 공사중단/도주 경고)</span>
+
+<span style="color:#ef4444">// v1.6 핵심 변경: Math.abs() 제거 → 양수/음수 별도 처리
+// 이전 v1.5: -30%면 abs(30%) → 35점. 하지만 bracket은 "양호"로 표시 → 모순
+// v1.6: -30%면 → 30점 + bracket "덤핑 위험" → 일관성 확보</span>
+
+<span style="color:#a6e3a1">종합 점수:</span>  overallScore = Σ (categoryScore[i] × weight[i])
+
+<span style="color:#cba6f7">보너스/패널티:</span>
++ 투명성 보너스: 항목 세분화 +3~5점
++ 브랜드 명시 보너스: 자재 브랜드/모델 기재 +2~3점
+<span style="color:#cba6f7">+ 면허 확인 보너스: 정식 면허 업체 +3점</span>             <span style="color:#6c7086">// v1.2</span>
+- 누락 패널티: 필수 항목 누락 -5점/건
+- 불명확 패널티: "일식" 과다 -3~5점
+<span style="color:#d97706">- 고액 일식 패널티: 500만원+ 단일 "1식" 항목 -5점/건</span>  <span style="color:#6c7086">// v1.6 NEW</span>
+<span style="color:#d97706">- 과소산량 패널티: 수량-면적 불일치 -8점</span>               <span style="color:#6c7086">// v1.6 NEW (Section 3-6)</span>
+<span style="color:#cba6f7">- 면허 미확인 패널티 (동적):</span>                          <span style="color:#6c7086">// v1.3 강화</span>
+<span style="color:#cba6f7">    일반 공종: -5점</span>
+<span style="color:#a6e3a1">    고위험 공종(확장/배관/전기/방수): -15점</span>              <span style="color:#6c7086">// v1.3 NEW — 법적 리스크 반영</span>
+<span style="color:#cba6f7">- 현장확인 조건부 패널티: "현장 후 확정" 항목 -2점/건</span> <span style="color:#6c7086">// v1.2</span>
+<span style="color:#a6e3a1">- 불완전 견적 패널티: completenessRating ≤ 2 → -8점</span>  <span style="color:#6c7086">// v1.3 NEW</span>
+        </pre>
+        <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm">
+            <strong class="text-amber-800">v1.6 고액 일식 개별 패널티:</strong> 기존 "일식 과다" 패널티는 전체 비율(30%+)만 봤으나, 개별 항목이 500만원 이상이면서 "1식"이면 해당 항목 자체가 불투명 리스크. <code>is_bundled && original_total_price > 5,000,000</code> → 항목당 -5점 패널티 추가. 기존 "일식 과다" 패널티와 별도 적용(중복 가산).
+        </div>
+    </div>
+
+    <!-- 3-5 De-bundling -->
+    <div class="bg-white rounded-xl p-6 shadow-sm border">
+        <h3 class="font-bold text-lg mb-4 text-red-700">3-5. 일식 항목 분해 알고리즘 (De-bundling)</h3>
+        <p class="text-sm text-gray-700 mb-4">"일식" 묶음 견적 → 구성요소 분해. 번들 미분해 시 거짓 "높은 가격" 알림 발생.</p>
+        <pre class="text-xs">
+<span style="color:#89b4fa">입력:</span> "욕실 공사 일식 3,500,000원"
+
+<span style="color:#f9e2af">Step 1: 일식/묶음 감지</span>
+  unit === "식" || unit === "일식" || unit === "LOT"
+  → bundled = true
+
+<span style="color:#a6e3a1">Step 2: 유사 항목별 견적 검색 (v1.3 강화)</span>
+  Dash search_knowledge("욕실 공사 항목별") → <span style="color:#a6e3a1">기존 분해된 견적이 있으면 실제 비율 사용</span>
+  → HIT: GOI-003의 욕실이 항목별 → 실측 비율 적용
+  → MISS: 추정 비율 폴백 [방수 12%, 타일시공 25%, 타일자재 20%, 위생도기 28%, 배관 10%, 기타 5%]
+  → <span style="color:#f38ba8">리포트에 "실측 기반" vs "추정 비율" 명시</span>
+
+<span style="color:#89dceb">Step 3: 각 구성요소를 개별 벤치마크와 비교</span>
+  → <span style="color:#cba6f7">단위 검증 Hard Gate 통과 후에만 비교 수행</span>
+
+<span style="color:#cba6f7">Step 4: 분해 신뢰도 표시</span>
+  confidence = "estimated" → 리포트에 추정치 명시
+
+<span style="color:#7dd3fc">Step 5: De-bundling Evidence 기록 (v1.4)</span>
+  → <span style="color:#7dd3fc">debundling_logic: "GOI-003 욕실 항목별 실측 비율 참조"</span>
+  → 또는: <span style="color:#7dd3fc">"34평 표준 욕실 비율 적용 (실측 데이터 미발견)"</span>
+  → Phase 2 자동 분해 학습의 핵심 훈련 데이터
+
+<span style="color:#ef4444">Step 6: Uncertainty Buffer 적용 (v1.5)</span>
+  → 모든 estimatedRatio에 <span style="color:#ef4444">variance_estimate (±%)</span> 기록
+  → 예: { "name": "방수", "estimatedRatio": 0.12, <span style="color:#ef4444">"variance_estimate": 0.03</span> }
+  → <span style="color:#ef4444">SD Threshold: Admin A와 B의 ratio 차이 &gt; 10%p → Gold Standard 부적격 → 재합의 필요</span>
+  → Phase 2 점수 산출 시 불확실성 범위를 반영하여 신뢰구간 계산
+        </pre>
+        <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm">
+            <strong>Phase 1 핵심:</strong> 매 분석 시 "일식" 항목을 수동 분해 → "비번들 훈련 데이터" 생성. <strong class="text-sky-700">v1.4: debundling_logic에 분해 근거를 반드시 기록</strong>하여 자동화 시 reasoning 재현 가능. <strong class="text-red-600">v1.5: 모든 estimatedRatio에 variance_estimate 기록. 평가자 간 ratio 차이 &gt;10%p이면 Gold Standard 부적격 → 재합의.</strong>
+        </div>
+    </div>
+
+    <!-- 3-6 Quantity-Area Cross-Validation (NEW v1.6) -->
+    <div class="bg-white rounded-xl p-6 shadow-sm border v16-new">
+        <h3 class="font-bold text-lg mb-4 text-amber-700">3-6. 수량-면적 교차검증 <span class="review-badge priority-p0">P0 v1.6 신규</span></h3>
+        <p class="text-sm text-gray-700 mb-4">업체가 의도적으로 수량을 적게 산출(Under-Quantity)하여 초기 견적을 낮추는 "미끼" 전략 탐지. 공사 중 "추가 물량"으로 프리미엄을 청구하는 한국 시장 대표적 사기 수법.</p>
+        <pre class="text-xs">
+<span style="color:#d97706">// 수량-면적 교차검증 (v1.6 NEW)</span>
+
+<span style="color:#89b4fa">// 카테고리별 표준 소요량 (34평 기준, 보정 가능)</span>
+standardQuantityPerSqm = {
+  "바닥": { "마루/장판": 1.05, "타일": 1.10 },  <span style="color:#6c7086">// ㎡당 1.05~1.10 (로스율 5~10% 포함)</span>
+  "도배": { "벽지": 1.15 },                      <span style="color:#6c7086">// ㎡당 1.15 (벽면적 = 바닥면적 × 2.5~3)</span>
+  "페인트": { "도장": 1.10 }
+}
+
+<span style="color:#f9e2af">// 검증 로직</span>
+expectedQuantity = property_size_sqm × standardQuantityPerSqm[category]
+actualQuantity = original_quantity
+
+<span style="color:#ef4444">// 판정</span>
+ratio = actualQuantity / expectedQuantity
+
+if (ratio < 0.85) {
+  <span style="color:#ef4444">// ★ 15%+ 부족: "과소산량" 경고</span>
+  flag = "UNDER_QUANTITY_WARNING"
+  penalty = -8  <span style="color:#6c7086">// 종합 점수에서 감점</span>
+  report += "바닥재 수량이 실제 면적 대비 ${Math.round((1-ratio)*100)}% 부족합니다."
+  report += "공사 중 추가 물량 요청으로 프리미엄 가격이 적용될 수 있습니다."
+} else if (ratio > 1.25) {
+  <span style="color:#d97706">// 25%+ 초과: "과대산량" 주의 (패딩 의심)</span>
+  flag = "OVER_QUANTITY_WARNING"
+  report += "수량이 표준 대비 높습니다. 로스율(Loss Rate)을 확인하세요."
+}
+        </pre>
+        <div class="mt-4 grid md:grid-cols-2 gap-3 text-sm">
+            <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                <h4 class="font-bold text-red-700 mb-1">"과소산량" 트릭 사례</h4>
+                <p class="text-xs text-gray-600">34평(112㎡) 집에 바닥재 83㎡만 견적 → "나머지 29㎡는 현장에서 추가 물량" → 추가분은 단가 30~50% 할증 청구. 초기 견적만 보면 "저렴"하지만 최종 비용은 정상 견적보다 높음.</p>
+            </div>
+            <div class="p-3 bg-green-50 rounded-lg border border-green-200">
+                <h4 class="font-bold text-green-700 mb-1">대응 (v1.6)</h4>
+                <p class="text-xs text-gray-600">바닥/도배/페인트 카테고리에서 <code>original_quantity</code>와 <code>property_size_sqm</code>를 자동 교차검증. 15% 이상 부족 시 리포트에 "과소산량 경고" + -8점 패널티. 소비자가 계약 전 전체 물량을 확정하도록 안내.</p>
+            </div>
+        </div>
+        <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm">
+            <strong>Phase 1 적용:</strong> 관리자가 수동으로 수량 vs 면적 비교. Phase 2에서 자동화. <strong>주의:</strong> 부분수리(특정 방만 시공)인 경우 false positive 방지를 위해 <code>scopeType</code>이 "부분수리"이면 검증 완화.
+        </div>
+    </div>
+</section>
+
+<!-- 4. Labeling Strategy -->
+<section id="labeling">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+        <span class="bg-red-100 text-red-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold">4</span>
+        데이터 수집 및 레이블링 전략
+        <span class="review-badge priority-p0">v1.2</span>
+    </h2>
+
+    <!-- Contractor License (NEW v1.2) -->
+    <div class="bg-white rounded-xl p-6 shadow-sm border mb-6 v12-new">
+        <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+            <span class="review-badge priority-p0">P0</span>
+            업체 면허 및 보험 검증
+        </h3>
+        <p class="text-sm text-gray-700 mb-4">"적정가"라도 <strong>무면허/무보험 업체</strong>의 견적은 높은 리스크. 가격만 보면 "양호"인 견적이 실제로는 위험할 수 있으므로, 업체 적격성을 메타데이터로 수집.</p>
+        <pre class="text-xs">
+<span style="color:#89b4fa">견적 메타데이터 스키마 (v1.4):</span>
+
+{
+  "quoteId": "GOI-001",
+  "customerInfo": {
+    "area_pyung": 34,
+    "area_sqm": 112.4,
+    "region": "서울 강남",
+    "buildingType": "아파트",
+    "scopeType": "올수리",
+    "floor": 12,
+    "hasElevator": true,
+    "parkingAvailable": true
+  },
+  "contractorInfo": {                      <span style="color:#6c7086">// NEW v1.2</span>
+    "companyName": "○○인테리어",
+    <span style="color:#cba6f7">"isLicensedContractor": true,</span>           <span style="color:#6c7086">// 면허 여부</span>
+    <span style="color:#cba6f7">"licenseNo": "20-1234-5678",</span>            <span style="color:#6c7086">// 면허 번호 (null이면 미확인)</span>
+    "hasInsurance": null,                   <span style="color:#6c7086">// 보험 여부 (null = 미확인)</span>
+    "yearsInBusiness": null                 <span style="color:#6c7086">// 업력 (확인 가능 시)</span>
+  },
+  <span style="color:#cba6f7">"quoteIssuedDate": "2026-01-15",</span>          <span style="color:#6c7086">// v1.2 P2: PPI 연동 준비</span>
+  "analysisDate": "2026-02-04",
+  <span style="color:#a6e3a1">"isVatIncluded": true,</span>                     <span style="color:#6c7086">// v1.3 P0: 부가세 포함 여부 (10% 오류 방지)</span>
+  <span style="color:#a6e3a1">"completenessRating": 4,</span>                   <span style="color:#6c7086">// v1.3 P1: 견적 완전성 (1=시작가~5=전체범위)</span>
+  <span style="color:#7dd3fc">"missingCategories": [],</span>                   <span style="color:#6c7086">// v1.4 P1: 누락 카테고리 태그 (completeness ≤3일 때)</span>
+  <span style="color:#7dd3fc">"constructionStartMonth": "2026-04",</span>       <span style="color:#6c7086">// v1.4 P0: 착공 예정월 (계절 보정 정확도)</span>
+  <span style="color:#7dd3fc">"reviewedBy": "admin_A",</span>                   <span style="color:#6c7086">// v1.4 P0: 평가자 ID</span>
+  <span style="color:#7dd3fc">"reviewerConfidence": 0.9,</span>                 <span style="color:#6c7086">// v1.4 P0: 평가자 확신도 (0~1)</span>
+  "siteConditions": {                      <span style="color:#6c7086">// v1.2: 현장 조건</span>
+    "hasPostVisitClauses": false,           <span style="color:#6c7086">// "현장 방문 후 확정" 조항 유무</span>
+    "accessNotes": null,                    <span style="color:#6c7086">// 접근성 특이사항</span>
+    <span style="color:#7dd3fc">"accessDifficulty": null</span>                <span style="color:#6c7086">// v1.4 P2: 접근 난이도 (easy/moderate/hard)</span>
+  },
+  <span style="color:#ef4444">"apartmentExclusiveContractor": false,</span>    <span style="color:#6c7086">// v1.5 P1: 아파트 단지 전속 업체 여부</span>
+  <span style="color:#ef4444">"pricingType": "turnkey"</span>                   <span style="color:#6c7086">// v1.5 P1: turnkey(자재+시공) | material_only(자재만) | labor_only(시공만)</span>
+}
+        </pre>
+        <div class="mt-3 p-3 bg-violet-50 border border-violet-200 rounded-lg text-sm">
+            <strong>점수 영향:</strong> 면허 확인 업체 → +3점 보너스. 면허 미확인 → -5점 패널티. 리포트에 "면허 미확인 업체이므로 하자 보수 및 보험 리스크" 경고 표시.
+        </div>
+    </div>
+
+    <!-- Gold Standard Labeling Interface -->
+    <div class="bg-white rounded-xl p-6 shadow-sm border mb-6">
+        <h3 class="font-bold text-lg mb-4">Gold Standard 레이블링 인터페이스</h3>
+        <div class="grid md:grid-cols-2 gap-4 mb-6">
+            <div class="p-4 bg-red-50 rounded-lg border border-red-200">
+                <h4 class="font-bold text-red-800 mb-2">이전 (v1.0)</h4>
+                <ul class="text-sm space-y-1 text-gray-600">
+                    <li>- 단순 JSON 저장</li>
+                    <li>- 수정 사유 미기록</li>
+                    <li>- 등급 판단 근거 없음</li>
+                </ul>
+            </div>
+            <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+                <h4 class="font-bold text-green-800 mb-2">현재 (v1.2)</h4>
+                <ul class="text-sm space-y-1 text-gray-600">
+                    <li>- Gold Standard JSON + <strong>feature_evidence</strong></li>
+                    <li>- 표준 에러 코드 + 텍스트 보충</li>
+                    <li>- 업체 면허/보험 정보 수집</li>
+                    <li>- 견적서 발행일 수집 (PPI 준비)</li>
+                </ul>
+            </div>
+        </div>
+
+        <h4 class="font-bold mb-3">Phase 1 레이블링 체크리스트 (v1.2)</h4>
+        <div class="bg-gray-50 p-4 rounded-lg text-sm space-y-2">
+            <div class="flex items-center gap-2"><input type="checkbox" class="rounded"> stdCategory + stdItem + subCategory 매핑</div>
+            <div class="flex items-center gap-2"><input type="checkbox" class="rounded"> attributes.brand 추출 (null 명시)</div>
+            <div class="flex items-center gap-2"><input type="checkbox" class="rounded"> attributes.grade 판정 + <strong class="text-violet-700">feature_evidence 기록</strong></div>
+            <div class="flex items-center gap-2"><input type="checkbox" class="rounded"> attributes.model 추출 (null 명시)</div>
+            <div class="flex items-center gap-2"><input type="checkbox" class="rounded"> bundled 여부 판정, 번들이면 components 분해</div>
+            <div class="flex items-center gap-2"><input type="checkbox" class="rounded"> AI 수정 시 <strong class="text-violet-700">correctionReasonCode 선택</strong> + 텍스트 보충</div>
+            <div class="flex items-center gap-2"><input type="checkbox" class="rounded"> errorType 분류 (parsing_error / reasoning_error)</div>
+            <div class="flex items-center gap-2 text-violet-700"><input type="checkbox" class="rounded"> <strong>업체 면허번호 확인 (contractorInfo)</strong></div>
+            <div class="flex items-center gap-2 text-violet-700"><input type="checkbox" class="rounded"> <strong>견적서 발행일 기록 (quoteIssuedDate)</strong></div>
+            <div class="flex items-center gap-2 text-violet-700"><input type="checkbox" class="rounded"> <strong>"현장 후 확정" 조항 확인 (hasPostVisitClauses)</strong></div>
+            <div class="flex items-center gap-2 text-emerald-700"><input type="checkbox" class="rounded"> <strong>부가세 포함 여부 확인 (isVatIncluded)</strong> — v1.3</div>
+            <div class="flex items-center gap-2 text-emerald-700"><input type="checkbox" class="rounded"> <strong>견적 완전성 평가 (completenessRating 1~5)</strong> — v1.3</div>
+            <div class="flex items-center gap-2 text-emerald-700"><input type="checkbox" class="rounded"> <strong>AI 정답 시 successReasonCode 선택</strong> — v1.3</div>
+            <div class="flex items-center gap-2 text-sky-700"><input type="checkbox" class="rounded"> <strong>착공 예정월 기록 (constructionStartMonth)</strong> — v1.4</div>
+            <div class="flex items-center gap-2 text-sky-700"><input type="checkbox" class="rounded"> <strong>평가자 ID + 확신도 기록 (reviewedBy, reviewerConfidence)</strong> — v1.4</div>
+            <div class="flex items-center gap-2 text-sky-700"><input type="checkbox" class="rounded"> <strong>completeness ≤ 3이면 missingCategories 태그</strong> — v1.4</div>
+            <div class="flex items-center gap-2 text-sky-700"><input type="checkbox" class="rounded"> <strong>일식 분해 시 debundling_logic 기록</strong> — v1.4</div>
+            <div class="flex items-center gap-2 text-sky-700"><input type="checkbox" class="rounded"> <strong>접근 난이도 플래그 (accessDifficulty)</strong> — v1.4</div>
+            <div class="flex items-center gap-2 text-red-700"><input type="checkbox" class="rounded"> <strong>첫 20건: Blind Labeling (AI 제안 미참조, 직접 선택)</strong> — v1.5</div>
+            <div class="flex items-center gap-2 text-red-700"><input type="checkbox" class="rounded"> <strong>VAT null 해소 (업체/고객 확인 후 true/false 확정)</strong> — v1.5</div>
+            <div class="flex items-center gap-2 text-red-700"><input type="checkbox" class="rounded"> <strong>일식 분해 시 variance_estimate 기록 (±%)</strong> — v1.5</div>
+            <div class="flex items-center gap-2 text-red-700"><input type="checkbox" class="rounded"> <strong>자재만/턴키 구분 + Labor-Material Split 태그</strong> — v1.5</div>
+            <div class="flex items-center gap-2 text-red-700"><input type="checkbox" class="rounded"> <strong>아파트 단지 전속 프리미엄 여부 확인</strong> — v1.5</div>
+        </div>
+    </div>
+
+    <!-- VAT Toggle + Completeness Rating (NEW v1.3) -->
+    <div class="bg-white rounded-xl p-6 shadow-sm border mb-6 v13-new">
+        <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+            <span class="review-badge priority-p0">P0 v1.3</span>
+            VAT Toggle + 견적 완전성 태그
+        </h3>
+        <div class="grid md:grid-cols-2 gap-4">
+            <div class="p-4 bg-red-50 rounded-lg border border-red-200">
+                <h4 class="font-bold text-red-800 mb-2">isVatIncluded (부가세)</h4>
+                <p class="text-sm text-gray-700 mb-2">한국 인테리어 견적서는 부가세 10% 포함/미포함이 <strong>비일관적</strong>. 미표기 시 10%의 체계적 오류 발생.</p>
+                <div class="text-xs space-y-1 text-gray-600">
+                    <div><code class="text-red-700">true</code> — 부가세 포함 금액 (VAT-inclusive)</div>
+                    <div><code class="text-red-700">false</code> — 부가세 별도 (비교 시 ×1.1 보정)</div>
+                    <div><code class="text-red-700">null</code> — 미확인 → <span class="line-through text-gray-400">리포트에 "VAT 미확인" 경고</span></div>
+                </div>
+                <div class="mt-2 p-2 bg-red-100 border border-red-300 rounded text-xs text-red-800">
+                    <strong>v1.5 변경 (P0):</strong> 50건 파일럿 기간 중 null 상태 <strong>금지</strong>. 관리자가 반드시 고객 또는 업체에 확인하여 true/false로 해소. 훈련 데이터셋에 null이 존재하면 10%의 체계적 오류가 전파되므로, null 허용은 Phase 2 이후(자동 감지 가능 시)만.
+                </div>
+                <p class="text-xs text-gray-500 mt-2">벤치마크 비교 전 반드시 VAT 정규화 수행. 모든 내부 벤치마크는 VAT 포함 기준으로 저장.</p>
+            </div>
+            <div class="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <h4 class="font-bold text-amber-800 mb-2">completenessRating (완전성)</h4>
+                <p class="text-sm text-gray-700 mb-2">불완전 견적이 Gold Standard에 진입하면 벤치마크를 왜곡. 완전성 등급으로 가중치 조절.</p>
+                <div class="text-xs space-y-1 text-gray-600">
+                    <div><span class="font-bold text-red-600">1</span> — 시작가/미끼 (주요 항목 다수 누락)</div>
+                    <div><span class="font-bold text-orange-600">2</span> — 부분 견적 (특정 공종만 포함)</div>
+                    <div><span class="font-bold text-yellow-600">3</span> — 대부분 포함 (일부 항목 "현장 확인")</div>
+                    <div><span class="font-bold text-blue-600">4</span> — 거의 완전 (소수 옵션 항목만 미포함)</div>
+                    <div><span class="font-bold text-green-600">5</span> — 완전 (모든 공종 + 부대비용 포함)</div>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">벤치마크 가중치: rating 5=1.0, 4=0.9, 3=0.7, 2=0.4, 1=0.1 (Gold Standard 제외 권고)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Missing Item Tags + Reviewer Bias Control (NEW v1.4) -->
+    <div class="bg-white rounded-xl p-6 shadow-sm border mb-6 v14-new">
+        <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+            <span class="review-badge priority-p1">P1 v1.4</span>
+            Missing Item Tags + 평가자 편향 제어
+        </h3>
+        <div class="grid md:grid-cols-2 gap-4">
+            <div class="p-4 bg-sky-50 rounded-lg border border-sky-200">
+                <h4 class="font-bold text-sky-800 mb-2">missingCategories (누락 태그)</h4>
+                <p class="text-sm text-gray-700 mb-2">completenessRating ≤ 3인 견적에 <strong>구체적으로 무엇이 빠졌는지</strong> 태그. AI가 "Low-Ball" 패턴을 학습하는 핵심 데이터.</p>
+                <p class="text-xs text-gray-500 mb-2">v1.4 기본 태그:</p>
+                <div class="grid grid-cols-2 gap-1 text-xs">
+                    <div class="bg-white p-1.5 rounded border"><code class="text-sky-700 font-bold">MISSING_DEMOLITION</code></div>
+                    <div class="bg-white p-1.5 rounded border"><code class="text-sky-700 font-bold">MISSING_WASTE_DISPOSAL</code></div>
+                    <div class="bg-white p-1.5 rounded border"><code class="text-sky-700 font-bold">MISSING_WATERPROOFING</code></div>
+                    <div class="bg-white p-1.5 rounded border"><code class="text-sky-700 font-bold">MISSING_ELECTRICAL</code></div>
+                    <div class="bg-white p-1.5 rounded border"><code class="text-sky-700 font-bold">MISSING_PLUMBING</code></div>
+                    <div class="bg-white p-1.5 rounded border"><code class="text-sky-700 font-bold">MISSING_SITE_MGMT</code></div>
+                    <div class="bg-white p-1.5 rounded border"><code class="text-sky-700 font-bold">MISSING_HAULING</code></div>
+                    <div class="bg-white p-1.5 rounded border"><code class="text-sky-700 font-bold">MISSING_CLEANING</code></div>
+                </div>
+                <div class="mt-3 p-2.5 bg-red-50 border border-red-200 rounded-lg">
+                    <p class="text-xs font-bold text-red-700 flex items-center gap-1"><span class="review-badge priority-p1">P1 v1.5</span> Labor-Material Split 태그</p>
+                    <p class="text-xs text-gray-700 mt-1">"자재만" 견적이 completenessRating을 인위적으로 높이는 문제 방지. 공종별로 <strong>인건비/자재비 누락을 구분</strong>하여 Low-Ball 패턴 정밀 식별.</p>
+                    <div class="grid grid-cols-2 gap-1 text-xs mt-2">
+                        <div class="bg-white p-1.5 rounded border border-red-200"><code class="text-red-700 font-bold">MISSING_LABOR_TILING</code></div>
+                        <div class="bg-white p-1.5 rounded border border-red-200"><code class="text-red-700 font-bold">MISSING_MATERIAL_TILING</code></div>
+                        <div class="bg-white p-1.5 rounded border border-red-200"><code class="text-red-700 font-bold">MISSING_LABOR_PAINTING</code></div>
+                        <div class="bg-white p-1.5 rounded border border-red-200"><code class="text-red-700 font-bold">MISSING_MATERIAL_PAINTING</code></div>
+                        <div class="bg-white p-1.5 rounded border border-red-200"><code class="text-red-700 font-bold">MISSING_LABOR_WOODWORK</code></div>
+                        <div class="bg-white p-1.5 rounded border border-red-200"><code class="text-red-700 font-bold">MISSING_MATERIAL_WOODWORK</code></div>
+                        <div class="bg-white p-1.5 rounded border border-red-200"><code class="text-red-700 font-bold">MISSING_LABOR_[공종]</code></div>
+                        <div class="bg-white p-1.5 rounded border border-red-200"><code class="text-red-700 font-bold">MISSING_MATERIAL_[공종]</code></div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">* [공종]은 표준 카테고리명의 영문 대문자. 예: ELECTRICAL, PLUMBING, FLOOR 등.</p>
+                </div>
+            </div>
+            <div class="p-4 bg-sky-50 rounded-lg border border-sky-200">
+                <h4 class="font-bold text-sky-800 mb-2">reviewedBy + reviewerConfidence</h4>
+                <p class="text-sm text-gray-700 mb-2">서로 다른 평가자의 "공정가" 기준이 다를 수 있음. 평가자 ID를 추적하여 <strong>편향 보정</strong> 가능.</p>
+                <div class="text-xs space-y-1.5 text-gray-600">
+                    <div><code class="text-sky-700">reviewedBy</code> — 평가자 식별 ID (예: "admin_A", "admin_B")</div>
+                    <div><code class="text-sky-700">reviewerConfidence</code> — 해당 판정에 대한 확신도 (0~1)</div>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">50건 축적 후 평가자별 "적정" 판정 비율 비교 → 편향이 큰 평가자의 데이터 가중치 조절. Consensus Decision Log와 결합하여 평가자 간 일관성 정량화.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Brand-Grade Matrix (NEW v1.2) -->
+    <div class="bg-white rounded-xl p-6 shadow-sm border mb-6 v12-new">
+        <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+            <span class="review-badge priority-p1">P1</span>
+            Brand-Grade Matrix — 브랜드별 등급 기준표 (v1.2)
+        </h3>
+        <p class="text-sm text-gray-700 mb-4">한국 시장에서 브랜드 "등급"은 직관적이지 않음. LG Z:IN 엔트리 라인이 한샘 미드레인지보다 저렴할 수 있음. 50건의 일관된 레이블링을 위해 <strong>기준표</strong>가 필요.</p>
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="border-b-2 border-gray-200">
+                        <th class="text-left py-2 px-2">카테고리</th>
+                        <th class="text-left py-2 px-2">가성비</th>
+                        <th class="text-left py-2 px-2">중급</th>
+                        <th class="text-left py-2 px-2">고급</th>
+                        <th class="text-left py-2 px-2">프리미엄</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y text-gray-600">
+                    <tr>
+                        <td class="py-2 px-2 font-medium">바닥 (마루)</td>
+                        <td class="px-2">동화 무늬목</td>
+                        <td class="px-2">LG Z:IN 기본, 한화 기본</td>
+                        <td class="px-2">LG Z:IN 컬렉션, 한샘</td>
+                        <td class="px-2">수입 원목마루</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-2 font-medium">도배 (벽지)</td>
+                        <td class="px-2">합지 벽지</td>
+                        <td class="px-2">LG실크, LX실크</td>
+                        <td class="px-2">수입 실크벽지</td>
+                        <td class="px-2">친환경/항균 프리미엄</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-2 font-medium">욕실 (도기)</td>
+                        <td class="px-2">국산 보급형</td>
+                        <td class="px-2">대림/아메리칸스탠다드</td>
+                        <td class="px-2">로얄/이누스</td>
+                        <td class="px-2">TOTO/Duravit/Kohler</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-2 font-medium">타일</td>
+                        <td class="px-2">국산 보급형</td>
+                        <td class="px-2">국산 중급 (동서/삼화)</td>
+                        <td class="px-2">수입 포세린</td>
+                        <td class="px-2">이탈리아/스페인 수입</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-2 font-medium">주방 (싱크대)</td>
+                        <td class="px-2">현지 제작</td>
+                        <td class="px-2">한샘 기본</td>
+                        <td class="px-2">한샘 고급 / 리바트</td>
+                        <td class="px-2">수입 키친 (SieMatic 등)</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-2 font-medium">창호 (샷시)</td>
+                        <td class="px-2">알루미늄 단창</td>
+                        <td class="px-2">KCC/LX 이중창</td>
+                        <td class="px-2">KCC 고단열/한화 고급</td>
+                        <td class="px-2">수입 삼중창 (YKK 등)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="mt-3 text-xs text-gray-500">* 이 기준표는 Phase 1 수동 분석 중 실제 데이터로 점진적 보정. 브랜드별 가격대가 겹치는 영역은 feature_evidence에 판단 근거 기록.</p>
+    </div>
+
+    <!-- Sub-Label System -->
+    <div class="bg-white rounded-xl p-6 shadow-sm border">
+        <h3 class="font-bold text-lg mb-4">세부 카테고리(Sub-Label) 체계</h3>
+        <div class="grid md:grid-cols-3 gap-3 text-sm">
+            <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 class="font-bold text-blue-800 mb-2">욕실</h4>
+                <ul class="space-y-1 text-gray-600 text-xs">
+                    <li>- 방수 (Waterproofing)</li>
+                    <li>- 타일 시공 / 자재</li>
+                    <li>- 위생도기 (Fixture)</li>
+                    <li>- 배관 / 악세서리</li>
+                </ul>
+            </div>
+            <div class="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                <h4 class="font-bold text-amber-800 mb-2">바닥</h4>
+                <ul class="space-y-1 text-gray-600 text-xs">
+                    <li>- 자재 / 시공</li>
+                    <li>- 몰딩/걸레받이</li>
+                    <li>- 하지 보수</li>
+                </ul>
+            </div>
+            <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                <h4 class="font-bold text-red-800 mb-2">철거</h4>
+                <ul class="space-y-1 text-gray-600 text-xs">
+                    <li>- 바닥재 / 벽체</li>
+                    <li>- 폐기물 처리</li>
+                    <li>- 양중/운반</li>
+                </ul>
+            </div>
+            <div class="p-3 bg-violet-50 rounded-lg border border-violet-200">
+                <h4 class="font-bold text-violet-800 mb-2">전기</h4>
+                <ul class="space-y-1 text-gray-600 text-xs">
+                    <li>- 배선 / 콘센트</li>
+                    <li>- 조명 자재 / 시공</li>
+                </ul>
+            </div>
+            <div class="p-3 bg-cyan-50 rounded-lg border border-cyan-200">
+                <h4 class="font-bold text-cyan-800 mb-2">주방</h4>
+                <ul class="space-y-1 text-gray-600 text-xs">
+                    <li>- 싱크대 / 상판</li>
+                    <li>- 타일 / 후드</li>
+                </ul>
+            </div>
+            <div class="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                <h4 class="font-bold text-orange-800 mb-2">목공</h4>
+                <ul class="space-y-1 text-gray-600 text-xs">
+                    <li>- 인건비 / 자재</li>
+                    <li>- 천장몰딩 / 아트월</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 5. Manual Analysis Phase -->
+<section id="manual">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+        <span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold">5</span>
+        수동 분석 Phase (현재)
+        <span class="review-badge priority-p1">v1.2</span>
+    </h2>
+    <div class="bg-white rounded-xl p-6 shadow-sm border">
+        <h3 class="font-bold text-lg mb-4">수동 분석 워크플로우</h3>
+
+        <div class="space-y-4">
+            <div class="flex gap-4 items-start">
+                <div class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
+                <div class="flex-1 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                    <h4 class="font-bold text-indigo-800">견적서 접수 + 메타데이터 수집</h4>
+                    <p class="text-sm text-gray-700 mt-1">견적서 파싱 → JSON 구조화 + 에러 분류. <strong class="text-violet-700">발행일, 업체명, 면허번호, 현장 조건</strong> 수집.</p>
+                </div>
+            </div>
+            <div class="flex gap-4 items-start">
+                <div class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+                <div class="flex-1 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h4 class="font-bold text-blue-800">정규화 + Gold Standard 레이블링 + 근거 기록</h4>
+                    <p class="text-sm text-gray-700 mt-1">카테고리 + subCategory 매핑. <strong>attributes + feature_evidence</strong> 기록. Brand-Grade Matrix 참조.</p>
+                </div>
+            </div>
+            <div class="flex gap-4 items-start">
+                <div class="bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">2.5</div>
+                <div class="flex-1 p-4 bg-red-50 rounded-lg border border-red-200">
+                    <h4 class="font-bold text-red-800">일식 분해 (De-bundling)</h4>
+                    <p class="text-sm text-gray-700 mt-1">"일식" 감지 → 구성요소 분해 추정 → 사람 검증. "비번들 훈련 데이터" 생성.</p>
+                </div>
+            </div>
+            <div class="flex gap-4 items-start">
+                <div class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+                <div class="flex-1 p-4 bg-cyan-50 rounded-lg border border-cyan-200">
+                    <h4 class="font-bold text-cyan-800">벤치마크 비교 (<span class="text-violet-700">단위 Gate + 계절 보정</span>)</h4>
+                    <p class="text-sm text-gray-700 mt-1">단위 호환성 검증 → Feature 가중 검색 → 비선형 면적 + <strong>계절 보정</strong> → 편차 계산.</p>
+                </div>
+            </div>
+            <div class="flex gap-4 items-start">
+                <div class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">4</div>
+                <div class="flex-1 p-4 bg-violet-50 rounded-lg border border-violet-200">
+                    <h4 class="font-bold text-violet-800">리포트 작성 + 피드백</h4>
+                    <p class="text-sm text-gray-700 mt-1">종합 점수 + 면허 가감 + 일식 분해 분석 포함. 사용자 피드백 수집.</p>
+                </div>
+            </div>
+            <div class="flex gap-4 items-start">
+                <div class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">5</div>
+                <div class="flex-1 p-4 bg-green-50 rounded-lg border border-green-200">
+                    <h4 class="font-bold text-green-800">학습 저장</h4>
+                    <p class="text-sm text-gray-700 mt-1">Dash에 전체 결과 + <strong>Hallucination Log (analysisId 연결)</strong> 저장.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consensus Decision Log (NEW v1.2) -->
+        <div class="mt-8 p-4 bg-violet-50 border border-violet-200 rounded-lg">
+            <h4 class="font-bold text-violet-800 mb-2 flex items-center gap-2">
+                <span class="review-badge priority-p1">P1</span>
+                Consensus Decision Log — 초기 20건 (v1.2)
+            </h4>
+            <p class="text-sm text-gray-700 mb-3">IRR 합의 과정에서 발생하는 "판단 기준 차이"를 구조적으로 문서화. Phase 2 프롬프트 엔지니어링의 핵심 자료.</p>
+            <pre class="text-xs">
+<span style="color:#89b4fa">Decision Log 스키마:</span>
+
+{
+  "logId": "DL-007",
+  "analysisId": "GOI-003",
+  "itemName": "주방 싱크대 교체 일식",
+  "dispute": {
+    "adminA": { "rating": "적정", "reason": "한샘 중급 기준으로 적절" },
+    "adminB": { "rating": "약간높음", "reason": "현지제작 수준인데 한샘가격" }
+  },
+  "resolution": {
+    "finalRating": "적정",
+    "tieBreaker": "브랜드 미기재 시 중급 기본 가정 + 10% 마진 허용",
+    <span style="color:#cba6f7">"ruleCreated": "R-003: 브랜드 미기재 싱크대는 '중급' 기본, 한샘 기준가의 +10%까지 '적정'"</span>
+  },
+  "timestamp": "2026-02-04T15:00:00Z"
+}
+            </pre>
+            <p class="text-xs text-gray-500 mt-2">이 Decision Log의 "ruleCreated"가 축적되면 Phase 2 AI의 판단 규칙이 됨. 20건 이후 단독 평가 시 이 규칙 참조.</p>
+        </div>
+
+        <!-- Global Conflict Hierarchy (NEW v1.5) -->
+        <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg v15-new">
+            <h4 class="font-bold text-red-800 mb-2 flex items-center gap-2">
+                <span class="review-badge priority-p0">P0 v1.5</span>
+                Global Conflict Hierarchy — 규칙 충돌 해결 계층
+            </h4>
+            <p class="text-sm text-gray-700 mb-3">Case #5에서 만든 규칙이 Case #1의 규칙과 모순될 수 있음. <strong>"Master Rule overrides Local Rule"</strong> 계층 구조로 일관성 보장.</p>
+            <pre class="text-xs">
+<span style="color:#89b4fa">Conflict Hierarchy 스키마:</span>
+
+{
+  "rulebook": [
+    {
+      "ruleId": "R-001",
+      "scope": "GLOBAL",               <span style="color:#6c7086">// GLOBAL | CATEGORY | CASE_SPECIFIC</span>
+      "priority": 1,                    <span style="color:#6c7086">// 낮을수록 우선 (1 = 최고 우선순위)</span>
+      "rule": "브랜드 미기재 시 '중급' 기본 가정",
+      "sourceCase": "GOI-001",
+      "createdAt": "2026-02-04",
+      <span style="color:#ef4444">"supersedes": [],</span>              <span style="color:#6c7086">// v1.5: 이 규칙이 대체하는 이전 규칙 ID</span>
+      <span style="color:#ef4444">"conflictChecked": true</span>        <span style="color:#6c7086">// v1.5: 기존 규칙과 충돌 점검 완료 여부</span>
+    },
+    {
+      "ruleId": "R-005",
+      "scope": "CATEGORY",
+      "category": "욕실",
+      "priority": 2,
+      "rule": "욕실 타일은 포세린 기준 중급, 수입 포세린 기준 고급",
+      "sourceCase": "GOI-005",
+      "createdAt": "2026-02-10",
+      <span style="color:#ef4444">"supersedes": ["R-002"],</span>       <span style="color:#6c7086">// R-002 규칙을 대체</span>
+      <span style="color:#ef4444">"conflictChecked": true</span>
+    }
+  ]
+}
+            </pre>
+            <div class="mt-3 grid md:grid-cols-3 gap-2 text-xs">
+                <div class="bg-white p-2 rounded border border-red-200">
+                    <p class="font-bold text-red-700 mb-1">GLOBAL (우선순위 1)</p>
+                    <p class="text-gray-500">전체 카테고리에 적용되는 기본 규칙. 새 규칙 생성 시 GLOBAL 규칙과 충돌 여부 필수 점검.</p>
+                </div>
+                <div class="bg-white p-2 rounded border border-red-200">
+                    <p class="font-bold text-red-700 mb-1">CATEGORY (우선순위 2)</p>
+                    <p class="text-gray-500">특정 공종에만 적용. GLOBAL과 충돌 시 GLOBAL 우선. 같은 카테고리 규칙 간 충돌 시 최신 규칙이 이전 규칙을 supersede.</p>
+                </div>
+                <div class="bg-white p-2 rounded border border-red-200">
+                    <p class="font-bold text-red-700 mb-1">CASE_SPECIFIC (우선순위 3)</p>
+                    <p class="text-gray-500">특수 상황에만 적용 (예: 특정 브랜드의 예외). 상위 규칙과 충돌 시 상위 우선.</p>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-3"><strong>프로세스:</strong> 새 규칙 생성 → 기존 Rulebook 전체 검색(같은 scope) → 충돌 발견 시 supersede 처리 또는 scope 조정 → conflictChecked=true 후 저장.</p>
+        </div>
+
+        <!-- Prompt Template v1.2 -->
+        <div class="mt-6 p-4 bg-gray-900 text-gray-100 rounded-lg">
+            <h4 class="font-bold text-sm text-gray-400 mb-3">수동 분석 프롬프트 템플릿 (v1.5)</h4>
+            <pre class="text-xs whitespace-pre-wrap" style="background:transparent; padding:0; color:#cdd6f4">
+이 견적서를 분석해줘.
+
+[견적 정보]
+- 평수: __평 (__㎡)
+- 지역: __
+- 건물유형: 아파트/빌라/주택
+- 시공유형: 올수리/부분수리/욕실만/주방만
+- 견적서 발행일: YYYY-MM-DD
+<span style="color:#7dd3fc">- 착공 예정월: YYYY-MM (없으면 "미정")</span>
+- 업체명: __
+- 면허번호: __ (없으면 "미확인")
+<span style="color:#a6e3a1">- 부가세 포함 여부: 포함/별도/미확인</span>
+<span style="color:#7dd3fc">- 평가자: admin_A / admin_B (v1.4)</span>
+<span style="color:#ef4444">- 견적 유형: 턴키(자재+시공) / 자재만 / 시공만 (v1.5)</span>
+<span style="color:#ef4444">- 아파트 전속 업체 여부: 예/아니오 (v1.5)</span>
+
+[분석 순서]
+1. 파싱 → JSON 구조화 + 에러 분류 + 메타데이터(발행일, 업체, 면허)
+<span style="color:#a6e3a1">   → VAT 확인: isVatIncluded 설정 (미확인 시 "VAT 미확인" 경고)</span>
+<span style="color:#a6e3a1">   → 견적 완전성 평가: completenessRating (1~5)</span>
+<span style="color:#7dd3fc">   → completeness ≤ 3이면 missingCategories 태그 (v1.4)</span>
+<span style="color:#ef4444">   → MISSING_LABOR_[공종] / MISSING_MATERIAL_[공종] 분리 (v1.5)</span>
+<span style="color:#ef4444">   → VAT null 금지: 업체/고객 확인 후 true/false 확정 (v1.5)</span>
+2. Gold Standard 레이블링 (brand, grade, model, subCategory)
+   → feature_evidence 반드시 기록 (등급 판단 근거)
+   → Brand-Grade Matrix 참조
+<span style="color:#a6e3a1">   → AI 정답 시 successReasonCode 선택</span>
+<span style="color:#7dd3fc">   → reviewedBy + reviewerConfidence 기록 (v1.4)</span>
+<span style="color:#ef4444">   → 첫 20건: Blind Labeling — AI 제안 미참조, 빈 필드에서 직접 선택 (v1.5)</span>
+3. "일식" 감지 → <span style="color:#a6e3a1">유사 항목별 견적 Dash 검색 우선</span> → De-bundling → 단위 Hard Gate
+<span style="color:#7dd3fc">   → debundling_logic 기록: 분해 근거 명시 (v1.4)</span>
+<span style="color:#ef4444">   → variance_estimate 기록: 각 estimatedRatio의 불확실성 (±%) (v1.5)</span>
+<span style="color:#ef4444">   → SD Threshold: 평가자 간 ratio 차이 &gt;10%p → 재합의 필요 (v1.5)</span>
+4. Dash 벤치마크 조회 + Feature 가중 검색 (단위 통과 후)
+<span style="color:#a6e3a1">   → VAT 정규화 (모든 비교는 VAT 포함 기준)</span>
+5. 비선형 면적보정 + 계절보정(<span style="color:#7dd3fc">착공월 우선, 없으면 발행월</span>) + 기타 보정
+6. 종합 점수 산출 (<span style="color:#a6e3a1">동적 면허 패널티 + 완전성 패널티</span>)
+<span style="color:#ef4444">7. 규칙 충돌 점검: 새 Decision Log 규칙 → Global Conflict Hierarchy와 대조 (v1.5)</span>
+8. Dash 저장 (save_knowledge) + Hallucination Log(analysisId 연결)
+            </pre>
+        </div>
+    </div>
+</section>
+
+<!-- 6. Learning Loop -->
+<section id="learning">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+        <span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold">6</span>
+        학습 루프 설계
+    </h2>
+    <div class="learning-loop rounded-xl p-6 border border-green-200">
+        <h3 class="font-bold text-lg mb-4">Self-Improving Analysis Loop</h3>
+
+        <pre class="text-xs">
+<span style="color:#a6e3a1">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span style="color:#89b4fa">         견적서 분석 요청 (n번째)</span>
+<span style="color:#a6e3a1">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+                    |
+        ┌─── Dash 검색 ───┐
+        │  기존 분석 n-1건   │
+        │  정규화 매핑 m건   │
+        │  <span style="color:#f38ba8">Hallucination Log</span> │ ← 오판 참조
+        │  <span style="color:#cba6f7">Decision Log</span>      │ ← 합의 규칙 참조 (v1.2)
+        └───────────────────┘
+                    |
+            ┌─ 분석 실행 ─┐
+            │  파싱 + 에러분류 │
+            │  정규화 + <span style="color:#cba6f7">evidence</span>│
+            │  De-bundling    │
+            │  <span style="color:#cba6f7">Unit Gate</span>       │ ← v1.2
+            │  비교 + <span style="color:#cba6f7">계절보정</span> │ ← v1.2
+            │  점수(면허가감)   │
+            └──────────────┘
+                    |
+        ┌─── 학습 저장 ───┐
+        │  분석 결과 저장    │ → 벤치마크 강화
+        │  새 매핑 저장      │ → 정규화 향상
+        │  오판 기록         │ → <span style="color:#f38ba8">analysisId로 연결</span> (v1.2)
+        │  <span style="color:#cba6f7">Decision Log</span>    │ → 합의 규칙 축적 (v1.2)
+        │  Feature 속성     │ → brand/grade + evidence
+        └───────────────────┘
+        </pre>
+
+        <div class="mt-6 grid md:grid-cols-3 gap-4">
+            <div class="bg-white p-4 rounded-lg border">
+                <h4 class="font-bold text-sm mb-2">매 분석마다 저장</h4>
+                <ul class="text-xs space-y-1 text-gray-600">
+                    <li>- Gold Standard JSON (전체 스키마)</li>
+                    <li>- feature_evidence (등급 근거)</li>
+                    <li>- 표준 에러 코드</li>
+                    <li>- Hallucination Log (analysisId 연결)</li>
+                    <li>- 업체 면허 정보</li>
+                    <li>- 견적서 발행일</li>
+                    <li>- De-bundling 분해 데이터</li>
+                </ul>
+            </div>
+            <div class="bg-white p-4 rounded-lg border">
+                <h4 class="font-bold text-sm mb-2">10건 축적 후</h4>
+                <ul class="text-xs space-y-1 text-gray-600">
+                    <li>- 주요 항목 자동 정규화</li>
+                    <li>- 일식 분해 비율 1차 모델</li>
+                    <li>- 에러 코드별 빈도 분석</li>
+                    <li class="text-violet-700">- Decision Log 기반 판단 규칙 10개+</li>
+                </ul>
+            </div>
+            <div class="bg-white p-4 rounded-lg border">
+                <h4 class="font-bold text-sm mb-2">50건 축적 후</h4>
+                <ul class="text-xs space-y-1 text-gray-600">
+                    <li>- 비선형 면적 계수 실측</li>
+                    <li>- Feature 기반 등급 자동 판별</li>
+                    <li>- Hallucination 패턴 프롬프트 튜닝</li>
+                    <li class="text-violet-700">- Brand-Grade Matrix 데이터 검증</li>
+                    <li class="text-violet-700">- 계절 보정 계수 실측</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Hallucination Log (Updated: analysisId linking) -->
+        <div class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <h4 class="font-bold text-red-800 mb-2">Negative Constraint — Hallucination Log <span class="review-badge priority-p1">v1.2</span></h4>
+            <p class="text-sm text-gray-700 mb-2">v1.2: Gold Standard 레코드와 <strong>analysisId</strong>로 연결하여 side-by-side 분석 가능.</p>
+            <pre class="text-xs">
+{
+  <span style="color:#cba6f7">"analysisId": "GOI-001",</span>           <span style="color:#6c7086">// Gold Standard 레코드와 연결</span>
+  "itemName": "프리미엄 실크 벽지",
+  "aiJudgment": {
+    "rating": "적정",
+    "benchmark": "일반 합지 벽지 단가",
+    <span style="color:#cba6f7">"feature_evidence_used": "벽지 카테고리 시맨틱 매칭"</span>
+  },
+  "humanCorrection": {
+    "rating": "양호",
+    "correctBenchmark": "실크 벽지 단가",
+    <span style="color:#cba6f7">"correctionReasonCode": "WRONG_GRADE"</span>
+  },
+  "preventionRule": "grade가 다른 벤치마크와 비교 금지"
+}
+            </pre>
+        </div>
+
+        <!-- Data Freshness Protocol (NEW v1.2) -->
+        <div class="mt-4 p-4 bg-violet-50 border border-violet-200 rounded-lg">
+            <h4 class="font-bold text-violet-800 mb-2 flex items-center gap-2">
+                <span class="review-badge priority-p1">P1</span>
+                데이터 신선도 프로토콜 (v1.2)
+            </h4>
+            <p class="text-sm text-gray-700 mb-2">1월에 분석한 10건의 Gold Standard가 3월 자재가 급등 이후에는 "잘못된 벤치마크"가 됨. 가격 급변 시 기존 데이터에 stale 플래그를 추가.</p>
+            <div class="grid md:grid-cols-3 gap-2 text-xs">
+                <div class="bg-white p-2 rounded border">
+                    <p class="font-bold mb-1">트리거 조건</p>
+                    <p class="text-gray-500">주요 자재 가격 ±15% 변동 감지 시</p>
+                </div>
+                <div class="bg-white p-2 rounded border">
+                    <p class="font-bold mb-1">조치</p>
+                    <p class="text-gray-500">해당 카테고리의 기존 벤치마크에 stale=true 플래그</p>
+                </div>
+                <div class="bg-white p-2 rounded border">
+                    <p class="font-bold mb-1">사용 방식</p>
+                    <p class="text-gray-500">stale 벤치마크는 가중치 0.5로 감소, 최신 데이터 우선</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Master Price Pulse (NEW v1.3) -->
+        <div class="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+            <h4 class="font-bold text-emerald-800 mb-2 flex items-center gap-2">
+                <span class="review-badge priority-p1">P1 v1.3</span>
+                Master Price Pulse — 5대 핵심 자재 월간 가격 점검
+            </h4>
+            <p class="text-sm text-gray-700 mb-3">Data Freshness Protocol의 <strong>트리거 소스</strong>. 매월 5개 핵심 자재의 시장가를 점검하여 ±15% 변동 시 stale 플래그를 자동 발동.</p>
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="border-b-2 border-gray-200">
+                            <th class="text-left py-2 px-2">#</th>
+                            <th class="text-left py-2 px-2">핵심 자재</th>
+                            <th class="text-left py-2 px-2">기준 단위</th>
+                            <th class="text-left py-2 px-2">점검 소스</th>
+                            <th class="text-left py-2 px-2">영향 카테고리</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y text-gray-600">
+                        <tr><td class="py-1.5 px-2">1</td><td class="px-2 font-medium">국산 중급 타일 (300×600)</td><td class="px-2">원/장</td><td class="px-2">토브디자인 단가표<br><span class="text-red-500 text-[10px]">v1.5: tobdesign.co.kr 도매가</span></td><td class="px-2">욕실, 바닥</td></tr>
+                        <tr><td class="py-1.5 px-2">2</td><td class="px-2 font-medium">합지/실크 벽지</td><td class="px-2">원/롤</td><td class="px-2">LG하우시스 공시가<br><span class="text-red-500 text-[10px]">v1.5: z-in.co.kr 소비자가</span></td><td class="px-2">도배</td></tr>
+                        <tr><td class="py-1.5 px-2">3</td><td class="px-2 font-medium">강화마루 12T (LG Z:IN 기본)</td><td class="px-2">원/㎡</td><td class="px-2">LG하우시스 공시가<br><span class="text-red-500 text-[10px]">v1.5: z-in.co.kr 소비자가</span></td><td class="px-2">바닥</td></tr>
+                        <tr><td class="py-1.5 px-2">4</td><td class="px-2 font-medium">목공 일당 (서울 기준)</td><td class="px-2">원/일</td><td class="px-2">업계 시세 확인<br><span class="text-red-500 text-[10px]">v1.5: 대한건설협회 노임단가 공시</span></td><td class="px-2">목공, 가구</td></tr>
+                        <tr><td class="py-1.5 px-2">5</td><td class="px-2 font-medium">폐기물 처리비 (아파트 34평 기준)</td><td class="px-2">원/㎡</td><td class="px-2">처리업체 견적<br><span class="text-red-500 text-[10px]">v1.5: 3개 폐기물처리업체 평균</span></td><td class="px-2">철거</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-3 grid md:grid-cols-3 gap-2 text-xs">
+                <div class="bg-white p-2 rounded border">
+                    <p class="font-bold mb-1">점검 주기</p>
+                    <p class="text-gray-500">매월 1회 (월초)</p>
+                </div>
+                <div class="bg-white p-2 rounded border">
+                    <p class="font-bold mb-1">트리거 조건</p>
+                    <p class="text-gray-500">전월 대비 ±15% 변동 → stale=true</p>
+                </div>
+                <div class="bg-white p-2 rounded border">
+                    <p class="font-bold mb-1">Phase 1 담당</p>
+                    <p class="text-gray-500">관리자가 수동 점검 → Dash에 기록</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 7. Normalization Table -->
+<section id="normalization">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+        <span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold">7</span>
+        항목 정규화 초기 매핑 테이블
+    </h2>
+    <div class="bg-white rounded-xl p-6 shadow-sm border overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b-2 border-gray-200">
+                    <th class="text-left py-2 px-3">표준 카테고리</th>
+                    <th class="text-left py-2 px-3">표준 항목명</th>
+                    <th class="text-left py-2 px-3 text-red-600">서브 카테고리</th>
+                    <th class="text-left py-2 px-3">매칭 키워드</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                <tr><td class="py-2 px-3 font-medium text-red-700">철거</td><td>바닥재 철거</td><td class="text-xs text-red-600">Floor Demo</td><td class="text-xs text-gray-500">마루철거, 바닥철거, 장판철거, 타일철거</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-red-700">철거</td><td>벽체 철거</td><td class="text-xs text-red-600">Wall Demo</td><td class="text-xs text-gray-500">벽지제거, 벽철거, 도배철거</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-red-700">철거</td><td>폐기물 처리</td><td class="text-xs text-red-600">Waste Disposal</td><td class="text-xs text-gray-500">폐기물, 쓰레기처리, 건축폐기물</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-red-700">철거</td><td>양중/운반</td><td class="text-xs text-red-600">Hauling</td><td class="text-xs text-gray-500">양중비, 운반비, 사다리차</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-orange-700">목공</td><td>목공사</td><td class="text-xs text-red-600">Labor</td><td class="text-xs text-gray-500">목공, 목수, 목공인건비</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-orange-700">목공</td><td>목자재</td><td class="text-xs text-red-600">Material</td><td class="text-xs text-gray-500">목자재, 합판, MDF</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-orange-700">목공</td><td>천장 몰딩</td><td class="text-xs text-red-600">Crown Molding</td><td class="text-xs text-gray-500">몰딩, 걸레받이, 크라운몰딩</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-orange-700">목공</td><td>아트월</td><td class="text-xs text-red-600">Feature Wall</td><td class="text-xs text-gray-500">아트월, TV벽, 포인트월</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-amber-700">바닥</td><td>강화마루</td><td class="text-xs text-red-600">Material+Install</td><td class="text-xs text-gray-500">강마루, 강화마루, LG마루, Z:IN</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-amber-700">바닥</td><td>장판</td><td class="text-xs text-red-600">Material+Install</td><td class="text-xs text-gray-500">장판, 장판시공, LG장판</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-amber-700">바닥</td><td>타일</td><td class="text-xs text-red-600">Material+Install</td><td class="text-xs text-gray-500">바닥타일, 포세린, 현관타일</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-amber-700">바닥</td><td>몰딩/걸레받이</td><td class="text-xs text-red-600">Molding</td><td class="text-xs text-gray-500">몰딩시공, 걸레받이</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-yellow-700">도배</td><td>벽지</td><td class="text-xs text-red-600">Material+Install</td><td class="text-xs text-gray-500">도배, 벽지, 실크벽지, 합지벽지</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-blue-700">욕실</td><td>방수공사</td><td class="text-xs text-red-600">Waterproofing</td><td class="text-xs text-gray-500">방수, 욕실방수</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-blue-700">욕실</td><td>타일 시공</td><td class="text-xs text-red-600">Tiling Labor</td><td class="text-xs text-gray-500">타일시공, 타일공사</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-blue-700">욕실</td><td>타일 자재</td><td class="text-xs text-red-600">Tiling Material</td><td class="text-xs text-gray-500">타일자재, 수입타일</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-blue-700">욕실</td><td>위생도기</td><td class="text-xs text-red-600">Fixture</td><td class="text-xs text-gray-500">세면대, 양변기, 욕조, 샤워부스</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-blue-700">욕실</td><td>배관</td><td class="text-xs text-red-600">Plumbing</td><td class="text-xs text-gray-500">욕실배관, 급배수</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-blue-700">욕실</td><td>악세서리</td><td class="text-xs text-red-600">Accessories</td><td class="text-xs text-gray-500">수건걸이, 거울, 선반</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-cyan-700">주방</td><td>싱크대</td><td class="text-xs text-red-600">Sink Cabinet</td><td class="text-xs text-gray-500">싱크대, 주방가구, 상하부장</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-cyan-700">주방</td><td>상판</td><td class="text-xs text-red-600">Countertop</td><td class="text-xs text-gray-500">상판, 인조대리석</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-violet-700">전기</td><td>전기 배선</td><td class="text-xs text-red-600">Wiring</td><td class="text-xs text-gray-500">전기배선, 전기시공</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-violet-700">전기</td><td>조명 자재</td><td class="text-xs text-red-600">Lighting Material</td><td class="text-xs text-gray-500">LED, 매입등, 다운라이트</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-violet-700">전기</td><td>조명 시공</td><td class="text-xs text-red-600">Lighting Install</td><td class="text-xs text-gray-500">조명시공, 간접조명시공</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-violet-700">전기</td><td>콘센트/스위치</td><td class="text-xs text-red-600">Outlet/Switch</td><td class="text-xs text-gray-500">콘센트, 스위치, 분전반</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-teal-700">창호</td><td>샷시</td><td class="text-xs text-red-600">Window Frame</td><td class="text-xs text-gray-500">샷시, 창호, 이중창</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-teal-700">창호</td><td>중문</td><td class="text-xs text-red-600">Interior Door</td><td class="text-xs text-gray-500">중문, 슬라이딩중문</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-pink-700">가구</td><td>붙박이장</td><td class="text-xs text-red-600">Built-in Closet</td><td class="text-xs text-gray-500">붙박이장, 옷장, 드레스룸</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-pink-700">가구</td><td>신발장</td><td class="text-xs text-red-600">Shoe Cabinet</td><td class="text-xs text-gray-500">신발장, 현관장</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-green-700">페인트</td><td>도장</td><td class="text-xs text-red-600">Painting</td><td class="text-xs text-gray-500">페인트, 도장, 탄성코트</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-green-700">필름</td><td>필름 시공</td><td class="text-xs text-red-600">Film Install</td><td class="text-xs text-gray-500">필름, 인테리어필름, 시트지</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-gray-700">기타</td><td>입주 청소</td><td class="text-xs text-red-600">Cleaning</td><td class="text-xs text-gray-500">청소, 입주청소</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-gray-700">기타</td><td>현장 관리</td><td class="text-xs text-red-600">Site Mgmt</td><td class="text-xs text-gray-500">현장관리비, 감리비, 이윤</td></tr>
+                <tr><td class="py-2 px-3 font-medium text-gray-700">설비</td><td>설비 배관</td><td class="text-xs text-red-600">Piping</td><td class="text-xs text-gray-500">설비, 배관, 난방배관, 보일러</td></tr>
+            </tbody>
+        </table>
+        <p class="mt-4 text-xs text-gray-500">* 분석을 거듭할수록 자동 확장. 새 항목명 → 수동 매핑 + correctionReasonCode → 저장 → 다음부터 자동.</p>
+    </div>
+</section>
+
+<!-- 8. Scoring Detail -->
+<section id="scoring">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+        <span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold">8</span>
+        점수 산출 상세
+    </h2>
+    <div class="bg-white rounded-xl p-6 shadow-sm border">
+        <h3 class="font-bold mb-4">점수 의미 구간</h3>
+        <div class="grid grid-cols-5 gap-2 mb-6">
+            <div class="text-center p-3 bg-red-50 rounded-lg border border-red-200">
+                <div class="text-2xl font-bold text-red-600">0~39</div>
+                <div class="text-xs mt-1 text-red-700 font-medium">매우 비쌈</div>
+                <div class="text-xs text-gray-500">재협상 강력 권고</div>
+            </div>
+            <div class="text-center p-3 bg-orange-50 rounded-lg border border-orange-200">
+                <div class="text-2xl font-bold text-orange-600">40~59</div>
+                <div class="text-xs mt-1 text-orange-700 font-medium">다소 비쌈</div>
+                <div class="text-xs text-gray-500">일부 항목 협상</div>
+            </div>
+            <div class="text-center p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                <div class="text-2xl font-bold text-yellow-600">60~74</div>
+                <div class="text-xs mt-1 text-yellow-700 font-medium">평균 수준</div>
+                <div class="text-xs text-gray-500">시장가 범위</div>
+            </div>
+            <div class="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div class="text-2xl font-bold text-blue-600">75~89</div>
+                <div class="text-xs mt-1 text-blue-700 font-medium">합리적</div>
+                <div class="text-xs text-gray-500">좋은 견적</div>
+            </div>
+            <div class="text-center p-3 bg-green-50 rounded-lg border border-green-200">
+                <div class="text-2xl font-bold text-green-600">90~100</div>
+                <div class="text-xs mt-1 text-green-700 font-medium">매우 좋음</div>
+                <div class="text-xs text-gray-500">탁월한 견적</div>
+            </div>
+        </div>
+
+        <h3 class="font-bold mb-4">리포트 출력 구성 <span class="review-badge priority-p0">v1.6 강화</span></h3>
+        <div class="bg-gray-50 p-4 rounded-lg text-sm space-y-2">
+            <div><span class="font-bold">1. 종합 요약:</span> 총액, 종합점수, 시장 대비 위치, <strong class="text-violet-700">면허 확인 상태</strong></div>
+            <div><span class="font-bold">2. 카테고리별 분석:</span> 공종별 비용, 편차, rating, <strong class="text-violet-700">단위 불일치 경고</strong></div>
+            <div><span class="font-bold">3. 주요 발견:</span> 긍정/부정/주의사항</div>
+            <div><span class="font-bold">4. 비용 절감 포인트:</span> 구체적 금액과 대안</div>
+            <div><span class="font-bold">5. 누락 항목 감지:</span> 필수 항목 경고</div>
+            <div><span class="font-bold">6. 유사 사례 비교:</span> Feature 가중 검색</div>
+            <div><span class="font-bold">7. 일식 분해 분석:</span> 번들 구성요소별 적정가 추정</div>
+            <div class="text-violet-700"><span class="font-bold">8. 리스크 알림 (v1.2):</span> 면허 미확인, "현장 후 확정" 조항, 계절 프리미엄 안내</div>
+            <div class="text-emerald-700"><span class="font-bold">9. VAT 상태 (v1.3):</span> 부가세 포함/별도/미확인 표시, 미확인 시 경고</div>
+            <div class="text-emerald-700"><span class="font-bold">10. 견적 완전성 (v1.3):</span> completenessRating + 누락 의심 항목 목록</div>
+            <div class="text-amber-700"><span class="font-bold">11. 적정가 비교표 (v1.6 P0):</span> 항목별 "현재 견적가 vs 벤치마크 적정가" 2컬럼 테이블. 소비자 협상 타겟 넘버 제공</div>
+            <div class="text-amber-700"><span class="font-bold">12. 안전 결제 스케줄 (v1.6 P1):</span> 계약금10% → 착공30% → 중간30% → 준공20% → 하자보수10% 권장 스케줄</div>
+            <div class="text-amber-700"><span class="font-bold">13. 데이터 권위 협상 스크립트 (v1.6 P1):</span> "시장 95백분위" 등 벤치마크 수치 기반 실전 협상 멘트 3건</div>
+            <div class="text-amber-700"><span class="font-bold">14. 데이터 출처 푸터 (v1.6 P1):</span> "경기도 34평 기준 N건 검증된 계약 데이터 기반" 투명성 표시</div>
+            <div class="text-amber-700"><span class="font-bold">15. 과소산량 경고 (v1.6 P0):</span> 바닥/도배 수량 vs 실면적 교차검증 결과. "추가 물량 트랩" 경고</div>
+        </div>
+
+        <!-- v1.6 적정가 비교표 설명 -->
+        <div class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg v16-new">
+            <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
+                <span class="review-badge priority-p0">P0 v1.6</span>
+                적정가 비교표 (Fair Target Price Table)
+            </h4>
+            <p class="text-sm text-gray-700 mb-3">"B등급"이라는 추상적 점수 대신, 소비자가 협상 시 실제로 사용할 수 있는 <strong>"목표 금액"</strong>을 항목별로 제공. "이 리포트의 ROI"를 직관적으로 보여주는 핵심 섹션.</p>
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs border">
+                    <thead>
+                        <tr class="bg-gray-100 border-b">
+                            <th class="text-left py-2 px-3">항목</th>
+                            <th class="text-right py-2 px-3">현재 견적가</th>
+                            <th class="text-right py-2 px-3 text-green-700">적정가 (벤치마크)</th>
+                            <th class="text-right py-2 px-3 text-red-700">차이</th>
+                            <th class="text-center py-2 px-3">판정</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y text-gray-600">
+                        <tr><td class="py-1.5 px-3">바닥재 (LG Z:IN 12T)</td><td class="text-right px-3">4,200,000</td><td class="text-right px-3 text-green-700">3,850,000</td><td class="text-right px-3 text-red-700">+350,000</td><td class="text-center"><span class="tag bg-amber-100 text-amber-700">약간높음</span></td></tr>
+                        <tr><td class="py-1.5 px-3">욕실 공사</td><td class="text-right px-3">8,500,000</td><td class="text-right px-3 text-green-700">8,200,000</td><td class="text-right px-3 text-blue-700">+300,000</td><td class="text-center"><span class="tag bg-blue-100 text-blue-700">적정</span></td></tr>
+                        <tr class="bg-amber-50"><td class="py-1.5 px-3 font-bold">합계</td><td class="text-right px-3 font-bold">42,000,000</td><td class="text-right px-3 font-bold text-green-700">39,550,000</td><td class="text-right px-3 font-bold text-red-700">+2,450,000</td><td class="text-center"><span class="tag bg-blue-100 text-blue-700">B</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-xs text-amber-700 mt-2 font-medium">* 벤치마크 적정가는 보정 계수(면적/지역/계절/등급) 적용 후 산출. ROI 배지: "절감 가능 금액: 2,450,000원 (리포트 비용의 49배)"</p>
+        </div>
+
+        <!-- v1.6 안전 결제 스케줄 -->
+        <div class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg v16-new">
+            <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
+                <span class="review-badge priority-p1">P1 v1.6</span>
+                안전 결제 스케줄 가이드
+            </h4>
+            <p class="text-sm text-gray-700 mb-3">업체가 공사 50% 시점에 90% 결제를 요구하는 "선결제 트랩" 방지. 견적 총액에 기반한 단계별 안전 결제 비율 제공.</p>
+            <div class="grid grid-cols-5 gap-2 text-center text-xs">
+                <div class="p-2 bg-white rounded border"><div class="font-bold text-blue-700 text-lg">10%</div><div class="text-gray-500">계약금</div><div class="text-gray-400">계약 시</div></div>
+                <div class="p-2 bg-white rounded border"><div class="font-bold text-blue-700 text-lg">30%</div><div class="text-gray-500">착공금</div><div class="text-gray-400">철거 완료 시</div></div>
+                <div class="p-2 bg-white rounded border"><div class="font-bold text-blue-700 text-lg">30%</div><div class="text-gray-500">중도금</div><div class="text-gray-400">목공 완료 시</div></div>
+                <div class="p-2 bg-white rounded border"><div class="font-bold text-blue-700 text-lg">20%</div><div class="text-gray-500">준공금</div><div class="text-gray-400">입주청소 후</div></div>
+                <div class="p-2 bg-white rounded border border-red-200"><div class="font-bold text-red-700 text-lg">10%</div><div class="text-gray-500">하자보수</div><div class="text-gray-400">입주 1개월 후</div></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 9. Domain-Specific Risks -->
+<section id="domain-risks">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+        <span class="bg-red-100 text-red-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold">9</span>
+        인테리어 도메인 특수 리스크
+        <span class="review-badge priority-p1">v1.2</span>
+    </h2>
+
+    <div class="space-y-4">
+        <div class="bg-white rounded-xl p-6 shadow-sm border new-section">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <span class="review-badge priority-high">HIGH</span>
+                번들링 문제 (The "Bundling" Problem)
+            </h3>
+            <p class="text-sm text-gray-700 mb-3">"철거+폐기물" 묶음 견적 → 항목별 벤치마크와 비교 불가 → 거짓 "높은 가격" 경고.</p>
+            <p class="text-sm text-gray-600"><strong>대응:</strong> Section 3-5 De-bundling + 단위 Hard Gate (v1.2)</p>
+        </div>
+
+        <!-- Hidden Site Conditions (NEW v1.2) -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border v12-new">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <span class="review-badge priority-p1">P1 NEW</span>
+                숨겨진 현장 조건 (Hidden Site Conditions)
+            </h3>
+            <p class="text-sm text-gray-700 mb-3">"현장 방문 후 확정" 조항이 포함된 저가 견적은 실제로 <strong>필수 구조 보수(하지 보수, 배관 노후 등)가 빠져 있는 거짓 벤치마크</strong>. 이를 Gold Standard로 저장하면 다른 정상 견적이 "비싸다"로 오판됨.</p>
+            <div class="grid md:grid-cols-2 gap-3 text-sm">
+                <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                    <h4 class="font-bold text-red-700 mb-1">위험</h4>
+                    <p class="text-xs text-gray-600">"현장 후 확정" 견적 → 낮은 가격 → Gold Standard에 저가 벤치마크 생성 → 이후 정상 견적이 모두 "높음"으로 판정</p>
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg border border-green-200">
+                    <h4 class="font-bold text-green-700 mb-1">대응 (v1.2)</h4>
+                    <p class="text-xs text-gray-600">hasPostVisitClauses 필드로 감지. 해당 항목은 벤치마크 가중치 0.5로 감소. 리포트에 "조건부 견적" 경고 표시.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seasonal Labor (NEW v1.2) -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border v12-new">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <span class="review-badge priority-p1">P1 NEW</span>
+                계절 인건비 변동 (이사철 프리미엄)
+            </h3>
+            <p class="text-sm text-gray-700 mb-3">봄(3~5월)/가을(9~10월) 이사철에 인건비가 5~8% 상승. 10월 견적이 "높음"이라도 계절 보정 후에는 "적정"일 수 있음.</p>
+            <p class="text-sm text-gray-600"><strong>대응:</strong> Section 3-3의 seasonFactor 적용. quoteIssuedDate(발행일) 수집으로 자동 보정.</p>
+        </div>
+
+        <!-- Moving Season Lag (NEW v1.4) -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border v14-new">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <span class="review-badge priority-p0">P0 v1.4</span>
+                이사철 시차 (Moving Season Lag)
+            </h3>
+            <p class="text-sm text-gray-700 mb-3">계절 보정은 현재 <strong>견적 발행일(quoteIssuedDate)</strong> 기준. 그러나 인건비는 <strong>착공월</strong>에 따라 결정됨. 2월 발행 → 4월 착공이면, 2월 비수기 가격이 아니라 4월 이사철 가격이 적용되어야 함.</p>
+            <div class="grid md:grid-cols-2 gap-3 text-sm">
+                <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                    <h4 class="font-bold text-red-700 mb-1">위험</h4>
+                    <p class="text-xs text-gray-600">발행일 기준 seasonFactor 0.95(비수기) 적용 → 실제 착공은 이사철 → "적정"인 견적이 "비싸다"로 오판</p>
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg border border-green-200">
+                    <h4 class="font-bold text-green-700 mb-1">대응 (v1.4)</h4>
+                    <p class="text-xs text-gray-600">constructionStartMonth 수집. 계절 보정 시 착공월 우선, 미정이면 발행월 폴백. 발행월 ≠ 착공월이면 리포트에 "계절 보정 주의" 표시.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Self-Selection Bias (NEW v1.4) -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border v14-new">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <span class="review-badge priority-p1">P1 v1.4</span>
+                자기선택 편향 (Self-Selection Bias)
+            </h3>
+            <p class="text-sm text-gray-700 mb-3">분석 대상 견적서는 고객이 "의심스러워서" 제출한 것. 따라서 <strong>"의심스럽게 높은" 또는 "의심스럽게 낮은"</strong> 견적이 과대 표집되고, <strong>"평균/공정"</strong> 견적은 부족할 수 있음.</p>
+            <div class="grid md:grid-cols-2 gap-3 text-sm">
+                <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                    <h4 class="font-bold text-red-700 mb-1">위험</h4>
+                    <p class="text-xs text-gray-600">Gold Standard에 극단값 편중 → "적정" 기준이 왜곡 → Phase 2 AI가 "평균" 견적을 판단 못 함</p>
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg border border-green-200">
+                    <h4 class="font-bold text-green-700 mb-1">대응 (v1.4)</h4>
+                    <p class="text-xs text-gray-600">50건 축적 중 분포 모니터링: "양호/적정/약간높음/높음" 비율 추적. "적정" 사례가 20% 미만이면 의도적으로 "공정 견적" 수집 보완. 토브디자인 실행원가 데이터(173현장)를 "평균" 앵커로 활용.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Brand Premium Trap (NEW v1.2) -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border v12-new">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <span class="review-badge priority-p1">P1 NEW</span>
+                브랜드 등급 함정 (The "Premium" Brand Trap)
+            </h3>
+            <p class="text-sm text-gray-700 mb-3">LG Z:IN 엔트리 라인이 한샘 미드레인지보다 저렴한 경우 등, 브랜드명만으로 등급을 판단하면 오류 발생.</p>
+            <p class="text-sm text-gray-600"><strong>대응:</strong> Section 4의 Brand-Grade Matrix로 일관된 등급 판정. feature_evidence에 구체적 라인명/모델 기록.</p>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border new-section">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <span class="review-badge priority-medium">MEDIUM</span>
+                지역 편차 및 물류비
+            </h3>
+            <p class="text-sm text-gray-700 mb-3">엘리베이터 유무, 골목 접근성, 주차 가능 여부에 따라 비용 차이. Phase 1: 3단계 보정 + accessNotes 기록.</p>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border new-section">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <span class="review-badge priority-low">LOW</span>
+                자재 시장 변동성
+            </h3>
+            <p class="text-sm text-gray-700 mb-3">연 4% 고정 → Phase 2에서 PPI API 연동. v1.2: 견적서 발행일(quoteIssuedDate) 수집으로 준비.</p>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border new-section">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <span class="review-badge priority-high">HIGH</span>
+                비선형 비용 + Feature Engineering 갭
+            </h3>
+            <p class="text-sm text-gray-700 mb-3">비선형 계수 모델(v1.1) + Gold Standard attributes + feature_evidence(v1.2)로 대응.</p>
+        </div>
+
+        <!-- Contractor Risk (Updated v1.3) -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border v13-new">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <span class="review-badge priority-p0">P0 v1.3 강화</span>
+                무면허/무보험 업체 리스크 (동적 패널티)
+            </h3>
+            <p class="text-sm text-gray-700 mb-3">"적정가" 견적이라도 무면허 업체면 하자 보수, 보험 미적용, 법적 분쟁 리스크가 높음. <strong class="text-emerald-700">v1.3: 고위험 공종(확장/배관/전기/방수)에서 면허 미확인 시 패널티 3배 강화(-15점).</strong></p>
+            <div class="grid md:grid-cols-2 gap-3 text-sm mt-3">
+                <div class="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <h4 class="font-bold text-amber-700 mb-1">일반 공종 (v1.2)</h4>
+                    <p class="text-xs text-gray-600">목공, 도배, 바닥, 페인트 등 → 면허 미확인 시 <strong>-5점</strong></p>
+                </div>
+                <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                    <h4 class="font-bold text-red-700 mb-1">고위험 공종 (v1.3)</h4>
+                    <p class="text-xs text-gray-600">발코니 확장, 주배관 교체, 전기 분전반, 방수 → 면허 미확인 시 <strong>-15점</strong><br>사유: 구조 안전 + 법적 책임 + 보험 미적용 리스크</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Under-Pricing Dump Risk (NEW v1.6) -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border v16-new">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <span class="review-badge priority-p0">P0 v1.6</span>
+                저가 덤핑 위험 (Under-Pricing Dump Risk)
+            </h3>
+            <p class="text-sm text-gray-700 mb-3">한국 인테리어 시장에서 <strong>시장가보다 25%+ 저렴한 견적</strong>은 대부분 다음 중 하나: (1) 공사중단 후 추가금 요구, (2) 최저급 자재/인력 투입, (3) 필수 공정 생략. <strong class="text-red-700">과소 가격은 과대 가격보다 더 위험.</strong></p>
+            <div class="grid md:grid-cols-3 gap-3 text-sm">
+                <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                    <h4 class="font-bold text-red-700 mb-1">공사중단 리스크</h4>
+                    <p class="text-xs text-gray-600">저가 수주 → 자재비 부족 → 공사 중단 → "추가금 안 주면 철수" → 고객이 다른 업체에 높은 가격으로 이어 시공</p>
+                </div>
+                <div class="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <h4 class="font-bold text-amber-700 mb-1">품질 저하 리스크</h4>
+                    <p class="text-xs text-gray-600">견적서에 "LG Z:IN"이라 쓰고 실제로는 중국산 무브랜드 시공. 소비자가 공사 후 확인해도 이미 시공 완료.</p>
+                </div>
+                <div class="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <h4 class="font-bold text-amber-700 mb-1">추가 물량 트릭</h4>
+                    <p class="text-xs text-gray-600">수량 과소 산출 → 공사 중 "물량 부족" 통보 → 추가분은 단가 30~50% 할증. Section 3-6 교차검증으로 탐지.</p>
+                </div>
+            </div>
+            <div class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg text-sm">
+                <h4 class="font-bold text-green-700 mb-1">대응 (v1.6)</h4>
+                <p class="text-xs text-gray-600">비대칭 스코어링(Section 3-4): -25% 이하 → 30점 + "덤핑 위험" bracket. 리포트에 "이 가격대에서는 공사중단, 저품질 시공, 추가비용 리스크가 높습니다" 강력 경고. 소비자에게 "왜 이렇게 싼지 업체에 반드시 질문하세요" 액션 가이드 제공.</p>
+            </div>
+        </div>
+
+        <!-- Quantity Under-Calculation (NEW v1.6) -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border v16-new">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <span class="review-badge priority-p0">P0 v1.6</span>
+                과소산량 트릭 (Under-Quantity Trap)
+            </h3>
+            <p class="text-sm text-gray-700 mb-3">34평 집 바닥재를 25평분만 견적에 넣어 초기 가격을 낮추는 수법. 바닥을 뜯은 후 "나머지 9평은 추가 물량"으로 프리미엄 단가 청구.</p>
+            <div class="grid md:grid-cols-2 gap-3 text-sm">
+                <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                    <h4 class="font-bold text-red-700 mb-1">위험</h4>
+                    <p class="text-xs text-gray-600">바닥 철거 후에는 다른 업체로 교체 불가능 → "포로 상태"에서 추가금 협상 → 전체 비용이 정상 견적보다 20~40% 더 높아짐</p>
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg border border-green-200">
+                    <h4 class="font-bold text-green-700 mb-1">대응 (v1.6)</h4>
+                    <p class="text-xs text-gray-600">Section 3-6 수량-면적 교차검증: 바닥/도배/페인트의 <code>original_quantity</code>를 <code>property_size_sqm</code>와 자동 대조. 15%+ 부족 시 -8점 패널티 + "과소산량 경고" 리포트 포함.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Low-Ball Trap (NEW v1.3) -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border v13-new">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <span class="review-badge priority-p1">P1 v1.3</span>
+                Low-Ball Trap (미끼 견적 함정)
+            </h3>
+            <p class="text-sm text-gray-700 mb-3">낮은 초기 견적은 대부분 "불완전"한 견적. 이 견적이 <strong>Completeness Score 없이</strong> Gold Standard에 진입하면 공정한 종합 견적이 "비싸다"로 오판됨.</p>
+            <div class="grid md:grid-cols-2 gap-3 text-sm">
+                <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                    <h4 class="font-bold text-red-700 mb-1">위험</h4>
+                    <p class="text-xs text-gray-600">completenessRating 1~2인 저가 견적 → 벤치마크 하향 왜곡 → 정상 견적이 "높음" 판정 → 사용자 오도</p>
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg border border-green-200">
+                    <h4 class="font-bold text-green-700 mb-1">대응 (v1.3)</h4>
+                    <p class="text-xs text-gray-600">completenessRating 필수 기록. rating 1~2는 벤치마크 가중치 0.1~0.4로 대폭 감소. rating 1은 Gold Standard 제외 권고. 리포트에 "불완전 견적 주의" 표시.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Material-Only vs Turnkey (NEW v1.5) -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border v15-new">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <span class="review-badge priority-p1">P1 v1.5</span>
+                "자재만" vs "턴키" 가격 함정 (Material-Only Trap)
+            </h3>
+            <p class="text-sm text-gray-700 mb-3">일부 업체는 경쟁력 있어 보이기 위해 <strong>"자재만" 가격</strong>을 제시하고 인건비를 별도 협상으로 남김. missingCategories가 인건비 누락을 명시하지 않으면 completenessRating이 인위적으로 높아짐.</p>
+            <div class="grid md:grid-cols-2 gap-3 text-sm">
+                <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                    <h4 class="font-bold text-red-700 mb-1">위험</h4>
+                    <p class="text-xs text-gray-600">"타일 자재 500,000원" (인건비 별도) → completenessRating 4로 평가 → Gold Standard에 저가 벤치마크 진입 → 자재+시공 포함 정상 견적이 "비싸다" 판정</p>
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg border border-green-200">
+                    <h4 class="font-bold text-green-700 mb-1">대응 (v1.5)</h4>
+                    <p class="text-xs text-gray-600"><code>MISSING_LABOR_[공종]</code> / <code>MISSING_MATERIAL_[공종]</code> 분리 태그로 인건비·자재비 누락을 개별 식별. "자재만" 견적은 반드시 <code>MISSING_LABOR_TILING</code> 등으로 태깅. completenessRating 산정 시 인건비 누락이면 최대 3등급으로 제한.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Apartment Complex Exclusivity (NEW v1.5) -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border v15-new">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <span class="review-badge priority-p1">P1 v1.5</span>
+                아파트 단지 전속 프리미엄 (Apartment-Specific Premium)
+            </h3>
+            <p class="text-sm text-gray-700 mb-3">한국 특정 아파트 단지에는 관리사무소에 높은 관리비를 납부한 <strong>"전속 업체"</strong>가 존재. 이 업체의 견적은 10~15% 높지만 숨겨진 편의(주차, 양중, 관리소 협조 등)가 포함되어 있음.</p>
+            <div class="grid md:grid-cols-2 gap-3 text-sm">
+                <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                    <h4 class="font-bold text-red-700 mb-1">위험</h4>
+                    <p class="text-xs text-gray-600">전속 업체 견적을 일반 업체와 직접 비교 → 10~15% 높게 나옴 → "비싸다" 판정. 그러나 실제로는 양중비/주차비/관리소 협조비가 포함된 합리적 가격일 수 있음.</p>
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg border border-green-200">
+                    <h4 class="font-bold text-green-700 mb-1">대응 (v1.5)</h4>
+                    <p class="text-xs text-gray-600">견적 메타데이터에 <code>apartmentExclusiveContractor: boolean</code> 필드 추가. true인 경우 regionFactor에 <strong>Apartment-Specific Premium (+10~15%)</strong>을 보정 계수로 적용. 리포트에 "단지 전속 업체 프리미엄 포함" 안내.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- VAT Inconsistency (NEW v1.3) -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border v13-new">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <span class="review-badge priority-p0">P0 v1.3</span>
+                부가세(VAT) 불일치 리스크
+            </h3>
+            <p class="text-sm text-gray-700 mb-3">한국 인테리어 견적서는 부가세 10% 포함/별도가 <strong>비일관적</strong>. isVatIncluded 없이 비교하면 <strong>10%의 체계적 오류</strong>가 50건 데이터셋 전체에 전파됨.</p>
+            <div class="grid md:grid-cols-2 gap-3 text-sm">
+                <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                    <h4 class="font-bold text-red-700 mb-1">위험</h4>
+                    <p class="text-xs text-gray-600">VAT 포함 견적과 VAT 별도 견적을 그대로 비교 → 10% 편차 발생 → "약간높음"이 실제로는 "적정"인 경우 다수</p>
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg border border-green-200">
+                    <h4 class="font-bold text-green-700 mb-1">대응 (v1.3)</h4>
+                    <p class="text-xs text-gray-600">isVatIncluded 불린 필드 필수 수집. VAT 별도(false) → 비교 전 ×1.1 정규화. 미확인(null) → 리포트에 "VAT 미확인 경고" + 벤치마크 비교 불확실성 표시.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 10. Automation Roadmap -->
+<section id="roadmap">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+        <span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold">10</span>
+        자동화 로드맵
+    </h2>
+    <div class="space-y-4">
+        <div class="phase-card bg-white rounded-xl p-6 shadow-sm border-l-4 border-amber-500">
+            <div class="flex items-center gap-3 mb-3">
+                <span class="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-sm font-bold">Phase 1</span>
+                <span class="font-bold text-lg">수동 분석 + 고품질 데이터 축적</span>
+                <span class="tag bg-amber-100 text-amber-700">현재</span>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <h4 class="font-medium mb-2">하는 일</h4>
+                    <ul class="space-y-1 text-gray-600">
+                        <li>- Gold Standard 레이블링 + <strong>feature_evidence</strong></li>
+                        <li>- 표준 에러 코드 기반 수정 기록</li>
+                        <li>- 일식 수동 분해 + 단위 Hard Gate</li>
+                        <li>- 초기 20건: Consensus Decision Log</li>
+                        <li>- 업체 면허 정보 + 견적 발행일 + <strong class="text-sky-700">착공월</strong> 수집</li>
+                        <li>- Brand-Grade Matrix 검증</li>
+                        <li>- Hallucination Log (analysisId 연결)</li>
+                        <li class="text-sky-700">- <strong>평가자 ID + 확신도 기록</strong> (v1.4)</li>
+                        <li class="text-sky-700">- <strong>missingCategories + debundling_logic</strong> (v1.4)</li>
+                        <li class="text-sky-700">- <strong>접근 난이도 플래그 (accessDifficulty)</strong> (v1.4)</li>
+                        <li class="text-red-700">- <strong>첫 20건 Blind Labeling (AI 미참조 직접 선택)</strong> (v1.5)</li>
+                        <li class="text-red-700">- <strong>VAT null 해소 의무화 (true/false 확정)</strong> (v1.5)</li>
+                        <li class="text-red-700">- <strong>Labor-Material Split 태그</strong> (v1.5)</li>
+                        <li class="text-red-700">- <strong>variance_estimate 기록 (De-bundling 불확실성)</strong> (v1.5)</li>
+                        <li class="text-red-700">- <strong>Global Conflict Hierarchy (규칙 충돌 해결)</strong> (v1.5)</li>
+                        <li class="text-red-700">- <strong>아파트 단지 전속 프리미엄 태깅</strong> (v1.5)</li>
+                        <li class="text-amber-700">- <strong>비대칭 스코어링 (저가=위험)</strong> (v1.6)</li>
+                        <li class="text-amber-700">- <strong>수량-면적 교차검증 (과소산량 탐지)</strong> (v1.6)</li>
+                        <li class="text-amber-700">- <strong>고액 일식 개별 패널티 (500만+)</strong> (v1.6)</li>
+                        <li class="text-amber-700">- <strong>적정가 비교표 + 안전 결제 스케줄</strong> (v1.6)</li>
+                        <li class="text-amber-700">- <strong>데이터 권위 협상 스크립트</strong> (v1.6)</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-medium mb-2">전환 조건 → Phase 2</h4>
+                    <ul class="space-y-1 text-gray-600">
+                        <li>- 50건 이상 (Gold Standard 완료)</li>
+                        <li>- 정규화 매핑 80%+ (subCategory 포함)</li>
+                        <li>- 3개 평수대 벤치마크</li>
+                        <li>- 평가자 불일치율 15% 미만</li>
+                        <li>- <strong>Decision Log 규칙 20개+</strong></li>
+                        <li>- <strong>Brand-Grade Matrix 주요 카테고리 검증</strong></li>
+                        <li>- <strong>계절 보정 계수 1주기(12개월) 데이터</strong></li>
+                        <li class="text-red-700">- <strong>Global Conflict Hierarchy 충돌 해결 규칙 0건</strong> (v1.5)</li>
+                        <li class="text-red-700">- <strong>Blind Labeling 20건 완료 → AI 제안 모드 전환</strong> (v1.5)</li>
+                        <li class="text-red-700">- <strong>VAT null 잔존 0건</strong> (v1.5)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="phase-card bg-white rounded-xl p-6 shadow-sm border-l-4 border-blue-500">
+            <div class="flex items-center gap-3 mb-3">
+                <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-bold">Phase 2</span>
+                <span class="font-bold text-lg">반자동 분석</span>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <h4 class="font-medium mb-2">자동화 범위</h4>
+                    <ul class="space-y-1 text-gray-600">
+                        <li>- 자동 파싱 + Feature 추출 + 단위 Gate</li>
+                        <li>- Feature 가중 비교 + 계절/PPI 보정</li>
+                        <li>- 일식 자동 분해 (주요 공종)</li>
+                        <li>- Decision Log 규칙 기반 자동 판단</li>
+                        <li>- Hallucination 패턴 프롬프트 자동 튜닝</li>
+                        <li class="text-emerald-700">- <strong>Zip Code 매핑</strong>: regionFactor를 우편번호 앞 3자리로 세분화 (v1.3)</li>
+                        <li class="text-emerald-700">- <strong>VAT 자동 감지</strong>: 견적서 하단 표기 패턴으로 isVatIncluded 자동 판정 (v1.3)</li>
+                        <li class="text-sky-700">- <strong>Zip-to-Logistics</strong>: accessDifficulty 훈련 데이터 → 자동 물류비 보정 (v1.4)</li>
+                        <li class="text-sky-700">- <strong>평가자 편향 보정</strong>: reviewedBy별 판정 편차 분석 → 가중치 조절 (v1.4)</li>
+                        <li>- 리포트 초안 자동 → 사람 최종 검수</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-medium mb-2">전환 조건 → Phase 3</h4>
+                    <ul class="space-y-1 text-gray-600">
+                        <li>- 200건 이상</li>
+                        <li>- 정규화 95%+, Feature 추출 90%+</li>
+                        <li>- 5개 평수대 + 3개 지역</li>
+                        <li>- 리포트 수정율 10% 미만</li>
+                        <li>- PPI 연동 안정화</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="phase-card bg-white rounded-xl p-6 shadow-sm border-l-4 border-green-500">
+            <div class="flex items-center gap-3 mb-3">
+                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold">Phase 3</span>
+                <span class="font-bold text-lg">완전 자동 API</span>
+            </div>
+            <div class="text-sm text-gray-600">
+                <p>견적서 업로드 → 자동 파싱 → Feature 추출 → De-bundling → 단위 Gate → 비교 → 면허 검증 → 리포트 생성 → 이메일</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 11. Current Data Status -->
+<section id="data-status">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+        <span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold">11</span>
+        현재 데이터 현황 (Dash DB)
+    </h2>
+    <div class="bg-white rounded-xl p-6 shadow-sm border">
+        <div class="grid md:grid-cols-2 gap-6">
+            <div>
+                <h3 class="font-bold mb-3 text-green-700">확보 완료 (11건)</h3>
+                <table class="w-full text-sm">
+                    <tbody class="divide-y">
+                        <tr><td class="py-1.5">카테고리별 시장 평균 단가</td><td class="text-right"><span class="tag bg-green-100 text-green-700">확보</span></td></tr>
+                        <tr><td class="py-1.5">34평 올수리 견적 벤치마크 (31항목)</td><td class="text-right"><span class="tag bg-green-100 text-green-700">확보</span></td></tr>
+                        <tr><td class="py-1.5">AI 분석 벤치마크 + 유사사례</td><td class="text-right"><span class="tag bg-green-100 text-green-700">확보</span></td></tr>
+                        <tr><td class="py-1.5">토브디자인 타일 단가 (2,492품목)</td><td class="text-right"><span class="tag bg-green-100 text-green-700">확보</span></td></tr>
+                        <tr><td class="py-1.5">토브디자인 거래내역 (523건)</td><td class="text-right"><span class="tag bg-green-100 text-green-700">확보</span></td></tr>
+                        <tr><td class="py-1.5">173개 현장 공종별 평균 원가</td><td class="text-right"><span class="tag bg-green-100 text-green-700">확보</span></td></tr>
+                        <tr><td class="py-1.5">자재비/인건비/간접비 비율</td><td class="text-right"><span class="tag bg-green-100 text-green-700">확보</span></td></tr>
+                        <tr><td class="py-1.5">유통사 도소매 가격</td><td class="text-right"><span class="tag bg-green-100 text-green-700">확보</span></td></tr>
+                        <tr><td class="py-1.5">평수별 올수리 시장가격 범위</td><td class="text-right"><span class="tag bg-green-100 text-green-700">확보</span></td></tr>
+                        <tr><td class="py-1.5">공종별 견적가 분포 (393건 기반)</td><td class="text-right"><span class="tag bg-green-100 text-green-700">확보</span></td></tr>
+                        <tr><td class="py-1.5">공사기간 + 추가비용 발생률</td><td class="text-right"><span class="tag bg-green-100 text-green-700">확보</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <h3 class="font-bold mb-3 text-amber-700">부족 / 수동분석으로 축적</h3>
+                <table class="w-full text-sm">
+                    <tbody class="divide-y">
+                        <tr><td class="py-1.5">20/25/40평+ 벤치마크</td><td class="text-right"><span class="tag bg-amber-100 text-amber-700">부족</span></td></tr>
+                        <tr><td class="py-1.5">지역별 보정계수 실측</td><td class="text-right"><span class="tag bg-red-100 text-red-700">없음</span></td></tr>
+                        <tr><td class="py-1.5">실제 고객 분석 건수</td><td class="text-right"><span class="tag bg-red-100 text-red-700">0건</span></td></tr>
+                        <tr><td class="py-1.5">비선형 면적 계수 검증</td><td class="text-right"><span class="tag bg-red-100 text-red-700">없음</span></td></tr>
+                        <tr><td class="py-1.5">일식 분해 훈련 데이터</td><td class="text-right"><span class="tag bg-red-100 text-red-700">없음</span></td></tr>
+                        <tr><td class="py-1.5">Gold Standard 속성 데이터</td><td class="text-right"><span class="tag bg-red-100 text-red-700">없음</span></td></tr>
+                        <tr class="bg-violet-50"><td class="py-1.5 text-violet-700 font-medium">feature_evidence 데이터</td><td class="text-right"><span class="tag bg-violet-100 text-violet-700">v1.2</span></td></tr>
+                        <tr class="bg-violet-50"><td class="py-1.5 text-violet-700 font-medium">Consensus Decision Log</td><td class="text-right"><span class="tag bg-violet-100 text-violet-700">v1.2</span></td></tr>
+                        <tr class="bg-violet-50"><td class="py-1.5 text-violet-700 font-medium">Brand-Grade Matrix 검증</td><td class="text-right"><span class="tag bg-violet-100 text-violet-700">v1.2</span></td></tr>
+                        <tr class="bg-violet-50"><td class="py-1.5 text-violet-700 font-medium">계절 보정 계수 실측</td><td class="text-right"><span class="tag bg-violet-100 text-violet-700">v1.2</span></td></tr>
+                        <tr class="bg-violet-50"><td class="py-1.5 text-violet-700 font-medium">업체 면허 데이터</td><td class="text-right"><span class="tag bg-violet-100 text-violet-700">v1.2</span></td></tr>
+                        <tr class="bg-emerald-50"><td class="py-1.5 text-emerald-700 font-medium">VAT 포함/별도 데이터 (isVatIncluded)</td><td class="text-right"><span class="tag bg-emerald-100 text-emerald-700">v1.3</span></td></tr>
+                        <tr class="bg-emerald-50"><td class="py-1.5 text-emerald-700 font-medium">견적 완전성 데이터 (completenessRating)</td><td class="text-right"><span class="tag bg-emerald-100 text-emerald-700">v1.3</span></td></tr>
+                        <tr class="bg-emerald-50"><td class="py-1.5 text-emerald-700 font-medium">Success Reason Codes 통계</td><td class="text-right"><span class="tag bg-emerald-100 text-emerald-700">v1.3</span></td></tr>
+                        <tr class="bg-emerald-50"><td class="py-1.5 text-emerald-700 font-medium">Master Price Pulse (5대 자재 월간 기록)</td><td class="text-right"><span class="tag bg-emerald-100 text-emerald-700">v1.3</span></td></tr>
+                        <tr class="bg-sky-50"><td class="py-1.5 text-sky-700 font-medium">평가자 편향 데이터 (reviewedBy)</td><td class="text-right"><span class="tag bg-sky-100 text-sky-700">v1.4</span></td></tr>
+                        <tr class="bg-sky-50"><td class="py-1.5 text-sky-700 font-medium">착공월 데이터 (constructionStartMonth)</td><td class="text-right"><span class="tag bg-sky-100 text-sky-700">v1.4</span></td></tr>
+                        <tr class="bg-sky-50"><td class="py-1.5 text-sky-700 font-medium">De-bundling Evidence (debundling_logic)</td><td class="text-right"><span class="tag bg-sky-100 text-sky-700">v1.4</span></td></tr>
+                        <tr class="bg-sky-50"><td class="py-1.5 text-sky-700 font-medium">누락 카테고리 태그 (missingCategories)</td><td class="text-right"><span class="tag bg-sky-100 text-sky-700">v1.4</span></td></tr>
+                        <tr class="bg-sky-50"><td class="py-1.5 text-sky-700 font-medium">접근 난이도 데이터 (accessDifficulty)</td><td class="text-right"><span class="tag bg-sky-100 text-sky-700">v1.4</span></td></tr>
+                        <tr class="bg-red-50"><td class="py-1.5 text-red-700 font-medium">Blind Labeling IRR 데이터 (20건)</td><td class="text-right"><span class="tag bg-red-100 text-red-700">v1.5</span></td></tr>
+                        <tr class="bg-red-50"><td class="py-1.5 text-red-700 font-medium">Global Conflict Hierarchy Rulebook</td><td class="text-right"><span class="tag bg-red-100 text-red-700">v1.5</span></td></tr>
+                        <tr class="bg-red-50"><td class="py-1.5 text-red-700 font-medium">Labor-Material Split 태그 데이터</td><td class="text-right"><span class="tag bg-red-100 text-red-700">v1.5</span></td></tr>
+                        <tr class="bg-red-50"><td class="py-1.5 text-red-700 font-medium">De-bundling variance_estimate 데이터</td><td class="text-right"><span class="tag bg-red-100 text-red-700">v1.5</span></td></tr>
+                        <tr class="bg-red-50"><td class="py-1.5 text-red-700 font-medium">아파트 전속 프리미엄 데이터</td><td class="text-right"><span class="tag bg-red-100 text-red-700">v1.5</span></td></tr>
+                        <tr class="bg-red-50"><td class="py-1.5 text-red-700 font-medium">PPI Data Source 공식 URL (5대 자재)</td><td class="text-right"><span class="tag bg-red-100 text-red-700">v1.5</span></td></tr>
+                        <tr class="bg-amber-50"><td class="py-1.5 text-amber-700 font-medium">비대칭 스코어링 구현 (저가 위험 감지)</td><td class="text-right"><span class="tag bg-amber-100 text-amber-700">v1.6</span></td></tr>
+                        <tr class="bg-amber-50"><td class="py-1.5 text-amber-700 font-medium">카테고리별 표준 소요량 테이블 (수량 검증)</td><td class="text-right"><span class="tag bg-amber-100 text-amber-700">v1.6</span></td></tr>
+                        <tr class="bg-amber-50"><td class="py-1.5 text-amber-700 font-medium">적정가 비교표 리포트 템플릿</td><td class="text-right"><span class="tag bg-amber-100 text-amber-700">v1.6</span></td></tr>
+                        <tr class="bg-amber-50"><td class="py-1.5 text-amber-700 font-medium">안전 결제 스케줄 가이드 데이터</td><td class="text-right"><span class="tag bg-amber-100 text-amber-700">v1.6</span></td></tr>
+                        <tr><td class="py-1.5">PPI/물가지수 API 연동</td><td class="text-right"><span class="tag bg-blue-100 text-blue-700">Phase 2</span></td></tr>
+                        <tr><td class="py-1.5">Zip Code → regionFactor 세분화</td><td class="text-right"><span class="tag bg-blue-100 text-blue-700">Phase 2</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+            <h4 class="font-bold text-indigo-800 mb-2">다음 행동 (Next Action)</h4>
+            <p class="text-sm text-gray-700">실제 고객 견적서 1건으로 <strong>v1.6 수동 분석 워크플로우 완전 실행</strong>: Gold Standard + feature_evidence + <span class="text-red-600">Blind Labeling(AI 미참조 직접 선택)</span> + successReasonCode + 표준 에러 코드 + De-bundling(유사 견적 검색 우선 + debundling_logic + <span class="text-red-600">variance_estimate 기록</span>) + 단위 Gate + 계절 보정(착공월 우선) + 업체 면허 확인 + <span class="text-red-600">VAT null 해소(true/false 확정)</span> + 완전성 평가(missingCategories + <span class="text-red-600">MISSING_LABOR/MATERIAL 분리</span>) + 평가자 ID/확신도 + <span class="text-red-600">아파트 전속 프리미엄 확인</span>. Global Conflict Hierarchy Rulebook 첫 기록. Master Price Pulse 첫 기록 (<span class="text-red-600">공식 URL 기반</span>).</p>
+        </div>
+    </div>
+</section>
+
+<!-- 12. Rejected Recommendations -->
+<section id="rejected">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+        <span class="bg-amber-100 text-amber-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold">12</span>
+        Consumer Advocate Review #6 미채택 사유
+        <span class="review-badge priority-p2">v1.6 신규</span>
+    </h2>
+    <div class="bg-white rounded-xl p-6 shadow-sm border">
+        <p class="text-sm text-gray-700 mb-6">외부 전략 감사에서 제안된 항목 중, 현 단계에서 채택하지 않은 권고와 그 구체적 사유를 기록합니다. 향후 조건이 변경되면 재검토할 수 있습니다.</p>
+
+        <div class="space-y-4">
+            <!-- 1. 실시간 노임 인덱스 -->
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="review-badge priority-p2">미채택</span>
+                    <h4 class="font-bold text-gray-800">실시간 일당(일당) 노임 인덱스 추적</h4>
+                </div>
+                <div class="grid md:grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <p class="font-medium text-gray-700 mb-1">감사 권고:</p>
+                        <p class="text-gray-600 text-xs">서울/경기 목수, 타일공의 실시간 일당 변동을 추적하여 인건비 벤치마크에 반영.</p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-red-700 mb-1">미채택 사유:</p>
+                        <p class="text-gray-600 text-xs"><strong>신뢰할 수 있는 실시간 데이터 소스가 없음.</strong> 대한건설협회가 노임단가를 연 1회 공시하며, 월간 변동 추적 가능한 공개 API/DB가 존재하지 않음. 비공식 시세는 편차가 크고 검증 불가. Master Price Pulse(v1.3)에서 연 1회 노임단가 공시를 이미 추적 중이므로, 현 단계에서는 이것으로 충분.</p>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">재검토 조건: 국토교통부/건설협회 API가 제공되거나, 자체 데이터 50건+ 축적 시 분기별 노임 변동 패턴 자체 추출 가능.</p>
+            </div>
+
+            <!-- 2. 플랫폼 비교 -->
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="review-badge priority-p2">미채택</span>
+                    <h4 class="font-bold text-gray-800">Top 3 인테리어 플랫폼 가격 비교 (오늘의집, 집닥 등)</h4>
+                </div>
+                <div class="grid md:grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <p class="font-medium text-gray-700 mb-1">감사 권고:</p>
+                        <p class="text-gray-600 text-xs">견적을 오늘의집, 집닥 등 플랫폼 평균가와 비교하여 소비자에게 시장 위치 제공.</p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-red-700 mb-1">미채택 사유:</p>
+                        <p class="text-gray-600 text-xs"><strong>해당 플랫폼의 가격 데이터에 합법적 접근 경로가 없음.</strong> 오늘의집/집닥은 견적 데이터를 공개하지 않으며, 크롤링은 이용약관 위반 + 법적 리스크. 또한 이들 플랫폼의 가격은 중개 수수료(10~15%)가 포함되어 있어, 직접 비교 시 왜곡 발생.</p>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">재검토 조건: 플랫폼과의 데이터 파트너십 체결, 또는 공개 가격 정보 API 제공 시.</p>
+            </div>
+
+            <!-- 3. ZipCheck 보증 -->
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="review-badge priority-p2">미채택</span>
+                    <h4 class="font-bold text-gray-800">"ZipCheck 보증" (최대 적정가 초과 시 무료 재검토)</h4>
+                </div>
+                <div class="grid md:grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <p class="font-medium text-gray-700 mb-1">감사 권고:</p>
+                        <p class="text-gray-600 text-xs">업체가 "최대 적정가" 이상 청구 시 무료 재검토를 제공하여 차별화.</p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-red-700 mb-1">미채택 사유:</p>
+                        <p class="text-gray-600 text-xs"><strong>코드/시스템 결정이 아닌 비즈니스 모델 결정.</strong> 기획서는 기술적 분석 시스템 설계 범위이며, 가격 보증 정책은 사업 전략/재무 분석 영역. 또한 벤치마크 데이터가 50건 미만인 현 단계에서 "보증"은 리스크가 크므로, Phase 2 이후 데이터 신뢰도 확보 후 사업부에서 별도 검토.</p>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">재검토 조건: Phase 2 진입(50건+) 후, 벤치마크 정확도 통계(MAE, MAPE) 확보 시 사업부 검토.</p>
+            </div>
+
+            <!-- 4. 소방/방화 탐지 -->
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="review-badge priority-p2">미채택</span>
+                    <h4 class="font-bold text-gray-800">소방/방화 안전 항목 누락 탐지</h4>
+                </div>
+                <div class="grid md:grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <p class="font-medium text-gray-700 mb-1">감사 권고:</p>
+                        <p class="text-gray-600 text-xs">천장/목공 견적에 화재감지기/스프링클러 보호 항목이 누락되었는지 탐지.</p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-red-700 mb-1">미채택 사유:</p>
+                        <p class="text-gray-600 text-xs"><strong>견적 분석 범위를 초과하는 설계 감리 영역.</strong> 소방 설비는 건축법/소방법에 따른 인허가 사항이며, 인테리어 견적서에 별도 기재하지 않는 것이 관행. 견적서에서 소방 항목의 유무로 견적 품질을 판단하는 것은 부적절. 다만, MISSING_FIRE_SAFETY를 missingCategories 태그 후보로 등록하여 향후 데이터로 판단.</p>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">재검토 조건: 실제 분석 데이터에서 소방 관련 분쟁 사례가 5건 이상 축적 시.</p>
+            </div>
+
+            <!-- 5. 보증금 법률 템플릿 -->
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="review-badge priority-p2">미채택</span>
+                    <h4 class="font-bold text-gray-800">하자보수 보증금(Retention Fund) 법률 템플릿</h4>
+                </div>
+                <div class="grid md:grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <p class="font-medium text-gray-700 mb-1">감사 권고:</p>
+                        <p class="text-gray-600 text-xs">공사 완료 후 1년간 총액의 10%를 보증금으로 유치하는 법률 조항 템플릿 제공.</p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-red-700 mb-1">미채택 사유:</p>
+                        <p class="text-gray-600 text-xs"><strong>법률 자문 영역으로, 기술 시스템에서 법적 조언을 제공하면 책임 리스크 발생.</strong> 대신 "안전 결제 스케줄"(v1.6 P1)에서 10% 하자보수금 유치를 "권고 사항"으로만 안내하되, 법적 구속력 있는 계약서 조항은 전문 법률가 검토 필요로 안내.</p>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">재검토 조건: 법무 파트너십 체결 후, 검증된 계약서 템플릿을 제공할 수 있는 체계 구축 시.</p>
+            </div>
+
+            <!-- 6. 복잡성 멀티플라이어 -->
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="review-badge priority-p2">미채택</span>
+                    <h4 class="font-bold text-gray-800">현장 복잡성 멀티플라이어 (엘리베이터/골목/최상층)</h4>
+                </div>
+                <div class="grid md:grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <p class="font-medium text-gray-700 mb-1">감사 권고:</p>
+                        <p class="text-gray-600 text-xs">"엘리베이터 전용", "좁은 골목", "최상층" 등 현장 조건별 벤치마크 보정 계수 적용.</p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-red-700 mb-1">미채택 사유:</p>
+                        <p class="text-gray-600 text-xs"><strong>데이터 수집 인프라가 현 단계에서 미비.</strong> v1.4에서 <code>accessDifficulty</code> 필드를 이미 추가했으나, 조건별 보정 계수를 산출할 데이터가 없음(0건). Phase 1에서 accessDifficulty를 수집하고, 20건+ 축적 후 easy/moderate/hard별 가격 차이를 통계적으로 확인한 뒤 계수 도입이 합리적.</p>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">재검토 조건: accessDifficulty 데이터 20건+ 축적 후, 난이도별 가격 차이가 통계적으로 유의미(p<0.05)한 경우.</p>
+            </div>
+
+            <!-- 7. 방수/단열 필수 카테고리 -->
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="review-badge priority-p1">부분채택</span>
+                    <h4 class="font-bold text-gray-800">방수/단열/배관 필수 카테고리 (구조 건강 검진)</h4>
+                </div>
+                <div class="grid md:grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <p class="font-medium text-gray-700 mb-1">감사 권고:</p>
+                        <p class="text-gray-600 text-xs">20년+ 노후 아파트 견적에서 방수/단열/배관이 $0이면 "고위험 경고" 발동.</p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-amber-700 mb-1">부분채택 사유:</p>
+                        <p class="text-xs text-gray-600"><strong>방수는 이미 v1.4에서 <code>MISSING_WATERPROOFING</code> 태그로 탐지 중.</strong> 배관은 <code>MISSING_PLUMBING</code>으로 탐지. 단열(Dan-yeol)은 현재 표준 카테고리에 없으므로, "기타" 카테고리의 서브 항목으로 추가 검토. 다만, 건물 연식 정보(building_age)를 현재 수집하지 않아, "20년+ 노후 아파트이므로 방수 필수" 로직은 건물 연식 필드 추가 후 적용 가능.</p>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">향후 조치: 견적 메타데이터에 <code>buildingAge</code> 또는 <code>buildingYear</code> 필드 추가 → 20년+ 건물에서 방수/배관 누락 시 자동 경고 로직 도입 (Phase 2 P1).</p>
+            </div>
+
+            <!-- 8. 자재 킥백 탐지 -->
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="review-badge priority-p2">미채택</span>
+                    <h4 class="font-bold text-gray-800">업체-자재 킥백(Cross-Selling Markup) 탐지</h4>
+                </div>
+                <div class="grid md:grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <p class="font-medium text-gray-700 mb-1">감사 권고:</p>
+                        <p class="text-gray-600 text-xs">업체가 특정 "프리미엄 브랜드" 타일/조명을 도매가 대비 20~30% 마크업하여 킥백을 얻는 패턴 탐지.</p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-red-700 mb-1">미채택 사유:</p>
+                        <p class="text-xs text-gray-600"><strong>도매가 데이터에 접근 불가.</strong> 킥백 탐지를 위해서는 자재의 "도매 원가"를 알아야 하나, 유통 구조가 불투명하고 도매 가격표는 비공개. 토브디자인 타일 단가(2,492품목)가 참고 가능하나, 이는 특정 유통사 가격이지 도매 원가가 아님. 현 벤치마크 시스템이 이미 "시장 평균 대비 편차"를 탐지하므로, 킥백으로 인한 과대 마크업은 "+25% 높음" bracket으로 자연스럽게 잡힘.</p>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">재검토 조건: 자재 유통사 파트너십으로 도매가 데이터 확보 시.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+</main>
+
+<!-- Footer -->
+<footer class="bg-gray-900 text-gray-400 py-8 mt-16">
+    <div class="max-w-5xl mx-auto px-6 text-sm">
+        <div class="flex justify-between items-center">
+            <div>
+                <p>GOI 견적 분석 시스템 설계기획서 v1.6</p>
+                <p class="text-gray-500 mt-1">데이터: Dash 지식DB (PostgreSQL + pgvector) | 프로젝트: F:\GOI</p>
+            </div>
+            <div class="text-right">
+                <p>v1.0: 2026-02-04 | v1.1: #1 | v1.2: #2 | v1.3: #3 | v1.4: #4 | v1.5: #5 | v1.6: #6</p>
+                <p class="text-gray-500 mt-1">Expert Review 6회 반영 (데이터 파이프라인 + ML + 도메인 + Consumer Advocate)</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

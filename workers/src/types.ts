@@ -27,6 +27,9 @@ export interface Env {
 	GMAIL_REFRESH_TOKEN: string
 	GOOGLE_OAUTH_CLIENT_ID: string
 	GOOGLE_OAUTH_CLIENT_SECRET: string
+	TELEGRAM_BOT_TOKEN: string
+	TELEGRAM_CHAT_ID: string
+	ADMIN_TOTP_SECRET?: string
 }
 
 export interface JWTPayload {

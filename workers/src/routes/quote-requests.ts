@@ -3,8 +3,10 @@ import type { Env, Variables } from '../types'
 import { query, findOne, insertOne, deleteOne } from '../lib/db'
 import { authenticateToken, requireAdmin } from '../middleware/auth'
 import { enqueueAnalysis } from '../services/ai-analysis'
-import { sendQuoteReceivedEmail, sendQuoteCompletedEmail } from '../services/google-gmail'
+import { runAutoAnalysis } from '../services/auto-analysis'
+import { sendQuoteReceivedEmail, sendQuoteCompletedEmail, sendAdminNewQuoteEmail, sendAnalysisResultEmail } from '../services/google-gmail'
 import { notifyNewQuote, notifyAnalysisComplete, notifyError } from '../services/slack'
+import { notifyNewQuoteViaTelegram } from '../services/telegram'
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>()
 
@@ -409,6 +411,20 @@ app.post('/submit', async (c) => {
 			console.error('Failed to notify Slack:', slackErr)
 		}
 
+		// Notify via Telegram (non-blocking)
+		try {
+			await notifyNewQuoteViaTelegram(c.env, {
+				id: String(data.id),
+				name: customer_name,
+				phone: customer_phone,
+				propertyType: property_type,
+				region,
+				itemCount: items.length,
+			})
+		} catch (telegramErr) {
+			console.error('Failed to notify Telegram:', telegramErr)
+		}
+
 		// Send email confirmation (non-blocking)
 		if (customer_email) {
 			try {
@@ -421,6 +437,18 @@ app.post('/submit', async (c) => {
 			} catch (emailErr) {
 				console.error('Failed to send confirmation email:', emailErr)
 			}
+		}
+
+		// Notify admin via email (non-blocking)
+		try {
+			await sendAdminNewQuoteEmail(c.env, {
+				id: String(data.id),
+				name: customer_name,
+				phone: customer_phone,
+				planName: `${property_type} ${region}`,
+			})
+		} catch (adminEmailErr) {
+			console.error('Failed to send admin email:', adminEmailErr)
 		}
 
 		// Return appropriate message based on validation status
@@ -686,6 +714,116 @@ app.post('/admin/:id/analyze', authenticateToken(), requireAdmin(), async (c) =>
 		})
 	} catch (error) {
 		console.error('Analysis error:', error)
+		const id = c.req.param('id')
+
+		// Revert status on error
+		await query(
+			c.env.DATABASE_URL,
+			'UPDATE quote_requests SET status = $1, updated_at = NOW() WHERE id = $2',
+			['pending', id]
+		).catch(() => {})
+
+		const message = error instanceof Error ? error.message : 'Unknown error'
+		return c.json({ error: message }, 500)
+	}
+})
+
+// Run auto analysis on a quote request (admin only)
+// This actually executes the scoring engine instead of just enqueueing
+app.post('/admin/:id/auto-analyze', authenticateToken(), requireAdmin(), async (c) => {
+	try {
+		const id = c.req.param('id')
+
+		console.log(`Admin: Running auto-analysis for quote request ${id}`)
+
+		// Verify quote request exists
+		const quoteRequest = await findOne<Record<string, unknown>>(
+			c.env.DATABASE_URL,
+			'SELECT * FROM quote_requests WHERE id = $1',
+			[id]
+		)
+
+		if (!quoteRequest) {
+			return c.json({ error: '견적을 찾을 수 없습니다.' }, 404)
+		}
+
+		// Check for quote_sets
+		const quoteSets = await query(
+			c.env.DATABASE_URL,
+			'SELECT * FROM quote_sets WHERE request_id = $1 ORDER BY set_id',
+			[id]
+		)
+
+		// Collect items
+		let allItems: unknown[] = []
+
+		if (quoteSets.length > 0) {
+			for (const qs of quoteSets) {
+				const quoteSet = qs as Record<string, unknown>
+				if (quoteSet.items && Array.isArray(quoteSet.items)) {
+					allItems.push(...(quoteSet.items as unknown[]))
+				}
+			}
+		} else {
+			allItems = (quoteRequest.items as unknown[]) || []
+		}
+
+		if (allItems.length === 0) {
+			return c.json({ error: '분석할 견적 항목이 없습니다.' }, 400)
+		}
+
+		// Update status to analyzing
+		await query(
+			c.env.DATABASE_URL,
+			'UPDATE quote_requests SET status = $1, updated_at = NOW() WHERE id = $2',
+			['analyzing', id]
+		)
+
+		// Run the auto analysis engine
+		const result = await runAutoAnalysis(c.env, {
+			quoteRequestId: String(id),
+			items: allItems as Array<Record<string, unknown>>,
+			propertySizeSqm: (quoteRequest.property_size as number) || null,
+			region: (quoteRequest.region as string) || '서울',
+			propertyType: (quoteRequest.property_type as string) || '',
+			quoteDate: (quoteRequest.created_at as string) || null,
+			constructionStartMonth: null,
+			grade: null,
+			isExclusive: false,
+			customerName: (quoteRequest.customer_name as string) || null,
+			customerEmail: (quoteRequest.customer_email as string) || null,
+		})
+
+		console.log(`Auto-analysis completed: score=${result.totalScore}, grade=${result.grade.label}`)
+
+		// Send analysis result email if customer has email
+		const customerEmail = quoteRequest.customer_email as string | undefined
+		if (customerEmail) {
+			try {
+				await sendAnalysisResultEmail(c.env, customerEmail, String(quoteRequest.customer_name || ''), result)
+			} catch (emailErr) {
+				console.error('Failed to send analysis result email:', emailErr)
+			}
+		}
+
+		return c.json({
+			success: true,
+			message: `자동 분석이 완료되었습니다. (${result.grade.label}등급, ${result.totalScore}점)`,
+			data: {
+				analysisId: result.analysisId,
+				totalScore: result.totalScore,
+				grade: result.grade,
+				scoreBreakdown: result.scoreBreakdown,
+				adjustmentFactors: result.adjustmentFactors,
+				itemsSummary: {
+					total: result.items.length,
+					mapped: result.items.filter(i => i.std_category).length,
+					benchmarked: result.items.filter(i => i.benchmark_unit_price != null).length,
+				},
+			},
+		})
+	} catch (error) {
+		console.error('Auto-analysis error:', error)
 		const id = c.req.param('id')
 
 		// Revert status on error
@@ -1143,6 +1281,21 @@ app.post('/submit-multiple', async (c) => {
 			console.error('Failed to notify Slack:', slackErr)
 		}
 
+		// Notify via Telegram (non-blocking)
+		try {
+			await notifyNewQuoteViaTelegram(c.env, {
+				id: String(quoteRequest.id),
+				name: customer_name,
+				phone: customer_phone,
+				propertyType: property_type,
+				region,
+				quoteSetCount: quote_sets.length,
+				itemCount: quote_sets.reduce((sum, s) => sum + s.items.length, 0),
+			})
+		} catch (telegramErr) {
+			console.error('Failed to notify Telegram:', telegramErr)
+		}
+
 		// Send email confirmation (non-blocking)
 		if (customer_email) {
 			try {
@@ -1155,6 +1308,18 @@ app.post('/submit-multiple', async (c) => {
 			} catch (emailErr) {
 				console.error('Failed to send confirmation email:', emailErr)
 			}
+		}
+
+		// Notify admin via email (non-blocking)
+		try {
+			await sendAdminNewQuoteEmail(c.env, {
+				id: String(quoteRequest.id),
+				name: customer_name,
+				phone: customer_phone,
+				planName: plan_name || `${property_type} ${region}`,
+			})
+		} catch (adminEmailErr) {
+			console.error('Failed to send admin email:', adminEmailErr)
 		}
 
 		return c.json({

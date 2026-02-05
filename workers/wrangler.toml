@@ -8,7 +8,7 @@ account_id = "1b84b674abad17f8ce74f6b8c1fd61bd"
 GA4_PROPERTY_ID = "properties/522887939"
 SEARCH_CONSOLE_SITE_URL = "sc-domain:zcheck.co.kr"
 FRONTEND_URL = "https://zcheck.co.kr"
-GMAIL_SENDER_EMAIL = "zipcheck.notify@gmail.com"
+GMAIL_SENDER_EMAIL = "hello@zcheck.co.kr"
 
 [[kv_namespaces]]
 binding = "KV"

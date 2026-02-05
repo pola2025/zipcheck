@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meta 시스템 사용자 + 앱 구성 가이드 - 집첵</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Pretendard', -apple-system, system-ui, sans-serif; }
+  .step-done { background: #ECFDF5 !important; border-color: #10B981 !important; }
+  .step-done .step-number { background: #10B981 !important; }
+  .copy-btn:active { transform: scale(0.95); }
+  .path-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #F3F4F6; border: 1px solid #E5E7EB; border-radius: 6px;
+    padding: 2px 10px; font-size: 13px; color: #374151; font-weight: 500;
+  }
+  .path-arrow { color: #9CA3AF; font-size: 12px; }
+  .warning-box { background: #FEF3C7; border-left: 4px solid #F59E0B; }
+  .info-box { background: #EFF6FF; border-left: 4px solid #3B82F6; }
+  .danger-box { background: #FEF2F2; border-left: 4px solid #EF4444; }
+</style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<div class="max-w-3xl mx-auto py-8 px-4">
+
+  <!-- Header -->
+  <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 5.523 4.477 10 10 10s10-4.477 10-10c0-5.523-4.477-10-10-10zm0 3a3 3 0 110 6 3 3 0 010-6zm0 14.2a7.2 7.2 0 01-6-3.22c.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08a7.2 7.2 0 01-6 3.22z"/></svg>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold text-gray-900">Meta 시스템 사용자 + 앱 구성 가이드</h1>
+        <p class="text-sm text-gray-500">Instagram + Threads 자동 게시를 위한 설정</p>
+      </div>
+    </div>
+
+    <div class="info-box rounded-lg p-4 mt-4">
+      <p class="text-sm text-blue-800">
+        <strong>시스템 사용자란?</strong> 개인 계정에 의존하지 않고 서버(Cloudflare Workers)에서 API를 호출할 수 있는 전용 계정입니다. 토큰이 만료되지 않아 자동화에 적합합니다.
+      </p>
+    </div>
+  </div>
+
+  <!-- Progress Checklist -->
+  <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+    <h2 class="font-bold text-gray-900 mb-4">진행 체크리스트</h2>
+    <div class="space-y-2">
+      <label class="flex items-center gap-3 cursor-pointer" data-step="1">
+        <input type="checkbox" class="w-4 h-4 rounded text-blue-600 check-item">
+        <span class="text-sm text-gray-700">1. 사전 준비 (비즈니스 계정 확인)</span>
+      </label>
+      <label class="flex items-center gap-3 cursor-pointer" data-step="2">
+        <input type="checkbox" class="w-4 h-4 rounded text-blue-600 check-item">
+        <span class="text-sm text-gray-700">2. Meta 비즈니스 포트폴리오 생성</span>
+      </label>
+      <label class="flex items-center gap-3 cursor-pointer" data-step="3">
+        <input type="checkbox" class="w-4 h-4 rounded text-blue-600 check-item">
+        <span class="text-sm text-gray-700">3. Meta 앱 생성</span>
+      </label>
+      <label class="flex items-center gap-3 cursor-pointer" data-step="4">
+        <input type="checkbox" class="w-4 h-4 rounded text-blue-600 check-item">
+        <span class="text-sm text-gray-700">4. Instagram + Threads API 추가</span>
+      </label>
+      <label class="flex items-center gap-3 cursor-pointer" data-step="5">
+        <input type="checkbox" class="w-4 h-4 rounded text-blue-600 check-item">
+        <span class="text-sm text-gray-700">5. 시스템 사용자 생성</span>
+      </label>
+      <label class="flex items-center gap-3 cursor-pointer" data-step="6">
+        <input type="checkbox" class="w-4 h-4 rounded text-blue-600 check-item">
+        <span class="text-sm text-gray-700">6. 에셋 할당 + 토큰 생성</span>
+      </label>
+      <label class="flex items-center gap-3 cursor-pointer" data-step="7">
+        <input type="checkbox" class="w-4 h-4 rounded text-blue-600 check-item">
+        <span class="text-sm text-gray-700">7. API 테스트</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="bg-white rounded-xl shadow-sm border p-6 mb-4 step-card" id="step-1">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold step-number">1</div>
+      <h3 class="font-bold text-gray-900">사전 준비</h3>
+    </div>
+
+    <div class="space-y-4">
+      <div>
+        <h4 class="font-semibold text-gray-800 text-sm mb-2">Instagram 비즈니스 계정 확인</h4>
+        <div class="flex flex-wrap gap-1 mb-2">
+          <span class="path-badge">Instagram 앱</span>
+          <span class="path-arrow">&rarr;</span>
+          <span class="path-badge">프로필</span>
+          <span class="path-arrow">&rarr;</span>
+          <span class="path-badge">설정</span>
+          <span class="path-arrow">&rarr;</span>
+          <span class="path-badge">계정 유형 및 도구</span>
+          <span class="path-arrow">&rarr;</span>
+          <span class="path-badge">프로페셔널 계정으로 전환</span>
+        </div>
+        <p class="text-sm text-gray-600">이미 비즈니스/크리에이터 계정이면 건너뜁니다.</p>
+      </div>
+
+      <div>
+        <h4 class="font-semibold text-gray-800 text-sm mb-2">Facebook 페이지 연결 확인</h4>
+        <div class="flex flex-wrap gap-1 mb-2">
+          <span class="path-badge">Instagram 설정</span>
+          <span class="path-arrow">&rarr;</span>
+          <span class="path-badge">계정 센터</span>
+          <span class="path-arrow">&rarr;</span>
+          <span class="path-badge">프로필</span>
+          <span class="path-arrow">&rarr;</span>
+          <span class="path-badge">Facebook 페이지 연결</span>
+        </div>
+        <p class="text-sm text-gray-600">"집첵" Facebook 페이지가 없으면 새로 생성 후 Instagram과 연결합니다.</p>
+      </div>
+
+      <div>
+        <h4 class="font-semibold text-gray-800 text-sm mb-2">Threads 계정 확인</h4>
+        <p class="text-sm text-gray-600">Instagram 계정으로 Threads 가입이 되어 있어야 합니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="bg-white rounded-xl shadow-sm border p-6 mb-4 step-card" id="step-2">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold step-number">2</div>
+      <h3 class="font-bold text-gray-900">Meta 비즈니스 포트폴리오 생성</h3>
+    </div>
+
+    <div class="space-y-4">
+      <div>
+        <p class="text-sm text-gray-600 mb-3">시스템 사용자는 비즈니스 포트폴리오(구 비즈니스 관리자) 안에서만 생성할 수 있습니다.</p>
+
+        <a href="https://business.facebook.com/overview" target="_blank"
+           class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition mb-3">
+          Meta Business Suite 열기 &rarr;
+        </a>
+
+        <div class="flex flex-wrap gap-1 mb-2">
+          <span class="path-badge">business.facebook.com</span>
+          <span class="path-arrow">&rarr;</span>
+          <span class="path-badge">설정 (톱니바퀴)</span>
+          <span class="path-arrow">&rarr;</span>
+          <span class="path-badge">비즈니스 설정</span>
+        </div>
+
+        <div class="warning-box rounded-lg p-3 mt-3">
+          <p class="text-sm text-yellow-800">
+            <strong>이미 비즈니스 포트폴리오가 있다면</strong> 이 단계를 건너뛰세요.
+            비즈니스 설정 &rarr; 비즈니스 정보에서 비즈니스 ID를 확인할 수 있습니다.
+          </p>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="font-semibold text-gray-800 text-sm mb-2">비즈니스 ID 기록</h4>
+        <div class="flex items-center gap-2">
+          <input type="text" id="business-id" placeholder="비즈니스 ID 입력 (예: 123456789)"
+                 class="flex-1 border rounded-lg px-3 py-2 text-sm">
+          <button onclick="saveValue('business-id')" class="bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg text-sm transition">저장</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="bg-white rounded-xl shadow-sm border p-6 mb-4 step-card" id="step-3">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold step-number">3</div>
+      <h3 class="font-bold text-gray-900">Meta 앱 생성</h3>
+    </div>
+
+    <div class="space-y-4">
+      <a href="https://developers.facebook.com/apps/create/" target="_blank"
+         class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+        Meta for Developers - 앱 생성 &rarr;
+      </a>
+
+      <div class="space-y-3">
+        <div class="border rounded-lg p-4">
+          <h4 class="font-semibold text-gray-800 text-sm mb-2">3-1. 앱 유형 선택</h4>
+          <p class="text-sm text-gray-600">
+            <strong>"비즈니스"</strong> 유형 선택<br>
+            (Other &rarr; Business 또는 직접 "비즈니스" 선택)
+          </p>
+        </div>
+
+        <div class="border rounded-lg p-4">
+          <h4 class="font-semibold text-gray-800 text-sm mb-2">3-2. 앱 정보 입력</h4>
+          <table class="w-full text-sm">
+            <tr class="border-b">
+              <td class="py-2 text-gray-500 w-32">앱 이름</td>
+              <td class="py-2 font-medium">ZipCheck Auto Publisher</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-2 text-gray-500">앱 연락처 이메일</td>
+              <td class="py-2 font-medium">imagime2002@naver.com</td>
+            </tr>
+            <tr>
+              <td class="py-2 text-gray-500">비즈니스 포트폴리오</td>
+              <td class="py-2 font-medium">Step 2에서 생성한 포트폴리오 선택</td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="border rounded-lg p-4">
+          <h4 class="font-semibold text-gray-800 text-sm mb-2">3-3. 앱 ID 기록</h4>
+          <div class="flex items-center gap-2">
+            <input type="text" id="app-id" placeholder="App ID (예: 1234567890123456)"
+                   class="flex-1 border rounded-lg px-3 py-2 text-sm">
+            <button onclick="saveValue('app-id')" class="bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg text-sm transition">저장</button>
+          </div>
+        </div>
+
+        <div class="border rounded-lg p-4">
+          <h4 class="font-semibold text-gray-800 text-sm mb-2">3-4. 앱 시크릿 기록</h4>
+          <div class="flex flex-wrap gap-1 mb-2">
+            <span class="path-badge">앱 대시보드</span>
+            <span class="path-arrow">&rarr;</span>
+            <span class="path-badge">설정</span>
+            <span class="path-arrow">&rarr;</span>
+            <span class="path-badge">기본 설정</span>
+            <span class="path-arrow">&rarr;</span>
+            <span class="path-badge">앱 시크릿 코드 (표시)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="password" id="app-secret" placeholder="App Secret"
+                   class="flex-1 border rounded-lg px-3 py-2 text-sm">
+            <button onclick="togglePassword('app-secret')" class="bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg text-sm transition">보기</button>
+          </div>
+          <div class="danger-box rounded-lg p-2 mt-2">
+            <p class="text-xs text-red-700">앱 시크릿은 절대 공개하지 마세요. Cloudflare Workers Secret으로만 저장합니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="bg-white rounded-xl shadow-sm border p-6 mb-4 step-card" id="step-4">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold step-number">4</div>
+      <h3 class="font-bold text-gray-900">Instagram + Threads API 제품 추가</h3>
+    </div>
+
+    <div class="space-y-4">
+      <div class="flex flex-wrap gap-1 mb-2">
+        <span class="path-badge">앱 대시보드</span>
+        <span class="path-arrow">&rarr;</span>
+        <span class="path-badge">제품 추가</span>
+      </div>
+
+      <div class="border rounded-lg p-4">
+        <h4 class="font-semibold text-gray-800 text-sm mb-3">추가할 제품 2개</h4>
+
+        <div class="space-y-3">
+          <div class="flex items-start gap-3 bg-gray-50 rounded-lg p-3">
+            <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex-shrink-0"></div>
+            <div>
+              <p class="font-medium text-sm">Instagram Graph API</p>
+              <p class="text-xs text-gray-500">"설정" 클릭 &rarr; Instagram 계정 연결</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3 bg-gray-50 rounded-lg p-3">
+            <div class="w-8 h-8 bg-black rounded-lg flex-shrink-0"></div>
+            <div>
+              <p class="font-medium text-sm">Threads API</p>
+              <p class="text-xs text-gray-500">"설정" 클릭 &rarr; Threads 계정 연결</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="border rounded-lg p-4">
+        <h4 class="font-semibold text-gray-800 text-sm mb-2">필요한 권한 (Permissions)</h4>
+        <div class="grid grid-cols-2 gap-2 text-sm">
+          <div class="bg-gray-50 rounded p-2">
+            <p class="font-medium text-gray-800">Instagram</p>
+            <ul class="text-xs text-gray-600 mt-1 space-y-1">
+              <li>instagram_basic</li>
+              <li>instagram_content_publish</li>
+              <li>instagram_manage_insights</li>
+              <li>pages_show_list</li>
+              <li>pages_read_engagement</li>
+            </ul>
+          </div>
+          <div class="bg-gray-50 rounded p-2">
+            <p class="font-medium text-gray-800">Threads</p>
+            <ul class="text-xs text-gray-600 mt-1 space-y-1">
+              <li>threads_basic</li>
+              <li>threads_content_publish</li>
+              <li>threads_manage_insights</li>
+              <li>threads_manage_replies</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box rounded-lg p-3">
+        <p class="text-sm text-blue-800">
+          <strong>앱 모드:</strong> 처음에는 "개발 모드"입니다.
+          시스템 사용자는 개발 모드에서도 테스트 가능하지만,
+          실서비스용으로는 "라이브 모드"로 전환 + 앱 검수가 필요합니다.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="bg-white rounded-xl shadow-sm border p-6 mb-4 step-card" id="step-5">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold step-number">5</div>
+      <h3 class="font-bold text-gray-900">시스템 사용자 생성</h3>
+    </div>
+
+    <div class="space-y-4">
+      <a href="https://business.facebook.com/settings/system-users" target="_blank"
+         class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+        비즈니스 설정 - 시스템 사용자 &rarr;
+      </a>
+
+      <div class="flex flex-wrap gap-1 mb-2">
+        <span class="path-badge">비즈니스 설정</span>
+        <span class="path-arrow">&rarr;</span>
+        <span class="path-badge">사용자</span>
+        <span class="path-arrow">&rarr;</span>
+        <span class="path-badge">시스템 사용자</span>
+        <span class="path-arrow">&rarr;</span>
+        <span class="path-badge">추가</span>
+      </div>
+
+      <div class="border rounded-lg p-4">
+        <h4 class="font-semibold text-gray-800 text-sm mb-2">시스템 사용자 정보</h4>
+        <table class="w-full text-sm">
+          <tr class="border-b">
+            <td class="py-2 text-gray-500 w-32">이름</td>
+            <td class="py-2 font-medium">zipcheck-publisher</td>
+          </tr>
+          <tr>
+            <td class="py-2 text-gray-500">역할</td>
+            <td class="py-2">
+              <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-xs font-medium">관리자 (Admin)</span>
+              <p class="text-xs text-gray-500 mt-1">콘텐츠 게시에 관리자 권한 필요</p>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="warning-box rounded-lg p-3">
+        <p class="text-sm text-yellow-800">
+          <strong>참고:</strong> "직원" 역할로는 콘텐츠 게시 권한이 부족할 수 있습니다.
+          Instagram content_publish에는 <strong>관리자(Admin)</strong> 시스템 사용자를 권장합니다.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="bg-white rounded-xl shadow-sm border p-6 mb-4 step-card" id="step-6">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold step-number">6</div>
+      <h3 class="font-bold text-gray-900">에셋 할당 + 액세스 토큰 생성</h3>
+    </div>
+
+    <div class="space-y-4">
+
+      <!-- 6-1: Assign Assets -->
+      <div class="border rounded-lg p-4">
+        <h4 class="font-semibold text-gray-800 text-sm mb-2">6-1. 에셋 할당</h4>
+        <p class="text-sm text-gray-600 mb-3">생성한 시스템 사용자를 선택한 후 "에셋 할당" 클릭</p>
+
+        <div class="space-y-2">
+          <div class="flex items-center gap-2 text-sm">
+            <span class="w-4 h-4 bg-blue-100 rounded flex items-center justify-center text-blue-600 text-xs">1</span>
+            <strong>페이지</strong> &rarr; 집첵 Facebook 페이지 선택 &rarr; "콘텐츠 관리" 권한
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <span class="w-4 h-4 bg-blue-100 rounded flex items-center justify-center text-blue-600 text-xs">2</span>
+            <strong>Instagram 계정</strong> &rarr; 집첵 Instagram 선택 &rarr; "콘텐츠 관리" 권한
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <span class="w-4 h-4 bg-blue-100 rounded flex items-center justify-center text-blue-600 text-xs">3</span>
+            <strong>앱</strong> &rarr; ZipCheck Auto Publisher 앱 선택 &rarr; "앱 관리" 권한
+          </div>
+        </div>
+      </div>
+
+      <!-- 6-2: Generate Token -->
+      <div class="border rounded-lg p-4">
+        <h4 class="font-semibold text-gray-800 text-sm mb-2">6-2. 액세스 토큰 생성</h4>
+        <p class="text-sm text-gray-600 mb-3">시스템 사용자 선택 &rarr; "새 토큰 생성" 클릭</p>
+
+        <div class="space-y-2 mb-3">
+          <div class="bg-gray-50 rounded p-3">
+            <p class="text-sm font-medium text-gray-800 mb-2">앱 선택: ZipCheck Auto Publisher</p>
+            <p class="text-sm text-gray-600 mb-2">체크할 권한:</p>
+            <div class="grid grid-cols-2 gap-1 text-xs">
+              <label class="flex items-center gap-1"><input type="checkbox" checked disabled> instagram_basic</label>
+              <label class="flex items-center gap-1"><input type="checkbox" checked disabled> instagram_content_publish</label>
+              <label class="flex items-center gap-1"><input type="checkbox" checked disabled> instagram_manage_insights</label>
+              <label class="flex items-center gap-1"><input type="checkbox" checked disabled> pages_show_list</label>
+              <label class="flex items-center gap-1"><input type="checkbox" checked disabled> pages_read_engagement</label>
+              <label class="flex items-center gap-1"><input type="checkbox" checked disabled> pages_manage_posts</label>
+              <label class="flex items-center gap-1"><input type="checkbox" checked disabled> threads_basic</label>
+              <label class="flex items-center gap-1"><input type="checkbox" checked disabled> threads_content_publish</label>
+              <label class="flex items-center gap-1"><input type="checkbox" checked disabled> threads_manage_insights</label>
+              <label class="flex items-center gap-1"><input type="checkbox" checked disabled> threads_manage_replies</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="danger-box rounded-lg p-3 mb-3">
+          <p class="text-sm text-red-700">
+            <strong>토큰은 한 번만 표시됩니다!</strong> 반드시 복사해서 안전한 곳에 저장하세요.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input type="password" id="access-token" placeholder="생성된 액세스 토큰 붙여넣기"
+                 class="flex-1 border rounded-lg px-3 py-2 text-sm font-mono">
+          <button onclick="togglePassword('access-token')" class="bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg text-sm transition">보기</button>
+          <button onclick="copyValue('access-token')" class="copy-btn bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 rounded-lg text-sm transition">복사</button>
+        </div>
+      </div>
+
+      <div class="info-box rounded-lg p-3">
+        <p class="text-sm text-blue-800">
+          <strong>시스템 사용자 토큰 = 영구 토큰</strong><br>
+          일반 사용자 토큰과 달리 만료되지 않습니다. Cloudflare Workers Secret으로 저장하면 됩니다.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 7 -->
+  <div class="bg-white rounded-xl shadow-sm border p-6 mb-4 step-card" id="step-7">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold step-number">7</div>
+      <h3 class="font-bold text-gray-900">API 테스트</h3>
+    </div>
+
+    <div class="space-y-4">
+      <div class="border rounded-lg p-4">
+        <h4 class="font-semibold text-gray-800 text-sm mb-2">7-1. 토큰 유효성 확인</h4>
+        <div class="bg-gray-900 rounded-lg p-3 mt-2">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-gray-400">터미널</span>
+            <button onclick="copyCode('test-token')" class="copy-btn text-xs text-gray-400 hover:text-white transition">복사</button>
+          </div>
+          <pre id="test-token" class="text-sm text-green-400 font-mono overflow-x-auto">curl "https://graph.facebook.com/v21.0/me?access_token=YOUR_TOKEN"</pre>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">시스템 사용자 이름과 ID가 반환되면 성공</p>
+      </div>
+
+      <div class="border rounded-lg p-4">
+        <h4 class="font-semibold text-gray-800 text-sm mb-2">7-2. Instagram 계정 ID 확인</h4>
+        <div class="bg-gray-900 rounded-lg p-3 mt-2">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-gray-400">터미널</span>
+            <button onclick="copyCode('test-ig')" class="copy-btn text-xs text-gray-400 hover:text-white transition">복사</button>
+          </div>
+          <pre id="test-ig" class="text-sm text-green-400 font-mono overflow-x-auto">curl "https://graph.facebook.com/v21.0/me/accounts?access_token=YOUR_TOKEN"</pre>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">Facebook 페이지 목록이 반환됩니다. 페이지 ID로 Instagram 계정 ID를 조회:</p>
+        <div class="bg-gray-900 rounded-lg p-3 mt-2">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-gray-400">터미널</span>
+            <button onclick="copyCode('test-ig2')" class="copy-btn text-xs text-gray-400 hover:text-white transition">복사</button>
+          </div>
+          <pre id="test-ig2" class="text-sm text-green-400 font-mono overflow-x-auto">curl "https://graph.facebook.com/v21.0/{PAGE_ID}?fields=instagram_business_account&access_token=YOUR_TOKEN"</pre>
+        </div>
+
+        <div class="flex items-center gap-2 mt-3">
+          <input type="text" id="ig-account-id" placeholder="Instagram Business Account ID"
+                 class="flex-1 border rounded-lg px-3 py-2 text-sm">
+          <button onclick="saveValue('ig-account-id')" class="bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg text-sm transition">저장</button>
+        </div>
+      </div>
+
+      <div class="border rounded-lg p-4">
+        <h4 class="font-semibold text-gray-800 text-sm mb-2">7-3. Threads 사용자 ID 확인</h4>
+        <div class="bg-gray-900 rounded-lg p-3 mt-2">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-gray-400">터미널</span>
+            <button onclick="copyCode('test-threads')" class="copy-btn text-xs text-gray-400 hover:text-white transition">복사</button>
+          </div>
+          <pre id="test-threads" class="text-sm text-green-400 font-mono overflow-x-auto">curl "https://graph.threads.net/v1.0/me?access_token=YOUR_TOKEN"</pre>
+        </div>
+        <div class="flex items-center gap-2 mt-3">
+          <input type="text" id="threads-user-id" placeholder="Threads User ID"
+                 class="flex-1 border rounded-lg px-3 py-2 text-sm">
+          <button onclick="saveValue('threads-user-id')" class="bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg text-sm transition">저장</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary / Next Steps -->
+  <div class="bg-white rounded-xl shadow-sm border p-6 mb-4">
+    <h3 class="font-bold text-gray-900 mb-4">Cloudflare Workers에 저장할 Secrets</h3>
+
+    <div class="space-y-2 mb-4">
+      <div class="bg-gray-900 rounded-lg p-3">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs text-gray-400">터미널 (프로젝트 루트에서 실행)</span>
+          <button onclick="copyCode('wrangler-cmds')" class="copy-btn text-xs text-gray-400 hover:text-white transition">복사</button>
+        </div>
+        <pre id="wrangler-cmds" class="text-sm text-green-400 font-mono overflow-x-auto whitespace-pre-wrap">wrangler secret put META_APP_ID
+wrangler secret put META_APP_SECRET
+wrangler secret put META_ACCESS_TOKEN
+wrangler secret put META_IG_ACCOUNT_ID
+wrangler secret put META_THREADS_USER_ID</pre>
+      </div>
+    </div>
+
+    <div class="info-box rounded-lg p-4">
+      <p class="text-sm text-blue-800 mb-2"><strong>다음 단계:</strong></p>
+      <ol class="text-sm text-blue-700 space-y-1 list-decimal list-inside">
+        <li>위 가이드대로 시스템 사용자 + 토큰 생성</li>
+        <li>API 테스트로 ID 확인</li>
+        <li>wrangler secret으로 Workers에 저장</li>
+        <li>Workers에 Instagram + Threads 게시 API 라우트 구현</li>
+        <li>어드민에 게시물 작성 UI 추가</li>
+      </ol>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function saveValue(id) {
+  const val = document.getElementById(id).value;
+  if (val) {
+    localStorage.setItem('meta-setup-' + id, val);
+    alert('저장됨: ' + id);
+  }
+}
+
+function togglePassword(id) {
+  const input = document.getElementById(id);
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+function copyValue(id) {
+  const input = document.getElementById(id);
+  navigator.clipboard.writeText(input.value).then(() => {
+    alert('클립보드에 복사됨');
+  });
+}
+
+function copyCode(id) {
+  const el = document.getElementById(id);
+  navigator.clipboard.writeText(el.textContent.trim()).then(() => {
+    const btn = el.parentElement.querySelector('.copy-btn');
+    const orig = btn.textContent;
+    btn.textContent = '복사됨!';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+
+// Load saved values
+window.addEventListener('load', () => {
+  ['business-id', 'app-id', 'app-secret', 'access-token', 'ig-account-id', 'threads-user-id'].forEach(id => {
+    const saved = localStorage.getItem('meta-setup-' + id);
+    if (saved) document.getElementById(id).value = saved;
+  });
+});
+</script>
+
+</body>
+</html>

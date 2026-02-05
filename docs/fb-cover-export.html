@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 820px; height: 360px; overflow: hidden; font-family: -apple-system, 'Pretendard', 'Malgun Gothic', sans-serif; }
+
+  .fb-cover {
+    width: 820px;
+    height: 360px;
+    background: #F2EFE8;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .top-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: #2D5A3D;
+  }
+
+  .bottom-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 52px;
+    background: #2D5A3D;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 36px;
+  }
+
+  .brand-badge {
+    background: #1BB896;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 6px 18px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+  }
+
+  .url {
+    color: rgba(255,255,255,0.7);
+    font-size: 14px;
+    letter-spacing: 0.5px;
+  }
+
+  .content {
+    position: absolute;
+    top: 6px;
+    bottom: 52px;
+    left: 0; right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 0 80px;
+  }
+
+  .logo {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #1F2937;
+    font-style: italic;
+  }
+  .logo .accent { color: #1BB896; }
+
+  .main-heading {
+    font-size: 38px;
+    font-weight: 800;
+    color: #1F2937;
+    letter-spacing: -1px;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .sub-heading {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1BB896;
+    text-align: center;
+    margin-top: 2px;
+  }
+
+  .description {
+    font-size: 14px;
+    color: #6B7280;
+    text-align: center;
+  }
+
+  .features {
+    display: flex;
+    gap: 32px;
+    margin-top: 8px;
+  }
+
+  .feature {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #4B5563;
+    font-weight: 500;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #1BB896;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<div class="fb-cover">
+  <div class="top-bar"></div>
+  <div class="content">
+    <div class="logo"><span class="accent">z</span>ip<span class="accent">c</span>he<span class="accent">c</span>k</div>
+    <div class="main-heading">시공원가 기준 인테리어 견적 분석</div>
+    <div class="sub-heading">지금 받은 견적, 적정 가격 맞습니까?</div>
+    <div class="description">시공원가 기준으로 항목별 견적을 분석해드립니다</div>
+    <div class="features">
+      <div class="feature"><span class="dot"></span>10개 공종별 분석</div>
+      <div class="feature"><span class="dot"></span>100점 만점 리포트</div>
+      <div class="feature"><span class="dot"></span>무료 견적 분석</div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="brand-badge">집첵</div>
+    <div class="url">zcheck.co.kr</div>
+  </div>
+</div>
+</body>
+</html>

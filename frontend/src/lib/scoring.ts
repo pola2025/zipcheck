@@ -290,9 +290,9 @@ export function calculateScore(analysis: Analysis, items: AnalysisItem[]): Score
 // ============================================
 
 export function getScoreGrade(score: number): { label: string; color: string; description: string } {
-	if (score >= 85) return { label: 'A', color: 'text-green-600', description: '매우 적정한 견적입니다' }
-	if (score >= 75) return { label: 'B', color: 'text-blue-600', description: '대체로 합리적인 견적입니다' }
-	if (score >= 60) return { label: 'C', color: 'text-amber-600', description: '일부 항목 검토가 필요합니다' }
-	if (score >= 45) return { label: 'D', color: 'text-orange-600', description: '상당 부분 검토가 필요합니다' }
-	return { label: 'F', color: 'text-red-600', description: '견적 재검토를 권장합니다' }
+	if (score >= 90) return { label: '매우 좋음', color: 'text-green-600', description: '매우 적정한 견적입니다' }
+	if (score >= 75) return { label: '합리적', color: 'text-blue-600', description: '대체로 합리적인 견적입니다' }
+	if (score >= 60) return { label: '평균 수준', color: 'text-amber-600', description: '일부 항목 검토가 필요합니다' }
+	if (score >= 40) return { label: '다소 비쌈', color: 'text-orange-600', description: '상당 부분 검토가 필요합니다' }
+	return { label: '매우 비쌈', color: 'text-red-600', description: '견적 재검토를 권장합니다' }
 }

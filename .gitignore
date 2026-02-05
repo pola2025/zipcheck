@@ -85,3 +85,14 @@ NEXT_SESSION_*.md
 .claude/settings.local.json
 **/settings.local.json
 .vercel
+
+# Test/temp images at root
+og-*.png
+output/
+
+# Design assets (large binaries)
+*.psd
+
+# Root package.json (script-only dev deps)
+/package.json
+/package-lock.json

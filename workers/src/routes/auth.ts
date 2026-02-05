@@ -1,23 +1,177 @@
 import { Hono } from 'hono'
+import * as OTPAuth from 'otpauth'
 import type { Env, Variables } from '../types'
 import { generateToken, verifyToken } from '../middleware/auth'
 import { query, findOne, insertOne } from '../lib/db'
+import { sendTelegramMessage } from '../services/telegram'
+
+const ADMIN_EMAIL = 'mkt@polarad.co.kr'
+const RATE_LIMIT_MAX = 5
+const RATE_LIMIT_WINDOW = 15 * 60 // 15 minutes in seconds
+const SESSION_TTL = 300 // 5 minutes
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>()
 
-// Admin login
+// Rate limiting helper
+async function checkRateLimit(kv: KVNamespace, ip: string): Promise<{ allowed: boolean; remaining: number }> {
+	const key = `rate_limit:admin_login:${ip}`
+	const raw = await kv.get(key)
+	const count = raw ? parseInt(raw, 10) : 0
+	if (count >= RATE_LIMIT_MAX) {
+		return { allowed: false, remaining: 0 }
+	}
+	await kv.put(key, String(count + 1), { expirationTtl: RATE_LIMIT_WINDOW })
+	return { allowed: true, remaining: RATE_LIMIT_MAX - count - 1 }
+}
+
+// Get stored TOTP secret
+async function getTotpSecret(env: Env): Promise<string | null> {
+	// Env secret takes priority, fallback to KV
+	if (env.ADMIN_TOTP_SECRET) return env.ADMIN_TOTP_SECRET
+	return await env.KV.get('admin_totp_secret')
+}
+
+// Admin login Step 1: Email verification
 app.post('/admin/login', async (c) => {
-	const { password } = await c.req.json<{ password: string }>()
-
-	if (!password) {
-		return c.json({ error: '비밀번호를 입력하세요.' }, 400)
+	const ip = c.req.header('CF-Connecting-IP') || 'unknown'
+	const { allowed, remaining } = await checkRateLimit(c.env.KV, ip)
+	if (!allowed) {
+		c.executionCtx.waitUntil(
+			sendTelegramMessage(c.env, `<b>⚠️ 관리자 로그인 Rate Limit 초과</b>\n\nIP: <code>${ip}</code>`)
+		)
+		return c.json({ error: '로그인 시도 횟수가 초과되었습니다. 15분 후 다시 시도하세요.' }, 429)
 	}
 
-	if (password !== c.env.ADMIN_PASSWORD) {
-		return c.json({ error: '비밀번호가 올바르지 않습니다.' }, 401)
+	const { email } = await c.req.json<{ email: string }>()
+
+	if (!email) {
+		return c.json({ error: '이메일을 입력하세요.' }, 400)
 	}
 
+	if (email.toLowerCase() !== ADMIN_EMAIL) {
+		c.executionCtx.waitUntil(
+			sendTelegramMessage(c.env, `<b>🔒 관리자 로그인 실패 (잘못된 이메일)</b>\n\n이메일: <code>${email}</code>\nIP: <code>${ip}</code>`)
+		)
+		return c.json({ error: '등록되지 않은 관리자 이메일입니다.' }, 401)
+	}
+
+	// Generate session token
+	const sessionArr = new Uint8Array(32)
+	crypto.getRandomValues(sessionArr)
+	const sessionToken = Array.from(sessionArr).map(b => b.toString(16).padStart(2, '0')).join('')
+
+	const existingSecret = await getTotpSecret(c.env)
+
+	if (!existingSecret) {
+		// First-time setup: generate new TOTP secret
+		const secret = new OTPAuth.Secret({ size: 20 })
+		const totp = new OTPAuth.TOTP({
+			issuer: 'ZipCheck Admin',
+			label: ADMIN_EMAIL,
+			algorithm: 'SHA1',
+			digits: 6,
+			period: 30,
+			secret,
+		})
+
+		// Store session with new secret in KV
+		await c.env.KV.put(
+			`admin_session:${sessionToken}`,
+			JSON.stringify({ email, newSecret: secret.base32 }),
+			{ expirationTtl: SESSION_TTL }
+		)
+
+		return c.json({
+			step: 'totp_setup',
+			sessionToken,
+			secret: secret.base32,
+			otpauthUri: totp.toString(),
+		})
+	}
+
+	// TOTP already configured → ask for code
+	await c.env.KV.put(
+		`admin_session:${sessionToken}`,
+		JSON.stringify({ email }),
+		{ expirationTtl: SESSION_TTL }
+	)
+
+	return c.json({
+		step: 'totp_required',
+		sessionToken,
+	})
+})
+
+// Admin login Step 2: TOTP verification
+app.post('/admin/login/verify-totp', async (c) => {
+	const ip = c.req.header('CF-Connecting-IP') || 'unknown'
+	const { allowed } = await checkRateLimit(c.env.KV, ip)
+	if (!allowed) {
+		return c.json({ error: '로그인 시도 횟수가 초과되었습니다. 15분 후 다시 시도하세요.' }, 429)
+	}
+
+	const { code, sessionToken, newSecret } = await c.req.json<{
+		code: string
+		sessionToken: string
+		newSecret?: string
+	}>()
+
+	if (!code || !sessionToken) {
+		return c.json({ error: '인증 코드와 세션 토큰이 필요합니다.' }, 400)
+	}
+
+	// Validate session token
+	const sessionRaw = await c.env.KV.get(`admin_session:${sessionToken}`)
+	if (!sessionRaw) {
+		return c.json({ error: '세션이 만료되었습니다. 다시 로그인하세요.' }, 401)
+	}
+
+	const session = JSON.parse(sessionRaw) as { email: string; newSecret?: string }
+
+	// Determine which secret to use for verification
+	const secretBase32 = newSecret || session.newSecret || await getTotpSecret(c.env)
+	if (!secretBase32) {
+		return c.json({ error: 'TOTP 시크릿이 설정되지 않았습니다.' }, 500)
+	}
+
+	// Verify TOTP code
+	const totp = new OTPAuth.TOTP({
+		issuer: 'ZipCheck Admin',
+		label: ADMIN_EMAIL,
+		algorithm: 'SHA1',
+		digits: 6,
+		period: 30,
+		secret: OTPAuth.Secret.fromBase32(secretBase32),
+	})
+
+	const delta = totp.validate({ token: code, window: 1 })
+	if (delta === null) {
+		c.executionCtx.waitUntil(
+			sendTelegramMessage(c.env, `<b>🔒 관리자 TOTP 인증 실패</b>\n\nIP: <code>${ip}</code>`)
+		)
+		return c.json({ error: '인증 코드가 올바르지 않습니다.' }, 401)
+	}
+
+	// If first-time setup, save the TOTP secret to KV
+	if (newSecret || session.newSecret) {
+		const secretToSave = newSecret || session.newSecret
+		await c.env.KV.put('admin_totp_secret', secretToSave!)
+	}
+
+	// Delete session token (one-time use)
+	await c.env.KV.delete(`admin_session:${sessionToken}`)
+
+	// Generate JWT
 	const token = await generateToken({ role: 'admin' }, c.env.JWT_SECRET)
+
+	// Telegram success notification
+	const now = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
+	c.executionCtx.waitUntil(
+		sendTelegramMessage(
+			c.env,
+			`<b>✅ 관리자 로그인 성공</b>\n\nIP: <code>${ip}</code>\n시각: ${now}${newSecret || session.newSecret ? '\n<i>최초 TOTP 등록 완료</i>' : ''}`
+		)
+	)
 
 	return c.json({
 		success: true,

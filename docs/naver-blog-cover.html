@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>ZipCheck Naver Blog Cover</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  width: 1080px;
+  height: 1300px;
+  overflow: hidden;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+.cover {
+  width: 1080px;
+  height: 1300px;
+  background: linear-gradient(175deg, #f5f2ec 0%, #ede9e0 40%, #e8e3d8 70%, #dfd9cc 100%);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Subtle pattern overlay */
+.cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(17, 193, 213, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(74, 103, 65, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255, 207, 77, 0.03) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+/* Top accent bar */
+.top-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(90deg, #3E5A35 0%, #11C1D5 50%, #FFCF4D 100%);
+}
+
+/* Decorative geometric elements */
+.deco-circle-1 {
+  position: absolute;
+  top: 80px;
+  right: -60px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  border: 2px solid rgba(17, 193, 213, 0.12);
+}
+
+.deco-circle-2 {
+  position: absolute;
+  bottom: 120px;
+  left: -80px;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  border: 2px solid rgba(62, 90, 53, 0.08);
+}
+
+.deco-line {
+  position: absolute;
+  top: 200px;
+  left: 60px;
+  width: 2px;
+  height: 160px;
+  background: linear-gradient(to bottom, rgba(17, 193, 213, 0.2), transparent);
+}
+
+/* Content */
+.content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 80px;
+}
+
+/* Logo area */
+.logo-section {
+  margin-bottom: 56px;
+}
+
+.logo-text {
+  font-family: 'Outfit', sans-serif;
+  font-size: 72px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  color: #1a1a1a;
+}
+
+.logo-text .c-accent {
+  color: #11C1D5;
+}
+
+.logo-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 16px;
+  padding: 8px 28px;
+  background: #3E5A35;
+  border-radius: 100px;
+  color: white;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+/* Main headline */
+.headline {
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: #1a1a1a;
+  margin-bottom: 36px;
+  letter-spacing: -1px;
+}
+
+.headline .highlight {
+  color: #11C1D5;
+  position: relative;
+}
+
+.headline .highlight::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: rgba(17, 193, 213, 0.2);
+  border-radius: 3px;
+}
+
+/* Subtext */
+.subtext {
+  font-size: 32px;
+  font-weight: 500;
+  color: #3E5A35;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.description {
+  font-size: 26px;
+  font-weight: 400;
+  color: #6b6b60;
+  line-height: 1.65;
+  max-width: 760px;
+}
+
+/* Divider */
+.divider {
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(90deg, #11C1D5, #3E5A35);
+  border-radius: 2px;
+  margin: 48px 0;
+}
+
+/* Feature pills */
+.pills {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(17, 193, 213, 0.15);
+  border-radius: 100px;
+  font-size: 22px;
+  font-weight: 500;
+  color: #2a2a2a;
+  backdrop-filter: blur(4px);
+}
+
+.pill .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #11C1D5;
+}
+
+/* Bottom bar */
+.bottom-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 60px;
+  background: rgba(62, 90, 53, 0.95);
+}
+
+.bottom-logo {
+  font-family: 'Outfit', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: white;
+}
+
+.bottom-logo .c-accent {
+  color: #11C1D5;
+}
+
+.bottom-url {
+  font-family: 'Outfit', sans-serif;
+  font-size: 26px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+}
+</style>
+</head>
+<body>
+<div class="cover">
+  <div class="top-bar"></div>
+  <div class="deco-circle-1"></div>
+  <div class="deco-circle-2"></div>
+  <div class="deco-line"></div>
+
+  <div class="content">
+    <div class="logo-section">
+      <div class="logo-text">zip<span class="c-accent">c</span>heck</div>
+      <div style="text-align:center;">
+        <span class="logo-badge">집 체 크</span>
+      </div>
+    </div>
+
+    <div class="headline">
+      원가 기준<br>
+      인테리어 <span class="highlight">견적 분석</span>
+    </div>
+
+    <div class="subtext">
+      지금 받은 견적, 적정 가격 맞습니까?
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="description">
+      원가 기준으로 항목별 견적을 분석해<br>
+      합리적인 인테리어를 도와드립니다
+    </div>
+
+    <div class="pills">
+      <span class="pill"><span class="dot"></span>항목별 원가 비교</span>
+      <span class="pill"><span class="dot"></span>적정가 분석</span>
+      <span class="pill"><span class="dot"></span>실시간 리포트</span>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="bottom-logo">zip<span class="c-accent">c</span>heck</div>
+    <div class="bottom-url">zcheck.co.kr</div>
+  </div>
+</div>
+</body>
+</html>

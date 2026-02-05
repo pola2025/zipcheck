@@ -7,6 +7,7 @@ import { Hono } from 'hono'
 import type { Env, Variables } from '../../types'
 import { query, findOne, findMany } from '../../lib/db'
 import { authenticateToken, requireAdmin } from '../../middleware/auth'
+import { sendQuoteCompletedEmail } from '../../services/google-gmail'
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>()
 
@@ -234,6 +235,21 @@ app.post('/:id/complete', async (c) => {
 
 		if (!rows.length) {
 			return c.json({ error: '분석을 찾을 수 없습니다.' }, 404)
+		}
+
+		// 분석 완료 → 고객에게 이메일 알림 (non-blocking)
+		const analysis = rows[0] as Record<string, unknown>
+		if (analysis.customer_email) {
+			try {
+				await sendQuoteCompletedEmail(
+					c.env,
+					String(analysis.customer_email),
+					String(analysis.id),
+					String(analysis.customer_name || '고객')
+				)
+			} catch (emailErr) {
+				console.error('[Analyses] Failed to send completion email:', emailErr)
+			}
 		}
 
 		return c.json({ success: true, data: rows[0] })

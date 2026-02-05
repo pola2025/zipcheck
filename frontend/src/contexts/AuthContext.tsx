@@ -5,11 +5,19 @@ interface User {
 	role: string
 }
 
+interface LoginStep1Result {
+	step: 'totp_required' | 'totp_setup'
+	sessionToken: string
+	secret?: string
+	otpauthUri?: string
+}
+
 interface AuthContextType {
 	user: User | null
 	token: string | null
 	isAuthenticated: boolean
-	login: (password: string) => Promise<void>
+	loginStep1: (email: string) => Promise<LoginStep1Result>
+	loginStep2: (code: string, sessionToken: string, newSecret?: string) => Promise<void>
 	logout: () => void
 }
 
@@ -30,42 +38,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 		}
 	}, [])
 
-	const login = async (password: string) => {
-		try {
-			const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-			const response = await fetch(`${API_URL}/api/auth/admin/login`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ password })
-			})
+	const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
-			if (!response.ok) {
-				const error = await response.json()
-				throw new Error(error.error || '로그인에 실패했습니다.')
-			}
+	const loginStep1 = async (email: string): Promise<LoginStep1Result> => {
+		const response = await fetch(`${API_URL}/api/auth/admin/login`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ email }),
+		})
 
-			const data = await response.json()
-
-			// Store token and user info
-			localStorage.setItem('admin_token', data.token)
-			localStorage.setItem('admin_user', JSON.stringify(data.user))
-
-			setToken(data.token)
-			setUser(data.user)
-		} catch (error) {
-			console.error('Login error:', error)
-			throw error
+		if (!response.ok) {
+			const error = await response.json()
+			throw new Error(error.error || '로그인에 실패했습니다.')
 		}
+
+		return response.json()
+	}
+
+	const loginStep2 = async (code: string, sessionToken: string, newSecret?: string) => {
+		const response = await fetch(`${API_URL}/api/auth/admin/login/verify-totp`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ code, sessionToken, newSecret }),
+		})
+
+		if (!response.ok) {
+			const error = await response.json()
+			throw new Error(error.error || '인증에 실패했습니다.')
+		}
+
+		const data = await response.json()
+
+		// Store token and user info
+		localStorage.setItem('admin_token', data.token)
+		localStorage.setItem('admin_user', JSON.stringify(data.user))
+
+		setToken(data.token)
+		setUser(data.user)
 	}
 
 	const logout = () => {
-		// Clear localStorage
 		localStorage.removeItem('admin_token')
 		localStorage.removeItem('admin_user')
-
-		// Clear state
 		setToken(null)
 		setUser(null)
 	}
@@ -74,8 +88,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 		user,
 		token,
 		isAuthenticated: !!token && !!user,
-		login,
-		logout
+		loginStep1,
+		loginStep2,
+		logout,
 	}
 
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

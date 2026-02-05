@@ -1,7 +1,9 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import type { Context, Next } from 'hono'
 import type { Env, Variables } from './types'
 import { handleScheduled } from './services/stats-cron'
+import { sendTelegramMessage } from './services/telegram'
 
 // Route imports
 import healthRoutes from './routes/health'
@@ -23,6 +25,7 @@ import blogRoutes from './routes/blog'
 import blogAdminRoutes from './routes/admin/blog-admin'
 import imageRoutes from './routes/images'
 import seoRoutes from './routes/seo'
+import metaRoutes from './routes/meta'
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>()
 
@@ -40,6 +43,27 @@ app.use('/*', cors({
 	allowHeaders: ['Content-Type', 'Authorization'],
 	maxAge: 86400,
 }))
+
+// China IP block middleware for admin routes
+function chinaIpBlock() {
+	return async (c: Context<{ Bindings: Env; Variables: Variables }>, next: Next) => {
+		const country = c.req.header('CF-IPCountry')
+		if (country === 'CN') {
+			const ip = c.req.header('CF-Connecting-IP') || 'unknown'
+			const path = c.req.path
+			c.executionCtx.waitUntil(
+				sendTelegramMessage(
+					c.env,
+					`<b>🚫 중국 IP 차단</b>\n\nIP: <code>${ip}</code>\n경로: <code>${path}</code>\n국가: CN`
+				)
+			)
+			return c.json({ error: 'Access denied' }, 403)
+		}
+		await next()
+	}
+}
+app.use('/api/admin/*', chinaIpBlock())
+app.use('/api/auth/admin/*', chinaIpBlock())
 
 // Mount routes
 app.route('/', healthRoutes)
@@ -61,6 +85,7 @@ app.route('/api/blog', blogRoutes)
 app.route('/api/admin/blog', blogAdminRoutes)
 app.route('/images', imageRoutes)
 app.route('/', seoRoutes)  // sitemap.xml, robots.txt, /api/seo/meta
+app.route('/api/meta', metaRoutes)
 
 // 404 fallback
 app.notFound((c) => {

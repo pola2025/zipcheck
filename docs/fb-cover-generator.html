@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>ZipCheck Facebook Cover</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 40px; font-family: -apple-system, 'Pretendard', sans-serif; }
+
+  .label { color: #aaa; font-size: 14px; margin-bottom: 8px; }
+
+  /* Facebook Cover: 820 x 360 (upload size, safe for both desktop & mobile) */
+  .fb-cover {
+    width: 820px;
+    height: 360px;
+    background: #F2EFE8;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Top bar */
+  .fb-cover .top-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: #2D5A3D;
+  }
+
+  /* Bottom bar */
+  .fb-cover .bottom-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 52px;
+    background: #2D5A3D;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 36px;
+  }
+
+  .fb-cover .bottom-bar .brand-badge {
+    background: #1BB896;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 6px 18px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+  }
+
+  .fb-cover .bottom-bar .url {
+    color: rgba(255,255,255,0.7);
+    font-size: 14px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Main content area */
+  .fb-cover .content {
+    position: absolute;
+    top: 6px;
+    bottom: 52px;
+    left: 0; right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 0 80px;
+  }
+
+  /* Logo */
+  .fb-cover .logo {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #1F2937;
+    font-style: italic;
+  }
+  .fb-cover .logo .z { color: #1BB896; }
+  .fb-cover .logo .check-e { color: #1BB896; }
+
+  /* Main heading */
+  .fb-cover .main-heading {
+    font-size: 38px;
+    font-weight: 800;
+    color: #1F2937;
+    letter-spacing: -1px;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  /* Sub heading */
+  .fb-cover .sub-heading {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1BB896;
+    text-align: center;
+    margin-top: 2px;
+  }
+
+  /* Description */
+  .fb-cover .description {
+    font-size: 14px;
+    color: #6B7280;
+    text-align: center;
+    margin-top: 0;
+  }
+
+  /* Features row */
+  .fb-cover .features {
+    display: flex;
+    gap: 32px;
+    margin-top: 8px;
+  }
+
+  .fb-cover .feature {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #4B5563;
+    font-weight: 500;
+  }
+
+  .fb-cover .feature .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #1BB896;
+    flex-shrink: 0;
+  }
+
+  /* Safe zone overlay (toggle) */
+  .safe-zone {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    display: none;
+  }
+  .safe-zone.show {
+    display: block;
+  }
+  /* Desktop crop: top/bottom 24px each */
+  .safe-zone .desktop-crop-top,
+  .safe-zone .desktop-crop-bottom {
+    position: absolute;
+    left: 0; right: 0;
+    background: rgba(255,0,0,0.1);
+    border: 1px dashed rgba(255,0,0,0.4);
+  }
+  .safe-zone .desktop-crop-top { top: 0; height: 24px; }
+  .safe-zone .desktop-crop-bottom { bottom: 0; height: 24px; }
+  /* Mobile crop: left/right 90px each */
+  .safe-zone .mobile-crop-left,
+  .safe-zone .mobile-crop-right {
+    position: absolute;
+    top: 0; bottom: 0;
+    background: rgba(0,0,255,0.08);
+    border: 1px dashed rgba(0,0,255,0.3);
+  }
+  .safe-zone .mobile-crop-left { left: 0; width: 90px; }
+  .safe-zone .mobile-crop-right { right: 0; width: 90px; }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  .controls button {
+    padding: 8px 20px;
+    border: 1px solid #555;
+    background: #444;
+    color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .controls button:hover { background: #555; }
+
+  /* Preview frames */
+  .previews {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+  }
+  .preview-frame {
+    border: 2px solid #555;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .preview-frame .preview-label {
+    background: #444;
+    color: #aaa;
+    font-size: 12px;
+    padding: 4px 12px;
+    text-align: center;
+  }
+  /* Desktop preview: 820x312 from center */
+  .desktop-preview {
+    width: 410px;
+    height: 156px;
+  }
+  .desktop-preview .inner {
+    width: 820px;
+    height: 312px;
+    transform: scale(0.5);
+    transform-origin: top left;
+    overflow: hidden;
+  }
+  /* Mobile preview: 640x360 from center */
+  .mobile-preview {
+    width: 320px;
+    height: 180px;
+  }
+  .mobile-preview .inner {
+    width: 640px;
+    height: 360px;
+    transform: scale(0.5);
+    transform-origin: top left;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .info { color: #888; font-size: 13px; text-align: center; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="label">Facebook Cover Image - 820 x 360px (Upload Size)</div>
+
+<!-- Main cover image -->
+<div class="fb-cover" id="fb-cover">
+  <div class="top-bar"></div>
+
+  <div class="content">
+    <div class="logo"><span class="z">z</span>ip<span class="check-e">c</span>he<span class="check-e">c</span>k</div>
+    <div class="main-heading">시공원가 기준 인테리어 견적 분석</div>
+    <div class="sub-heading">지금 받은 견적, 적정 가격 맞습니까?</div>
+    <div class="description">시공원가 기준으로 항목별 견적을 분석해드립니다</div>
+    <div class="features">
+      <div class="feature"><span class="dot"></span>10개 공종별 분석</div>
+      <div class="feature"><span class="dot"></span>100점 만점 리포트</div>
+      <div class="feature"><span class="dot"></span>무료 견적 분석</div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="brand-badge">집첵</div>
+    <div class="url">zcheck.co.kr</div>
+  </div>
+
+  <div class="safe-zone" id="safe-zone">
+    <div class="desktop-crop-top"></div>
+    <div class="desktop-crop-bottom"></div>
+    <div class="mobile-crop-left"></div>
+    <div class="mobile-crop-right"></div>
+  </div>
+</div>
+
+<div class="controls">
+  <button onclick="toggleSafeZone()">Safe Zone 표시 토글</button>
+  <button onclick="downloadImage()">PNG 다운로드</button>
+</div>
+
+<div class="label" style="margin-top: 20px;">미리보기 (Desktop 820x312 / Mobile 640x360)</div>
+<div class="previews">
+  <div>
+    <div class="preview-frame desktop-preview">
+      <div class="preview-label">Desktop (820x312)</div>
+      <div class="inner" id="desktop-preview"></div>
+    </div>
+  </div>
+  <div>
+    <div class="preview-frame mobile-preview">
+      <div class="preview-label">Mobile (640x360)</div>
+      <div class="inner" id="mobile-preview"></div>
+    </div>
+  </div>
+</div>
+
+<div class="info">
+  <p>PNG 다운로드 버튼을 클릭하면 820x360px 이미지를 다운로드합니다.</p>
+  <p>Safe Zone: 빨강 = 데스크톱 잘리는 영역 / 파랑 = 모바일 잘리는 영역</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+function toggleSafeZone() {
+  document.getElementById('safe-zone').classList.toggle('show');
+}
+
+async function downloadImage() {
+  // Hide safe zone for screenshot
+  const sz = document.getElementById('safe-zone');
+  sz.classList.remove('show');
+
+  const el = document.getElementById('fb-cover');
+  const canvas = await html2canvas(el, {
+    width: 820,
+    height: 360,
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#F2EFE8'
+  });
+
+  const link = document.createElement('a');
+  link.download = 'zipcheck-fb-cover-820x360.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+// Generate previews
+function generatePreviews() {
+  const cover = document.getElementById('fb-cover');
+
+  // Desktop: show center 820x312 (crop 24px top, 24px bottom)
+  const dPreview = document.getElementById('desktop-preview');
+  const dClone = cover.cloneNode(true);
+  dClone.style.marginTop = '-24px';
+  dClone.id = '';
+  dPreview.appendChild(dClone);
+
+  // Mobile: show center 640x360 (crop 90px each side)
+  const mPreview = document.getElementById('mobile-preview');
+  const mClone = cover.cloneNode(true);
+  mClone.style.marginLeft = '-90px';
+  mClone.id = '';
+  mPreview.appendChild(mClone);
+}
+
+window.addEventListener('load', generatePreviews);
+</script>
+</body>
+</html>
