@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FileText, TrendingUp, LayoutDashboard, ArrowRight, MessageSquare, BarChart3 } from 'lucide-react'
+import { FileText, TrendingUp, LayoutDashboard, ArrowRight, MessageSquare, BarChart3, ClipboardCheck } from 'lucide-react'
 import { getApiUrl } from '../../lib/api-config'
 import { adminPath } from '../../lib/admin-path'
 
@@ -17,6 +17,9 @@ interface DashboardStats {
 	recentQuoteRequests: number
 	totalReviews: number
 	totalDamageCases: number
+	totalAnalyses: number
+	inProgressAnalyses: number
+	completedAnalyses: number
 }
 
 const Dashboard: React.FC = () => {
@@ -25,7 +28,10 @@ const Dashboard: React.FC = () => {
 		pendingQuoteRequests: 0,
 		recentQuoteRequests: 0,
 		totalReviews: 0,
-		totalDamageCases: 0
+		totalDamageCases: 0,
+		totalAnalyses: 0,
+		inProgressAnalyses: 0,
+		completedAnalyses: 0,
 	})
 	const [loading, setLoading] = useState(true)
 
@@ -38,7 +44,7 @@ const Dashboard: React.FC = () => {
 			const token = localStorage.getItem('admin_token')
 			if (!token) return
 
-			const [quoteResponse, reviewsResponse, damagesResponse] = await Promise.all([
+			const [quoteResponse, reviewsResponse, damagesResponse, analysesResponse] = await Promise.all([
 				fetch(getApiUrl('/api/admin/quote-requests'), {
 					headers: { Authorization: `Bearer ${token}` }
 				}),
@@ -46,6 +52,9 @@ const Dashboard: React.FC = () => {
 					headers: { Authorization: `Bearer ${token}` }
 				}),
 				fetch(getApiUrl('/api/damage-cases/admin/all'), {
+					headers: { Authorization: `Bearer ${token}` }
+				}),
+				fetch(getApiUrl('/api/admin/analyses?limit=100'), {
 					headers: { Authorization: `Bearer ${token}` }
 				})
 			])
@@ -55,6 +64,9 @@ const Dashboard: React.FC = () => {
 			let recentQuoteRequests = 0
 			let totalReviews = 0
 			let totalDamageCases = 0
+			let totalAnalyses = 0
+			let inProgressAnalyses = 0
+			let completedAnalyses = 0
 
 			if (quoteResponse.ok) {
 				const quoteData: QuoteRequest[] = await quoteResponse.json()
@@ -78,12 +90,23 @@ const Dashboard: React.FC = () => {
 				totalDamageCases = damagesData.data?.length || 0
 			}
 
+			if (analysesResponse.ok) {
+				const analysesData = await analysesResponse.json()
+				const analyses = analysesData.data || []
+				totalAnalyses = analyses.length
+				inProgressAnalyses = analyses.filter((a: any) => a.status === 'in_progress' || a.status === 'draft').length
+				completedAnalyses = analyses.filter((a: any) => a.status === 'completed').length
+			}
+
 			setStats({
 				totalQuoteRequests,
 				pendingQuoteRequests,
 				recentQuoteRequests,
 				totalReviews,
-				totalDamageCases
+				totalDamageCases,
+				totalAnalyses,
+				inProgressAnalyses,
+				completedAnalyses,
 			})
 		} catch (error) {
 			console.error('Failed to fetch dashboard stats:', error)
@@ -120,6 +143,20 @@ const Dashboard: React.FC = () => {
 			icon: MessageSquare,
 			accent: 'bg-wood-100 text-wood-500',
 			link: adminPath('/community')
+		},
+		{
+			title: '전체 분석',
+			value: stats.totalAnalyses,
+			icon: ClipboardCheck,
+			accent: 'bg-blue-50 text-blue-600',
+			link: adminPath('/quote-requests?tab=analyses')
+		},
+		{
+			title: '진행중 분석',
+			value: stats.inProgressAnalyses,
+			icon: TrendingUp,
+			accent: 'bg-amber-50 text-amber-600',
+			link: adminPath('/quote-requests?tab=analyses')
 		}
 	]
 
@@ -134,7 +171,7 @@ const Dashboard: React.FC = () => {
 			</div>
 
 			{/* Stat Cards */}
-			<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+			<div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
 				{statCards.map((card, index) => (
 					<motion.div
 						key={card.title}

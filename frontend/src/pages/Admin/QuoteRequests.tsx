@@ -167,14 +167,6 @@ export default function QuoteRequests() {
 
 	return (
 		<div className="space-y-6">
-			{/* 페이지 타이틀 */}
-			<div>
-				<h2 className="text-2xl font-semibold text-sand-900" style={{ fontFamily: 'Outfit, sans-serif' }}>
-					견적 신청 관리
-				</h2>
-				<p className="text-sand-700 mt-1">사용자가 신청한 견적 분석 요청 관리</p>
-			</div>
-
 			{/* 검증 실패 알림 */}
 			{requests.some(r => r.validation_status === 'rejected_insufficient_detail') && (
 				<motion.div

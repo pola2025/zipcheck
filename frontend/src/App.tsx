@@ -79,8 +79,9 @@ const NotFound = lazyWithRetry(async () => import('pages/NotFound'))
 // BlacklistCheck page
 const BlacklistCheck = lazyWithRetry(async () => import('pages/BlacklistCheck/BlacklistCheck'))
 
-// Blog page
+// Blog pages
 const BlogLanding = lazyWithRetry(async () => import('pages/Blog/BlogLanding'))
+const BlogPostDetail = lazyWithRetry(async () => import('pages/Blog/BlogPostDetail'))
 
 // Admin pages
 const AdminLogin = lazyWithRetry(async () => import('pages/Admin/Login'))
@@ -88,10 +89,16 @@ const AdminLayout = lazyWithRetry(async () => import('components/admin/AdminLayo
 const ProtectedRoute = lazyWithRetry(async () => import('components/auth/ProtectedRoute'))
 const AdminDashboard = lazyWithRetry(async () => import('pages/Admin/Dashboard'))
 const AdminQuoteRequests = lazyWithRetry(async () => import('pages/Admin/QuoteRequests'))
+const QuoteManagement = lazyWithRetry(async () => import('pages/Admin/QuoteManagement'))
 const AdminQuoteRequestDetail = lazyWithRetry(async () => import('pages/Admin/QuoteRequestDetail'))
 const AdminDataManagement = lazyWithRetry(async () => import('pages/Admin/DataManagement'))
 const AdminCommunityManagement = lazyWithRetry(async () => import('pages/Admin/CommunityManagement'))
 const AdminAnalytics = lazyWithRetry(async () => import('pages/Admin/Analytics'))
+const AnalysisList = lazyWithRetry(async () => import('pages/Admin/AnalysisList'))
+const AnalysisWorkspace = lazyWithRetry(async () => import('pages/Admin/AnalysisWorkspace'))
+const BenchmarkManager = lazyWithRetry(async () => import('pages/Admin/BenchmarkManager'))
+const ConflictRuleManager = lazyWithRetry(async () => import('pages/Admin/ConflictRuleManager'))
+const BlogManagement = lazyWithRetry(async () => import('pages/Admin/BlogManagement'))
 
 import { getSubdomain } from 'lib/subdomain'
 
@@ -101,10 +108,15 @@ const currentSubdomain = getSubdomain()
 const adminChildRoutes = (
 	<>
 		<Route index element={<AdminDashboard />} />
-		<Route path='quote-requests' element={<AdminQuoteRequests />} />
+		<Route path='quote-requests' element={<QuoteManagement />} />
 		<Route path='quote-requests/:id' element={<AdminQuoteRequestDetail />} />
+		<Route path='analyses' element={<Navigate to="../quote-requests?tab=analyses" replace />} />
+		<Route path='analyses/:id' element={<AnalysisWorkspace />} />
+		<Route path='benchmarks' element={<BenchmarkManager />} />
+		<Route path='conflict-rules' element={<ConflictRuleManager />} />
 		<Route path='analytics' element={<AdminAnalytics />} />
 		<Route path='community' element={<AdminCommunityManagement />} />
+		<Route path='blog' element={<BlogManagement />} />
 		<Route path='data' element={<AdminDataManagement />} />
 	</>
 )
@@ -142,6 +154,9 @@ const reviewDomainRoutes = (
 const blogDomainRoutes = (
 	<>
 		<Route path='/' element={<BlogLanding />} />
+		<Route path='/blog/:slug' element={<BlogPostDetail />} />
+		<Route path='/auth/google/callback' element={<GoogleCallback />} />
+		<Route path='/auth/google/success' element={<GoogleCallback />} />
 		<Route path='/privacy' element={<PrivacyPolicy />} />
 		<Route path='/terms' element={<TermsOfService />} />
 		<Route path='*' element={<NotFound />} />
@@ -182,6 +197,7 @@ const mainDomainRoutes = (
 		<Route path='/damage-cases/:slug' element={<DamageCaseSlugPage />} />
 		<Route path='/blacklist-check' element={<BlacklistCheck />} />
 		<Route path='/blog' element={<BlogLanding />} />
+		<Route path='/blog/:slug' element={<BlogPostDetail />} />
 		<Route path='/payment' element={<Payment />} />
 		<Route path='/quote-submission' element={<QuoteSubmission />} />
 		<Route path='/quote-status' element={<QuoteStatus />} />

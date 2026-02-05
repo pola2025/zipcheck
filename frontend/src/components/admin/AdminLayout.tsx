@@ -6,6 +6,7 @@ import {
 	BarChart3,
 	MessageSquare,
 	Database,
+	PenSquare,
 	LogOut,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
@@ -16,6 +17,7 @@ const navItems = [
 	{ label: '견적 관리', icon: FileText, path: '/quote-requests' },
 	{ label: '유입 분석', icon: BarChart3, path: '/analytics' },
 	{ label: '커뮤니티', icon: MessageSquare, path: '/community' },
+	{ label: '블로그', icon: PenSquare, path: '/blog' },
 	{ label: '데이터', icon: Database, path: '/data' },
 ]
 
@@ -31,7 +33,7 @@ function NavItem({ item, isMobile }: { item: typeof navItems[0]; isMobile?: bool
 					`flex flex-col items-center gap-0.5 px-2 py-1.5 text-[10px] font-medium transition-colors ${
 						isActive
 							? 'text-white'
-							: 'text-forest-300 hover:text-white'
+							: 'text-forest-200 hover:text-white'
 					}`
 				}
 			>
@@ -80,7 +82,7 @@ export default function AdminLayout() {
 						</div>
 						<div>
 							<h1 className="text-base font-semibold text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>ZipCheck</h1>
-							<p className="text-[11px] text-forest-400 uppercase tracking-widest" style={{ fontFamily: 'Outfit, sans-serif' }}>Admin</p>
+							<p className="text-[11px] text-forest-300 uppercase tracking-widest" style={{ fontFamily: 'Outfit, sans-serif' }}>Admin</p>
 						</div>
 					</div>
 				</div>
@@ -105,7 +107,7 @@ export default function AdminLayout() {
 						</div>
 						<button
 							onClick={handleLogout}
-							className="p-1.5 rounded-lg text-forest-300 hover:text-red-400 hover:bg-white/10 transition-colors"
+							className="p-1.5 rounded-lg text-forest-200 hover:text-red-400 hover:bg-white/10 transition-colors"
 							title="로그아웃"
 						>
 							<LogOut className="w-4 h-4" />
