@@ -5,7 +5,11 @@
 
 import type { Env } from '../types'
 import { query } from '../lib/db'
-import { CATEGORY_MARGIN_RATES, CATEGORY_WEIGHTS, categoryMarginToScore } from '../lib/constants'
+import {
+	CATEGORY_MARGIN_RATES, CATEGORY_WEIGHTS, categoryMarginToScore,
+	CATEGORY_OVERRIDE_RULES, ITEM_KEYWORD_MAP, LUMP_SUM_RANGES,
+	type CategoryOverrideRule,
+} from '../lib/constants'
 
 // ============================================
 // Types
@@ -71,6 +75,7 @@ interface AnalyzedItem {
 	adjustment_factors: AdjustmentFactors
 	is_bundled: boolean
 	confidence: number
+	match_tier: number | null  // v3: 어느 단계에서 매칭했는지 (1~7)
 	// 마진율 분석 (v2)
 	margin_rate: number | null
 	margin_bracket: MarginBracket | null
@@ -443,29 +448,78 @@ function matchCategory(
 ): { stdCategory: StdCategory; stdItem: string } | null {
 	if (!category && !itemName) return null
 
-	const searchTerms = [
-		category?.trim().toLowerCase(),
-		itemName?.trim().toLowerCase(),
-	].filter(Boolean) as string[]
+	const catLower = category?.trim().toLowerCase() || ''
+	const itemLower = itemName?.trim().toLowerCase() || ''
+	const combined = `${catLower} ${itemLower}`.trim()
 
-	for (const mapping of mappings) {
-		const originalLower = mapping.original_name.toLowerCase()
-		const allNames = [originalLower, ...(mapping.aliases || []).map(a => a.toLowerCase())]
-
-		for (const term of searchTerms) {
-			for (const name of allNames) {
-				if (term.includes(name) || name.includes(term)) {
-					return {
-						stdCategory: mapping.std_category as StdCategory,
-						stdItem: mapping.std_item,
-					}
+	// Phase 0: CATEGORY_OVERRIDE_RULES (priority 순, 최우선)
+	const sortedRules = [...CATEGORY_OVERRIDE_RULES].sort((a, b) => b.priority - a.priority)
+	for (const rule of sortedRules) {
+		for (const keyword of rule.keywords) {
+			if (combined.includes(keyword.toLowerCase())) {
+				// 키워드 매칭된 항목명으로 std_item 결정
+				const mappedItem = ITEM_KEYWORD_MAP[keyword] || itemName || category || rule.stdCategory
+				return {
+					stdCategory: rule.stdCategory,
+					stdItem: mappedItem,
 				}
 			}
 		}
 	}
 
-	// Fallback: direct category name match
-	const stdCategories: StdCategory[] = ['욕실', '바닥', '가구', '목공', '전기', '도배', '철거', '주방', '창호', '페인트']
+	// Phase 1: category_mappings DB에서 모든 후보 수집 + 점수 부여
+	const searchTerms = [catLower, itemLower].filter(Boolean)
+	interface MappingCandidate {
+		stdCategory: StdCategory
+		stdItem: string
+		score: number
+	}
+	const candidates: MappingCandidate[] = []
+
+	for (const mapping of mappings) {
+		const originalLower = mapping.original_name.toLowerCase()
+		const allNames = [originalLower, ...(mapping.aliases || []).map(a => a.toLowerCase())]
+
+		let bestScore = 0
+		for (const term of searchTerms) {
+			for (const name of allNames) {
+				if (term === name) {
+					// 완전 일치
+					bestScore = Math.max(bestScore, 100)
+				} else if (term.includes(name) || name.includes(term)) {
+					// 부분 일치 — category vs itemName 구분
+					const isCatMatch = catLower.includes(name) || name.includes(catLower)
+					const isItemMatch = itemLower.includes(name) || name.includes(itemLower)
+					if (isCatMatch && isItemMatch) {
+						bestScore = Math.max(bestScore, 80)
+					} else if (isItemMatch) {
+						bestScore = Math.max(bestScore, 60)
+					} else if (isCatMatch) {
+						bestScore = Math.max(bestScore, 40)
+					}
+				}
+			}
+		}
+		if (bestScore > 0) {
+			candidates.push({
+				stdCategory: mapping.std_category as StdCategory,
+				stdItem: mapping.std_item,
+				score: bestScore,
+			})
+		}
+	}
+
+	// 최고 점수 후보 반환
+	if (candidates.length > 0) {
+		candidates.sort((a, b) => b.score - a.score)
+		return {
+			stdCategory: candidates[0].stdCategory,
+			stdItem: candidates[0].stdItem,
+		}
+	}
+
+	// Phase 2: Fallback — 직접 카테고리명 매칭 (철거 우선순위 높임)
+	const stdCategories: StdCategory[] = ['철거', '욕실', '바닥', '가구', '목공', '전기', '도배', '주방', '창호', '페인트', '기타']
 	for (const stdCat of stdCategories) {
 		for (const term of searchTerms) {
 			if (term.includes(stdCat)) {
@@ -477,49 +531,284 @@ function matchCategory(
 	return null
 }
 
+interface BenchmarkMatch {
+	benchmark: BenchmarkPrice
+	matchTier: 1 | 2 | 3 | 4 | 5 | 6 | 10
+}
+
+function findBenchmarkWithTier(
+	stdCategory: string,
+	stdItem: string,
+	benchmarks: BenchmarkPrice[],
+	grade: string,
+	originalItemName?: string | null,
+): BenchmarkMatch | null {
+	const isManual = (b: BenchmarkPrice) => b.source !== 'google_search'
+	const isGoogleReliable = (b: BenchmarkPrice) =>
+		b.source === 'google_search' && b.model !== 'low'
+
+	// Tier 1: 수동 벤치마크 exact match (수동 우선)
+	const manualExact = benchmarks.find(
+		b => isManual(b) && b.std_category === stdCategory && b.std_item === stdItem && b.grade === grade
+	)
+	if (manualExact) return { benchmark: manualExact, matchTier: 1 }
+
+	// Tier 2: 키워드 매칭 (ITEM_KEYWORD_MAP으로 변환 후 매칭)
+	if (originalItemName) {
+		const itemLower = originalItemName.toLowerCase()
+		// 키워드 맵에서 매칭되는 std_item 찾기
+		for (const [keyword, mappedStdItem] of Object.entries(ITEM_KEYWORD_MAP)) {
+			if (itemLower.includes(keyword.toLowerCase())) {
+				// 같은 등급 우선
+				const keywordMatch = benchmarks.find(
+					b => isManual(b) && b.std_category === stdCategory && b.std_item === mappedStdItem && b.grade === grade
+				)
+				if (keywordMatch) return { benchmark: keywordMatch, matchTier: 2 }
+				// 가장 가까운 등급 (중급 → 고급 → 가성비 → 프리미엄)
+				const gradeOrder = ['중급', '고급', '가성비', '프리미엄']
+				for (const g of gradeOrder) {
+					const fallbackMatch = benchmarks.find(
+						b => isManual(b) && b.std_category === stdCategory && b.std_item === mappedStdItem && b.grade === g
+					)
+					if (fallbackMatch) return { benchmark: fallbackMatch, matchTier: 2 }
+				}
+			}
+		}
+	}
+
+	// Tier 3: 수동 벤치마크 — 같은 카테고리 + 등급
+	const manualCatGrade = benchmarks.find(
+		b => isManual(b) && b.std_category === stdCategory && b.grade === grade
+	)
+	if (manualCatGrade) return { benchmark: manualCatGrade, matchTier: 3 }
+
+	// Tier 4: 구글 벤치마크 exact match (신뢰도 high/medium만)
+	const googleExact = benchmarks.find(
+		b => isGoogleReliable(b) && b.std_category === stdCategory && b.std_item === stdItem
+	)
+	if (googleExact) return { benchmark: googleExact, matchTier: 4 }
+
+	// Tier 5: 수동 벤치마크 — 같은 카테고리 + 중급
+	const catDefault = benchmarks.find(
+		b => isManual(b) && b.std_category === stdCategory && b.grade === '중급'
+	)
+	if (catDefault) return { benchmark: catDefault, matchTier: 5 }
+
+	// Tier 6: 구글 벤치마크 — 같은 카테고리 (신뢰도 무관)
+	const googleCat = benchmarks.find(
+		b => b.source === 'google_search' && b.std_category === stdCategory
+	)
+	if (googleCat) return { benchmark: googleCat, matchTier: 6 }
+
+	// Tier 7: 매칭 실패 (기존의 "아무거나" 제거)
+	return null
+}
+
+// 하위 호환: calculateCategoryCost 등에서 사용하는 기존 시그니처
 function findBenchmark(
 	stdCategory: string,
 	stdItem: string,
 	benchmarks: BenchmarkPrice[],
 	grade: string
 ): BenchmarkPrice | null {
-	const isManual = (b: BenchmarkPrice) => b.source !== 'google_search'
-	const isGoogleReliable = (b: BenchmarkPrice) =>
-		b.source === 'google_search' && b.model !== 'low'
+	const result = findBenchmarkWithTier(stdCategory, stdItem, benchmarks, grade)
+	return result?.benchmark || null
+}
 
-	// 1차: 수동 벤치마크 exact match (수동 우선)
-	const manualExact = benchmarks.find(
-		b => isManual(b) && b.std_category === stdCategory && b.std_item === stdItem && b.grade === grade
-	)
-	if (manualExact) return manualExact
+/**
+ * matchTier 기반 confidence 산출 (v3)
+ */
+function getConfidence(matchTier: number | null, deviationPercent: number | null): number {
+	let base: number
+	if (!matchTier) {
+		base = 0.20  // 매칭 실패
+	} else if (matchTier === 1) {
+		base = 0.90  // 정확 매칭
+	} else if (matchTier === 2) {
+		base = 0.75  // 키워드 매칭
+	} else if (matchTier <= 4) {
+		base = 0.60  // 카테고리+등급 / google exact
+	} else if (matchTier <= 6) {
+		base = 0.45  // 카테고리 대표 / google any
+	} else if (matchTier === 10) {
+		base = 0.55  // cross-grade refinement (다른 등급 벤치마크 매칭)
+	} else {
+		base = 0.20  // fallback
+	}
+	// 편차 200%+ 일 때 0.1 감산
+	if (deviationPercent != null && Math.abs(deviationPercent) > 200) {
+		base = Math.max(0.10, base - 0.10)
+	}
+	return base
+}
 
-	// 2차: 수동 벤치마크 — 같은 카테고리 + 등급
-	const manualCatGrade = benchmarks.find(
-		b => isManual(b) && b.std_category === stdCategory && b.grade === grade
-	)
-	if (manualCatGrade) return manualCatGrade
+/**
+ * 일식 항목 적정가격 범위 평가 (v3)
+ */
+interface LumpSumResult {
+	score: number
+	bracket: 'dump_risk' | 'low_margin' | 'fair' | 'slightly_high' | 'excessive'
+	rangeMin: number
+	rangeMax: number
+}
 
-	// 3차: 구글 벤치마크 exact match (신뢰도 high/medium만)
-	const googleExact = benchmarks.find(
-		b => isGoogleReliable(b) && b.std_category === stdCategory && b.std_item === stdItem
-	)
-	if (googleExact) return googleExact
+function evaluateLumpSum(
+	stdCategory: string,
+	stdItem: string,
+	totalPrice: number,
+	propertySizePyeong: number,
+	targetGrade: string
+): LumpSumResult | null {
+	// 카테고리 → LUMP_SUM_RANGES 키 매핑
+	let rangeKey: string | null = null
+	const itemLower = stdItem.toLowerCase()
+	if (itemLower.includes('아트월') || itemLower.includes('포인트월')) {
+		rangeKey = '목공_아트월'
+	} else if (itemLower.includes('폐기물') || itemLower.includes('잔재물')) {
+		rangeKey = '폐기물처리'
+	} else if (stdCategory === '철거' && (itemLower.includes('전체') || totalPrice > 1_500_000)) {
+		rangeKey = '철거_전체'
+	} else if (stdCategory === '욕실') {
+		rangeKey = '욕실'
+	} else if (stdCategory === '주방') {
+		rangeKey = '주방'
+	}
 
-	// 4차: 수동 벤치마크 — 같은 카테고리 + 중급
-	const catDefault = benchmarks.find(
-		b => isManual(b) && b.std_category === stdCategory && b.grade === '중급'
-	)
-	if (catDefault) return catDefault
+	if (!rangeKey) return null
+	const rangeData = LUMP_SUM_RANGES[rangeKey]
+	if (!rangeData) return null
 
-	// 5차: 구글 벤치마크 — 같은 카테고리 (신뢰도 무관)
-	const googleCat = benchmarks.find(
-		b => b.source === 'google_search' && b.std_category === stdCategory
-	)
-	if (googleCat) return googleCat
+	// 평수 구간 결정
+	let pyeongIdx = 0
+	for (let i = 0; i < rangeData.pyeongRanges.length; i++) {
+		const [min, max] = rangeData.pyeongRanges[i]
+		if (propertySizePyeong >= min && propertySizePyeong < max) {
+			pyeongIdx = i
+			break
+		}
+		if (i === rangeData.pyeongRanges.length - 1) {
+			pyeongIdx = i
+		}
+	}
 
-	// 6차: 아무거나 (기존 fallback)
-	const catAny = benchmarks.find(b => b.std_category === stdCategory)
-	return catAny || null
+	const gradeRanges = rangeData.grades[targetGrade]
+	if (!gradeRanges || !gradeRanges[pyeongIdx]) return null
+
+	const [rangeMin, rangeMax] = gradeRanges[pyeongIdx]
+
+	// 총액이 범위 대비 어디인지 판정
+	if (totalPrice < rangeMin * 0.8) {
+		return { score: 55, bracket: 'dump_risk', rangeMin, rangeMax }
+	}
+	if (totalPrice < rangeMin) {
+		return { score: 75, bracket: 'low_margin', rangeMin, rangeMax }
+	}
+	if (totalPrice <= rangeMax) {
+		return { score: 90, bracket: 'fair', rangeMin, rangeMax }
+	}
+	if (totalPrice <= rangeMax * 1.3) {
+		return { score: 70, bracket: 'slightly_high', rangeMin, rangeMax }
+	}
+	return { score: 40, bracket: 'excessive', rangeMin, rangeMax }
+}
+
+// ============================================
+// Grade auto-estimation (v3.1)
+// ============================================
+
+/**
+ * 견적 항목의 단가 수준으로 등급(가성비/중급/고급/프리미엄) 자동 추정
+ * 4등급 각각에서 가중 평균 편차를 계산, 최소 편차 등급을 반환
+ */
+function estimateGrade(
+	items: QuoteItem[],
+	mappings: CategoryMapping[],
+	benchmarks: BenchmarkPrice[],
+	baseFactors: AdjustmentFactors,
+	propertySizeSqm: number | null,
+): Grade {
+	const grades: Grade[] = ['가성비', '중급', '고급', '프리미엄']
+	const pyeong = propertySizeSqm ? sqmToPyeong(propertySizeSqm) : 34
+
+	// 카테고리 매핑은 등급과 무관 → 1회만 계산
+	const mappedItems: Array<{
+		mapped: { stdCategory: StdCategory; stdItem: string }
+		unitPrice: number | null
+		totalPrice: number | null
+		quantity: number | null
+		unit: string | null
+		isBundled: boolean
+		itemName: string | null
+	}> = []
+
+	for (const item of items) {
+		const itemName = item.item_name ?? item.itemName ?? null
+		const category = item.category ?? null
+		const unitPrice = item.unit_price ?? item.unitPrice ?? null
+		const quantity = item.quantity ?? null
+		const totalPrice = item.total_price ?? item.totalPrice ?? item.quoted_price ?? null
+		const unit = item.unit ?? null
+		const isBundled = !quantity || !unitPrice || (unit === '일식' || unit === '식')
+
+		const mapped = matchCategory(category, itemName, mappings)
+		if (!mapped) continue
+
+		mappedItems.push({ mapped, unitPrice, totalPrice, quantity, unit, isBundled, itemName })
+	}
+
+	if (mappedItems.length === 0) return '중급'
+
+	let bestGrade: Grade = '중급'
+	let bestAvgDev = Infinity
+
+	for (const grade of grades) {
+		const gradeFactor = GRADE_FACTORS[grade] ?? 1.0
+		const factors = { ...baseFactors, grade: gradeFactor }
+		let totalWeightedDev = 0
+		let totalWeight = 0
+
+		for (const { mapped, unitPrice, totalPrice, quantity, unit, isBundled, itemName } of mappedItems) {
+			if (!isBundled && unitPrice && unitPrice > 0) {
+				// 단가 비교 가능한 항목
+				const benchResult = findBenchmarkWithTier(
+					mapped.stdCategory, mapped.stdItem, benchmarks, grade, itemName
+				)
+				if (!benchResult) continue
+
+				const adjustedPrice = applyAdjustments(benchResult.benchmark.unit_price, factors)
+				if (adjustedPrice <= 0) continue
+
+				const deviation = Math.abs((unitPrice - adjustedPrice) / adjustedPrice * 100)
+				const weight = totalPrice || (unitPrice * (quantity || 1))
+				totalWeightedDev += deviation * weight
+				totalWeight += weight
+			} else if (totalPrice && totalPrice > 0) {
+				// 일식 항목 → LUMP_SUM_RANGES 범위 기반 평가
+				const lumpResult = evaluateLumpSum(
+					mapped.stdCategory, mapped.stdItem,
+					totalPrice, pyeong, grade
+				)
+				if (lumpResult) {
+					const pseudoDev = lumpResult.bracket === 'fair' ? 5 :
+						lumpResult.bracket === 'low_margin' ? 15 :
+						lumpResult.bracket === 'slightly_high' ? 20 :
+						lumpResult.bracket === 'dump_risk' ? 40 : 50
+					totalWeightedDev += pseudoDev * totalPrice
+					totalWeight += totalPrice
+				}
+			}
+		}
+
+		if (totalWeight === 0) continue
+		const avgDev = totalWeightedDev / totalWeight
+
+		if (avgDev < bestAvgDev) {
+			bestAvgDev = avgDev
+			bestGrade = grade
+		}
+	}
+
+	return bestGrade
 }
 
 // ============================================
@@ -658,6 +947,7 @@ export async function runAutoAnalysis(
 		: null
 
 	// 4. Calculate adjustment factors
+	const targetGrade = input.grade || '중급'
 	const adjustmentFactors = calculateAdjustmentFactors({
 		propertySizeSqm: input.propertySizeSqm,
 		region: input.region,
@@ -669,7 +959,13 @@ export async function runAutoAnalysis(
 	})
 	console.log(`[AutoAnalysis] Adjustment factors:`, adjustmentFactors)
 
-	const targetGrade = input.grade || '중급'
+	// Auto-estimate grade for informational purposes (stored in result, not used for scoring)
+	let estimatedGradeInfo: string | null = null
+	if (!input.grade) {
+		const neutralFactors = { ...adjustmentFactors, grade: 1.0 }
+		estimatedGradeInfo = estimateGrade(input.items, mappings, benchmarks, neutralFactors, input.propertySizeSqm)
+		console.log(`[AutoAnalysis] Estimated grade (info only): ${estimatedGradeInfo}`)
+	}
 
 	// 5. Analyze each item
 	const analyzedItems: AnalyzedItem[] = input.items.map((item) => {
@@ -700,38 +996,70 @@ export async function runAutoAnalysis(
 		let fairPriceMin: number | null = null
 		let fairPriceMax: number | null = null
 
+		let matchTier: number | null = null
+
 		if (mapped) {
-			const bench = findBenchmark(mapped.stdCategory, mapped.stdItem, benchmarks, targetGrade)
-			if (bench) {
+			const benchResult = findBenchmarkWithTier(mapped.stdCategory, mapped.stdItem, benchmarks, targetGrade, itemName)
+			if (benchResult) {
+				const bench = benchResult.benchmark
+				matchTier = benchResult.matchTier
 				benchmarkUnitPrice = bench.unit_price
 				benchmarkUnit = bench.unit
 				adjustedBenchmarkPrice = applyAdjustments(bench.unit_price, adjustmentFactors)
 
-				// 단위 기반 비교 — 면적 단위(㎡, m2, 평) 벤치마크 vs 합산 총액 견적 감지
+				// 단위 기반 비교 — 벤치마크 단위 vs 견적 단위 불일치 감지
 				const areaUnits = ['㎡', 'm2', 'm²', '평', '자']
 				const lumpUnits = ['식', '일식', '세트', '개소', '조']
+				const weightUnits = ['톤', 'kg', 't']
 				const benchIsAreaBased = areaUnits.some(u => bench.unit?.includes(u))
+				const benchIsWeightBased = weightUnits.some(u => bench.unit?.includes(u))
+				const quoteUnitIsCount = unit === '개' || unit === '세트' || unit === '조'
 				const quoteIsLumpSum = isBundled || lumpUnits.some(u => unit?.includes(u) || false)
 					|| (!unitPrice && quantity === 1)
+				// 단위 불일치 판정:
+				// 1) 벤치마크가 면적/중량 기반인데 견적이 일식/개수 기반
+				// 2) 벤치마크가 면적 기반인데 견적이 개수 기반 (방충망 ㎡ vs 개 등)
+				const isUnitMismatch = (benchIsAreaBased || benchIsWeightBased) && (quoteIsLumpSum || quoteUnitIsCount)
 
-				if (benchIsAreaBased && quoteIsLumpSum) {
-					// 단위 불일치: 면적 환산으로 원가 추정 → 마진율 계산
+				if (isUnitMismatch) {
+					// 단위 불일치: 일식 항목 평가
 					unitMismatch = true
 					deviationPercent = null
 					deviationBracket = null
 
-					// 카테고리 구성요소 합산 기반 원가 추정 (Fix 3)
-					estimatedCost = calculateCategoryCost(
-						mapped.stdCategory, benchmarks, adjustmentFactors,
-						targetGrade, input.propertySizeSqm
-					)
-					if (estimatedCost && totalPrice && estimatedCost > 0) {
-						marginRate = Math.round(
-							((totalPrice - estimatedCost) / estimatedCost) * 10000
-						) / 100
-						marginBracket = getMarginBracket(marginRate)
-						fairPriceMin = Math.round(estimatedCost * 1.15)
-						fairPriceMax = Math.round(estimatedCost * 1.25)
+					// v3: evaluateLumpSum 먼저 시도
+					const pyeong = input.propertySizeSqm ? sqmToPyeong(input.propertySizeSqm) : 34
+					if (totalPrice && totalPrice > 0) {
+						const lumpResult = evaluateLumpSum(
+							mapped.stdCategory, mapped.stdItem,
+							totalPrice, pyeong, targetGrade
+						)
+						if (lumpResult) {
+							// 일식 범위 기반 평가 성공
+							fairPriceMin = lumpResult.rangeMin
+							fairPriceMax = lumpResult.rangeMax
+							estimatedCost = Math.round((lumpResult.rangeMin + lumpResult.rangeMax) / 2)
+							marginRate = Math.round(
+								((totalPrice - estimatedCost) / estimatedCost) * 10000
+							) / 100
+							marginBracket = lumpResult.bracket as MarginBracket
+						}
+					}
+
+					// evaluateLumpSum 실패 시 기존 calculateCategoryCost 폴백
+					if (!estimatedCost) {
+						estimatedCost = calculateCategoryCost(
+							mapped.stdCategory, benchmarks, adjustmentFactors,
+							targetGrade, input.propertySizeSqm
+						)
+						if (estimatedCost && totalPrice && estimatedCost > 0) {
+							marginRate = Math.round(
+								((totalPrice - estimatedCost) / estimatedCost) * 10000
+							) / 100
+							marginBracket = getMarginBracket(marginRate)
+							fairPriceMin = Math.round(estimatedCost * 1.15)
+							fairPriceMax = Math.round(estimatedCost * 1.25)
+						}
 					}
 				} else {
 					// 단가 비교 가능 항목
@@ -786,9 +1114,8 @@ export async function runAutoAnalysis(
 			unit_mismatch: unitMismatch,
 			adjustment_factors: adjustmentFactors,
 			is_bundled: isBundled,
-			confidence: !mapped ? 0.3
-				: (deviationPercent != null && Math.abs(deviationPercent) > 200) ? 0.4  // 벤치마크 미스매치 가능
-				: 0.8,
+			confidence: getConfidence(mapped ? matchTier : null, deviationPercent),
+			match_tier: matchTier,
 			margin_rate: marginRate,
 			margin_bracket: marginBracket,
 			estimated_cost: estimatedCost,
@@ -796,6 +1123,89 @@ export async function runAutoAnalysis(
 			fair_price_max: fairPriceMax,
 		}
 	})
+
+	// 5.5. Cross-grade refinement: items with high deviation (>50%)
+	// 등급 미스매치 의심 항목에 대해 다른 등급 벤치마크를 탐색하여 최적 매칭
+	// 조건: (1) deviation > 50% AND (2) cross-grade가 50%+ 개선해야 적용
+	const CROSS_GRADE_TRIGGER = 50
+	const CROSS_GRADE_MIN_IMPROVEMENT = 0.5
+	const factorsNoGrade = { ...adjustmentFactors, grade: 1.0 }
+	let crossGradeRefined = 0
+	for (const item of analyzedItems) {
+		if (item.deviation_percent == null || Math.abs(item.deviation_percent) <= CROSS_GRADE_TRIGGER) continue
+		if (!item.std_category || !item.std_item) continue
+		if (item.unit_mismatch) continue  // 일식 항목은 별도 처리
+
+		const comparePrice = item.original_unit_price ||
+			(item.original_total_price && item.original_quantity
+				? item.original_total_price / item.original_quantity : null)
+		if (!comparePrice || comparePrice <= 0) continue
+
+		let bestDev = Math.abs(item.deviation_percent)
+		let bestBench: BenchmarkPrice | null = null
+		let bestAdjusted: number | null = null
+
+		for (const bench of benchmarks) {
+			if (bench.std_category !== item.std_category) continue
+			if (bench.source === 'google_search') continue
+
+			// std_item 직접 매칭 또는 키워드 매핑으로 매칭
+			let isMatch = bench.std_item === item.std_item
+			if (!isMatch && item.original_item_name) {
+				const itemLower = item.original_item_name.toLowerCase()
+				for (const [kw, mapped] of Object.entries(ITEM_KEYWORD_MAP)) {
+					if (itemLower.includes(kw.toLowerCase()) && bench.std_item === mapped) {
+						isMatch = true
+						break
+					}
+				}
+			}
+			if (!isMatch) continue
+
+			// 등급별 벤치마크를 grade factor 없이 비교 (이미 등급 가격이 반영됨)
+			const adjusted = applyAdjustments(bench.unit_price, factorsNoGrade)
+			if (adjusted <= 0) continue
+			const dev = Math.abs((comparePrice - adjusted) / adjusted * 100)
+			if (dev < bestDev) {
+				bestDev = dev
+				bestBench = bench
+				bestAdjusted = adjusted
+			}
+		}
+
+		const origDev = Math.abs(item.deviation_percent)
+		const improvement = origDev > 0 ? 1 - (bestDev / origDev) : 0
+		if (bestBench && bestAdjusted && improvement >= CROSS_GRADE_MIN_IMPROVEMENT) {
+			item.benchmark_unit_price = bestBench.unit_price
+			item.benchmark_unit = bestBench.unit
+			item.adjusted_benchmark_price = bestAdjusted
+			item.deviation_percent = Math.round(
+				((comparePrice - bestAdjusted) / bestAdjusted) * 10000
+			) / 100
+			item.deviation_bracket = getDeviationBracket(item.deviation_percent)
+			item.match_tier = 10
+			item.confidence = getConfidence(10, item.deviation_percent)
+
+			// 편차 200% 이하면 마진율 재계산
+			if (Math.abs(item.deviation_percent) <= 200) {
+				const industryMargin = CATEGORY_MARGIN_RATES[item.std_category] || 0.20
+				const estimatedCostPerUnit = bestAdjusted / (1 + industryMargin)
+				item.margin_rate = Math.round(
+					((comparePrice - estimatedCostPerUnit) / estimatedCostPerUnit) * 10000
+				) / 100
+				item.margin_bracket = getMarginBracket(item.margin_rate)
+				const quantity = item.original_quantity || 1
+				item.estimated_cost = Math.round(estimatedCostPerUnit * quantity)
+				item.fair_price_min = Math.round(item.estimated_cost * (1 + industryMargin * 0.8))
+				item.fair_price_max = Math.round(item.estimated_cost * (1 + industryMargin * 1.2))
+			}
+			crossGradeRefined++
+			console.log(`[AutoAnalysis] Cross-grade refined: ${item.original_item_name} → ${bestBench.grade} ${bestBench.std_item} (${bestBench.unit_price}원), dev: ${item.deviation_percent}%`)
+		}
+	}
+	if (crossGradeRefined > 0) {
+		console.log(`[AutoAnalysis] Cross-grade refinement: ${crossGradeRefined}건 개선`)
+	}
 
 	// 6. Calculate category scores
 	const categoryMap = new Map<string, AnalyzedItem[]>()
@@ -975,6 +1385,8 @@ export async function runAutoAnalysis(
 			)
 		})
 
+		// NOTE: match_tier is stored in analysis_result JSON, not as a DB column
+		// to avoid schema migration. It's accessible via the JSON payload.
 		await query(
 			env.DATABASE_URL,
 			`INSERT INTO analysis_items (
@@ -1000,6 +1412,7 @@ export async function runAutoAnalysis(
 		WHERE id = $2`,
 		[JSON.stringify({
 			analysisId,
+			estimatedGrade: estimatedGradeInfo,
 			...scoreBreakdown,
 			adjustmentFactors,
 			items: analyzedItems,

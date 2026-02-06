@@ -795,6 +795,38 @@ function getSeedData(): SeedItem[] {
 		{ std_category: '바닥', std_item: '문턱', sub_category: '마감재', unit_price: 25000, unit: '개', grade: '가성비' },
 		{ std_category: '바닥', std_item: '문턱', sub_category: '마감재', unit_price: 45000, unit: '개', grade: '중급' },
 		{ std_category: '바닥', std_item: '문턱', sub_category: '마감재', unit_price: 70000, unit: '개', grade: '고급', material: '대리석' },
+
+		// ─── 벤치마크 매칭 v3 추가 항목 ───
+		// 펜던트 조명
+		{ std_category: '전기', std_item: '펜던트 조명', sub_category: '조명', unit_price: 80000, unit: '개', grade: '가성비' },
+		{ std_category: '전기', std_item: '펜던트 조명', sub_category: '조명', unit_price: 200000, unit: '개', grade: '중급' },
+		{ std_category: '전기', std_item: '펜던트 조명', sub_category: '조명', unit_price: 400000, unit: '개', grade: '고급' },
+		{ std_category: '전기', std_item: '펜던트 조명', sub_category: '조명', unit_price: 800000, unit: '개', grade: '프리미엄', brand: '루이스폴센' },
+		// 비디오폰
+		{ std_category: '전기', std_item: '비디오폰', sub_category: '통신', unit_price: 120000, unit: '식', grade: '가성비' },
+		{ std_category: '전기', std_item: '비디오폰', sub_category: '통신', unit_price: 220000, unit: '식', grade: '중급' },
+		{ std_category: '전기', std_item: '비디오폰', sub_category: '통신', unit_price: 380000, unit: '식', grade: '고급' },
+		{ std_category: '전기', std_item: '비디오폰', sub_category: '통신', unit_price: 600000, unit: '식', grade: '프리미엄' },
+		// 주방 싱크볼
+		{ std_category: '주방', std_item: '싱크볼', sub_category: '싱크대', unit_price: 150000, unit: '개', grade: '가성비' },
+		{ std_category: '주방', std_item: '싱크볼', sub_category: '싱크대', unit_price: 280000, unit: '개', grade: '중급' },
+		{ std_category: '주방', std_item: '싱크볼', sub_category: '싱크대', unit_price: 450000, unit: '개', grade: '고급' },
+		{ std_category: '주방', std_item: '싱크볼', sub_category: '싱크대', unit_price: 700000, unit: '개', grade: '프리미엄', material: '스테인리스 언더마운트' },
+		// 욕실 악세사리
+		{ std_category: '욕실', std_item: '욕실 악세사리', sub_category: '악세사리', unit_price: 80000, unit: '세트', grade: '가성비' },
+		{ std_category: '욕실', std_item: '욕실 악세사리', sub_category: '악세사리', unit_price: 150000, unit: '세트', grade: '중급' },
+		{ std_category: '욕실', std_item: '욕실 악세사리', sub_category: '악세사리', unit_price: 300000, unit: '세트', grade: '고급' },
+		{ std_category: '욕실', std_item: '욕실 악세사리', sub_category: '악세사리', unit_price: 500000, unit: '세트', grade: '프리미엄' },
+		// 청소/마무리
+		{ std_category: '기타', std_item: '청소/마무리', sub_category: '청소', unit_price: 200000, unit: '식', grade: '가성비' },
+		{ std_category: '기타', std_item: '청소/마무리', sub_category: '청소', unit_price: 350000, unit: '식', grade: '중급' },
+		{ std_category: '기타', std_item: '청소/마무리', sub_category: '청소', unit_price: 500000, unit: '식', grade: '고급' },
+		{ std_category: '기타', std_item: '청소/마무리', sub_category: '청소', unit_price: 800000, unit: '식', grade: '프리미엄' },
+		// 현장 관리비
+		{ std_category: '기타', std_item: '현장 관리비', sub_category: '관리', unit_price: 300000, unit: '식', grade: '가성비' },
+		{ std_category: '기타', std_item: '현장 관리비', sub_category: '관리', unit_price: 500000, unit: '식', grade: '중급' },
+		{ std_category: '기타', std_item: '현장 관리비', sub_category: '관리', unit_price: 800000, unit: '식', grade: '고급' },
+		{ std_category: '기타', std_item: '현장 관리비', sub_category: '관리', unit_price: 1200000, unit: '식', grade: '프리미엄' },
 	]
 }
 
