@@ -104,8 +104,8 @@ function deviationBadgeStyle(dev: number): string {
 }
 
 function deviationBadgeLabel(dev: number): string {
-	if (dev < -25) return '덤핑 위험'
-	if (dev < -15) return '과소 주의'
+	if (dev < -25) return '가성비↓'
+	if (dev < -15) return '시장가 이하'
 	if (dev < -5) return '양호'
 	if (dev <= 10) return '적정'
 	if (dev <= 25) return '약간높음'
@@ -147,7 +147,7 @@ function marginBadgeStyle(margin: number): string {
 }
 
 function marginBadgeLabel(margin: number): string {
-	if (margin < 5) return '덤핑위험'
+	if (margin < 5) return '가성비↓'
 	if (margin < 15) return '저마진'
 	if (margin <= 25) return '적정'
 	if (margin <= 40) return '약간높음'
@@ -905,7 +905,7 @@ export default function AnalysisResultView({
 						<div className="flex gap-3 mt-4 justify-center flex-wrap border-t border-sand-100 pt-3">
 							{hasMarginData ? (
 								<>
-									<div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-purple-400" /><span className="text-[10px] text-sand-700">{'덤핑 <5%'}</span></div>
+									<div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-purple-400" /><span className="text-[10px] text-sand-700">{'가성비↓ <5%'}</span></div>
 									<div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-blue-400" /><span className="text-[10px] text-sand-700">저마진 5~14%</span></div>
 									<div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-green-400" /><span className="text-[10px] text-sand-700">적정 15~25%</span></div>
 									<div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-amber-400" /><span className="text-[10px] text-sand-700">약간높음 25~40%</span></div>
@@ -1707,9 +1707,9 @@ export default function AnalysisResultView({
 						<div className="space-y-4">
 							{dumpRiskItems.length > 0 && (
 								<div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-5">
-									<h4 className="text-base font-bold text-purple-800 mb-2">덤핑 위험 감지 (시장가 대비 25%+ 저렴)</h4>
+									<h4 className="text-base font-bold text-purple-800 mb-2">저가 항목 주의 (시장가 대비 25%+ 저렴)</h4>
 									<p className="text-sm text-purple-700 mb-2 break-keep">
-										이 가격대에서는 <strong>공사중단, 저품질 시공, 추가비용 리스크</strong>가 높습니다.
+										시장 평균보다 현저히 낮은 가격입니다. <strong>시공 범위, 자재 등급, 추가 비용 여부</strong>를 업체에 확인하세요.
 									</p>
 									<div className="space-y-1.5">
 										{dumpRiskItems.map((item, idx) => (

@@ -1,8 +1,8 @@
 import type { DeviationBracket } from '../../types/analysis'
 
 const config: Record<DeviationBracket, { label: string; bg: string }> = {
-	dump_risk: { label: '덤핑 위험', bg: 'bg-purple-50 text-purple-700 border-purple-200' },
-	under_warning: { label: '과소 주의', bg: 'bg-orange-50 text-orange-700 border-orange-200' },
+	dump_risk: { label: '가성비↓', bg: 'bg-purple-50 text-purple-700 border-purple-200' },
+	under_warning: { label: '시장가 이하', bg: 'bg-orange-50 text-orange-700 border-orange-200' },
 	good: { label: '양호', bg: 'bg-green-50 text-green-700 border-green-200' },
 	fair: { label: '적정', bg: 'bg-blue-50 text-blue-700 border-blue-200' },
 	slightly_high: { label: '약간높음', bg: 'bg-amber-50 text-amber-700 border-amber-200' },

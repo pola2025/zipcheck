@@ -152,7 +152,7 @@ export function calculateDeviation(actualPrice: number, adjustedBenchmark: numbe
 }
 
 export function getDeviationBracket(deviation: number): DeviationBracket {
-	if (deviation < -25) return 'dump_risk'        // 덤핑 위험 (시장가 대비 25%↑ 저렴)
+	if (deviation < -25) return 'dump_risk'        // 저가 주의 (시장가 대비 25%↑ 저렴)
 	if (deviation < -15) return 'under_warning'    // 과소 주의 (-25% ~ -15%)
 	if (deviation < -5) return 'good'              // 양호 (-15% ~ -5%)
 	if (deviation <= 10) return 'fair'             // 적정 (-5% ~ +10%)
@@ -162,7 +162,7 @@ export function getDeviationBracket(deviation: number): DeviationBracket {
 
 export function getDeviationLabel(bracket: DeviationBracket): string {
 	const labels: Record<DeviationBracket, string> = {
-		dump_risk: '덤핑 위험',
+		dump_risk: '저가 주의',
 		under_warning: '과소 주의',
 		good: '양호',
 		fair: '적정',

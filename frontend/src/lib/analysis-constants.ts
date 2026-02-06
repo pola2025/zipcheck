@@ -50,7 +50,7 @@ export function categoryMarginToScore(marginRate: number, stdCategory: string): 
 	const deviation = marginRate - industryMargin
 
 	if (marginRate < 0) return 35            // 마이너스 마진 = 데이터 오류 가능성
-	if (marginRate < industryMargin * 0.3) return 55  // 덤핑 의심
+	if (marginRate < industryMargin * 0.3) return 55  // 저마진 주의
 	if (deviation < -10) return 78            // 저마진
 	if (deviation < -5) return 88             // 적정 근접 (약간 저렴)
 	if (Math.abs(deviation) <= 5) return 95   // 업계 표준 ±5%p = 최적

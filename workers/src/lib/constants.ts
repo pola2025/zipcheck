@@ -54,7 +54,7 @@ export function categoryMarginToScore(marginRate: number, stdCategory: string): 
 	if (marginRate < -50) return 20            // 극단적 마이너스 = 데이터 오류
 	if (marginRate < -30) return 35            // 심각한 마이너스
 	if (marginRate < -15) return 45            // 의미있는 마이너스
-	if (marginRate < Math.max(0, industryMargin * 0.3)) return 55  // 경미한 마이너스 ~ 덤핑 수준
+	if (marginRate < Math.max(0, industryMargin * 0.3)) return 55  // 경미한 마이너스 ~ 저마진 주의
 	if (deviation < -10) return 78             // 저마진
 	if (deviation < -5) return 88              // 적정 근접 (약간 저렴)
 	if (Math.abs(deviation) <= 5) return 95    // 업계 표준 ±5%p = 최적
@@ -85,6 +85,7 @@ export const CATEGORY_OVERRIDE_RULES: CategoryOverrideRule[] = [
 	{ keywords: ['아트월', '포인트월', 'TV월'], stdCategory: '목공', priority: 90 },
 	{ keywords: ['중문', '슬라이딩도어'], stdCategory: '목공', priority: 90 },
 	{ keywords: ['상판 교체', '싱크대 상판'], stdCategory: '주방', priority: 90 },
+	{ keywords: ['주방 타일', '주방타일', '주방 벽 타일', '주방벽타일'], stdCategory: '주방', priority: 90 },
 	{ keywords: ['비디오폰', '인터폰', '월패드'], stdCategory: '전기', priority: 90 },
 	{ keywords: ['펜던트', '샹들리에'], stdCategory: '전기', priority: 85 },
 	{ keywords: ['간접조명', '매입등', '다운라이트'], stdCategory: '전기', priority: 85 },
@@ -120,6 +121,10 @@ export const ITEM_KEYWORD_MAP: Record<string, string> = {
 	'스위치': '스위치 교체',
 
 	// 주방
+	'주방 벽 타일': '주방 타일',
+	'주방벽타일': '주방 타일',
+	'주방 타일': '주방 타일',
+	'주방타일': '주방 타일',
 	'상판': '싱크대 상판',
 	'싱크대상판': '싱크대 상판',
 	'하부장': '하부장',
@@ -202,7 +207,14 @@ export const ITEM_KEYWORD_MAP: Record<string, string> = {
 	// 페인트
 	'페인트': '벽면 페인트',
 	'도장': '벽면 페인트',
-	'천장페인트': '천장 페인트',
+	'벽면도장': '벽면 페인트',
+	'벽면 도장': '벽면 페인트',
+	'몰딩도장': '몰딩 도장',
+	'몰딩 도장': '몰딩 도장',
+	'천장도장': '천장 도장',
+	'천장 도장': '천장 도장',
+	'천장페인트': '천장 도장',
+	'천장 페인트': '천장 도장',
 	'에폭시': '에폭시',
 	'우드스테인': '우드스테인',
 

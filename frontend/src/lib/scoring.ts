@@ -43,14 +43,14 @@ function deviationToScore(deviationPercent: number): number {
 		if (deviationPercent <= 40) return 35
 		return 20
 	} else {
-		// 저가 방향 (음수: 시장가보다 저렴 → 덤핑 위험 반영)
+		// 저가 방향 (음수: 시장가보다 저렴 → 저가 리스크 반영)
 		const abs = Math.abs(deviationPercent)
 		if (abs <= 5) return 95
 		if (abs <= 10) return 85
 		if (abs <= 15) return 75
 		if (abs <= 20) return 60
 		if (abs <= 25) return 45
-		return 30                    // -25% 초과: 덤핑 위험
+		return 30                    // -25% 초과: 저가 주의
 	}
 }
 

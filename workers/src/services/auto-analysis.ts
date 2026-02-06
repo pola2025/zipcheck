@@ -994,17 +994,48 @@ function calculatePenalties(items: AnalyzedItem[], propertySizeSqm: number | nul
 // ============================================
 
 const FALLBACK_BENCHMARKS: BenchmarkPrice[] = [
-	// 바닥 철거 (강마루/장판 제거, ㎡당)
-	{ std_category: '철거', std_item: '바닥 철거', unit_price: 6000, unit: '㎡', grade: '가성비', region: '전국', reference_date: '2025-06-01' },
+	// 바닥 철거 (강마루/장판 제거, ㎡당) — 시장가 5,000~10,000
+	{ std_category: '철거', std_item: '바닥 철거', unit_price: 5000, unit: '㎡', grade: '가성비', region: '전국', reference_date: '2025-06-01' },
 	{ std_category: '철거', std_item: '바닥 철거', unit_price: 8000, unit: '㎡', grade: '중급', region: '전국', reference_date: '2025-06-01' },
 	{ std_category: '철거', std_item: '바닥 철거', unit_price: 10000, unit: '㎡', grade: '고급', region: '전국', reference_date: '2025-06-01' },
 	{ std_category: '철거', std_item: '바닥 철거', unit_price: 13000, unit: '㎡', grade: '프리미엄', region: '전국', reference_date: '2025-06-01' },
-	// 도배 철거 (벽지 제거, ㎡당)
+	// 도배 철거 (벽지 제거, ㎡당) — 시장가 2,500~5,000
 	{ std_category: '철거', std_item: '도배 철거', unit_price: 2500, unit: '㎡', grade: '가성비', region: '전국', reference_date: '2025-06-01' },
 	{ std_category: '철거', std_item: '도배 철거', unit_price: 3500, unit: '㎡', grade: '중급', region: '전국', reference_date: '2025-06-01' },
 	{ std_category: '철거', std_item: '도배 철거', unit_price: 4500, unit: '㎡', grade: '고급', region: '전국', reference_date: '2025-06-01' },
 	{ std_category: '철거', std_item: '도배 철거', unit_price: 6000, unit: '㎡', grade: '프리미엄', region: '전국', reference_date: '2025-06-01' },
+	// 몰딩 도장 (m 기준, 세밀 작업) — 시장가 5,000~12,000원/m
+	{ std_category: '페인트', std_item: '몰딩 도장', unit_price: 5000, unit: 'm', grade: '가성비', region: '전국', reference_date: '2025-06-01' },
+	{ std_category: '페인트', std_item: '몰딩 도장', unit_price: 8000, unit: 'm', grade: '중급', region: '전국', reference_date: '2025-06-01' },
+	{ std_category: '페인트', std_item: '몰딩 도장', unit_price: 12000, unit: 'm', grade: '고급', region: '전국', reference_date: '2025-06-01' },
+	{ std_category: '페인트', std_item: '몰딩 도장', unit_price: 18000, unit: 'm', grade: '프리미엄', region: '전국', reference_date: '2025-06-01' },
+	// 천장 도장 (벽면보다 작업 난이도 높음, ㎡당) — 시장가 평당 3~3.5만 = ㎡당 9,000~11,000
+	{ std_category: '페인트', std_item: '천장 도장', unit_price: 9000, unit: '㎡', grade: '가성비', region: '전국', reference_date: '2025-06-01' },
+	{ std_category: '페인트', std_item: '천장 도장', unit_price: 11000, unit: '㎡', grade: '중급', region: '전국', reference_date: '2025-06-01' },
+	{ std_category: '페인트', std_item: '천장 도장', unit_price: 14000, unit: '㎡', grade: '고급', region: '전국', reference_date: '2025-06-01' },
+	{ std_category: '페인트', std_item: '천장 도장', unit_price: 18000, unit: '㎡', grade: '프리미엄', region: '전국', reference_date: '2025-06-01' },
 ]
+
+/**
+ * DB 벤치마크 보정 — 시장가와 크게 괴리가 있는 DB 데이터를 런타임에서 수정
+ * key: `${std_category}|${std_item}|${grade}`, value: 보정 단가
+ */
+const BENCHMARK_CORRECTIONS: Record<string, number> = {
+	// 스위치: DB 25~90K는 스마트 스위치 포함. 일반 스위치 교체 시장가 8~15K/개
+	'전기|스위치 교체|가성비': 10000,
+	'전기|스위치 교체|중급': 15000,
+	'전기|스위치 교체|고급': 25000,
+	'전기|스위치 교체|프리미엄': 40000,
+	// 콘센트: DB 30~95K는 과다. 일반 콘센트 교체 시장가 10~20K/개
+	'전기|콘센트 교체|가성비': 12000,
+	'전기|콘센트 교체|중급': 18000,
+	'전기|콘센트 교체|고급': 30000,
+	'전기|콘센트 교체|프리미엄': 45000,
+	// 천장 페인트: DB 5~10K는 재료비 수준. 시장가(시공 포함) 9~18K/㎡ (평당 3~3.5만)
+	'페인트|천장 페인트|가성비': 9000,
+	'페인트|천장 페인트|중급': 11000,
+	'페인트|천장 페인트|고급': 14000,
+}
 
 // ============================================
 // 이중청구 탐지 (Fix 3)
@@ -1140,9 +1171,17 @@ export async function runAutoAnalysis(
 		env.DATABASE_URL,
 		'SELECT std_category, std_item, unit_price, unit, grade, region, reference_date, source, model FROM benchmark_prices WHERE is_active = true'
 	)
-	// 폴백 벤치마크 머지 (DB에 해당 항목이 없을 경우에만 추가)
+	// 폴백 벤치마크 머지 + DB 벤치마크 보정
 	const dbBenchmarks = benchmarkRows as BenchmarkPrice[]
-	const benchmarks = [...dbBenchmarks]
+	const benchmarks: BenchmarkPrice[] = dbBenchmarks.map(b => {
+		const key = `${b.std_category}|${b.std_item}|${b.grade}`
+		const correction = BENCHMARK_CORRECTIONS[key]
+		if (correction !== undefined) {
+			console.log(`[AutoAnalysis] Benchmark correction: ${key} ${b.unit_price} → ${correction}`)
+			return { ...b, unit_price: correction }
+		}
+		return b
+	})
 	for (const fb of FALLBACK_BENCHMARKS) {
 		const exists = dbBenchmarks.some(b =>
 			b.std_category === fb.std_category && b.std_item === fb.std_item && b.grade === fb.grade
@@ -1194,6 +1233,29 @@ export async function runAutoAnalysis(
 
 		// Map to standard category
 		const mapped = matchCategory(category, itemName, mappings)
+
+		// Refine stdItem via ITEM_KEYWORD_MAP (longest match first)
+		// matchCategory의 DB 매핑이 '도장'→'벽면 페인트' 같은 범용 매칭을 할 때,
+		// '천장 도장'→'천장 도장' 같은 구체적 키워드가 있으면 덮어씌움
+		if (mapped && itemName) {
+			const itemLower = itemName.toLowerCase()
+			const sortedKeywords = Object.entries(ITEM_KEYWORD_MAP)
+				.sort((a, b) => b[0].length - a[0].length)  // 긴 키워드 우선
+			for (const [keyword, mappedStdItem] of sortedKeywords) {
+				if (itemLower.includes(keyword.toLowerCase())) {
+					if (mapped.stdItem !== mappedStdItem) {
+						// Guard: 새 stdItem이 현재 카테고리에 벤치마크가 없으면 스킵
+						// 범용 키워드('타일' 등)가 카테고리를 넘어 매칭되는 부작용 방지
+						const newHasBench = benchmarks.some(
+							b => b.std_category === mapped.stdCategory && b.std_item === mappedStdItem
+						)
+						if (!newHasBench) break
+						mapped.stdItem = mappedStdItem
+					}
+					break
+				}
+			}
+		}
 
 		// Find benchmark
 		let benchmarkUnitPrice: number | null = null
@@ -1306,6 +1368,29 @@ export async function runAutoAnalysis(
 							((comparePrice - adjustedBenchmarkPrice) / adjustedBenchmarkPrice) * 10000
 						) / 100
 						deviationBracket = getDeviationBracket(deviationPercent)
+
+						// Cross-grade adaptive: dump_risk면 다른 등급 벤치마크로 재시도
+						if (deviationBracket === 'dump_risk' && targetGrade !== '가성비') {
+							const altGrades = ['가성비', '중급', '고급', '프리미엄'].filter(g => g !== targetGrade)
+							for (const altGrade of altGrades) {
+								const altBench = findBenchmarkWithTier(mapped.stdCategory, mapped.stdItem, benchmarks, altGrade, itemName, unit)
+								if (altBench) {
+									const altAdj = applyAdjustments(altBench.benchmark.unit_price, adjustmentFactors)
+									if (altAdj > 0) {
+										const altDev = Math.round(((comparePrice - altAdj) / altAdj) * 10000) / 100
+										const altBracket = getDeviationBracket(altDev)
+										if (altBracket !== 'dump_risk' && altBracket !== 'high') {
+											benchmarkUnitPrice = altBench.benchmark.unit_price
+											adjustedBenchmarkPrice = altAdj
+											deviationPercent = altDev
+											deviationBracket = altBracket
+											matchTier = altBench.matchTier
+											break
+										}
+									}
+								}
+							}
+						}
 
 						// 비정상 deviation(>200%)은 벤치마크 미스매치 → 마진 계산 스킵 (Fix 4)
 						if (Math.abs(deviationPercent) > 200) {
@@ -1457,9 +1542,27 @@ export async function runAutoAnalysis(
 		const weight = CATEGORY_WEIGHTS[category] || 0.03
 
 		// 마진율 기반 스코어링 (우선), 없으면 deviation 폴백
+		// Fix C: lump-sum 항목은 bracket 기반 합성 마진으로 변환
+		// midpoint 기준 마진이 음수여도 fair 범위 내면 업계 표준 마진으로 치환
+		const industryMarginPct = (CATEGORY_MARGIN_RATES[category] || 0.20) * 100
+		const getEffectiveMargin = (item: AnalyzedItem): number | null => {
+			if (item.margin_rate == null) return null
+			// lump-sum 평가 항목: bracket 기반으로 합성 마진 매핑
+			if (item.unit_mismatch && item.margin_bracket) {
+				switch (item.margin_bracket) {
+					case 'fair': return industryMarginPct          // 적정 → 업계표준 → 95점
+					case 'low_margin': return industryMarginPct - 8  // 저마진 → 78~88점
+					case 'dump_risk': return -5                      // 저가 → 55점
+					case 'slightly_high': return industryMarginPct + 12  // 약간높음 → 70~85점
+					case 'excessive': return industryMarginPct + 30     // 과다 → 50점
+					default: return item.margin_rate
+				}
+			}
+			return item.margin_rate
+		}
 		const margins = catItems
 			.filter(i => i.margin_rate != null)
-			.map(i => i.margin_rate!)
+			.map(i => getEffectiveMargin(i)!)
 		const deviations = catItems
 			.filter(i => i.deviation_percent != null)
 			.map(i => i.deviation_percent!)
