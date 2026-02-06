@@ -93,6 +93,8 @@ interface BenchmarkPrice {
 	grade: string
 	region: string
 	reference_date: string | null
+	source?: string | null
+	model?: string | null  // google_search 신뢰도: 'high'/'medium'/'low'
 }
 
 interface QuoteItem {
@@ -236,19 +238,100 @@ function applyAdjustments(basePrice: number, factors: AdjustmentFactors): number
 }
 
 // ============================================
-// 면적 환산 계수 (일식 항목 → 원가 추정용)
+// 카테고리별 원가 프로필 (구성요소 합산 방식)
 // ============================================
 
-// 면적 기반 카테고리: propertySizeSqm × factor × 벤치마크 단가 = 추정 원가
-const AREA_CONVERSION_FACTORS: Record<string, number> = {
-	'도배': 2.8,     // 벽(전용×1.8) + 천장(전용×1.0)
-	'바닥': 0.85,    // 전용면적×0.85 (가구/벽 제외)
-	'페인트': 2.8,   // 벽(전용×1.8) + 천장(전용×1.0)
-	'철거': 1.85,    // 바닥+벽 환산
+interface CostComponent {
+	std_item: string       // 벤치마크에서 찾을 std_item
+	area_factor?: number   // propertySizeSqm × factor = 시공면적
+	default_qty?: number   // 세트 기반일 때 기본 수량
 }
 
-// 세트 기반 카테고리: 면적 무관, 기본 1세트로 추정
-const SET_BASED_CATEGORIES = new Set(['욕실', '주방', '가구', '전기', '창호'])
+interface CategoryCostProfile {
+	type: 'area' | 'set' | 'mixed'
+	components: CostComponent[]
+}
+
+const CATEGORY_COST_PROFILES: Record<string, CategoryCostProfile> = {
+	'도배': {
+		type: 'area',
+		components: [
+			{ std_item: '실크 도배', area_factor: 1.8 },
+			{ std_item: '천장 도배', area_factor: 1.0 },
+		],
+	},
+	'바닥': {
+		type: 'area',
+		components: [
+			{ std_item: '강화마루', area_factor: 0.85 },
+		],
+	},
+	'철거': {
+		type: 'area',
+		components: [
+			{ std_item: '바닥 철거', area_factor: 1.0 },
+			{ std_item: '도배 철거', area_factor: 1.8 },
+		],
+	},
+	'페인트': {
+		type: 'area',
+		components: [
+			{ std_item: '벽면 페인트', area_factor: 1.8 },
+			{ std_item: '천장 페인트', area_factor: 1.0 },
+		],
+	},
+	'욕실': {
+		type: 'set',
+		components: [
+			{ std_item: '바닥 타일', area_factor: 0.035 },
+			{ std_item: '벽 타일', area_factor: 0.12 },
+			{ std_item: '세면대', default_qty: 1 },
+			{ std_item: '양변기', default_qty: 1 },
+			{ std_item: '수전', default_qty: 1 },
+			{ std_item: '방수 공사', area_factor: 0.035 },
+		],
+	},
+	'주방': {
+		type: 'set',
+		components: [
+			{ std_item: '싱크대 상판', default_qty: 3 },
+			{ std_item: '하부장', default_qty: 3 },
+			{ std_item: '상부장', default_qty: 3 },
+			{ std_item: '빌트인 후드', default_qty: 1 },
+		],
+	},
+	'전기': {
+		type: 'set',
+		components: [
+			{ std_item: '콘센트 교체', default_qty: 20 },
+			{ std_item: '스위치 교체', default_qty: 10 },
+			{ std_item: '조명 교체', default_qty: 10 },
+			{ std_item: '분전반 교체', default_qty: 1 },
+		],
+	},
+	'목공': {
+		type: 'mixed',
+		components: [
+			{ std_item: '문틀', default_qty: 5 },
+			{ std_item: '몰딩', default_qty: 40 },
+			{ std_item: '걸레받이', default_qty: 40 },
+		],
+	},
+	'가구': {
+		type: 'set',
+		components: [
+			{ std_item: '붙박이장', default_qty: 2 },
+			{ std_item: '신발장', default_qty: 1 },
+		],
+	},
+	'창호': {
+		type: 'set',
+		components: [
+			{ std_item: '방문', default_qty: 4 },
+			{ std_item: '현관문', default_qty: 1 },
+		],
+	},
+}
 
 // ============================================
 // 마진율 계산 헬퍼
@@ -264,39 +347,57 @@ function getMarginBracket(marginRate: number): MarginBracket {
 }
 
 function marginToScore(marginRate: number): number {
-	if (marginRate < 5) return 40          // 덤핑 위험
-	if (marginRate < 15) return 70         // 저마진
+	if (marginRate < 0) return 35          // 마이너스 마진 = 데이터 오류 가능성
+	if (marginRate < 5) return 55          // 덤핑 위험
+	if (marginRate < 10) return 78         // 저마진
+	if (marginRate < 15) return 88         // 적정 근접
 	if (marginRate <= 25) return 95        // 적정
-	if (marginRate <= 40) return 70        // 약간 높음
-	if (marginRate <= 80) return 45        // 과다
+	if (marginRate <= 30) return 85        // 약간 높음
+	if (marginRate <= 40) return 70        // 높음
+	if (marginRate <= 60) return 50        // 과다
+	if (marginRate <= 80) return 35        // 매우 과다
 	return 20                              // 비정상
 }
 
-function calculateEstimatedCost(
-	adjustedBenchmarkPrice: number,
+/**
+ * 카테고리 전체 구성요소를 합산하여 원가 추정 (Fix 2)
+ * 기존 calculateEstimatedCost(단일 벤치마크)를 대체
+ */
+function calculateCategoryCost(
 	stdCategory: string,
+	benchmarks: BenchmarkPrice[],
+	adjustmentFactors: AdjustmentFactors,
+	targetGrade: string,
 	propertySizeSqm: number | null,
-	quantity: number | null,
 ): number | null {
-	// 면적 기반 카테고리
-	const areaFactor = AREA_CONVERSION_FACTORS[stdCategory]
-	if (areaFactor != null) {
-		if (!propertySizeSqm || propertySizeSqm <= 0) return null
-		return Math.round(propertySizeSqm * areaFactor * adjustedBenchmarkPrice)
+	const profile = CATEGORY_COST_PROFILES[stdCategory]
+	if (!profile) return null
+
+	let totalCost = 0
+	let matchedComponents = 0
+
+	for (const comp of profile.components) {
+		const bench = findBenchmark(stdCategory, comp.std_item, benchmarks, targetGrade)
+		if (!bench) continue
+
+		const adjustedPrice = applyAdjustments(bench.unit_price, adjustmentFactors)
+		let qty: number
+
+		if (comp.area_factor != null && propertySizeSqm && propertySizeSqm > 0) {
+			qty = propertySizeSqm * comp.area_factor
+		} else if (comp.default_qty != null) {
+			qty = comp.default_qty
+		} else {
+			continue
+		}
+
+		totalCost += adjustedPrice * qty
+		matchedComponents++
 	}
 
-	// 세트 기반 카테고리
-	if (SET_BASED_CATEGORIES.has(stdCategory)) {
-		const qty = (quantity && quantity > 0) ? quantity : 1
-		return Math.round(adjustedBenchmarkPrice * qty)
-	}
-
-	// 기타: 수량이 있으면 수량 기반
-	if (quantity && quantity > 0) {
-		return Math.round(adjustedBenchmarkPrice * quantity)
-	}
-
-	return null
+	// 최소 절반 이상 매칭되어야 유효
+	if (matchedComponents < profile.components.length / 2) return null
+	return Math.round(totalCost)
 }
 
 // ============================================
@@ -312,16 +413,19 @@ const CATEGORY_WEIGHTS: Record<string, number> = {
 function deviationToScore(deviationPercent: number): number {
 	if (deviationPercent >= 0) {
 		if (deviationPercent <= 5) return 95
-		if (deviationPercent <= 10) return 85
-		if (deviationPercent <= 15) return 75
-		if (deviationPercent <= 25) return 55
-		if (deviationPercent <= 35) return 35
+		if (deviationPercent <= 10) return 87
+		if (deviationPercent <= 15) return 78
+		if (deviationPercent <= 20) return 65
+		if (deviationPercent <= 30) return 50
+		if (deviationPercent <= 40) return 35
 		return 20
 	} else {
 		const abs = Math.abs(deviationPercent)
 		if (abs <= 5) return 95
-		if (abs <= 15) return 80
-		if (abs <= 25) return 55
+		if (abs <= 10) return 85
+		if (abs <= 15) return 75
+		if (abs <= 20) return 60
+		if (abs <= 25) return 45
 		return 30
 	}
 }
@@ -337,9 +441,9 @@ function getDeviationBracket(deviation: number): DeviationBracket {
 
 function getScoreGrade(score: number): { label: string; description: string } {
 	if (score >= 85) return { label: 'A', description: '매우 적정한 견적입니다' }
-	if (score >= 75) return { label: 'B', description: '대체로 합리적인 견적입니다' }
-	if (score >= 60) return { label: 'C', description: '일부 항목 검토가 필요합니다' }
-	if (score >= 45) return { label: 'D', description: '상당 부분 검토가 필요합니다' }
+	if (score >= 72) return { label: 'B', description: '대체로 합리적인 견적입니다' }
+	if (score >= 55) return { label: 'C', description: '일부 항목 검토가 필요합니다' }
+	if (score >= 40) return { label: 'D', description: '상당 부분 검토가 필요합니다' }
 	return { label: 'F', description: '견적 재검토를 권장합니다' }
 }
 
@@ -394,25 +498,41 @@ function findBenchmark(
 	benchmarks: BenchmarkPrice[],
 	grade: string
 ): BenchmarkPrice | null {
-	// Exact match first
-	const exact = benchmarks.find(
-		b => b.std_category === stdCategory && b.std_item === stdItem && b.grade === grade
-	)
-	if (exact) return exact
+	const isManual = (b: BenchmarkPrice) => b.source !== 'google_search'
+	const isGoogleReliable = (b: BenchmarkPrice) =>
+		b.source === 'google_search' && b.model !== 'low'
 
-	// Same category + grade
-	const catGrade = benchmarks.find(
-		b => b.std_category === stdCategory && b.grade === grade
+	// 1차: 수동 벤치마크 exact match (수동 우선)
+	const manualExact = benchmarks.find(
+		b => isManual(b) && b.std_category === stdCategory && b.std_item === stdItem && b.grade === grade
 	)
-	if (catGrade) return catGrade
+	if (manualExact) return manualExact
 
-	// Same category + 중급 (default grade)
+	// 2차: 수동 벤치마크 — 같은 카테고리 + 등급
+	const manualCatGrade = benchmarks.find(
+		b => isManual(b) && b.std_category === stdCategory && b.grade === grade
+	)
+	if (manualCatGrade) return manualCatGrade
+
+	// 3차: 구글 벤치마크 exact match (신뢰도 high/medium만)
+	const googleExact = benchmarks.find(
+		b => isGoogleReliable(b) && b.std_category === stdCategory && b.std_item === stdItem
+	)
+	if (googleExact) return googleExact
+
+	// 4차: 수동 벤치마크 — 같은 카테고리 + 중급
 	const catDefault = benchmarks.find(
-		b => b.std_category === stdCategory && b.grade === '중급'
+		b => isManual(b) && b.std_category === stdCategory && b.grade === '중급'
 	)
 	if (catDefault) return catDefault
 
-	// Any from same category
+	// 5차: 구글 벤치마크 — 같은 카테고리 (신뢰도 무관)
+	const googleCat = benchmarks.find(
+		b => b.source === 'google_search' && b.std_category === stdCategory
+	)
+	if (googleCat) return googleCat
+
+	// 6차: 아무거나 (기존 fallback)
 	const catAny = benchmarks.find(b => b.std_category === stdCategory)
 	return catAny || null
 }
@@ -443,13 +563,13 @@ function calculateBonuses(items: AnalyzedItem[]): ScoreModifier[] {
 function calculatePenalties(items: AnalyzedItem[], propertySizeSqm: number | null): ScoreModifier[] {
 	const penalties: ScoreModifier[] = []
 
-	// Missing category penalty
+	// Missing category penalty (capped at -12)
 	const missingItems = items.filter(i => !i.std_category || !i.std_item)
 	if (missingItems.length > 0) {
 		penalties.push({
 			type: 'missing_items',
 			label: '미분류 항목',
-			points: -5 * missingItems.length,
+			points: Math.max(-12, -3 * missingItems.length),
 			reason: `${missingItems.length}개 항목 미분류`,
 		})
 	}
@@ -466,27 +586,15 @@ function calculatePenalties(items: AnalyzedItem[], propertySizeSqm: number | nul
 		})
 	}
 
-	// License unverified penalty (default - no license info in auto analysis)
-	const highRiskCategories = items.filter(i =>
-		['전기', '욕실', '주방'].includes(i.std_category || '')
-	)
-	if (highRiskCategories.length > 0) {
-		penalties.push({
-			type: 'license_unverified_high_risk',
-			label: '면허 미확인 (고위험)',
-			points: -15,
-			reason: '전기/욕실/주방 포함인데 면허 미확인',
-		})
-	} else {
-		penalties.push({
-			type: 'license_unverified',
-			label: '면허 미확인',
-			points: -5,
-			reason: '시공업체 면허 미확인',
-		})
-	}
+	// License unverified nudge (auto-analysis can't verify licenses, so soft penalty only)
+	penalties.push({
+		type: 'license_unverified',
+		label: '면허 미확인',
+		points: -3,
+		reason: '시공업체 면허 정보 미제공 (자동분석)',
+	})
 
-	// High value bundled penalty
+	// High value bundled penalty (capped at -15)
 	const highValueBundled = items.filter(i =>
 		i.is_bundled && (i.original_total_price ?? 0) > 5_000_000
 	)
@@ -494,12 +602,12 @@ function calculatePenalties(items: AnalyzedItem[], propertySizeSqm: number | nul
 		penalties.push({
 			type: 'high_value_bundled',
 			label: '고액 일식 항목',
-			points: -5 * highValueBundled.length,
+			points: Math.max(-15, -5 * highValueBundled.length),
 			reason: `${highValueBundled.length}건의 500만원 초과 일식 항목`,
 		})
 	}
 
-	// Quantity-area cross-validation (v1.6)
+	// Quantity-area cross-validation (v1.6 → v2: 카테고리 합산 비교, Fix 5)
 	if (propertySizeSqm && propertySizeSqm > 0) {
 		const areaCategories: Array<{ cat: string; stdRatio: number }> = [
 			{ cat: '바닥', stdRatio: 1.05 },
@@ -510,17 +618,18 @@ function calculatePenalties(items: AnalyzedItem[], propertySizeSqm: number | nul
 			const catItems = items.filter(i =>
 				i.std_category === cat && i.original_quantity != null && i.original_quantity > 0
 			)
-			for (const item of catItems) {
-				const expectedQty = propertySizeSqm * stdRatio
-				const ratio = item.original_quantity! / expectedQty
-				if (ratio < 0.85) {
-					penalties.push({
-						type: 'under_quantity',
-						label: `${cat} 수량 부족`,
-						points: -8,
-						reason: `${item.std_item || cat}: 수량 ${item.original_quantity}㎡ vs 예상 ${Math.round(expectedQty)}㎡ (비율 ${(ratio * 100).toFixed(0)}%)`,
-					})
-				}
+			if (catItems.length === 0) continue
+			// 카테고리 내 모든 아이템 수량 합산하여 비교 (개별 비교 → 합산 비교)
+			const totalQty = catItems.reduce((sum, i) => sum + (i.original_quantity || 0), 0)
+			const expectedQty = propertySizeSqm * stdRatio
+			const ratio = totalQty / expectedQty
+			if (ratio < 0.5) {  // 50% 미만일 때만 (기존 85%는 너무 엄격)
+				penalties.push({
+					type: 'under_quantity',
+					label: `${cat} 수량 부족`,
+					points: -5,  // -8 → -5 완화, 카테고리당 1번만
+					reason: `${cat} 합산 수량 ${Math.round(totalQty)}㎡ vs 예상 ${Math.round(expectedQty)}㎡ (비율 ${(ratio * 100).toFixed(0)}%)`,
+				})
 			}
 		}
 	}
@@ -550,7 +659,7 @@ export async function runAutoAnalysis(
 	// 2. Load benchmark prices (1 query)
 	const benchmarkRows = await query(
 		env.DATABASE_URL,
-		'SELECT std_category, std_item, unit_price, unit, grade, region, reference_date FROM benchmark_prices WHERE is_active = true'
+		'SELECT std_category, std_item, unit_price, unit, grade, region, reference_date, source, model FROM benchmark_prices WHERE is_active = true'
 	)
 	const benchmarks = benchmarkRows as BenchmarkPrice[]
 	console.log(`[AutoAnalysis] Loaded ${benchmarks.length} benchmark prices`)
@@ -579,12 +688,12 @@ export async function runAutoAnalysis(
 
 	// 5. Analyze each item
 	const analyzedItems: AnalyzedItem[] = input.items.map((item) => {
-		const category = item.category || null
-		const itemName = item.item_name || item.itemName || null
-		const quantity = item.quantity || null
-		const unit = item.unit || null
-		const unitPrice = item.unit_price || item.unitPrice || null
-		const totalPrice = item.total_price || item.totalPrice || item.quoted_price || null
+		const category = item.category ?? null
+		const itemName = item.item_name ?? item.itemName ?? null
+		const quantity = item.quantity ?? null
+		const unit = item.unit ?? null
+		const unitPrice = item.unit_price ?? item.unitPrice ?? null
+		const totalPrice = item.total_price ?? item.totalPrice ?? item.quoted_price ?? null
 
 		// Detect bundled (lump sum) items
 		const isBundled = !quantity || !unitPrice || (unit === '일식' || unit === '식')
@@ -626,10 +735,10 @@ export async function runAutoAnalysis(
 					deviationPercent = null
 					deviationBracket = null
 
-					// 면적 환산 기반 원가 추정
-					estimatedCost = calculateEstimatedCost(
-						adjustedBenchmarkPrice, mapped.stdCategory,
-						input.propertySizeSqm, quantity
+					// 카테고리 구성요소 합산 기반 원가 추정 (Fix 3)
+					estimatedCost = calculateCategoryCost(
+						mapped.stdCategory, benchmarks, adjustmentFactors,
+						targetGrade, input.propertySizeSqm
 					)
 					if (estimatedCost && totalPrice && estimatedCost > 0) {
 						marginRate = Math.round(
@@ -649,9 +758,14 @@ export async function runAutoAnalysis(
 						) / 100
 						deviationBracket = getDeviationBracket(deviationPercent)
 
-						// 마진율 계산 (단가 기반)
-						marginRate = deviationPercent // 원가 대비 견적가 차이 = 마진율
-						marginBracket = getMarginBracket(marginRate)
+						// 비정상 deviation(>200%)은 벤치마크 미스매치 → 마진 계산 스킵 (Fix 4)
+						if (Math.abs(deviationPercent) > 200) {
+							marginRate = null
+							marginBracket = null
+						} else {
+							marginRate = deviationPercent
+							marginBracket = getMarginBracket(marginRate)
+						}
 
 						// 추정 원가 총액
 						estimatedCost = (quantity && quantity > 0)
@@ -681,7 +795,9 @@ export async function runAutoAnalysis(
 			unit_mismatch: unitMismatch,
 			adjustment_factors: adjustmentFactors,
 			is_bundled: isBundled,
-			confidence: mapped ? 0.8 : 0.3,
+			confidence: !mapped ? 0.3
+				: (deviationPercent != null && Math.abs(deviationPercent) > 200) ? 0.4  // 벤치마크 미스매치 가능
+				: 0.8,
 			margin_rate: marginRate,
 			margin_bracket: marginBracket,
 			estimated_cost: estimatedCost,
@@ -713,19 +829,45 @@ export async function runAutoAnalysis(
 		let avgDeviation: number
 		let score: number
 
-		if (margins.length > 0) {
-			// 마진율 기반 (primary)
+		// 개별 비교 신뢰도 판단: 극단적 deviation(>100%) 비율 체크
+		const extremeDeviations = deviations.filter(d => Math.abs(d) > 100)
+		const unreliableRatio = catItems.length > 0
+			? (catItems.length - margins.length + extremeDeviations.length) / catItems.length
+			: 0
+		const isUnreliable = unreliableRatio > 0.5
+
+		if (margins.length > 0 && !isUnreliable) {
+			// 마진율 기반 (primary) — 개별 비교가 신뢰할 만할 때만
 			const avgMargin = margins.reduce((a, b) => a + b, 0) / margins.length
 			avgDeviation = Math.round(avgMargin * 100) / 100
 			score = marginToScore(avgMargin)
-		} else if (deviations.length > 0) {
-			// deviation 폴백
-			avgDeviation = deviations.reduce((a, b) => a + b, 0) / deviations.length
-			avgDeviation = Math.round(avgDeviation * 100) / 100
-			score = deviationToScore(avgDeviation)
 		} else {
-			avgDeviation = 0
-			score = 70
+			// 개별 비교 실패 → 카테고리 총액 비교로 폴백
+			const categoryCost = calculateCategoryCost(
+				category, benchmarks, adjustmentFactors, targetGrade, input.propertySizeSqm
+			)
+			const totalQuoted = catItems.reduce((s, i) => s + (i.original_total_price || 0), 0)
+
+			if (categoryCost && categoryCost > 0 && totalQuoted > 0) {
+				// 카테고리 전체 견적가 vs 카테고리 합산 원가
+				const categoryMargin = ((totalQuoted - categoryCost) / categoryCost) * 100
+				avgDeviation = Math.round(categoryMargin * 100) / 100
+				score = marginToScore(categoryMargin)
+				console.log(`[AutoAnalysis] ${category}: category-level fallback, cost=${categoryCost}, quoted=${totalQuoted}, margin=${avgDeviation}%`)
+			} else if (margins.length > 0) {
+				// 카테고리 비용 계산 실패 → 기존 마진 사용
+				const avgMargin = margins.reduce((a, b) => a + b, 0) / margins.length
+				avgDeviation = Math.round(avgMargin * 100) / 100
+				score = marginToScore(avgMargin)
+			} else if (deviations.length > 0) {
+				// deviation 폴백 (최후 수단)
+				avgDeviation = deviations.reduce((a, b) => a + b, 0) / deviations.length
+				avgDeviation = Math.round(avgDeviation * 100) / 100
+				score = deviationToScore(avgDeviation)
+			} else {
+				avgDeviation = 0
+				score = 70
+			}
 		}
 
 		categoryScores.push({

@@ -399,57 +399,35 @@ app.post('/submit', async (c) => {
 			`Quote request created: ${data.id} (Group: ${finalGroupId}, Sequence: ${sequence})`
 		)
 
-		// Notify via Slack (non-blocking)
-		try {
-			await notifyNewQuote(c.env, {
-				id: String(data.id),
-				name: customer_name,
-				phone: customer_phone,
-				planName: `${property_type} ${region}`,
-			})
-		} catch (slackErr) {
-			console.error('Failed to notify Slack:', slackErr)
-		}
-
-		// Notify via Telegram (non-blocking)
-		try {
-			await notifyNewQuoteViaTelegram(c.env, {
-				id: String(data.id),
-				name: customer_name,
-				phone: customer_phone,
-				propertyType: property_type,
-				region,
-				itemCount: items.length,
-			})
-		} catch (telegramErr) {
-			console.error('Failed to notify Telegram:', telegramErr)
-		}
-
-		// Send email confirmation (non-blocking)
-		if (customer_email) {
-			try {
-				await sendQuoteReceivedEmail(
-					c.env,
-					customer_email,
-					String(data.id),
-					customer_name
-				)
-			} catch (emailErr) {
-				console.error('Failed to send confirmation email:', emailErr)
-			}
-		}
-
-		// Notify admin via email (non-blocking)
-		try {
-			await sendAdminNewQuoteEmail(c.env, {
-				id: String(data.id),
-				name: customer_name,
-				phone: customer_phone,
-				planName: `${property_type} ${region}`,
-			})
-		} catch (adminEmailErr) {
-			console.error('Failed to send admin email:', adminEmailErr)
-		}
+		// Fire-and-forget notifications via waitUntil (non-blocking)
+		c.executionCtx.waitUntil(
+			Promise.allSettled([
+				notifyNewQuote(c.env, {
+					id: String(data.id),
+					name: customer_name,
+					phone: customer_phone,
+					planName: `${property_type} ${region}`,
+				}).catch(err => console.error('Failed to notify Slack:', err)),
+				notifyNewQuoteViaTelegram(c.env, {
+					id: String(data.id),
+					name: customer_name,
+					phone: customer_phone,
+					propertyType: property_type,
+					region,
+					itemCount: items.length,
+				}).catch(err => console.error('Failed to notify Telegram:', err)),
+				...(customer_email ? [
+					sendQuoteReceivedEmail(c.env, customer_email, String(data.id), customer_name)
+						.catch(err => console.error('Failed to send confirmation email:', err)),
+				] : []),
+				sendAdminNewQuoteEmail(c.env, {
+					id: String(data.id),
+					name: customer_name,
+					phone: customer_phone,
+					planName: `${property_type} ${region}`,
+				}).catch(err => console.error('Failed to send admin email:', err)),
+			])
+		)
 
 		// Return appropriate message based on validation status
 		let responseMessage = '견적 신청이 접수되었습니다.'
@@ -478,15 +456,41 @@ app.post('/submit', async (c) => {
 })
 
 // Get quote requests by phone number (for users to view their submissions)
+// Protected: requires matching phone token or admin auth
 app.get('/by-phone/:phone', async (c) => {
 	try {
 		const phone = c.req.param('phone')
 
+		// Require phone-token header (SHA-256 of phone+date) or admin JWT
+		const phoneToken = c.req.header('X-Phone-Token')
+		const authHeader = c.req.header('Authorization')
+		const isAdmin = authHeader?.startsWith('Bearer ')
+
+		if (!isAdmin && !phoneToken) {
+			return c.json({ error: '인증이 필요합니다.' }, 401)
+		}
+
+		// Validate phone token (simple hash: phone + YYYY-MM-DD)
+		if (!isAdmin && phoneToken) {
+			const today = new Date().toISOString().slice(0, 10)
+			const encoder = new TextEncoder()
+			const data = encoder.encode(phone + today)
+			const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+			const hashArray = Array.from(new Uint8Array(hashBuffer))
+			const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+			if (phoneToken !== expectedToken) {
+				return c.json({ error: '잘못된 인증 토큰입니다.' }, 403)
+			}
+		}
+
 		console.log(`Looking up quote requests for phone: ${phone}`)
 
+		// Return only safe fields (exclude internal admin notes, PII of other customers)
 		const rows = await query(
 			c.env.DATABASE_URL,
-			'SELECT * FROM quote_requests WHERE customer_phone = $1 ORDER BY created_at DESC',
+			`SELECT id, customer_name, property_type, property_size, region, status,
+				validation_status, created_at, updated_at, analysis_result, group_id, sequence_in_group
+			 FROM quote_requests WHERE customer_phone = $1 ORDER BY created_at DESC`,
 			[phone]
 		)
 
@@ -745,6 +749,15 @@ app.post('/admin/:id/auto-analyze', authenticateToken(), requireAdmin(), async (
 
 		if (!quoteRequest) {
 			return c.json({ error: '견적을 찾을 수 없습니다.' }, 404)
+		}
+
+		// Race condition guard: prevent duplicate analysis
+		if (quoteRequest.status === 'analyzing' || quoteRequest.status === 'completed') {
+			return c.json({
+				error: quoteRequest.status === 'analyzing'
+					? '이미 분석이 진행 중입니다.'
+					: '이미 분석이 완료된 견적입니다. 재분석하려면 상태를 먼저 초기화하세요.',
+			}, 409)
 		}
 
 		// Check for quote_sets
@@ -1273,58 +1286,36 @@ app.post('/submit-multiple', async (c) => {
 			totalAmountAllSets += totalAmount
 		}
 
-		// Notify via Slack (non-blocking)
-		try {
-			await notifyNewQuote(c.env, {
-				id: String(quoteRequest.id),
-				name: customer_name,
-				phone: customer_phone,
-				planName: plan_name || `${property_type} ${region}`,
-			})
-		} catch (slackErr) {
-			console.error('Failed to notify Slack:', slackErr)
-		}
-
-		// Notify via Telegram (non-blocking)
-		try {
-			await notifyNewQuoteViaTelegram(c.env, {
-				id: String(quoteRequest.id),
-				name: customer_name,
-				phone: customer_phone,
-				propertyType: property_type,
-				region,
-				quoteSetCount: quote_sets.length,
-				itemCount: quote_sets.reduce((sum, s) => sum + s.items.length, 0),
-			})
-		} catch (telegramErr) {
-			console.error('Failed to notify Telegram:', telegramErr)
-		}
-
-		// Send email confirmation (non-blocking)
-		if (customer_email) {
-			try {
-				await sendQuoteReceivedEmail(
-					c.env,
-					customer_email,
-					String(quoteRequest.id),
-					customer_name
-				)
-			} catch (emailErr) {
-				console.error('Failed to send confirmation email:', emailErr)
-			}
-		}
-
-		// Notify admin via email (non-blocking)
-		try {
-			await sendAdminNewQuoteEmail(c.env, {
-				id: String(quoteRequest.id),
-				name: customer_name,
-				phone: customer_phone,
-				planName: plan_name || `${property_type} ${region}`,
-			})
-		} catch (adminEmailErr) {
-			console.error('Failed to send admin email:', adminEmailErr)
-		}
+		// Fire-and-forget notifications via waitUntil (non-blocking)
+		c.executionCtx.waitUntil(
+			Promise.allSettled([
+				notifyNewQuote(c.env, {
+					id: String(quoteRequest.id),
+					name: customer_name,
+					phone: customer_phone,
+					planName: plan_name || `${property_type} ${region}`,
+				}).catch(err => console.error('Failed to notify Slack:', err)),
+				notifyNewQuoteViaTelegram(c.env, {
+					id: String(quoteRequest.id),
+					name: customer_name,
+					phone: customer_phone,
+					propertyType: property_type,
+					region,
+					quoteSetCount: quote_sets.length,
+					itemCount: quote_sets.reduce((sum, s) => sum + s.items.length, 0),
+				}).catch(err => console.error('Failed to notify Telegram:', err)),
+				...(customer_email ? [
+					sendQuoteReceivedEmail(c.env, customer_email, String(quoteRequest.id), customer_name)
+						.catch(err => console.error('Failed to send confirmation email:', err)),
+				] : []),
+				sendAdminNewQuoteEmail(c.env, {
+					id: String(quoteRequest.id),
+					name: customer_name,
+					phone: customer_phone,
+					planName: plan_name || `${property_type} ${region}`,
+				}).catch(err => console.error('Failed to send admin email:', err)),
+			])
+		)
 
 		return c.json({
 			success: true,

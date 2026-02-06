@@ -20,6 +20,7 @@ import blacklistAdminRoutes from './routes/admin/blacklist-admin'
 import analysesRoutes from './routes/admin/analyses'
 import conflictRulesRoutes from './routes/admin/conflict-rules'
 import benchmarksRoutes from './routes/admin/benchmarks'
+import marketPricesRoutes from './routes/admin/market-prices'
 import categoryMappingsRoutes from './routes/admin/category-mappings'
 import blogRoutes from './routes/blog'
 import blogAdminRoutes from './routes/admin/blog-admin'
@@ -32,12 +33,11 @@ const app = new Hono<{ Bindings: Env; Variables: Variables }>()
 // Global CORS
 app.use('/*', cors({
 	origin: (origin) => {
-		// Allow all origins in development, restrict in production
 		if (!origin) return '*'
 		if (origin.includes('zcheck.co.kr')) return origin
 		if (origin.includes('localhost')) return origin
 		if (origin.includes('vercel.app')) return origin
-		return origin
+		return null as unknown as string
 	},
 	allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 	allowHeaders: ['Content-Type', 'Authorization'],
@@ -80,6 +80,7 @@ app.route('/api/admin/blacklist', blacklistAdminRoutes)
 app.route('/api/admin/analyses', analysesRoutes)
 app.route('/api/admin/conflict-rules', conflictRulesRoutes)
 app.route('/api/admin/benchmarks', benchmarksRoutes)
+app.route('/api/admin/market-prices', marketPricesRoutes)
 app.route('/api/admin/category-mappings', categoryMappingsRoutes)
 app.route('/api/blog', blogRoutes)
 app.route('/api/admin/blog', blogAdminRoutes)
@@ -95,8 +96,9 @@ app.notFound((c) => {
 // Global error handler
 app.onError((err, c) => {
 	console.error(`Error on ${c.req.method} ${c.req.path}:`, err)
+	const isLocal = c.req.header('origin')?.includes('localhost') ?? false
 	return c.json({
-		error: err.message || 'Internal Server Error',
+		error: isLocal ? (err.message || 'Internal Server Error') : 'Internal Server Error',
 	}, 500)
 })
 

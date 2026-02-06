@@ -34,17 +34,20 @@ function deviationToScore(deviationPercent: number): number {
 	if (deviationPercent >= 0) {
 		// 고가 방향 (양수: 시장가보다 비쌈)
 		if (deviationPercent <= 5) return 95
-		if (deviationPercent <= 10) return 85
-		if (deviationPercent <= 15) return 75
-		if (deviationPercent <= 25) return 55
-		if (deviationPercent <= 35) return 35
+		if (deviationPercent <= 10) return 87
+		if (deviationPercent <= 15) return 78
+		if (deviationPercent <= 20) return 65
+		if (deviationPercent <= 30) return 50
+		if (deviationPercent <= 40) return 35
 		return 20
 	} else {
 		// 저가 방향 (음수: 시장가보다 저렴 → 덤핑 위험 반영)
 		const abs = Math.abs(deviationPercent)
 		if (abs <= 5) return 95
-		if (abs <= 15) return 80
-		if (abs <= 25) return 55
+		if (abs <= 10) return 85
+		if (abs <= 15) return 75
+		if (abs <= 20) return 60
+		if (abs <= 25) return 45
 		return 30                    // -25% 초과: 덤핑 위험
 	}
 }
@@ -100,7 +103,7 @@ function calculateBonuses(analysis: Analysis, items: AnalysisItem[]): ScoreModif
 function calculatePenalties(analysis: Analysis, items: AnalysisItem[]): ScoreModifier[] {
 	const penalties: ScoreModifier[] = []
 
-	// 누락 패널티 (-5/건)
+	// 누락 패널티 (capped at -12)
 	const missingItems = items.filter((i) =>
 		!i.std_category || !i.std_item
 	)
@@ -108,7 +111,7 @@ function calculatePenalties(analysis: Analysis, items: AnalysisItem[]): ScoreMod
 		penalties.push({
 			type: 'missing_items',
 			label: '미분류 항목',
-			points: -5 * missingItems.length,
+			points: Math.max(-12, -3 * missingItems.length),
 			reason: `${missingItems.length}개 항목 미분류`,
 		})
 	}
@@ -147,7 +150,7 @@ function calculatePenalties(analysis: Analysis, items: AnalysisItem[]): ScoreMod
 		}
 	}
 
-	// 고액 일식 개별 패널티 (-5점/건, 500만원 초과 일식)
+	// 고액 일식 개별 패널티 (capped at -15)
 	const highValueBundled = items.filter((i) =>
 		i.is_bundled && (i.original_total_price ?? 0) > 5_000_000
 	)
@@ -155,7 +158,7 @@ function calculatePenalties(analysis: Analysis, items: AnalysisItem[]): ScoreMod
 		penalties.push({
 			type: 'high_value_bundled',
 			label: '고액 일식 항목',
-			points: -5 * highValueBundled.length,
+			points: Math.max(-15, -5 * highValueBundled.length),
 			reason: `${highValueBundled.length}건의 500만원 초과 일식 항목 (투명성 부족)`,
 		})
 	}
@@ -290,9 +293,9 @@ export function calculateScore(analysis: Analysis, items: AnalysisItem[]): Score
 // ============================================
 
 export function getScoreGrade(score: number): { label: string; color: string; description: string } {
-	if (score >= 90) return { label: '매우 좋음', color: 'text-green-600', description: '매우 적정한 견적입니다' }
-	if (score >= 75) return { label: '합리적', color: 'text-blue-600', description: '대체로 합리적인 견적입니다' }
-	if (score >= 60) return { label: '평균 수준', color: 'text-amber-600', description: '일부 항목 검토가 필요합니다' }
+	if (score >= 85) return { label: '매우 좋음', color: 'text-green-600', description: '매우 적정한 견적입니다' }
+	if (score >= 72) return { label: '합리적', color: 'text-blue-600', description: '대체로 합리적인 견적입니다' }
+	if (score >= 55) return { label: '평균 수준', color: 'text-amber-600', description: '일부 항목 검토가 필요합니다' }
 	if (score >= 40) return { label: '다소 비쌈', color: 'text-orange-600', description: '상당 부분 검토가 필요합니다' }
 	return { label: '매우 비쌈', color: 'text-red-600', description: '견적 재검토를 권장합니다' }
 }

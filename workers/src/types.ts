@@ -30,6 +30,8 @@ export interface Env {
 	TELEGRAM_BOT_TOKEN: string
 	TELEGRAM_CHAT_ID: string
 	ADMIN_TOTP_SECRET?: string
+	GOOGLE_CSE_API_KEY?: string
+	GOOGLE_CSE_CX?: string
 }
 
 export interface JWTPayload {

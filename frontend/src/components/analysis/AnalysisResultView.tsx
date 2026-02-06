@@ -522,6 +522,40 @@ export default function AnalysisResultView({
 									<div className="text-lg sm:text-xl font-bold text-sand-900">{totalItems}건</div>
 								</div>
 							</div>
+
+							{/* ★ v2: 적정가 범위 바 */}
+							{hasMarginData && totalEstimatedCost > 0 && (
+								<div className="mt-3 bg-sand-50 rounded-xl px-4 py-3 border border-sand-200 w-full">
+									<div className="flex justify-between text-xs text-sand-700 mb-1.5">
+										<span>적정 견적 범위 <span className="text-sand-400">(마진 15~25%)</span></span>
+										<span className="font-bold text-forest-600">
+											{formatManWon(totalEstimatedCost * 1.15)} ~ {formatManWon(totalEstimatedCost * 1.25)}
+										</span>
+									</div>
+									<div className="relative h-3 bg-sand-200 rounded-full">
+										{/* 적정 범위 (녹색 영역) */}
+										{(() => {
+											const maxVal = Math.max(totalQuoteAmount, totalEstimatedCost * 1.5)
+											const minPos = (totalEstimatedCost * 1.15 / maxVal) * 100
+											const maxPos = (totalEstimatedCost * 1.25 / maxVal) * 100
+											const costPos = (totalEstimatedCost / maxVal) * 100
+											const quotePos = (totalQuoteAmount / maxVal) * 100
+											return (
+												<>
+													<div className="absolute h-full bg-green-200 rounded-full" style={{ left: `${minPos}%`, width: `${maxPos - minPos}%` }} />
+													<div className="absolute top-1/2 -translate-y-1/2 w-1 h-5 bg-blue-400 rounded-full" style={{ left: `${costPos}%` }} />
+													<div className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-forest-500 rounded-full border-2 border-white shadow-md" style={{ left: `calc(${quotePos}% - 7px)` }} />
+												</>
+											)
+										})()}
+									</div>
+									<div className="flex justify-between text-[10px] text-sand-400 mt-1">
+										<span className="text-blue-500">원가 {formatManWon(totalEstimatedCost)}</span>
+										<span className="text-green-500 text-center">적정 범위</span>
+										<span className="text-forest-600 font-bold">견적 {formatManWon(totalQuoteAmount)}</span>
+									</div>
+								</div>
+							)}
 						</div>
 					</div>
 				</div>
@@ -672,115 +706,117 @@ export default function AnalysisResultView({
 				)}
 
 				{/* ═══════════════════════════════════════════════════════
-				    3. 카테고리별 분석 (설계서 매칭 — 바 차트)
+				    3. 카테고리별 마진율 분석 (v2 디자인)
 				    ═══════════════════════════════════════════════════════ */}
 				{categoryList.length > 0 && (
 					<div className="bg-white rounded-2xl border border-sand-300 p-4 sm:p-6">
-						<h3 className="font-outfit text-lg font-semibold text-sand-900 mb-4 sm:mb-5">
-							카테고리별 분석 ({categoryList.length}개)
+						<h3 className="font-outfit text-lg font-semibold text-sand-900 mb-2 flex items-center gap-2">
+							<svg className="w-5 h-5 text-forest-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+							카테고리별 {hasMarginData ? '마진율' : '편차'} 분석
 						</h3>
-						<div className="space-y-3">
-							{/* 주요 카테고리 (상위 7개) — 마진율 기반 */}
+						<p className="text-sm text-sand-700 mb-5">
+							{hasMarginData
+								? <>업체가 각 항목에서 얼마나 남기는지 원가 기반으로 분석합니다. <span className="text-green-600 font-semibold">적정 마진: 15~25%</span></>
+								: <>각 카테고리의 시장 평균 대비 편차를 분석합니다.</>
+							}
+						</p>
+
+						{/* v2: 스케일 가이드 */}
+						{hasMarginData && (
+							<div className="relative mb-2">
+								<div className="flex items-center gap-2 text-[10px] text-sand-400 mb-1">
+									<span className="w-14" />
+									<div className="flex-1 flex justify-between px-1">
+										<span>0%</span><span className="text-green-500 font-bold">15%</span><span className="text-green-500 font-bold">25%</span><span>40%</span><span>60%+</span>
+									</div>
+									<span className="w-16" />
+								</div>
+							</div>
+						)}
+
+						<div className="space-y-2.5">
+							{/* 주요 카테고리 — v2 높이 바 */}
 							{categoryList.slice(0, 7).map(cat => {
 								const useMargin = hasMarginData && cat.margin_count > 0
 								const displayRate = useMargin ? cat.margin_rate : cat.deviation
+								const isHighlight = useMargin && (displayRate > 40 || displayRate < 5)
 								return (
-									<div key={cat.name} className={`rounded-xl border p-3 sm:p-4 transition-colors ${useMargin ? categoryBorderByMargin(displayRate) : categoryBorderByDev(displayRate)}`}>
-										<div className="flex items-center justify-between gap-2 mb-2">
-											<div className="flex items-center gap-2 min-w-0">
-												<span className={`shrink-0 px-2.5 py-1 rounded-lg text-xs font-bold ${CATEGORY_BADGE[cat.name] || 'bg-sand-100 text-sand-700'}`}>
-													{cat.name}
-												</span>
-												<span className="text-sm font-semibold text-sand-800 break-keep">
-													{cat.count}개 항목 | {formatManWon(cat.total)}
-												</span>
-											</div>
-											<div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-												<span className="text-xs text-sand-700 hidden sm:inline">
-													{useMargin
-														? `원가 ${cat.estimated_cost > 0 ? formatManWon(cat.estimated_cost) : '—'}`
-														: `시장 평균 ${cat.benchmark > 0 ? formatManWon(cat.benchmark) : '—'}`
-													}
-												</span>
-												<span className={`px-2 py-0.5 rounded-full text-xs font-bold border whitespace-nowrap ${useMargin ? marginBadgeStyle(displayRate) : deviationBadgeStyle(displayRate)}`}>
-													{useMargin ? marginBadgeLabel(displayRate) : deviationBadgeLabel(displayRate)}
-												</span>
-												{useMargin ? (
-													<span className={`text-sm font-bold ${displayRate > 40 ? 'text-red-700' : displayRate <= 25 ? 'text-green-700' : 'text-sand-800'}`}>
-														{displayRate.toFixed(0)}%
-													</span>
-												) : (
-													<span className={`text-sm font-bold ${cat.deviation > 25 ? 'text-red-700' : 'text-sand-800'}`}>
-														{cat.pct.toFixed(1)}%
-													</span>
+									<div key={cat.name} className="flex items-center gap-2 sm:gap-3">
+										<div className={`w-14 text-xs font-bold text-right shrink-0 ${isHighlight ? (displayRate > 40 ? 'text-red-700' : 'text-purple-700') : 'text-sand-700'}`}>
+											{cat.name}
+										</div>
+										<div className="flex-1 relative">
+											<div className="h-7 bg-sand-100 rounded-full overflow-hidden relative">
+												{/* 적정 구간 배경 (15~25%) */}
+												{useMargin && (
+													<div className="absolute h-full bg-green-100/50" style={{ left: '25%', width: '16.7%' }} />
 												)}
+												{/* 바 */}
+												<div
+													className={`h-full rounded-full flex items-center ${displayRate > 30 ? 'justify-end pr-3' : 'pl-3'} ${
+														useMargin ? barColorByMargin(displayRate) : barColorByDev(displayRate)
+													}`}
+													style={{ width: `${Math.min(Math.max(useMargin ? displayRate / 0.6 : Math.abs(displayRate) + 50, 5), 100)}%` }}
+												>
+													<span className="text-[11px] font-bold text-white drop-shadow-sm whitespace-nowrap">
+														{useMargin
+															? `${displayRate.toFixed(1)}%${displayRate > 40 ? ' ⚠' : ''}`
+															: `${displayRate > 0 ? '+' : ''}${displayRate.toFixed(1)}%`
+														}
+													</span>
+												</div>
 											</div>
 										</div>
-										<div className="sm:hidden text-xs text-sand-700 mb-1.5">
-											{useMargin
-												? `추정 원가 ${cat.estimated_cost > 0 ? formatManWon(cat.estimated_cost) : '—'} | 마진 ${displayRate.toFixed(0)}%`
-												: `시장 평균 ${cat.benchmark > 0 ? formatManWon(cat.benchmark) : '—'}`
-											}
-										</div>
-										{/* 마진율 바: 적정 구간(15~25%) 기준으로 시각화 */}
-										{useMargin ? (
-											<div className="w-full bg-sand-100 rounded-full h-2.5 mb-2 relative">
-												<div
-													className={`h-full rounded-full ${barColorByMargin(displayRate)}`}
-													style={{ width: `${Math.min(Math.max(displayRate, 0), 100)}%` }}
-												/>
-												{/* 적정 구간 마커 */}
-												<div className="absolute top-0 h-full border-l-2 border-dashed border-green-400 opacity-60" style={{ left: '15%' }} />
-												<div className="absolute top-0 h-full border-l-2 border-dashed border-green-400 opacity-60" style={{ left: '25%' }} />
-											</div>
-										) : (
-											<div className="w-full bg-sand-100 rounded-full h-2.5 mb-2">
-												<div
-													className={`h-full rounded-full ${barColorByDev(cat.deviation)}`}
-													style={{ width: `${Math.min(cat.pct * 2, 100)}%` }}
-												/>
-											</div>
-										)}
+										<span className={`px-2 py-0.5 rounded-full text-[10px] font-bold w-16 text-center shrink-0 ${
+											useMargin ? marginBadgeStyle(displayRate) : deviationBadgeStyle(displayRate)
+										}`}>
+											{useMargin ? marginBadgeLabel(displayRate) : deviationBadgeLabel(displayRate)}
+										</span>
 									</div>
 								)
 							})}
 
-							{/* 적정 마진 범위 범례 */}
-							{hasMarginData && (
-								<div className="flex items-center gap-3 text-xs text-sand-600 px-1">
-									<span className="flex items-center gap-1">
-										<span className="w-3 h-0.5 border-t-2 border-dashed border-green-400" />
-										적정 마진 15~25%
-									</span>
-									<span className="flex items-center gap-1">
-										<span className="w-3 h-2 rounded-sm bg-green-400" /> 적정
-									</span>
-									<span className="flex items-center gap-1">
-										<span className="w-3 h-2 rounded-sm bg-amber-400" /> 높음
-									</span>
-									<span className="flex items-center gap-1">
-										<span className="w-3 h-2 rounded-sm bg-red-400" /> 과다
-									</span>
-								</div>
-							)}
-
-							{/* 나머지 (축약 — 3열 그리드) */}
+							{/* 나머지 (축약 — 2열 그리드) */}
 							{categoryList.length > 7 && (
-								<div className="grid grid-cols-3 gap-2 sm:gap-3">
+								<div className="grid grid-cols-2 gap-2 mt-1">
 									{categoryList.slice(7).map(cat => {
 										const useMargin = hasMarginData && cat.margin_count > 0
 										const displayRate = useMargin ? cat.margin_rate : cat.deviation
 										return (
-											<div key={cat.name} className={`rounded-xl border p-2.5 sm:p-3 text-center ${useMargin ? categoryBorderByMargin(displayRate) : categoryBorderByDev(displayRate)}`}>
+											<div key={cat.name} className="flex items-center gap-2 bg-sand-50 rounded-lg p-2 border border-sand-200">
 												<span className="text-xs font-bold text-sand-600">{cat.name}</span>
-												<div className="text-sm font-bold text-sand-900 mt-1">{formatManWon(cat.total)}</div>
-												<span className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${useMargin ? marginBadgeStyle(displayRate) : deviationBadgeStyle(displayRate)}`}>
-													{useMargin ? `${marginBadgeLabel(displayRate)} ${displayRate.toFixed(0)}%` : `${deviationBadgeLabel(displayRate)} ${cat.pct.toFixed(1)}%`}
+												<span className="text-xs text-sand-700 ml-auto">
+													{useMargin ? `마진 ${displayRate.toFixed(1)}%` : `${displayRate > 0 ? '+' : ''}${displayRate.toFixed(1)}%`}
+												</span>
+												<span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+													useMargin ? marginBadgeStyle(displayRate) : deviationBadgeStyle(displayRate)
+												}`}>
+													{useMargin ? marginBadgeLabel(displayRate) : deviationBadgeLabel(displayRate)}
 												</span>
 											</div>
 										)
 									})}
 								</div>
+							)}
+						</div>
+
+						{/* v2 범례 */}
+						<div className="flex gap-3 mt-4 justify-center flex-wrap border-t border-sand-100 pt-3">
+							{hasMarginData ? (
+								<>
+									<div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-purple-400" /><span className="text-[10px] text-sand-700">{'덤핑 <5%'}</span></div>
+									<div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-blue-400" /><span className="text-[10px] text-sand-700">저마진 5~14%</span></div>
+									<div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-green-400" /><span className="text-[10px] text-sand-700">적정 15~25%</span></div>
+									<div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-amber-400" /><span className="text-[10px] text-sand-700">약간높음 25~40%</span></div>
+									<div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-red-400" /><span className="text-[10px] text-sand-700">과다 40%+</span></div>
+								</>
+							) : (
+								<>
+									<div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-green-400" /><span className="text-[10px] text-sand-700">양호</span></div>
+									<div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-blue-400" /><span className="text-[10px] text-sand-700">적정</span></div>
+									<div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-amber-400" /><span className="text-[10px] text-sand-700">약간높음</span></div>
+									<div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-red-400" /><span className="text-[10px] text-sand-700">높음</span></div>
+								</>
 							)}
 						</div>
 					</div>
@@ -832,7 +868,7 @@ export default function AnalysisResultView({
 										const isDumpRisk = useMargin && margin < 5
 										return (
 											<>
-												<tr key={idx} className={`border-b ${isAbnormal ? 'border-b-0' : ''} border-sand-100 transition-colors ${
+												<tr key={idx} className={`border-b border-sand-100 transition-colors ${
 													isAbnormal ? 'bg-purple-50/40' : isDumpRisk ? 'bg-purple-50/30' : isHigh ? 'bg-red-50/30' : isWarn ? 'bg-amber-50/20' : isGood ? 'bg-green-50/20' : 'hover:bg-sand-50'
 												}`}>
 													<td className="py-3 px-3">
@@ -879,20 +915,6 @@ export default function AnalysisResultView({
 														</span>
 													</td>
 												</tr>
-												{isAbnormal && (
-													<tr key={`${idx}-note`} className="border-b border-sand-100 bg-purple-50/30">
-														<td colSpan={6} className="px-4 py-2">
-															<p className="text-xs text-purple-700 break-keep">
-																{useMargin
-																	? `💡 원가 대비 마진율이 ${margin.toFixed(0)}%입니다. 프리미엄 자재·특수 시공 등 차별화 요소가 포함되었을 수 있습니다. 업체에 해당 항목의 상세 사양을 확인해주세요.`
-																	: margin > 0
-																		? `💡 시장 평균 대비 ${margin.toFixed(0)}% 높은 금액입니다. 프리미엄 자재·특수 시공 등 차별화 요소가 포함되었을 수 있습니다. 업체에 해당 항목의 상세 사양을 확인해주세요.`
-																		: `💡 시장 평균 대비 ${Math.abs(margin).toFixed(0)}% 낮은 금액입니다. 자재 등급 하향·일부 공정 미포함 등의 가능성이 있습니다. 업체에 포함 범위를 확인해주세요.`
-																}
-															</p>
-														</td>
-													</tr>
-												)}
 											</>
 										)
 									})}
@@ -1063,6 +1085,81 @@ export default function AnalysisResultView({
 				)}
 
 				{/* ═══════════════════════════════════════════════════════
+				    5.5 종합 분석 의견 (v2 신규)
+				    ═══════════════════════════════════════════════════════ */}
+				{benchmarkedItems.length > 0 && (
+					<div className="bg-white rounded-2xl border border-sand-300 p-4 sm:p-6">
+						<h3 className="font-outfit text-lg font-semibold text-sand-900 mb-5 flex items-center gap-2">
+							<svg className="w-5 h-5 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+							집첵 {hasMarginData ? '원가 기반' : ''} 견적 평가
+						</h3>
+						<div className="space-y-5 text-sm text-sand-700 break-keep leading-relaxed">
+							{/* 전체 평가 */}
+							<div className="border-l-2 border-blue-300 pl-4">
+								<h4 className="font-semibold text-sand-900 mb-1.5">{hasMarginData ? '원가 기반 전체 평가' : '전체 평가'}</h4>
+								<p>
+									본 견적은 {region && <>{region} 소재 </>}
+									{propertySizePyeong ? `${Math.round(propertySizePyeong)}평` : ''} {propertyType || '인테리어'}에 대한 견적으로,
+									총 {totalItems}개 세부 항목에 걸쳐 <strong>{formatManWon(totalQuoteAmount)}</strong>이 산정되었습니다.
+									{hasMarginData && totalEstimatedCost > 0
+										? <> 업종별 원자재 시세·인건비 기준 <strong>추정 원가는 약 {formatManWon(totalEstimatedCost)}</strong>이며, 이에 따른 <strong>평균 마진율은 {overallMarginRate.toFixed(1)}%</strong>로 업계 {overallMarginRate <= 25 ? '적정 수준' : overallMarginRate <= 40 ? '다소 높은 수준' : '과다 수준'}에 위치합니다.</>
+										: <> 시장 벤치마크 대비 <strong>{marketDeviation > 0 ? '+' : ''}{marketDeviation.toFixed(1)}%</strong> 수준입니다.</>
+									}
+								</p>
+							</div>
+
+							{/* 마진율 적정성 (마진 데이터 있을 때) */}
+							{hasMarginData && (() => {
+								const fairCats = categoryList.filter(c => c.margin_count > 0 && c.margin_rate >= 15 && c.margin_rate <= 25)
+								const highCats = categoryList.filter(c => c.margin_count > 0 && c.margin_rate > 25)
+								const fairPct = fairCats.reduce((s, c) => s + c.pct, 0)
+								return (
+									<div className="border-l-2 border-green-300 pl-4">
+										<h4 className="font-semibold text-sand-900 mb-1.5">마진율 적정성 분석</h4>
+										<p>
+											{fairCats.length > 0 && (
+												<>{fairCats.map(c => c.name).join('·')} 등 <strong>{fairCats.length}개</strong> 카테고리가 적정 마진 범위 내에 있으며, 이 카테고리들이 전체 견적의 <strong>약 {fairPct.toFixed(0)}%</strong>를 차지합니다. </>
+											)}
+											{highCats.length > 0 && (
+												<>반면 <strong>{highCats.map(c => `${c.name}(마진율 ${c.margin_rate.toFixed(1)}%)`).join(', ')}</strong>{highCats.length === 1 ? '은' : '는'} 적정 범위를 초과하고 있어 협상 검토가 필요합니다.</>
+											)}
+										</p>
+									</div>
+								)
+							})()}
+
+							{/* 비용 최적화 */}
+							{totalSavings > 0 && (
+								<div className="border-l-2 border-forest-300 pl-4">
+									<h4 className="font-semibold text-sand-900 mb-1.5">비용 최적화 제안</h4>
+									<p>
+										{hasMarginData ? '과다 마진' : '높은 편차'} 항목을 적정 수준으로 조정하면 약 <strong className="text-forest-700">{formatManWon(totalSavings)} 절감</strong>이 가능합니다.
+										{savingsItems.length > 0 && (
+											<> 주요 절감 항목: {savingsItems.slice(0, 3).map(i => `${i.std_category}(${formatWon(i.diff)})`).join(', ')}.</>
+										)}
+									</p>
+								</div>
+							)}
+
+							{/* 종합 의견 */}
+							<div className="border-l-2 border-sand-400 pl-4 bg-sand-50/80 -ml-4 pl-[calc(0.5rem+1rem)] py-3.5 rounded-r-xl">
+								<h4 className="font-semibold text-sand-900 mb-1.5">종합 의견</h4>
+								<p>
+									본 견적은 <strong>{score}점({grade.label}, '{grade.description}')</strong>으로 평가됩니다.
+									{hasMarginData
+										? <> 전체 평균 마진율 {overallMarginRate.toFixed(1)}%로 {overallMarginRate <= 25 ? '업계 적정 범위 내에 있으며, 대다수 카테고리가 원가 대비 합리적으로 책정되어 있습니다' : '적정 범위를 초과하고 있어 항목별 검토가 필요합니다'}.</>
+										: <> 시장 평균 대비 {Math.abs(marketDeviation).toFixed(1)}% {marketDeviation > 0 ? '높은' : '낮은'} 수준입니다.</>
+									}
+									{missingCats.length > 0 && (
+										<> 미포함 항목({missingCats.join('·')})의 추가 여부에 따라 총 공사비가 변동하므로, 계약 전 전체 공사 범위를 확정하세요.</>
+									)}
+								</p>
+							</div>
+						</div>
+					</div>
+				)}
+
+				{/* ═══════════════════════════════════════════════════════
 				    6. 추천사항 (설계서 매칭 — 절감/경고 카드)
 				    ═══════════════════════════════════════════════════════ */}
 				{(savingsItems.length > 0 || missingCats.length > 0) && (
@@ -1173,8 +1270,8 @@ export default function AnalysisResultView({
 						<div className="mt-4 rounded-lg bg-white/5 border border-white/10 p-3">
 							<p className="text-xs text-sand-600 break-keep">
 								<strong className="text-sand-300">TIP:</strong>{' '}
-								협상은 "깎아주세요"가 아니라{' '}
-								<strong className="text-sand-200">"시장 데이터 기반으로 확인하고 싶다"</strong>는 톤으로 접근하면 시공사도 부담 없이 응합니다.
+								"깎아주세요"가 아니라{' '}
+								<strong className="text-sand-200">{hasMarginData ? '"원가 데이터 기준으로 적정 마진을 확인하고 싶다"' : '"시장 데이터 기준으로 확인하고 싶다"'}</strong>는 톤으로 접근하세요. 구체적 숫자를 제시하면 시공사도 합리적 근거로 인식합니다.
 							</p>
 						</div>
 					</div>

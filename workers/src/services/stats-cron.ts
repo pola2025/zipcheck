@@ -3,6 +3,7 @@ import { query } from '../lib/db'
 import { notifyDailyStats, sendSlackMessage } from './slack'
 import { syncDailyAnalytics } from './airtable-sync'
 import { getTrafficReport } from './google-analytics'
+import { runMonthlyCrawl } from './market-price-crawler'
 
 export async function handleScheduled(event: ScheduledEvent, env: Env) {
 	const hour = new Date(event.scheduledTime).getUTCHours()
@@ -19,9 +20,10 @@ export async function handleScheduled(event: ScheduledEvent, env: Env) {
 		await runWeeklyStats(env)
 	}
 
-	// 매월 1일 15:00 UTC → 월간 통계
+	// 매월 1일 15:00 UTC → 월간 통계 + 시장가 크롤
 	if (event.cron === '0 15 1 * *') {
 		await runMonthlyStats(env)
+		await runMonthlyCrawl(env)
 	}
 }
 

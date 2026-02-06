@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOI 견적분석시스템 품질 종합 리포트</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Pretendard', -apple-system, system-ui, sans-serif; }
+  .section-card { scroll-margin-top: 80px; }
+  .severity-critical { @apply bg-red-100 text-red-800 border-red-300; }
+  .severity-high { @apply bg-orange-100 text-orange-800 border-orange-300; }
+  .severity-medium { @apply bg-yellow-100 text-yellow-800 border-yellow-300; }
+  .severity-low { @apply bg-blue-100 text-blue-800 border-blue-300; }
+  details summary { cursor: pointer; }
+  details summary::-webkit-details-marker { display: none; }
+  code { font-size: 0.85em; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
+  pre code { background: none; padding: 0; }
+  .nav-pill { transition: all 0.2s; }
+  .nav-pill:hover { transform: translateY(-1px); }
+  @media print { .no-print { display: none; } }
+</style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+<!-- Sticky Navigation -->
+<nav class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-200 no-print">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3 overflow-x-auto">
+    <span class="font-bold text-gray-900 shrink-0">GOI Audit</span>
+    <div class="flex gap-2 text-sm">
+      <a href="#overview" class="nav-pill px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200">Overview</a>
+      <a href="#reliability" class="nav-pill px-3 py-1 rounded-full bg-red-50 hover:bg-red-100 text-red-700">신뢰도</a>
+      <a href="#learning" class="nav-pill px-3 py-1 rounded-full bg-purple-50 hover:bg-purple-100 text-purple-700">자율학습</a>
+      <a href="#stability" class="nav-pill px-3 py-1 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-700">안정성</a>
+      <a href="#uiux" class="nav-pill px-3 py-1 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700">UI/UX</a>
+      <a href="#roadmap" class="nav-pill px-3 py-1 rounded-full bg-green-50 hover:bg-green-100 text-green-700">로드맵</a>
+    </div>
+  </div>
+</nav>
+
+<div class="max-w-6xl mx-auto px-4 py-8">
+
+<!-- Header -->
+<header class="mb-10">
+  <div class="flex items-start justify-between">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">GOI 견적분석시스템 품질 종합 리포트</h1>
+      <p class="text-gray-500 mt-2">2026-02-06 | 4개 전문 에이전트 병렬 심층 분석</p>
+    </div>
+    <span class="px-4 py-2 rounded-xl bg-amber-100 text-amber-800 font-bold text-sm border border-amber-200">
+      종합 등급: C+
+    </span>
+  </div>
+  <p class="mt-4 text-gray-600 leading-relaxed">
+    견적분석 결과의 고객 가치, 자율개선 학습 구조, 코드 안정성, UI/UX 사용자 경험을
+    4개 전문 에이전트가 동시에 심층 분석한 결과입니다. 다음 세션에서 우선순위별 개선 작업에 활용하세요.
+  </p>
+</header>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- OVERVIEW -->
+<!-- ═══════════════════════════════════════════════ -->
+<section id="overview" class="section-card mb-10">
+  <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+    <span class="w-8 h-8 rounded-lg bg-gray-800 text-white flex items-center justify-center text-sm">0</span>
+    Executive Summary
+  </h2>
+
+  <!-- Score Cards -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white rounded-xl border-2 border-red-200 p-5 text-center">
+      <div class="text-4xl font-bold text-red-600">5.5</div>
+      <div class="text-sm text-gray-600 mt-1">신뢰도 평가</div>
+      <div class="text-xs text-red-500 mt-2">CRITICAL 4 / HIGH 6</div>
+    </div>
+    <div class="bg-white rounded-xl border-2 border-purple-200 p-5 text-center">
+      <div class="text-4xl font-bold text-purple-600">2.0</div>
+      <div class="text-sm text-gray-600 mt-1">자율학습 구조</div>
+      <div class="text-xs text-purple-500 mt-2">피드백 루프 0개</div>
+    </div>
+    <div class="bg-white rounded-xl border-2 border-amber-200 p-5 text-center">
+      <div class="text-4xl font-bold text-amber-600">6.0</div>
+      <div class="text-sm text-gray-600 mt-1">코드 안정성</div>
+      <div class="text-xs text-amber-500 mt-2">CRITICAL 3 / HIGH 8</div>
+    </div>
+    <div class="bg-white rounded-xl border-2 border-blue-200 p-5 text-center">
+      <div class="text-4xl font-bold text-blue-600">5.5</div>
+      <div class="text-sm text-gray-600 mt-1">UI/UX</div>
+      <div class="text-xs text-blue-500 mt-2">접근성 3/10</div>
+    </div>
+  </div>
+
+  <!-- Issue Summary -->
+  <div class="bg-white rounded-xl border border-gray-200 p-6">
+    <h3 class="font-bold text-lg mb-4">발견 이슈 요약</h3>
+    <div class="grid grid-cols-4 gap-4 text-center mb-6">
+      <div class="bg-red-50 rounded-lg p-3 border border-red-200">
+        <div class="text-2xl font-bold text-red-700">7</div>
+        <div class="text-xs text-red-600">CRITICAL</div>
+      </div>
+      <div class="bg-orange-50 rounded-lg p-3 border border-orange-200">
+        <div class="text-2xl font-bold text-orange-700">14</div>
+        <div class="text-xs text-orange-600">HIGH</div>
+      </div>
+      <div class="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+        <div class="text-2xl font-bold text-yellow-700">18</div>
+        <div class="text-xs text-yellow-600">MEDIUM</div>
+      </div>
+      <div class="bg-blue-50 rounded-lg p-3 border border-blue-200">
+        <div class="text-2xl font-bold text-blue-700">10</div>
+        <div class="text-xs text-blue-600">LOW</div>
+      </div>
+    </div>
+
+    <!-- Top 5 Critical Issues -->
+    <h4 class="font-semibold text-sm text-gray-500 uppercase tracking-wider mb-3">TOP 5 즉시 수정 필요</h4>
+    <div class="space-y-2">
+      <div class="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
+        <span class="px-2 py-0.5 rounded text-xs font-bold bg-red-200 text-red-800 shrink-0">C-1</span>
+        <div>
+          <span class="font-semibold">CORS 정책이 모든 Origin 허용</span>
+          <span class="text-sm text-gray-600"> &mdash; index.ts:34 fallback이 모든 origin을 반사, 크로스사이트 공격 가능</span>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
+        <span class="px-2 py-0.5 rounded text-xs font-bold bg-red-200 text-red-800 shrink-0">C-2</span>
+        <div>
+          <span class="font-semibold">전화번호 조회 API 인증 없음</span>
+          <span class="text-sm text-gray-600"> &mdash; quote-requests.ts:481 누구나 고객 PII 조회 가능</span>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
+        <span class="px-2 py-0.5 rounded text-xs font-bold bg-red-200 text-red-800 shrink-0">C-3</span>
+        <div>
+          <span class="font-semibold">벤치마크 데이터 ~90건뿐</span>
+          <span class="text-sm text-gray-600"> &mdash; 마케팅 "3,000건 데이터"와 불일치, 최소 400건 필요</span>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
+        <span class="px-2 py-0.5 rounded text-xs font-bold bg-red-200 text-red-800 shrink-0">C-4</span>
+        <div>
+          <span class="font-semibold">자율학습 피드백 루프 완전 부재</span>
+          <span class="text-sm text-gray-600"> &mdash; 분석 결과가 벤치마크에 전혀 반영 안 됨 (일방향 데이터 흐름)</span>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
+        <span class="px-2 py-0.5 rounded text-xs font-bold bg-red-200 text-red-800 shrink-0">C-5</span>
+        <div>
+          <span class="font-semibold">Falsy 값 버그 (0이 null로 변환)</span>
+          <span class="text-sm text-gray-600"> &mdash; auto-analysis.ts:693 <code>|| null</code>이 0값을 삼킴, <code>?? null</code>로 교체 필요</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 1. RELIABILITY -->
+<!-- ═══════════════════════════════════════════════ -->
+<section id="reliability" class="section-card mb-10">
+  <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+    <span class="w-8 h-8 rounded-lg bg-red-600 text-white flex items-center justify-center text-sm">1</span>
+    견적분석 신뢰도 평가
+    <span class="ml-auto text-sm px-3 py-1 rounded-full bg-red-100 text-red-700">5.5/10</span>
+  </h2>
+
+  <div class="space-y-4">
+    <!-- A. Benchmark -->
+    <details class="bg-white rounded-xl border border-gray-200 overflow-hidden" open>
+      <summary class="p-5 font-semibold flex items-center gap-2 hover:bg-gray-50">
+        <span class="text-red-600">A.</span> 벤치마크 데이터 품질
+        <span class="ml-auto px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-700">CRITICAL</span>
+      </summary>
+      <div class="px-5 pb-5 space-y-4 text-sm">
+        <div class="bg-red-50 rounded-lg p-4 border border-red-200">
+          <p class="font-bold text-red-800">~90개 시드 벤치마크만 존재</p>
+          <p class="text-red-700 mt-1">마케팅 페이지의 "3,000건 데이터" 주장과 현실 사이에 큰 괴리. 카테고리별:</p>
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mt-3">
+            <div class="bg-white rounded p-2 text-center"><span class="font-bold">욕실</span><br><span class="text-green-600">19건 (양호)</span></div>
+            <div class="bg-white rounded p-2 text-center"><span class="font-bold">바닥</span><br><span class="text-green-600">12건</span></div>
+            <div class="bg-white rounded p-2 text-center"><span class="font-bold">주방</span><br><span class="text-yellow-600">11건</span></div>
+            <div class="bg-white rounded p-2 text-center"><span class="font-bold">전기</span><br><span class="text-yellow-600">10건</span></div>
+            <div class="bg-white rounded p-2 text-center"><span class="font-bold">철거</span><br><span class="text-red-600">7건 (중급만)</span></div>
+          </div>
+          <p class="text-red-600 mt-3 font-semibold">개선: 400건+ 확장 필요 (4등급 x 10카테고리 x 10항목)</p>
+        </div>
+
+        <div class="bg-orange-50 rounded-lg p-4 border border-orange-200">
+          <p class="font-bold text-orange-800">findBenchmark() 6단계 폴백이 잘못된 비교 유발</p>
+          <p class="text-orange-700 mt-1"><code>auto-analysis.ts:495-538</code> &mdash; 같은 카테고리의 다른 항목 벤치마크로 대체 비교됨.
+          예: "원목마루" 고급 벤치마크가 없으면 "타일" 고급 가격으로 비교 &rarr; 완전히 잘못된 결과.</p>
+          <p class="text-orange-600 mt-2 font-semibold">개선: 대체 사용 시 confidence 점수를 0.5 이하로 낮추고, 리포트에 "추정치" 표시</p>
+        </div>
+      </div>
+    </details>
+
+    <!-- B. Scoring -->
+    <details class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <summary class="p-5 font-semibold flex items-center gap-2 hover:bg-gray-50">
+        <span class="text-orange-600">B.</span> 스코어링 정확도
+        <span class="ml-auto px-2 py-0.5 rounded text-xs font-bold bg-orange-100 text-orange-700">HIGH</span>
+      </summary>
+      <div class="px-5 pb-5 space-y-3 text-sm">
+        <div class="bg-orange-50 rounded-lg p-4 border border-orange-200">
+          <p class="font-bold text-orange-800">marginRate = deviationPercent 개념적 혼동</p>
+          <p class="text-orange-700 mt-1"><code>auto-analysis.ts:766</code> &mdash; 벤치마크가 "시장가"인지 "원가"인지 모호.
+          시장가 대비 편차를 "마진율"로 표시하면 고객에게 오해를 줄 수 있음.</p>
+        </div>
+        <div class="bg-orange-50 rounded-lg p-4 border border-orange-200">
+          <p class="font-bold text-orange-800">미매칭 카테고리에 기본 70점 (B등급) 부여</p>
+          <p class="text-orange-700 mt-1"><code>auto-analysis.ts:868-869</code> &mdash; 검증 불가 항목에 "대체로 합리적" 등급은 오해 유발.
+          "검증 불가" 상태로 표시하고 점수 제외 필요.</p>
+        </div>
+        <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+          <p class="font-bold text-yellow-800">등급 라벨이 "비쌈"/"저렴" 구분 못함</p>
+          <p class="text-yellow-700 mt-1">점수 30이 "매우 비쌈"으로 표시되지만, 실제로는 덤핑 위험(너무 저렴)일 수 있음.
+          양극단을 구분하는 라벨 필요.</p>
+        </div>
+        <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+          <p class="font-bold text-yellow-800">적정가 범위 15-25%가 전 카테고리 균일 적용</p>
+          <p class="text-yellow-700 mt-1">시스템 자체 데이터(<code>market-price-crawler.ts:129-140</code>)에서 카테고리별 마진율이 다름:
+          철거 35%, 주방/가구 15%, 욕실 18%. 하지만 리포트는 모든 항목에 15-25% 표시.</p>
+        </div>
+      </div>
+    </details>
+
+    <!-- C. Adjustment -->
+    <details class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <summary class="p-5 font-semibold flex items-center gap-2 hover:bg-gray-50">
+        <span class="text-yellow-600">C.</span> 보정 계수 타당성
+        <span class="ml-auto px-2 py-0.5 rounded text-xs font-bold bg-yellow-100 text-yellow-700">MEDIUM</span>
+      </summary>
+      <div class="px-5 pb-5 space-y-3 text-sm">
+        <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+          <p class="font-bold text-yellow-800">지역 3단계(서울/경기/지방) 너무 단순</p>
+          <p class="text-yellow-700 mt-1">경기도 분당(고가)과 포천(저가) 동일 0.9x. 부산과 시골 동일 0.8x. 최소 5~6구간 필요.</p>
+        </div>
+        <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+          <p class="font-bold text-yellow-800">등급 팩터 복합 효과: 프리미엄 + 성수기 + 독점 = 2.16x</p>
+          <p class="text-yellow-700 mt-1">팩터들이 곱셈으로 결합, 극단적 조합에서 비현실적 보정값. 팩터 간 독립성 가정이 틀림.</p>
+        </div>
+        <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+          <p class="font-bold text-yellow-800">면적 팩터 50평에서 정체 (0.88)</p>
+          <p class="text-yellow-700 mt-1">70평, 100평도 동일 0.88x. 대형 시공의 추가 할인 미반영.</p>
+        </div>
+      </div>
+    </details>
+
+    <!-- D. Customer Value -->
+    <details class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <summary class="p-5 font-semibold flex items-center gap-2 hover:bg-gray-50">
+        <span class="text-red-600">D.</span> 고객 가치 평가
+        <span class="ml-auto px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-700">HIGH</span>
+      </summary>
+      <div class="px-5 pb-5 space-y-3 text-sm">
+        <div class="bg-red-50 rounded-lg p-4 border border-red-200">
+          <p class="font-bold text-red-800">협상 스크립트에 부정확한 가격 정보 포함 가능</p>
+          <p class="text-red-700 mt-1">벤치마크 미스매치로 계산된 "추정 원가"를 고객이 업체에 직접 발송 &rarr; 서비스 신뢰도 훼손.</p>
+        </div>
+        <div class="bg-orange-50 rounded-lg p-4 border border-orange-200">
+          <p class="font-bold text-orange-800">분석 결과에 신뢰도/정확도 지표 없음</p>
+          <p class="text-orange-700 mt-1">벤치마크 매칭된 비율, 대체 사용 비율, 데이터 신선도 등 표시 없음.</p>
+        </div>
+        <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+          <p class="font-bold text-green-800">긍정 요소</p>
+          <ul class="text-green-700 mt-1 list-disc list-inside space-y-1">
+            <li>단위 불일치 감지 (면적 vs 일식) 자동 전환 &mdash; 우수한 설계</li>
+            <li>투명성 보너스로 상세 견적서 인센티브 제공</li>
+            <li>카테고리 원가 합산 폴백 &mdash; 묶음 항목에 대한 현명한 접근</li>
+          </ul>
+        </div>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 2. SELF-LEARNING -->
+<!-- ═══════════════════════════════════════════════ -->
+<section id="learning" class="section-card mb-10">
+  <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+    <span class="w-8 h-8 rounded-lg bg-purple-600 text-white flex items-center justify-center text-sm">2</span>
+    자율개선 학습 구조
+    <span class="ml-auto text-sm px-3 py-1 rounded-full bg-purple-100 text-purple-700">2.0/10</span>
+  </h2>
+
+  <!-- Data Flow Diagram -->
+  <div class="bg-white rounded-xl border border-gray-200 p-6 mb-4">
+    <h3 class="font-bold mb-4">현재 데이터 흐름 (일방향 &mdash; 학습 없음)</h3>
+    <div class="bg-gray-50 rounded-lg p-4 font-mono text-sm text-center">
+      <div class="flex items-center justify-center gap-3 flex-wrap">
+        <span class="px-3 py-2 bg-blue-100 rounded-lg border border-blue-300">benchmark_prices</span>
+        <span class="text-gray-400">&rarr; reads &rarr;</span>
+        <span class="px-3 py-2 bg-green-100 rounded-lg border border-green-300">auto-analysis.ts</span>
+        <span class="text-gray-400">&rarr; writes &rarr;</span>
+        <span class="px-3 py-2 bg-gray-200 rounded-lg border border-gray-400">analyses + items</span>
+        <span class="text-red-500 font-bold ml-2">DEAD END</span>
+      </div>
+      <p class="text-red-500 mt-3 text-xs">분석 결과가 벤치마크에 전혀 반영되지 않음</p>
+    </div>
+  </div>
+
+  <!-- Missing Capabilities -->
+  <div class="bg-white rounded-xl border border-gray-200 p-6 mb-4">
+    <h3 class="font-bold mb-4">누락된 학습 기능 7가지</h3>
+    <div class="grid md:grid-cols-2 gap-3">
+      <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-red-200 text-red-700 flex items-center justify-center text-xs font-bold">1</span>
+          <span class="font-semibold text-red-800">벤치마크 자동 보정</span>
+        </div>
+        <p class="text-sm text-red-700 mt-1">실제 견적 데이터로 벤치마크 검증/업데이트 &mdash; 최우선</p>
+      </div>
+      <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-red-200 text-red-700 flex items-center justify-center text-xs font-bold">2</span>
+          <span class="font-semibold text-red-800">미매핑 용어 수집</span>
+        </div>
+        <p class="text-sm text-red-700 mt-1">matchCategory() 실패 시 용어를 DB에 기록하지 않음</p>
+      </div>
+      <div class="p-3 bg-orange-50 rounded-lg border border-orange-200">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-orange-200 text-orange-700 flex items-center justify-center text-xs font-bold">3</span>
+          <span class="font-semibold text-orange-800">가격 히스토리 스냅샷</span>
+        </div>
+        <p class="text-sm text-orange-700 mt-1">벤치마크 UPDATE 시 이전 값이 삭제됨, 가격 추이 추적 불가</p>
+      </div>
+      <div class="p-3 bg-orange-50 rounded-lg border border-orange-200">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-orange-200 text-orange-700 flex items-center justify-center text-xs font-bold">4</span>
+          <span class="font-semibold text-orange-800">카테고리 매핑 자동학습</span>
+        </div>
+        <p class="text-sm text-orange-700 mt-1">성공적 매핑을 is_verified=false로 자동 추가하는 로직 없음</p>
+      </div>
+      <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-yellow-200 text-yellow-700 flex items-center justify-center text-xs font-bold">5</span>
+          <span class="font-semibold text-yellow-800">고객 피드백 수집</span>
+        </div>
+        <p class="text-sm text-yellow-700 mt-1">"분석이 도움이 되었나요?" 피드백 메커니즘 없음</p>
+      </div>
+      <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-yellow-200 text-yellow-700 flex items-center justify-center text-xs font-bold">6</span>
+          <span class="font-semibold text-yellow-800">적응형 편차 임계값</span>
+        </div>
+        <p class="text-sm text-yellow-700 mt-1">deviationToScore 하드코딩. 실제 분포 기반 동적 조정 필요</p>
+      </div>
+      <div class="p-3 bg-blue-50 rounded-lg border border-blue-200 md:col-span-2">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-blue-200 text-blue-700 flex items-center justify-center text-xs font-bold">7</span>
+          <span class="font-semibold text-blue-800">지역별 가격 학습</span>
+        </div>
+        <p class="text-sm text-blue-700 mt-1">REGION_FACTORS 하드코딩 (서울1.0/경기0.9/지방0.8). 실제 데이터로 학습 안 함</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Proposed Architecture -->
+  <div class="bg-white rounded-xl border border-gray-200 p-6">
+    <h3 class="font-bold mb-4">제안 학습 아키텍처 (P0~P4)</h3>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b-2 border-gray-200">
+            <th class="text-left py-2 px-3">우선순위</th>
+            <th class="text-left py-2 px-3">기능</th>
+            <th class="text-center py-2 px-3">영향도</th>
+            <th class="text-center py-2 px-3">공수</th>
+            <th class="text-left py-2 px-3">핵심 구현</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-gray-100 bg-red-50/30">
+            <td class="py-2 px-3 font-bold text-red-700">P0</td>
+            <td class="py-2 px-3">벤치마크 자동 보정</td>
+            <td class="py-2 px-3 text-center"><span class="px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-bold">CRITICAL</span></td>
+            <td class="py-2 px-3 text-center">2~3일</td>
+            <td class="py-2 px-3">월간 크론 + benchmark_calibration_log 테이블 + 신뢰도 기반 자동 업데이트</td>
+          </tr>
+          <tr class="border-b border-gray-100 bg-orange-50/30">
+            <td class="py-2 px-3 font-bold text-orange-700">P1</td>
+            <td class="py-2 px-3">미매핑 용어 수집 + 가격 히스토리</td>
+            <td class="py-2 px-3 text-center"><span class="px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-bold">HIGH</span></td>
+            <td class="py-2 px-3 text-center">1~2일</td>
+            <td class="py-2 px-3">unmapped_terms + benchmark_price_history 테이블, waitUntil() 비동기 기록</td>
+          </tr>
+          <tr class="border-b border-gray-100 bg-yellow-50/30">
+            <td class="py-2 px-3 font-bold text-yellow-700">P2</td>
+            <td class="py-2 px-3">매핑 자동학습 + 피드백 수집</td>
+            <td class="py-2 px-3 text-center"><span class="px-2 py-0.5 rounded bg-yellow-100 text-yellow-700 text-xs font-bold">MEDIUM</span></td>
+            <td class="py-2 px-3 text-center">2~3일</td>
+            <td class="py-2 px-3">analysis_feedback 테이블, 프론트엔드 피드백 UI, 매핑 자동 INSERT</td>
+          </tr>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 px-3 font-bold text-blue-700">P3</td>
+            <td class="py-2 px-3">적응형 임계값 + 지역 학습</td>
+            <td class="py-2 px-3 text-center"><span class="px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-xs font-bold">MEDIUM</span></td>
+            <td class="py-2 px-3 text-center">3~4일</td>
+            <td class="py-2 px-3">PERCENTILE_CONT 기반 동적 임계값, 지역별 가격 통계</td>
+          </tr>
+          <tr class="bg-gray-50/30">
+            <td class="py-2 px-3 font-bold text-gray-500">P4</td>
+            <td class="py-2 px-3">월간 학습 리포트</td>
+            <td class="py-2 px-3 text-center"><span class="px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-xs font-bold">LOW</span></td>
+            <td class="py-2 px-3 text-center">1일</td>
+            <td class="py-2 px-3">stats-cron.ts 확장, 텔레그램 알림</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 3. CODE STABILITY -->
+<!-- ═══════════════════════════════════════════════ -->
+<section id="stability" class="section-card mb-10">
+  <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+    <span class="w-8 h-8 rounded-lg bg-amber-600 text-white flex items-center justify-center text-sm">3</span>
+    코드 안정성 및 버그탐지
+    <span class="ml-auto text-sm px-3 py-1 rounded-full bg-amber-100 text-amber-700">6.0/10</span>
+  </h2>
+
+  <!-- Security -->
+  <div class="bg-white rounded-xl border border-red-200 p-6 mb-4">
+    <h3 class="font-bold text-red-800 mb-4">보안 이슈 (즉시 수정)</h3>
+    <div class="space-y-3 text-sm">
+      <div class="p-3 bg-red-50 rounded-lg">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2 py-0.5 rounded text-xs font-bold bg-red-200 text-red-800">CRITICAL</span>
+          <code>index.ts:34-46</code>
+        </div>
+        <p><strong>CORS: 모든 origin 반사</strong> &mdash; 마지막 줄 <code>return origin</code>이 어떤 도메인이든 허용. <code>return null</code>로 변경 필요.</p>
+      </div>
+      <div class="p-3 bg-red-50 rounded-lg">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2 py-0.5 rounded text-xs font-bold bg-red-200 text-red-800">CRITICAL</span>
+          <code>quote-requests.ts:481-501</code>
+        </div>
+        <p><strong>GET /by-phone/:phone 인증 없음</strong> &mdash; 전화번호만 알면 모든 고객 데이터 조회 가능. 인증 미들웨어 또는 OTP 검증 추가.</p>
+      </div>
+      <div class="p-3 bg-orange-50 rounded-lg">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2 py-0.5 rounded text-xs font-bold bg-orange-200 text-orange-800">HIGH</span>
+          <code>db.ts:40-46</code>
+        </div>
+        <p><strong>insertOne/updateOne 테이블명 비검증</strong> &mdash; 현재 하드코딩이지만 SQL 인젝션 표면. 화이트리스트 추가.</p>
+      </div>
+      <div class="p-3 bg-orange-50 rounded-lg">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2 py-0.5 rounded text-xs font-bold bg-orange-200 text-orange-800">HIGH</span>
+          <code>index.ts:98-103</code>
+        </div>
+        <p><strong>에러 핸들러가 내부 메시지 노출</strong> &mdash; DB 에러 시 SQL 쿼리, 테이블명 노출. 프로덕션에선 제네릭 메시지 반환.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bugs -->
+  <div class="bg-white rounded-xl border border-gray-200 p-6 mb-4">
+    <h3 class="font-bold mb-4">로직 버그</h3>
+    <div class="space-y-3 text-sm">
+      <div class="p-3 bg-red-50 rounded-lg">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2 py-0.5 rounded text-xs font-bold bg-red-200 text-red-800">CRITICAL</span>
+          <code>db.ts:75-88</code>
+        </div>
+        <p><strong>transaction() 함수 작동 안 함</strong> &mdash; Neon HTTP 드라이버는 요청 간 커넥션 공유 안 함. BEGIN/COMMIT이 각각 별도 커넥션. 현재 미사용이지만 함정.</p>
+      </div>
+      <div class="p-3 bg-orange-50 rounded-lg">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2 py-0.5 rounded text-xs font-bold bg-orange-200 text-orange-800">HIGH</span>
+          <code>auto-analysis.ts:693-696</code>
+        </div>
+        <p><strong>Falsy 값 버그</strong> &mdash; <code>item.quantity || null</code>에서 <code>0</code>이 <code>null</code>로 변환. <code>?? null</code>로 교체 필요.</p>
+      </div>
+      <div class="p-3 bg-orange-50 rounded-lg">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2 py-0.5 rounded text-xs font-bold bg-orange-200 text-orange-800">HIGH</span>
+          <code>quote-requests.ts:733-838</code>
+        </div>
+        <p><strong>auto-analyze 레이스 컨디션</strong> &mdash; 중복 클릭 시 분석 2번 실행, 중복 레코드 생성. <code>WHERE status NOT IN ('analyzing', 'completed')</code> 가드 필요.</p>
+      </div>
+      <div class="p-3 bg-orange-50 rounded-lg">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2 py-0.5 rounded text-xs font-bold bg-orange-200 text-orange-800">HIGH</span>
+          <code>quote-requests.ts:402-452</code>
+        </div>
+        <p><strong>알림이 응답을 차단</strong> &mdash; "non-blocking" 주석이지만 실제로 await. <code>waitUntil()</code>로 변경 필요.</p>
+      </div>
+      <div class="p-3 bg-yellow-50 rounded-lg">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2 py-0.5 rounded text-xs font-bold bg-yellow-200 text-yellow-800">MEDIUM</span>
+          <code>AnalysisResultView.tsx:1291-1307</code>
+        </div>
+        <p><strong>비용 시뮬레이터 체크박스 충돌</strong> &mdash; 모든 누락 카테고리가 같은 키(5000000) 공유 &rarr; 하나 토글하면 전부 토글.</p>
+      </div>
+      <div class="p-3 bg-yellow-50 rounded-lg">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2 py-0.5 rounded text-xs font-bold bg-yellow-200 text-yellow-800">MEDIUM</span>
+          <code>AnalysisResultView.tsx:870</code>
+        </div>
+        <p><strong>React Fragment key 위치 오류</strong> &mdash; key가 Fragment 내부 tr에 있음. <code>&lt;Fragment key={idx}&gt;</code>으로 변경.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Positives -->
+  <div class="bg-white rounded-xl border border-green-200 p-6">
+    <h3 class="font-bold text-green-800 mb-3">잘 된 부분</h3>
+    <ul class="text-sm text-green-700 space-y-1.5 list-disc list-inside">
+      <li>모든 SQL 쿼리에 파라미터화 사용 ($1, $2) &mdash; SQL 인젝션 방어</li>
+      <li>분석 아이템 배치 INSERT (20건 단위) &mdash; Workers 서브리퀘스트 제한 준수</li>
+      <li>JWT 인증에 crypto.subtle HMAC-SHA256 사용 &mdash; Workers 환경에 적합</li>
+      <li>최종 점수 0~100 클램핑 &mdash; 음수/초과 방지</li>
+      <li>패널티 캡 설정 (-12, -15) &mdash; 단일 이슈가 점수를 파괴하지 않음</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 4. UI/UX -->
+<!-- ═══════════════════════════════════════════════ -->
+<section id="uiux" class="section-card mb-10">
+  <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+    <span class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm">4</span>
+    디자인 UI/UX
+    <span class="ml-auto text-sm px-3 py-1 rounded-full bg-blue-100 text-blue-700">5.5/10</span>
+  </h2>
+
+  <!-- Score Card -->
+  <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+    <div class="bg-white rounded-xl border border-gray-200 p-4 text-center">
+      <div class="text-2xl font-bold text-gray-800">6/10</div>
+      <div class="text-xs text-gray-500">정보 구조</div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 text-center">
+      <div class="text-2xl font-bold text-orange-600">5/10</div>
+      <div class="text-xs text-gray-500">모바일 경험</div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 text-center">
+      <div class="text-2xl font-bold text-blue-600">7/10</div>
+      <div class="text-xs text-gray-500">데이터 시각화</div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 text-center">
+      <div class="text-2xl font-bold text-red-600">4/10</div>
+      <div class="text-xs text-gray-500">사용자 액션</div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 text-center">
+      <div class="text-2xl font-bold text-red-600">3/10</div>
+      <div class="text-xs text-gray-500">접근성</div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 text-center">
+      <div class="text-2xl font-bold text-green-600">8/10</div>
+      <div class="text-xs text-gray-500">신뢰도/전문성</div>
+    </div>
+  </div>
+
+  <div class="space-y-4">
+    <!-- Information Architecture -->
+    <details class="bg-white rounded-xl border border-gray-200 overflow-hidden" open>
+      <summary class="p-5 font-semibold flex items-center gap-2 hover:bg-gray-50">
+        정보 과부하 &amp; 네비게이션
+        <span class="ml-auto px-2 py-0.5 rounded text-xs font-bold bg-orange-100 text-orange-700">HIGH</span>
+      </summary>
+      <div class="px-5 pb-5 text-sm space-y-3">
+        <p><strong>15개 섹션</strong>이 하나의 긴 스크롤 페이지. TOC/섹션 네비게이션 없음.</p>
+        <p><strong>누락 카테고리가 3곳에 중복 표시</strong>: Findings Grid, Cost Simulator, 전용 섹션</p>
+        <p class="text-red-700"><strong>리스크 알림이 15번째(마지막) 섹션에 위치</strong> &mdash; 덤핑 위험, 면허 미확인 등 안전 정보가 바닥에 묻힘.</p>
+        <div class="bg-green-50 rounded-lg p-3 border border-green-200">
+          <p class="font-semibold text-green-800">개선안:</p>
+          <ul class="list-disc list-inside text-green-700 mt-1 space-y-1">
+            <li>Sticky 섹션 네비게이션 추가 (점수/상세비교/협상가이드/체크리스트)</li>
+            <li>리스크 알림을 점수 바로 아래(2번째)로 이동</li>
+            <li>누락 카테고리 정보를 1곳으로 통합</li>
+          </ul>
+        </div>
+      </div>
+    </details>
+
+    <!-- Mobile -->
+    <details class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <summary class="p-5 font-semibold flex items-center gap-2 hover:bg-gray-50">
+        모바일 UX
+        <span class="ml-auto px-2 py-0.5 rounded text-xs font-bold bg-orange-100 text-orange-700">HIGH</span>
+      </summary>
+      <div class="px-5 pb-5 text-sm space-y-3">
+        <p><strong>비교 테이블</strong> <code>min-w-[600px]</code> 강제 가로 스크롤. 스크롤 힌트 없음.</p>
+        <p><strong>폰트 크기 위반 17건</strong>: <code>text-[9px]</code>, <code>text-[10px]</code>, <code>text-[11px]</code> 사용. WCAG 최소 12px.</p>
+        <p><strong>터치 타겟 미달</strong>: 체크박스 20px, 복사 버튼 32px (최소 44px).</p>
+        <div class="bg-green-50 rounded-lg p-3 border border-green-200">
+          <p class="font-semibold text-green-800">개선안:</p>
+          <ul class="list-disc list-inside text-green-700 mt-1 space-y-1">
+            <li>모바일에서 테이블을 카드 레이아웃으로 전환 (<code>md:table</code>)</li>
+            <li>모든 <code>text-[9-11px]</code>를 최소 <code>text-xs</code>(12px)로 교체</li>
+            <li>버튼/체크박스에 <code>min-h-[44px] min-w-[44px]</code> 적용</li>
+          </ul>
+        </div>
+      </div>
+    </details>
+
+    <!-- Accessibility -->
+    <details class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <summary class="p-5 font-semibold flex items-center gap-2 hover:bg-gray-50">
+        접근성 (WCAG 2.1 AA)
+        <span class="ml-auto px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-700">CRITICAL</span>
+      </summary>
+      <div class="px-5 pb-5 text-sm space-y-3">
+        <p><strong>ARIA 라벨 없음</strong>: PDF 다운로드, 복사 버튼, 탭 버튼 모두 <code>aria-label</code> 미적용.</p>
+        <p><strong>ScoreGauge SVG 접근성 없음</strong>: <code>role</code>, <code>aria-label</code>, <code>&lt;title&gt;</code> 없음.</p>
+        <p><strong>색상만으로 정보 전달</strong>: 편차 바지, 카테고리 바 &mdash; 색맹 사용자 배려 없음.</p>
+        <p><strong>헤딩 계층 깨짐</strong>: 모든 섹션이 <code>&lt;h3&gt;</code>. <code>&lt;h1&gt;</code>/<code>&lt;h2&gt;</code> 없음.</p>
+        <p><strong>테이블 접근성 부족</strong>: <code>&lt;caption&gt;</code>, <code>scope="col"</code> 없음.</p>
+      </div>
+    </details>
+
+    <!-- Trust -->
+    <details class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <summary class="p-5 font-semibold flex items-center gap-2 hover:bg-gray-50">
+        신뢰도 &amp; 전문성 (강점)
+        <span class="ml-auto px-2 py-0.5 rounded text-xs font-bold bg-green-100 text-green-700">GOOD</span>
+      </summary>
+      <div class="px-5 pb-5 text-sm space-y-3">
+        <div class="bg-green-50 rounded-lg p-3 border border-green-200">
+          <ul class="list-disc list-inside text-green-700 space-y-1">
+            <li><strong>보정 계수 투명 공개</strong> &mdash; 면적/지역/등급 계수를 직접 보여줌</li>
+            <li><strong>점수 구성 투명</strong> &mdash; 보너스/패널티 이유 명시</li>
+            <li><strong>전문가 의견 섹션</strong> &mdash; 내러티브 분석으로 신뢰도 높임</li>
+            <li><strong>협상 가이드</strong> &mdash; 복사-붙여넣기 스크립트 &rarr; 실용적 가치</li>
+            <li><strong>데이터 출처 푸터</strong> &mdash; 방법론과 출처 명시</li>
+          </ul>
+        </div>
+        <div class="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+          <p class="font-semibold text-yellow-800">개선 필요:</p>
+          <ul class="list-disc list-inside text-yellow-700 mt-1 space-y-1">
+            <li>버전 번호 v1.7 &rarr; v2.0 업데이트</li>
+            <li>분석 생성일 타임스탬프 추가</li>
+            <li>신뢰도 지표 (벤치마크 매칭률 %) 표시</li>
+            <li>공사 기간 "4~5주" 하드코딩 &rarr; 규모별 동적 계산</li>
+          </ul>
+        </div>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 5. ROADMAP -->
+<!-- ═══════════════════════════════════════════════ -->
+<section id="roadmap" class="section-card mb-10">
+  <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+    <span class="w-8 h-8 rounded-lg bg-green-600 text-white flex items-center justify-center text-sm">5</span>
+    통합 개선 로드맵
+  </h2>
+
+  <!-- Phase 1 -->
+  <div class="bg-white rounded-xl border-2 border-red-200 p-6 mb-4">
+    <h3 class="font-bold text-red-800 text-lg mb-4">Phase 1: 즉시 수정 (보안 + 치명적 버그) &mdash; 1~2일</h3>
+    <div class="space-y-2 text-sm">
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>CORS fallback</strong> &mdash; <code>index.ts:46</code> <code>return origin</code> &rarr; <code>return null</code></div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>/by-phone 인증</strong> &mdash; <code>quote-requests.ts:481</code> 인증 미들웨어 추가 또는 OTP 검증</div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>Falsy 값 수정</strong> &mdash; <code>auto-analysis.ts:693-696</code> <code>||</code> &rarr; <code>??</code></div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>에러 메시지 제네릭화</strong> &mdash; <code>index.ts:98</code> 프로덕션에서 <code>err.message</code> 숨기기</div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>Race condition 가드</strong> &mdash; <code>WHERE status NOT IN ('analyzing','completed')</code></div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>알림 waitUntil()</strong> &mdash; <code>quote-requests.ts:402-452</code> await &rarr; waitUntil</div>
+      </label>
+    </div>
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="bg-white rounded-xl border-2 border-orange-200 p-6 mb-4">
+    <h3 class="font-bold text-orange-800 text-lg mb-4">Phase 2: 분석 품질 향상 &mdash; 3~5일</h3>
+    <div class="space-y-2 text-sm">
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>벤치마크 400건+ 확장</strong> &mdash; 4등급 x 10카테고리 x 10항목 완전 커버리지</div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>벤치마크 자동 보정 (P0)</strong> &mdash; benchmark_calibration_log + 월간 크론</div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>미매핑 용어 수집 (P1)</strong> &mdash; unmapped_terms 테이블 + 자동 기록</div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>marginRate vs deviationPercent 구분</strong> &mdash; 개념 분리, 라벨 명확화</div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>카테고리별 적정 마진율 차등 적용</strong> &mdash; 철거 35%, 주방 15% 등</div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>신뢰도 지표 추가</strong> &mdash; 벤치마크 매칭률, 대체 사용 비율 표시</div>
+      </label>
+    </div>
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="bg-white rounded-xl border-2 border-blue-200 p-6 mb-4">
+    <h3 class="font-bold text-blue-800 text-lg mb-4">Phase 3: UI/UX 개선 &mdash; 2~3일</h3>
+    <div class="space-y-2 text-sm">
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>Sticky 섹션 네비게이션</strong> &mdash; 15개 섹션 점프 바</div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>리스크 알림 위치 이동</strong> &mdash; 15번째 &rarr; 2번째 섹션으로</div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>모바일 테이블 &rarr; 카드 레이아웃</strong></div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>폰트 크기 12px 최소화</strong> &mdash; 17건 수정</div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>접근성</strong> &mdash; ARIA 라벨, 헤딩 계층, ScoreGauge role</div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>비용 시뮬레이터 버그 수정</strong> &mdash; 체크박스 키 충돌 해결</div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>카카오톡 공유 / CTA 추가</strong> &mdash; 현재 PDF 다운만 가능</div>
+      </label>
+    </div>
+  </div>
+
+  <!-- Phase 4 -->
+  <div class="bg-white rounded-xl border-2 border-purple-200 p-6">
+    <h3 class="font-bold text-purple-800 text-lg mb-4">Phase 4: 자율학습 구조 구축 &mdash; 5~7일</h3>
+    <div class="space-y-2 text-sm">
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>가격 히스토리 스냅샷</strong> &mdash; benchmark_price_history 테이블</div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>카테고리 매핑 자동학습</strong> &mdash; 성공 매핑 auto-insert (is_verified=false)</div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>고객 피드백 수집</strong> &mdash; analysis_feedback 테이블 + UI</div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>적응형 편차 임계값</strong> &mdash; PERCENTILE_CONT 기반 동적 조정</div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>지역 5~6구간 확장</strong> &mdash; 실제 데이터 기반 지역 팩터</div>
+      </label>
+      <label class="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+        <input type="checkbox" class="mt-1 w-4 h-4 shrink-0">
+        <div><strong>월간 학습 리포트</strong> &mdash; 텔레그램 자동 발송</div>
+      </label>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="text-center text-sm text-gray-400 py-8 border-t border-gray-200">
+  <p>GOI 견적분석시스템 품질 종합 리포트 v2.0</p>
+  <p class="mt-1">생성일: 2026-02-06 | 4개 전문 에이전트 병렬 분석 (총 500K+ 토큰)</p>
+  <p class="mt-1">분석 영역: 신뢰도 / 자율학습 / 코드안정성 / UI/UX</p>
+</footer>
+
+</div>
+</body>
+</html>
