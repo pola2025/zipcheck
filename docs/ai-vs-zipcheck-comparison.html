@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>일반 AI vs ZipCheck 분석 비교</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+  * { font-family: 'Pretendard', -apple-system, system-ui, sans-serif; }
+  .gradient-header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%); }
+  .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04); }
+  .ai-badge { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+  .zc-badge { background: linear-gradient(135deg, #0ea5e9, #06b6d4); }
+  .score-ring { width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; }
+  .ai-ring { border: 6px solid #8b5cf6; color: #6366f1; }
+  .zc-ring { border: 6px solid #06b6d4; color: #0ea5e9; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+  .tag-high { background: #fef2f2; color: #dc2626; }
+  .tag-ok { background: #f0fdf4; color: #16a34a; }
+  .tag-warn { background: #fffbeb; color: #d97706; }
+  .tag-error { background: #fef2f2; color: #991b1b; border: 1px dashed #fca5a5; }
+  .diff-better { background: #ecfdf5; border-left: 3px solid #10b981; }
+  .diff-worse { background: #fef2f2; border-left: 3px solid #ef4444; }
+  .diff-same { background: #f8fafc; border-left: 3px solid #94a3b8; }
+  .highlight-box { background: linear-gradient(135deg, #fefce8, #fef9c3); border: 1px solid #fde047; border-radius: 12px; }
+  .value-box { background: linear-gradient(135deg, #0f172a, #1e3a5f); border-radius: 16px; color: white; }
+  table { border-collapse: separate; border-spacing: 0; }
+  th { background: #f8fafc; position: sticky; top: 0; z-index: 1; }
+  tbody tr:hover { background: #f8fafc; }
+  .progress-bar { height: 8px; border-radius: 4px; background: #e2e8f0; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+</style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- Header -->
+<div class="gradient-header text-white py-8 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="flex items-center gap-3 mb-2">
+      <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center text-lg">&#x1F9EA;</div>
+      <h1 class="text-2xl font-bold">서비스 가치 검증 실험</h1>
+    </div>
+    <p class="text-white/70 text-sm mt-1">일반 AI(Opus 4.6, 배경지식 없음) vs ZipCheck 전문 분석 시스템 — 동일 견적서 분석 비교</p>
+    <div class="flex gap-4 mt-4 text-sm">
+      <div class="bg-white/10 rounded-lg px-4 py-2">
+        <span class="text-white/50">견적서</span>
+        <span class="ml-2 font-semibold">김현우 · 수원 영통구 34평 올수리</span>
+      </div>
+      <div class="bg-white/10 rounded-lg px-4 py-2">
+        <span class="text-white/50">총액</span>
+        <span class="ml-2 font-semibold">42,747,200원</span>
+      </div>
+      <div class="bg-white/10 rounded-lg px-4 py-2">
+        <span class="text-white/50">항목</span>
+        <span class="ml-2 font-semibold">33개</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="max-w-6xl mx-auto px-6 py-8 space-y-8">
+
+<!-- 1. Score Comparison -->
+<section class="card p-6">
+  <h2 class="text-lg font-bold text-gray-900 mb-6">1. 전체 점수 비교</h2>
+  <div class="grid grid-cols-2 gap-6">
+    <!-- AI -->
+    <div class="border border-purple-100 rounded-xl p-6 text-center">
+      <div class="ai-badge text-white text-xs font-bold px-3 py-1 rounded-full inline-block mb-4">일반 AI (Opus 4.6)</div>
+      <div class="flex justify-center mb-4">
+        <div class="score-ring ai-ring">68</div>
+      </div>
+      <p class="text-sm text-gray-600 leading-relaxed">자재 선택은 중상급으로 적절하나, 바닥재와 목공 일부 항목에서 시장가 대비 20~30% 높은 단가가 포함</p>
+      <div class="mt-4 flex justify-center gap-2 flex-wrap">
+        <span class="tag tag-ok">가격 적정성 60</span>
+        <span class="tag tag-ok">구성 완성도 75</span>
+        <span class="tag tag-warn">브랜드 명시 70</span>
+        <span class="tag tag-warn">투명성 65</span>
+      </div>
+    </div>
+    <!-- ZipCheck -->
+    <div class="border border-cyan-100 rounded-xl p-6 text-center">
+      <div class="zc-badge text-white text-xs font-bold px-3 py-1 rounded-full inline-block mb-4">ZipCheck 전문 분석</div>
+      <div class="flex justify-center mb-4">
+        <div class="score-ring zc-ring">66</div>
+      </div>
+      <p class="text-sm text-gray-600 leading-relaxed">가중합산 66.94 = 카테고리 점수 67.94 + 투명성 보너스 +5 - 일식 비율 패널티 -3 - 면허 미확인 -3</p>
+      <div class="mt-4 flex justify-center gap-2 flex-wrap">
+        <span class="tag tag-ok">투명성 보너스 +5</span>
+        <span class="tag tag-high">일식 비율 -3</span>
+        <span class="tag tag-high">면허 미확인 -3</span>
+      </div>
+    </div>
+  </div>
+  <div class="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+    <strong>관찰:</strong> 점수 자체는 비슷하지만 (68 vs 66), 산출 근거가 완전히 다릅니다. 일반 AI는 "체감 평가"이고, ZipCheck은 <strong>405건 벤치마크 DB 기반 정량 산출</strong>입니다.
+  </div>
+</section>
+
+<!-- 2. Category-by-Category -->
+<section class="card p-6">
+  <h2 class="text-lg font-bold text-gray-900 mb-6">2. 카테고리별 분석 비교</h2>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-left text-gray-500 text-xs uppercase">
+          <th class="px-4 py-3">카테고리</th>
+          <th class="px-4 py-3">견적 금액</th>
+          <th class="px-4 py-3 text-center" style="background:#f5f3ff">일반 AI 판정</th>
+          <th class="px-4 py-3 text-center" style="background:#ecfeff">ZipCheck 점수</th>
+          <th class="px-4 py-3">핵심 차이</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <tr>
+          <td class="px-4 py-3 font-semibold">철거</td>
+          <td class="px-4 py-3 text-gray-600">2,036,400</td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-ok">적정</span></td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-high">20점</span></td>
+          <td class="px-4 py-3 text-xs text-gray-500">ZipCheck 벤치마크 매핑 오류 (단가 vs 일식 비교)</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 font-semibold">목공</td>
+          <td class="px-4 py-3 text-gray-600">3,357,000</td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-warn">약간 비쌈</span></td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-warn">70점</span></td>
+          <td class="px-4 py-3 text-xs text-gray-500">AI: 몰딩 비쌈 / ZC: 아트월 -27%, 몰딩 +40%</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 font-semibold">바닥</td>
+          <td class="px-4 py-3 text-gray-600">10,426,000</td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-high">비쌈</span></td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-ok">85점</span></td>
+          <td class="px-4 py-3 text-xs text-gray-500 diff-better">AI: 마루 95K 과다청구 / <strong>ZC: +12.8% 적정 범위</strong></td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 font-semibold">도배</td>
+          <td class="px-4 py-3 text-gray-600">2,344,000</td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-warn">약간 비쌈</span></td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-ok">85점</span></td>
+          <td class="px-4 py-3 text-xs text-gray-500">AI: 단가 높다 / ZC: +11%, +0.9% 적정</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 font-semibold">욕실</td>
+          <td class="px-4 py-3 text-gray-600">7,800,000</td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-ok">적정</span></td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-high">20점</span></td>
+          <td class="px-4 py-3 text-xs text-gray-500 diff-worse">AI: 브랜드 고려 적정 / <strong>ZC: LED미러로 잘못 매칭 (+539%)</strong></td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 font-semibold">주방</td>
+          <td class="px-4 py-3 text-gray-600">1,390,000</td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-ok">합리적</span></td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-ok">85점</span></td>
+          <td class="px-4 py-3 text-xs text-gray-500">양쪽 모두 적정 판단</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 font-semibold">전기</td>
+          <td class="px-4 py-3 text-gray-600">2,805,000</td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-warn">LED등 비쌈</span></td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-ok">88점</span></td>
+          <td class="px-4 py-3 text-xs text-gray-500 diff-better">AI: 매입등 45K 과다 / <strong>ZC: 벤치 44.6K, +0.9% 정확</strong></td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 font-semibold">창호</td>
+          <td class="px-4 py-3 text-gray-600">1,680,000</td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-warn">방충망 비쌈</span></td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-ok">95점</span></td>
+          <td class="px-4 py-3 text-xs text-gray-500 diff-better">AI: 80K 비싸다 / <strong>ZC: 벤치 79.3K, 거의 동일</strong></td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 font-semibold">가구</td>
+          <td class="px-4 py-3 text-gray-600">4,010,000</td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-ok">적정</span></td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-warn">55점</span></td>
+          <td class="px-4 py-3 text-xs text-gray-500">AI: 적정 / ZC: 신발장 -49% (벤치 75만, 견적 38만)</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 font-semibold">페인트</td>
+          <td class="px-4 py-3 text-gray-600">1,708,800</td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-ok">적정(상한)</span></td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-ok">95점</span></td>
+          <td class="px-4 py-3 text-xs text-gray-500">양쪽 모두 적정</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 font-semibold">기타</td>
+          <td class="px-4 py-3 text-gray-600">1,200,000</td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-ok">적정</span></td>
+          <td class="px-4 py-3 text-center"><span class="tag tag-ok">85점</span></td>
+          <td class="px-4 py-3 text-xs text-gray-500">양쪽 비슷</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 3. Key Differences -->
+<section class="card p-6">
+  <h2 class="text-lg font-bold text-gray-900 mb-6">3. 핵심 차이점 분석</h2>
+
+  <div class="space-y-4">
+    <!-- ZipCheck이 더 나은 경우 -->
+    <div class="diff-better rounded-lg p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-emerald-600 font-bold text-sm">ZipCheck이 더 정확한 경우</span>
+        <span class="zc-badge text-white text-xs px-2 py-0.5 rounded-full">우위</span>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div class="flex gap-4">
+          <div class="w-1/3">
+            <div class="font-semibold text-gray-800">강화마루 95,000원/㎡</div>
+          </div>
+          <div class="w-1/3 text-purple-700">
+            <strong>AI:</strong> "비쌈, 55K~80K가 시장가" → <span class="tag tag-high">170만원 과다청구 주장</span>
+          </div>
+          <div class="w-1/3 text-cyan-700">
+            <strong>ZC:</strong> 벤치마크 84,235원, 편차 +12.8% → <span class="tag tag-ok">적정 범위</span>
+          </div>
+        </div>
+        <div class="text-xs text-gray-500 ml-4">&#x2192; AI는 "LG지아 자재비 25K~35K" 기준으로 과다 판정했지만, 실제 시공비 포함 단가는 ZipCheck DB가 정확. <strong>AI 분석대로면 고객이 불필요하게 재협상하여 업체 관계 악화 가능</strong></div>
+
+        <div class="flex gap-4 pt-2 border-t border-emerald-200">
+          <div class="w-1/3">
+            <div class="font-semibold text-gray-800">LED 매입등 45,000원/개</div>
+          </div>
+          <div class="w-1/3 text-purple-700">
+            <strong>AI:</strong> "비쌈, 25K~40K가 시장가" → <span class="tag tag-warn">36~48만원 과다</span>
+          </div>
+          <div class="w-1/3 text-cyan-700">
+            <strong>ZC:</strong> 벤치마크 44,595원, 편차 +0.9% → <span class="tag tag-ok">정확 일치</span>
+          </div>
+        </div>
+        <div class="text-xs text-gray-500 ml-4">&#x2192; AI는 자재비만 기준으로 판단, ZipCheck은 시공비 포함 실제 시장가 반영</div>
+
+        <div class="flex gap-4 pt-2 border-t border-emerald-200">
+          <div class="w-1/3">
+            <div class="font-semibold text-gray-800">방충망 80,000원/개</div>
+          </div>
+          <div class="w-1/3 text-purple-700">
+            <strong>AI:</strong> "비쌈, 40K~60K가 시장가" → <span class="tag tag-warn">12~24만원 절감 가능</span>
+          </div>
+          <div class="w-1/3 text-cyan-700">
+            <strong>ZC:</strong> 벤치마크 79,280원, 편차 +0.9% → <span class="tag tag-ok">정확 일치</span>
+          </div>
+        </div>
+        <div class="text-xs text-gray-500 ml-4">&#x2192; AI는 "롤방충망 40K" 기준이지만, 실제 거실/침실 대형 방충망은 80K가 적정가</div>
+      </div>
+    </div>
+
+    <!-- AI가 더 나은 경우 -->
+    <div class="diff-worse rounded-lg p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-red-600 font-bold text-sm">일반 AI가 더 나은 경우</span>
+        <span class="ai-badge text-white text-xs px-2 py-0.5 rounded-full">우위</span>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div class="flex gap-4">
+          <div class="w-1/3">
+            <div class="font-semibold text-gray-800">욕실 리모델링 380만/350만</div>
+          </div>
+          <div class="w-1/3 text-purple-700">
+            <strong>AI:</strong> "듀라빗+코헬러 포함 적정" → <span class="tag tag-ok">합리적 판단</span>
+          </div>
+          <div class="w-1/3 text-cyan-700">
+            <strong>ZC:</strong> LED미러(60만)로 잘못 매칭 → <span class="tag tag-error">+539% 오류</span>
+          </div>
+        </div>
+        <div class="text-xs text-gray-500 ml-4">&#x2192; ZipCheck 벤치마크에 "욕실 풀패키지" 항목이 없어 하위 항목(LED미러)에 매칭된 치명적 오류. <strong>가중치 18%로 전체 점수 10점 이상 감점</strong></div>
+
+        <div class="flex gap-4 pt-2 border-t border-red-200">
+          <div class="w-1/3">
+            <div class="font-semibold text-gray-800">초배지/간접조명 이중청구</div>
+          </div>
+          <div class="w-1/3 text-purple-700">
+            <strong>AI:</strong> 이중청구 가능성 적극 지적 → <span class="tag tag-ok">유용한 인사이트</span>
+          </div>
+          <div class="w-1/3 text-cyan-700">
+            <strong>ZC:</strong> 항목 간 교차 검증 없음 → <span class="tag tag-warn">미탐지</span>
+          </div>
+        </div>
+        <div class="text-xs text-gray-500 ml-4">&#x2192; AI는 비고란까지 읽고 맥락적 중복을 탐지. ZipCheck은 개별 항목 단가만 비교하므로 교차 중복 탐지 불가</div>
+
+        <div class="flex gap-4 pt-2 border-t border-red-200">
+          <div class="w-1/3">
+            <div class="font-semibold text-gray-800">누락 항목 탐지</div>
+          </div>
+          <div class="w-1/3 text-purple-700">
+            <strong>AI:</strong> 방문/문짝, 분전반, 배관 등 7개 누락 항목 지적 → <span class="tag tag-ok">풍부</span>
+          </div>
+          <div class="w-1/3 text-cyan-700">
+            <strong>ZC:</strong> 견적 완성도 "partial" 표시만 → <span class="tag tag-warn">구체성 부족</span>
+          </div>
+        </div>
+        <div class="text-xs text-gray-500 ml-4">&#x2192; AI는 "34평 올수리"의 맥락을 이해하고 빠진 항목을 추론. ZipCheck은 제출된 항목만 분석</div>
+      </div>
+    </div>
+
+    <!-- 비슷한 경우 -->
+    <div class="diff-same rounded-lg p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-gray-600 font-bold text-sm">양쪽 유사한 판단</span>
+      </div>
+      <div class="text-sm text-gray-600 space-y-1">
+        <div>&#x2022; 주방 (그로헤 수전, 싱크볼 적정) — 양쪽 모두 합리적 판단</div>
+        <div>&#x2022; 페인트/도장 — 양쪽 모두 적정~상한선</div>
+        <div>&#x2022; 현장 관리비 — 양쪽 모두 적정 판단</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Value Proposition -->
+<section class="value-box p-8">
+  <h2 class="text-xl font-bold mb-6">4. 서비스 가치 검증 결론</h2>
+
+  <div class="grid grid-cols-3 gap-6 mb-8">
+    <div class="bg-white/10 rounded-xl p-5 text-center">
+      <div class="text-3xl font-black text-emerald-400 mb-1">350만원</div>
+      <div class="text-sm text-white/60">AI가 주장한 절감 가능액</div>
+      <div class="text-xs text-red-400 mt-2">&#x26A0; 상당수가 부정확한 시장가 기반</div>
+    </div>
+    <div class="bg-white/10 rounded-xl p-5 text-center">
+      <div class="text-3xl font-black text-cyan-400 mb-1">30~50만원</div>
+      <div class="text-sm text-white/60">실제 과다 의심 항목 (ZC 기준)</div>
+      <div class="text-xs text-emerald-400 mt-2">&#x2713; 벤치마크 DB 기반 검증된 수치</div>
+    </div>
+    <div class="bg-white/10 rounded-xl p-5 text-center">
+      <div class="text-3xl font-black text-amber-400 mb-1">9,900원</div>
+      <div class="text-sm text-white/60">프로모션 가격</div>
+      <div class="text-xs text-white/40 mt-2">2026년 프로모션 기간</div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-6">
+    <div class="bg-red-500/10 border border-red-500/20 rounded-xl p-5">
+      <div class="text-red-400 font-bold mb-3">&#x274C; 일반 AI 분석의 위험성</div>
+      <ul class="text-sm text-white/70 space-y-2">
+        <li>&#x2022; <strong>잘못된 시장가 기준</strong>으로 "비쌈" 판정 → 고객이 업체와 불필요한 마찰</li>
+        <li>&#x2022; 강화마루 "170만원 과다" 주장 → 실제로는 <strong>+12.8%로 정상 범위</strong></li>
+        <li>&#x2022; 방충망 "40K가 시장가" → 실제 <strong>대형 방충망은 80K가 적정</strong></li>
+        <li>&#x2022; "350만원 절감 가능" 조언 → 업체에 현실과 동떨어진 요구 유발</li>
+        <li>&#x2022; 숫자의 <strong>정량적 근거가 없음</strong> (체감과 일반 지식 기반)</li>
+      </ul>
+    </div>
+    <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-5">
+      <div class="text-emerald-400 font-bold mb-3">&#x2705; ZipCheck 분석의 차별 가치</div>
+      <ul class="text-sm text-white/70 space-y-2">
+        <li>&#x2022; <strong>405건 실거래 벤치마크 DB</strong> 기반 정량 비교</li>
+        <li>&#x2022; 항목별 정확한 편차율 (%) 제공</li>
+        <li>&#x2022; 등급별(가성비/중급/고급/프리미엄) 세분화 비교</li>
+        <li>&#x2022; 견적 투명성 자동 평가 (일식 비율, 면허 확인)</li>
+        <li>&#x2022; <strong>잘못된 절감 조언으로 인한 업체 마찰 방지</strong></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 5. What needs to be fixed -->
+<section class="card p-6">
+  <h2 class="text-lg font-bold text-gray-900 mb-6">5. ZipCheck 개선이 필요한 영역 (서비스 출시 전)</h2>
+
+  <div class="space-y-4">
+    <div class="border border-red-200 rounded-lg p-4 bg-red-50">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+        <span class="font-bold text-red-800">욕실 풀패키지 벤치마크 추가 (Critical)</span>
+      </div>
+      <p class="text-sm text-red-700 ml-8">현재 "욕실 리모델링 380만원"이 "LED미러 60만원"에 매칭되어 +539% 오류 발생. 욕실 풀패키지(300~500만원대) 벤치마크 필수 추가. <strong>가중치 18%로 전체 점수에 10점+ 영향.</strong></p>
+    </div>
+
+    <div class="border border-red-200 rounded-lg p-4 bg-red-50">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
+        <span class="font-bold text-red-800">철거 항목 벤치마크 세분화 (Critical)</span>
+      </div>
+      <p class="text-sm text-red-700 ml-8">바닥재 철거(8,000/㎡), 벽지 제거(3,000/㎡)가 "철거 일반 70,000원"과 비교되어 -88~-96% 편차. 철거 유형별(바닥/벽지/타일/설비) 벤치마크 분리 필요.</p>
+    </div>
+
+    <div class="border border-amber-200 rounded-lg p-4 bg-amber-50">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
+        <span class="font-bold text-amber-800">항목 간 교차 중복 탐지 (High)</span>
+      </div>
+      <p class="text-sm text-amber-700 ml-8">AI가 탐지한 "초배지 이중청구", "아트월 간접조명 중복" 같은 교차 항목 검증 기능 추가. 비고란의 자연어를 분석하여 중복 가능성 경고.</p>
+    </div>
+
+    <div class="border border-amber-200 rounded-lg p-4 bg-amber-50">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center text-xs font-bold">4</span>
+        <span class="font-bold text-amber-800">누락 항목 자동 추천 (High)</span>
+      </div>
+      <p class="text-sm text-amber-700 ml-8">평수/공사유형(올수리) 기반으로 보통 포함되는 항목 리스트 자동 생성. "방문 교체", "분전반", "배관 점검" 등 누락 시 경고.</p>
+    </div>
+
+    <div class="border border-blue-200 rounded-lg p-4 bg-blue-50">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">5</span>
+        <span class="font-bold text-blue-800">협상 가이드 기능 (Medium)</span>
+      </div>
+      <p class="text-sm text-blue-700 ml-8">AI의 "이렇게 말해보세요" 스타일 협상 가이드는 고객에게 실질적 도움. 벤치마크 기반 정확한 수치로 협상 포인트 제공.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Final Verdict -->
+<section class="highlight-box p-6">
+  <h2 class="text-lg font-bold text-gray-900 mb-4">6. 최종 판단: 9,900원 서비스 가치가 있는가?</h2>
+
+  <div class="grid grid-cols-2 gap-6">
+    <div>
+      <h3 class="font-bold text-emerald-700 mb-3">&#x2705; 출시 가능한 이유</h3>
+      <ul class="text-sm text-gray-700 space-y-2">
+        <li><strong>1.</strong> 일반 AI는 "체감 시장가"로 판단하여 <strong>잘못된 절감액(350만원)을 제시</strong>하는 반면, ZipCheck은 실데이터 기반으로 정확한 편차율 제공</li>
+        <li><strong>2.</strong> AI의 잘못된 조언으로 업체와 마찰을 일으키는 것보다, <strong>정확한 데이터로 합리적 협상</strong>하는 것이 고객에게 실질적 이익</li>
+        <li><strong>3.</strong> 33개 항목 × 405건 벤치마크 교차 비교는 일반인이 2~3시간 걸릴 작업 → <strong>시간 가치만으로도 9,900원 이상</strong></li>
+        <li><strong>4.</strong> 등급별(가성비~프리미엄) 세분화 비교는 일반 AI가 제공 불가능한 <strong>독자적 데이터 가치</strong></li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="font-bold text-red-700 mb-3">&#x26A0; 출시 전 해결 필수</h3>
+      <ul class="text-sm text-gray-700 space-y-2">
+        <li><strong>1.</strong> 욕실 풀패키지 벤치마크 추가 — 현재 <span class="tag tag-error">+539% 오류</span>는 신뢰도 치명타</li>
+        <li><strong>2.</strong> 철거 벤치마크 세분화 — <span class="tag tag-error">-88% 편차</span>는 고객에게 혼란</li>
+        <li><strong>3.</strong> AI가 잡아낸 이중청구/누락 탐지 기능을 ZipCheck에도 추가해야 경쟁력 확보</li>
+        <li><strong>4.</strong> 분석 리포트에 "근거 데이터 출처"와 "비교 대상 명시"로 투명성 강화 필요</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="mt-6 p-4 bg-white rounded-lg border border-amber-300">
+    <div class="flex items-start gap-3">
+      <div class="text-2xl">&#x1F4A1;</div>
+      <div>
+        <div class="font-bold text-gray-900 mb-1">결론</div>
+        <p class="text-sm text-gray-700">
+          <strong>ZipCheck의 핵심 가치는 "정확한 데이터 기반 판단"</strong>입니다. 일반 AI는 그럴듯하지만 부정확한 시장가로 고객을 오도할 수 있고, ZipCheck은 실데이터로 이를 바로잡습니다.
+          다만 욕실/철거 벤치마크 매핑 오류 2건만 해결하면, <strong>벤치마크 커버리지 95%+ 달성 시 9,900원은 충분히 납득 가능한 가격</strong>입니다.
+          "350만원 절감 가능"이라는 AI의 잘못된 조언 vs "실제로는 +12.8%로 적정"이라는 ZipCheck의 정확한 판단 — 이 차이 하나만으로도 서비스 가치 설명이 됩니다.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<!-- Footer -->
+<div class="bg-gray-100 border-t border-gray-200 py-6 mt-12">
+  <div class="max-w-6xl mx-auto px-6 text-center text-sm text-gray-400">
+    ZipCheck Service Value Validation · 2026-02-06 · 김현우 견적 기준
+  </div>
+</div>
+
+</body>
+</html>

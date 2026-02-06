@@ -484,6 +484,11 @@ export default function QuoteRequestDetail() {
 						propertyType={request.property_type}
 						isVatIncluded={analysisResult.is_vat_included as boolean | null | undefined}
 						completeness={analysisResult.completeness as 'full' | 'partial' | 'minimal' | undefined}
+						warnings={analysisResult.warnings as Array<{
+							type: string; severity: 'high' | 'medium' | 'low';
+							title: string; description: string;
+							relatedItems?: string[]; estimatedImpact?: string;
+						}> | undefined}
 					/>
 				</motion.div>
 			)}

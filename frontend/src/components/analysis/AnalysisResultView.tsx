@@ -68,10 +68,20 @@ interface AnalyzedItem {
 	fair_price_max?: number | null
 }
 
+interface AnalysisWarning {
+	type: 'duplicate_charge' | 'missing_item' | string
+	severity: 'high' | 'medium' | 'low'
+	title: string
+	description: string
+	relatedItems?: string[]
+	estimatedImpact?: string
+}
+
 interface Props {
 	scoreBreakdown: ScoreBreakdown
 	adjustmentFactors?: AdjustmentFactors
 	items?: AnalyzedItem[]
+	warnings?: AnalysisWarning[]
 	customerName?: string
 	propertyInfo?: string
 	region?: string
@@ -224,6 +234,7 @@ export default function AnalysisResultView({
 	scoreBreakdown,
 	adjustmentFactors,
 	items,
+	warnings,
 	customerName,
 	propertyInfo,
 	region,
@@ -571,6 +582,65 @@ export default function AnalysisResultView({
 						</div>
 					</div>
 				</div>
+
+
+			{/* ═══════════════════════════════════════════════════════
+			    1.5. 경고: 이중청구 + 누락 항목 (v4)
+			    ═══════════════════════════════════════════════════════ */}
+			{warnings && warnings.length > 0 && (
+				<div className="bg-white rounded-2xl border border-amber-300 p-5 sm:p-6">
+					<h3 className="text-sm font-semibold text-amber-800 mb-4 flex items-center gap-2">
+						<AlertTriangle className="w-4 h-4 text-amber-600" />
+						검토 필요 사항 ({warnings.length}건)
+					</h3>
+					<div className="space-y-3">
+						{warnings.map((w, idx) => (
+							<div
+								key={idx}
+								className={`rounded-xl border p-4 ${
+									w.severity === 'high'
+										? 'border-red-200 bg-red-50/50'
+										: w.severity === 'medium'
+											? 'border-amber-200 bg-amber-50/50'
+											: 'border-sand-200 bg-sand-50/50'
+								}`}
+							>
+								<div className="flex items-start gap-3">
+									<div className={`mt-0.5 shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+										w.type === 'duplicate_charge'
+											? 'bg-red-100 text-red-700'
+											: 'bg-amber-100 text-amber-700'
+									}`}>
+										{w.type === 'duplicate_charge' ? '중' : '누'}
+									</div>
+									<div className="flex-1 min-w-0">
+										<div className="flex items-center gap-2 flex-wrap">
+											<span className="text-sm font-semibold text-sand-900">{w.title}</span>
+											{w.estimatedImpact && (
+												<span className={`shrink-0 px-2 py-0.5 rounded-md text-xs font-bold ${
+													w.severity === 'high' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+												}`}>
+													{w.estimatedImpact}
+												</span>
+											)}
+										</div>
+										<p className="text-xs text-sand-600 mt-1 break-keep">{w.description}</p>
+										{w.relatedItems && w.relatedItems.length > 0 && (
+											<div className="mt-2 flex flex-wrap gap-1.5">
+												{w.relatedItems.map((item, i) => (
+													<span key={i} className="inline-block px-2 py-0.5 rounded text-xs bg-sand-100 text-sand-700 border border-sand-200">
+														{item}
+													</span>
+												))}
+											</div>
+										)}
+									</div>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			)}
 
 				{/* ═══════════════════════════════════════════════════════
 				    2. 요약: 긍정/주의/미포함/절감 + 추가비용 (설계서 매칭 2x2 그리드)

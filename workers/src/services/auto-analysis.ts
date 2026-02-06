@@ -8,7 +8,8 @@ import { query } from '../lib/db'
 import {
 	CATEGORY_MARGIN_RATES, CATEGORY_WEIGHTS, categoryMarginToScore,
 	CATEGORY_OVERRIDE_RULES, ITEM_KEYWORD_MAP, LUMP_SUM_RANGES,
-	type CategoryOverrideRule,
+	DUPLICATE_CHECK_RULES, ESSENTIAL_ITEMS_CHECKLIST,
+	type CategoryOverrideRule, type DuplicateCheckRule, type EssentialItem, type LumpSumRange,
 } from '../lib/constants'
 
 // ============================================
@@ -132,6 +133,16 @@ export interface AutoAnalysisInput {
 	isExclusive: boolean
 	customerName: string | null
 	customerEmail: string | null
+	hasLicense?: boolean | null  // 시공업체 면허 확인 여부 (확인 시 가점)
+}
+
+interface AnalysisWarning {
+	type: 'duplicate_charge' | 'missing_item'
+	severity: 'high' | 'medium'
+	title: string
+	description: string
+	relatedItems?: string[]
+	estimatedImpact?: string
 }
 
 export interface AutoAnalysisResult {
@@ -141,6 +152,7 @@ export interface AutoAnalysisResult {
 	adjustmentFactors: AdjustmentFactors
 	totalScore: number
 	grade: { label: string; description: string }
+	warnings: AnalysisWarning[]
 }
 
 // ============================================
@@ -571,7 +583,7 @@ function findBenchmarkWithTier(
 	)
 	if (manualExacts.length > 0) {
 		// 단위 호환 벤치마크 우선
-		const unitMatch = manualExacts.find(b => unitCompatible(b.unit, quoteUnit))
+		const unitMatch = manualExacts.find(b => unitCompatible(b.unit, quoteUnit ?? null))
 		if (unitMatch) return { benchmark: unitMatch, matchTier: 1 }
 		return { benchmark: manualExacts[0], matchTier: 1 }
 	}
@@ -675,6 +687,32 @@ interface LumpSumResult {
 	rangeMax: number
 }
 
+function evaluateLumpSumForGrade(
+	rangeData: LumpSumRange,
+	pyeongIdx: number,
+	grade: string,
+	totalPrice: number,
+): LumpSumResult | null {
+	const gradeRanges = rangeData.grades[grade]
+	if (!gradeRanges || !gradeRanges[pyeongIdx]) return null
+
+	const [rangeMin, rangeMax] = gradeRanges[pyeongIdx]
+
+	if (totalPrice < rangeMin * 0.8) {
+		return { score: 55, bracket: 'dump_risk', rangeMin, rangeMax }
+	}
+	if (totalPrice < rangeMin) {
+		return { score: 75, bracket: 'low_margin', rangeMin, rangeMax }
+	}
+	if (totalPrice <= rangeMax) {
+		return { score: 90, bracket: 'fair', rangeMin, rangeMax }
+	}
+	if (totalPrice <= rangeMax * 1.3) {
+		return { score: 70, bracket: 'slightly_high', rangeMin, rangeMax }
+	}
+	return { score: 40, bracket: 'excessive', rangeMin, rangeMax }
+}
+
 function evaluateLumpSum(
 	stdCategory: string,
 	stdItem: string,
@@ -689,6 +727,10 @@ function evaluateLumpSum(
 		rangeKey = '목공_아트월'
 	} else if (itemLower.includes('폐기물') || itemLower.includes('잔재물')) {
 		rangeKey = '폐기물처리'
+	} else if (stdCategory === '철거' && (itemLower.includes('바닥') || itemLower.includes('마루') || itemLower.includes('장판'))) {
+		rangeKey = '철거_바닥재'
+	} else if (stdCategory === '철거' && (itemLower.includes('벽지') || itemLower.includes('도배'))) {
+		rangeKey = '철거_벽지'
 	} else if (stdCategory === '철거' && (itemLower.includes('전체') || totalPrice > 1_500_000)) {
 		rangeKey = '철거_전체'
 	} else if (stdCategory === '욕실') {
@@ -714,25 +756,33 @@ function evaluateLumpSum(
 		}
 	}
 
-	const gradeRanges = rangeData.grades[targetGrade]
-	if (!gradeRanges || !gradeRanges[pyeongIdx]) return null
+	// 1단계: targetGrade로 평가
+	const primaryResult = evaluateLumpSumForGrade(rangeData, pyeongIdx, targetGrade, totalPrice)
 
-	const [rangeMin, rangeMax] = gradeRanges[pyeongIdx]
+	// 2단계: adaptive — dump_risk/excessive면 다른 등급에서 fair 범위 탐색
+	// 견적 내 카테고리마다 등급이 다를 수 있으므로, 일식 항목은 자체 등급 매칭
+	if (primaryResult && (primaryResult.bracket === 'dump_risk' || primaryResult.bracket === 'excessive')) {
+		const allGrades = ['가성비', '중급', '고급', '프리미엄']
+		let bestResult: LumpSumResult | null = null
+		let bestScore = 0
 
-	// 총액이 범위 대비 어디인지 판정
-	if (totalPrice < rangeMin * 0.8) {
-		return { score: 55, bracket: 'dump_risk', rangeMin, rangeMax }
+		for (const grade of allGrades) {
+			if (grade === targetGrade) continue
+			const result = evaluateLumpSumForGrade(rangeData, pyeongIdx, grade, totalPrice)
+			if (result && result.score > bestScore) {
+				bestResult = result
+				bestScore = result.score
+			}
+		}
+
+		// 다른 등급에서 더 나은 결과가 있으면 사용 (fair/slightly_high/low_margin)
+		if (bestResult && bestResult.score > primaryResult.score) {
+			console.log(`[AutoAnalysis] Lump-sum adaptive: ${stdItem} → ${targetGrade}(${primaryResult.bracket}) → best fit(${bestResult.bracket}, range: ${bestResult.rangeMin}~${bestResult.rangeMax})`)
+			return bestResult
+		}
 	}
-	if (totalPrice < rangeMin) {
-		return { score: 75, bracket: 'low_margin', rangeMin, rangeMax }
-	}
-	if (totalPrice <= rangeMax) {
-		return { score: 90, bracket: 'fair', rangeMin, rangeMax }
-	}
-	if (totalPrice <= rangeMax * 1.3) {
-		return { score: 70, bracket: 'slightly_high', rangeMin, rangeMax }
-	}
-	return { score: 40, bracket: 'excessive', rangeMin, rangeMax }
+
+	return primaryResult
 }
 
 // ============================================
@@ -838,7 +888,7 @@ function estimateGrade(
 // Bonus / Penalty calculation
 // ============================================
 
-function calculateBonuses(items: AnalyzedItem[]): ScoreModifier[] {
+function calculateBonuses(items: AnalyzedItem[], hasLicense?: boolean | null): ScoreModifier[] {
 	const bonuses: ScoreModifier[] = []
 
 	// Transparency bonus
@@ -851,6 +901,16 @@ function calculateBonuses(items: AnalyzedItem[]): ScoreModifier[] {
 			label: '투명성 보너스',
 			points: items.length >= 15 ? 5 : 3,
 			reason: '모든 항목에 수량/단위 명시',
+		})
+	}
+
+	// 면허 확인 가점 (한국 시장에서 면허 보유는 차별화 요소)
+	if (hasLicense) {
+		bonuses.push({
+			type: 'license_verified',
+			label: '면허 확인',
+			points: 5,
+			reason: '시공업체 면허/자격 확인됨',
 		})
 	}
 
@@ -883,13 +943,8 @@ function calculatePenalties(items: AnalyzedItem[], propertySizeSqm: number | nul
 		})
 	}
 
-	// License unverified nudge (auto-analysis can't verify licenses, so soft penalty only)
-	penalties.push({
-		type: 'license_unverified',
-		label: '면허 미확인',
-		points: -3,
-		reason: '시공업체 면허 정보 미제공 (자동분석)',
-	})
+	// License: 한국 인테리어 시장에서 면허 없는 게 기본 → 페널티 X, 확인 시 가점
+	// (자동분석에서는 면허 확인 불가 → 보너스도 페널티도 없음)
 
 	// High value bundled penalty (capped at -15)
 	const highValueBundled = items.filter(i =>
@@ -935,6 +990,133 @@ function calculatePenalties(items: AnalyzedItem[], propertySizeSqm: number | nul
 }
 
 // ============================================
+// 철거 세부 항목 폴백 벤치마크 (DB에 없을 경우)
+// ============================================
+
+const FALLBACK_BENCHMARKS: BenchmarkPrice[] = [
+	// 바닥 철거 (강마루/장판 제거, ㎡당)
+	{ std_category: '철거', std_item: '바닥 철거', unit_price: 6000, unit: '㎡', grade: '가성비', region: '전국', reference_date: '2025-06-01' },
+	{ std_category: '철거', std_item: '바닥 철거', unit_price: 8000, unit: '㎡', grade: '중급', region: '전국', reference_date: '2025-06-01' },
+	{ std_category: '철거', std_item: '바닥 철거', unit_price: 10000, unit: '㎡', grade: '고급', region: '전국', reference_date: '2025-06-01' },
+	{ std_category: '철거', std_item: '바닥 철거', unit_price: 13000, unit: '㎡', grade: '프리미엄', region: '전국', reference_date: '2025-06-01' },
+	// 도배 철거 (벽지 제거, ㎡당)
+	{ std_category: '철거', std_item: '도배 철거', unit_price: 2500, unit: '㎡', grade: '가성비', region: '전국', reference_date: '2025-06-01' },
+	{ std_category: '철거', std_item: '도배 철거', unit_price: 3500, unit: '㎡', grade: '중급', region: '전국', reference_date: '2025-06-01' },
+	{ std_category: '철거', std_item: '도배 철거', unit_price: 4500, unit: '㎡', grade: '고급', region: '전국', reference_date: '2025-06-01' },
+	{ std_category: '철거', std_item: '도배 철거', unit_price: 6000, unit: '㎡', grade: '프리미엄', region: '전국', reference_date: '2025-06-01' },
+]
+
+// ============================================
+// 이중청구 탐지 (Fix 3)
+// ============================================
+
+function detectDuplicateCharges(
+	analyzedItems: AnalyzedItem[],
+	quoteItems: QuoteItem[],
+): AnalysisWarning[] {
+	const warnings: AnalysisWarning[] = []
+
+	for (const rule of DUPLICATE_CHECK_RULES) {
+		// 각 카테고리에서 해당 키워드가 포함된 항목 찾기
+		const matchesByCategory = new Map<string, string[]>()
+
+		for (let i = 0; i < analyzedItems.length; i++) {
+			const analyzed = analyzedItems[i]
+			const quote = quoteItems[i]
+			if (!analyzed.std_category) continue
+
+			// 이 규칙의 대상 카테고리가 아니면 스킵
+			if (!rule.categories.includes(analyzed.std_category as any)) continue
+
+			// 항목명 + 비고에서 키워드 검색
+			const searchText = [
+				analyzed.original_item_name || '',
+				quote?.notes || '',
+				quote?.specification || '',
+			].join(' ').toLowerCase()
+
+			const hasKeyword = rule.contextKeywords.some(kw =>
+				searchText.includes(kw.toLowerCase())
+			)
+
+			if (hasKeyword) {
+				if (!matchesByCategory.has(analyzed.std_category)) {
+					matchesByCategory.set(analyzed.std_category, [])
+				}
+				matchesByCategory.get(analyzed.std_category)!.push(
+					analyzed.original_item_name || '(항목명 없음)'
+				)
+			}
+		}
+
+		// 2개 이상 카테고리에서 동일 키워드 발견 → 이중청구 의심
+		if (matchesByCategory.size >= 2) {
+			const relatedItems: string[] = []
+			for (const [cat, items] of matchesByCategory) {
+				relatedItems.push(`[${cat}] ${items.join(', ')}`)
+			}
+
+			warnings.push({
+				type: 'duplicate_charge',
+				severity: 'high',
+				title: `이중청구 의심: ${rule.contextKeywords[0]}`,
+				description: rule.description,
+				relatedItems,
+				estimatedImpact: rule.estimatedOverlap,
+			})
+		}
+	}
+
+	return warnings
+}
+
+// ============================================
+// 누락 항목 탐지 (Fix 3)
+// ============================================
+
+function detectMissingItems(
+	analyzedItems: AnalyzedItem[],
+	quoteItems: QuoteItem[],
+	propertySizeSqm: number | null,
+): AnalysisWarning[] {
+	const warnings: AnalysisWarning[] = []
+
+	// 평수 기반으로 올수리 여부 판단 (20㎡ 이상 + 5개 카테고리 이상 = 올수리)
+	const uniqueCategories = new Set(analyzedItems.map(i => i.std_category).filter(Boolean))
+	const isFullRenovation = uniqueCategories.size >= 5
+
+	if (!isFullRenovation) return warnings
+
+	const checklist = ESSENTIAL_ITEMS_CHECKLIST['올수리'] || []
+
+	// 모든 항목명 + 비고를 합쳐서 검색 풀 생성
+	const allText = analyzedItems.map((ai, idx) => {
+		const quote = quoteItems[idx]
+		return [
+			ai.original_item_name || '',
+			ai.original_category || '',
+			quote?.notes || '',
+			quote?.specification || '',
+		].join(' ').toLowerCase()
+	}).join(' ')
+
+	for (const essential of checklist) {
+		const found = essential.keywords.some(kw => allText.includes(kw.toLowerCase()))
+		if (!found) {
+			warnings.push({
+				type: 'missing_item',
+				severity: essential.importance,
+				title: `누락 항목: ${essential.description}`,
+				description: `${essential.description}이(가) 견적에 포함되지 않았습니다. 추가 시 ${essential.estimatedCostRange} 비용이 발생할 수 있습니다.`,
+				estimatedImpact: essential.estimatedCostRange,
+			})
+		}
+	}
+
+	return warnings
+}
+
+// ============================================
 // Main auto-analysis function
 // ============================================
 
@@ -958,8 +1140,16 @@ export async function runAutoAnalysis(
 		env.DATABASE_URL,
 		'SELECT std_category, std_item, unit_price, unit, grade, region, reference_date, source, model FROM benchmark_prices WHERE is_active = true'
 	)
-	const benchmarks = benchmarkRows as BenchmarkPrice[]
-	console.log(`[AutoAnalysis] Loaded ${benchmarks.length} benchmark prices`)
+	// 폴백 벤치마크 머지 (DB에 해당 항목이 없을 경우에만 추가)
+	const dbBenchmarks = benchmarkRows as BenchmarkPrice[]
+	const benchmarks = [...dbBenchmarks]
+	for (const fb of FALLBACK_BENCHMARKS) {
+		const exists = dbBenchmarks.some(b =>
+			b.std_category === fb.std_category && b.std_item === fb.std_item && b.grade === fb.grade
+		)
+		if (!exists) benchmarks.push(fb)
+	}
+	console.log(`[AutoAnalysis] Loaded ${dbBenchmarks.length} DB + ${benchmarks.length - dbBenchmarks.length} fallback benchmarks`)
 
 	// 3. Find the earliest benchmark reference date for year factor
 	const referenceDates = benchmarks
@@ -1022,6 +1212,29 @@ export async function runAutoAnalysis(
 		let matchTier: number | null = null
 
 		if (mapped) {
+			// Fix 1: 일식 고액 항목은 LUMP_SUM_RANGES 먼저 평가 (욕실/주방 패키지 오매칭 방지)
+			let lumpSumHandled = false
+			if (isBundled && totalPrice && totalPrice > 500_000) {
+				const pyeong = input.propertySizeSqm ? sqmToPyeong(input.propertySizeSqm) : 34
+				const lumpResult = evaluateLumpSum(
+					mapped.stdCategory, mapped.stdItem || itemName || '',
+					totalPrice, pyeong, targetGrade
+				)
+				if (lumpResult) {
+					lumpSumHandled = true
+					unitMismatch = true
+					fairPriceMin = lumpResult.rangeMin
+					fairPriceMax = lumpResult.rangeMax
+					estimatedCost = Math.round((lumpResult.rangeMin + lumpResult.rangeMax) / 2)
+					marginRate = Math.round(
+						((totalPrice - estimatedCost) / estimatedCost) * 10000
+					) / 100
+					marginBracket = lumpResult.bracket as MarginBracket
+					console.log(`[AutoAnalysis] Lump-sum priority: ${itemName} → ${lumpResult.bracket} (range: ${lumpResult.rangeMin}~${lumpResult.rangeMax}, price: ${totalPrice})`)
+				}
+			}
+
+			if (!lumpSumHandled) {
 			const benchResult = findBenchmarkWithTier(mapped.stdCategory, mapped.stdItem, benchmarks, targetGrade, itemName, unit)
 			if (benchResult) {
 				const bench = benchResult.benchmark
@@ -1118,6 +1331,7 @@ export async function runAutoAnalysis(
 					}
 				}
 			}
+			} // end if (!lumpSumHandled)
 		}
 
 		return {
@@ -1315,7 +1529,7 @@ export async function runAutoAnalysis(
 		: 70
 
 	// 8. Calculate bonuses and penalties
-	const bonuses = calculateBonuses(analyzedItems)
+	const bonuses = calculateBonuses(analyzedItems, input.hasLicense)
 	const penalties = calculatePenalties(analyzedItems, input.propertySizeSqm)
 
 	const bonusTotal = bonuses.reduce((s, b) => s + b.points, 0)
@@ -1334,6 +1548,14 @@ export async function runAutoAnalysis(
 	}
 
 	console.log(`[AutoAnalysis] Score: ${finalScore}, Categories: ${categoryScores.length}`)
+
+	// 8.5. Detect warnings (이중청구 + 누락 항목)
+	const duplicateWarnings = detectDuplicateCharges(analyzedItems, input.items)
+	const missingWarnings = detectMissingItems(analyzedItems, input.items, input.propertySizeSqm)
+	const allWarnings = [...duplicateWarnings, ...missingWarnings]
+	if (allWarnings.length > 0) {
+		console.log(`[AutoAnalysis] Warnings: ${allWarnings.length}건 (이중청구: ${duplicateWarnings.length}, 누락: ${missingWarnings.length})`)
+	}
 
 	// 9. Insert analysis record (1 query)
 	const analysisId = crypto.randomUUID()
@@ -1459,6 +1681,8 @@ export async function runAutoAnalysis(
 					itemCount: withMargin.length,
 				}
 			})(),
+			// 이중청구 + 누락 항목 경고
+			warnings: allWarnings,
 		}), input.quoteRequestId]
 	)
 
@@ -1510,5 +1734,6 @@ export async function runAutoAnalysis(
 		adjustmentFactors,
 		totalScore: finalScore,
 		grade: getScoreGrade(finalScore),
+		warnings: allWarnings,
 	}
 }

@@ -181,14 +181,21 @@ export const ITEM_KEYWORD_MAP: Record<string, string> = {
 	'악세사리': '욕실 악세사리',
 	'수건걸이': '욕실 악세사리',
 
-	// 철거
+	// 철거 (세분화: 바닥재/벽지/타일 개별 단가 매칭)
 	'바닥철거': '바닥 철거',
+	'바닥재 철거': '바닥 철거',
+	'바닥재철거': '바닥 철거',
+	'마루 철거': '바닥 철거',
+	'마루철거': '바닥 철거',
+	'장판 철거': '바닥 철거',
+	'장판철거': '바닥 철거',
 	'벽체철거': '벽체 철거',
+	'벽지 제거': '도배 철거',
+	'벽지제거': '도배 철거',
 	'욕실철거': '욕실 철거',
 	'주방철거': '주방 철거',
 	'천장철거': '천장 철거',
 	'타일철거': '타일 철거',
-	'마루철거': '마루 철거',
 	'도배철거': '도배 철거',
 	'폐기물': '폐기물 반출',
 
@@ -270,6 +277,24 @@ export const LUMP_SUM_RANGES: Record<string, LumpSumRange> = {
 			'프리미엄': [[500_000, 1_200_000], [700_000, 1_500_000], [900_000, 2_000_000], [1_200_000, 2_500_000]],
 		},
 	},
+	'철거_바닥재': {
+		pyeongRanges: [[0, 15], [15, 25], [25, 35], [35, 999]],
+		grades: {
+			'가성비':   [[300_000, 600_000], [400_000, 800_000], [600_000, 1_200_000], [800_000, 1_500_000]],
+			'중급':     [[400_000, 800_000], [600_000, 1_000_000], [800_000, 1_500_000], [1_000_000, 2_000_000]],
+			'고급':     [[600_000, 1_000_000], [800_000, 1_300_000], [1_000_000, 1_800_000], [1_200_000, 2_500_000]],
+			'프리미엄': [[800_000, 1_500_000], [1_000_000, 1_800_000], [1_200_000, 2_500_000], [1_500_000, 3_000_000]],
+		},
+	},
+	'철거_벽지': {
+		pyeongRanges: [[0, 15], [15, 25], [25, 35], [35, 999]],
+		grades: {
+			'가성비':   [[100_000, 250_000], [150_000, 350_000], [200_000, 500_000], [300_000, 600_000]],
+			'중급':     [[150_000, 350_000], [200_000, 500_000], [300_000, 600_000], [400_000, 800_000]],
+			'고급':     [[200_000, 500_000], [300_000, 600_000], [400_000, 800_000], [500_000, 1_000_000]],
+			'프리미엄': [[300_000, 600_000], [400_000, 800_000], [500_000, 1_000_000], [700_000, 1_200_000]],
+		},
+	},
 	'철거_전체': {
 		pyeongRanges: [[0, 15], [15, 25], [25, 35], [35, 999]],
 		grades: {
@@ -279,4 +304,92 @@ export const LUMP_SUM_RANGES: Record<string, LumpSumRange> = {
 			'프리미엄': [[5_000_000, 8_000_000], [6_000_000, 10_000_000], [7_500_000, 13_000_000], [9_000_000, 16_000_000]],
 		},
 	},
+}
+
+// ============================================
+// 이중청구 탐지 규칙
+// ============================================
+
+export interface DuplicateCheckRule {
+	id: string
+	contextKeywords: string[]      // 비고/항목명에서 검색할 키워드
+	categories: StdCategory[]      // 중복 의심 카테고리 조합
+	description: string            // 사용자에게 보여줄 경고 메시지
+	estimatedOverlap: string       // 예상 중복 금액
+}
+
+export const DUPLICATE_CHECK_RULES: DuplicateCheckRule[] = [
+	{
+		id: 'chobaegi',
+		contextKeywords: ['초배지', '초배'],
+		categories: ['철거', '도배'],
+		description: '초배지 작업이 철거(벽지 제거)와 도배에 각각 포함되었을 수 있습니다',
+		estimatedOverlap: '30~50만원',
+	},
+	{
+		id: 'indirect_lighting',
+		contextKeywords: ['간접조명', 'LED 간접', 'led 간접'],
+		categories: ['목공', '전기'],
+		description: '간접조명 시공이 목공(아트월)과 전기에 각각 포함되었을 수 있습니다',
+		estimatedOverlap: '15~25만원',
+	},
+	{
+		id: 'waterproof',
+		contextKeywords: ['방수', '도막방수', '시트방수'],
+		categories: ['욕실', '바닥'],
+		description: '방수 공사가 욕실 리모델링과 바닥 공사에 각각 포함되었을 수 있습니다',
+		estimatedOverlap: '20~40만원',
+	},
+	{
+		id: 'demolition_waste',
+		contextKeywords: ['쓰레기', '폐기물', '반출'],
+		categories: ['철거', '기타'],
+		description: '폐기물 처리가 철거와 기타 항목에 각각 포함되었을 수 있습니다',
+		estimatedOverlap: '20~50만원',
+	},
+]
+
+// ============================================
+// 필수 항목 체크리스트 (누락 탐지용)
+// ============================================
+
+export interface EssentialItem {
+	category: StdCategory
+	keywords: string[]             // 이 키워드 중 하나라도 있으면 존재로 판정
+	description: string
+	estimatedCostRange: string
+	importance: 'high' | 'medium'  // high = 반드시 필요, medium = 권장
+}
+
+export const ESSENTIAL_ITEMS_CHECKLIST: Record<string, EssentialItem[]> = {
+	'올수리': [
+		{
+			category: '창호',
+			keywords: ['방문', '문짝', '실내문', '도어'],
+			description: '실내문(방문) 교체 또는 시트지 래핑',
+			estimatedCostRange: '80~200만원',
+			importance: 'high',
+		},
+		{
+			category: '전기',
+			keywords: ['분전반', '분전함', '차단기'],
+			description: '분전반(차단기 박스) 교체',
+			estimatedCostRange: '15~30만원',
+			importance: 'medium',
+		},
+		{
+			category: '기타',
+			keywords: ['보양', '양생'],
+			description: '공사 중 보양(바닥/엘리베이터 보호) 작업',
+			estimatedCostRange: '30~60만원',
+			importance: 'medium',
+		},
+		{
+			category: '전기',
+			keywords: ['에어컨', '배관 매립', '냉매배관'],
+			description: '에어컨 배관 매립 (시스템/벽걸이)',
+			estimatedCostRange: '30~60만원',
+			importance: 'medium',
+		},
+	],
 }
