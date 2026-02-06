@@ -126,14 +126,14 @@ export default function DamageCasesLanding() {
 			/>
 			{subdomain === 'report' ? <SubdomainNavigation subdomain="report" /> : <NordicNavigation />}
 
-			{/* Hero - Red Gradient Style */}
+			{/* Hero - Warm Red Gradient Style */}
 			<div className="pt-24 md:pt-28">
-				<div className="bg-gradient-to-b from-red-600 to-red-700">
+				<div className="bg-gradient-to-b from-rose-600 to-rose-700">
 					<div className="max-w-6xl mx-auto px-5 md:px-8 py-10 md:py-14">
 						<h1 className="text-white text-2xl md:text-3xl font-extrabold tracking-tight mb-1.5">
 							인테리어 피해,
 						</h1>
-						<p className="text-red-200 text-2xl md:text-3xl font-extrabold tracking-tight mb-6">
+						<p className="text-rose-200 text-2xl md:text-3xl font-extrabold tracking-tight mb-6">
 							함께 예방합니다
 						</p>
 
@@ -141,14 +141,14 @@ export default function DamageCasesLanding() {
 						<div className="flex gap-3 mb-6">
 							<button
 								onClick={() => navigate('/write/damage-case')}
-								className="flex-1 md:flex-none px-8 py-3.5 bg-white text-red-600 font-bold rounded-2xl text-sm hover:bg-sand-100 transition-colors flex items-center justify-center gap-2"
+								className="flex-1 md:flex-none px-8 py-3.5 bg-white text-rose-600 font-bold rounded-2xl text-sm hover:bg-sand-100 transition-colors flex items-center justify-center gap-2"
 							>
 								<AlertTriangle size={16} />
 								사례 등록
 							</button>
 							<button
 								onClick={() => navigate('/blacklist-check')}
-								className="flex-1 md:flex-none px-8 py-3.5 bg-red-800/50 text-white font-bold rounded-2xl text-sm hover:bg-red-800/70 transition-colors flex items-center justify-center gap-2 border border-white/20"
+								className="flex-1 md:flex-none px-8 py-3.5 bg-rose-800/50 text-white font-bold rounded-2xl text-sm hover:bg-rose-800/70 transition-colors flex items-center justify-center gap-2 border border-white/20"
 							>
 								<Shield size={16} />
 								블랙리스트 조회
@@ -158,19 +158,19 @@ export default function DamageCasesLanding() {
 				</div>
 
 				{/* Stats Bar */}
-				<div className="bg-red-50 border-b border-red-100">
+				<div className="bg-rose-50 border-b border-rose-100">
 					<div className="max-w-6xl mx-auto px-5 md:px-8 py-3 flex justify-center gap-10 md:gap-16">
 						<div className="text-center">
-							<p className="text-lg md:text-xl font-extrabold text-red-600">{totalCount > 0 ? totalCount : '-'}</p>
-							<p className="text-[11px] text-sand-500">등록 사례</p>
+							<p className="text-lg md:text-xl font-extrabold text-rose-600">{totalCount > 0 ? totalCount : '-'}</p>
+							<p className="text-[11px] font-semibold text-sand-700">등록 사례</p>
 						</div>
 						<div className="text-center">
-							<p className="text-lg md:text-xl font-extrabold text-red-600">-</p>
-							<p className="text-[11px] text-sand-500">해결 완료</p>
+							<p className="text-lg md:text-xl font-extrabold text-rose-600">-</p>
+							<p className="text-[11px] font-semibold text-sand-700">해결 완료</p>
 						</div>
 						<div className="text-center">
-							<p className="text-lg md:text-xl font-extrabold text-red-600">-</p>
-							<p className="text-[11px] text-sand-500">예방 도움</p>
+							<p className="text-lg md:text-xl font-extrabold text-rose-600">-</p>
+							<p className="text-[11px] font-semibold text-sand-700">예방 도움</p>
 						</div>
 					</div>
 				</div>
@@ -198,7 +198,7 @@ export default function DamageCasesLanding() {
 								updateParam('search', e.target.value)
 							}}
 							placeholder="업체명, 지역, 피해유형 검색"
-							className="w-full pl-10 pr-4 py-2.5 bg-white border border-sand-200 rounded-xl text-sm text-sand-900 placeholder-sand-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-300 transition-all"
+							className="w-full pl-10 pr-4 py-2.5 bg-white border border-sand-200 rounded-xl text-sm text-sand-900 placeholder-sand-400 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 transition-all"
 						/>
 					</div>
 					<select
@@ -207,7 +207,7 @@ export default function DamageCasesLanding() {
 							setSortBy(e.target.value)
 							updateParam('sort_by', e.target.value)
 						}}
-						className="px-4 py-2.5 bg-white border border-sand-200 rounded-xl text-sm text-sand-700 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-300 transition-all"
+						className="px-4 py-2.5 bg-white border border-sand-200 rounded-xl text-sm text-sand-700 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 transition-all"
 					>
 						<option value="created_at">최신순</option>
 						<option value="severity">심각도순</option>
@@ -217,7 +217,7 @@ export default function DamageCasesLanding() {
 				{/* Initial Loading */}
 				{loading && cases.length === 0 && (
 					<div className="flex justify-center py-16">
-						<div className="w-10 h-10 border-2 border-sand-200 border-t-red-400 rounded-full animate-spin" />
+						<div className="w-10 h-10 border-2 border-sand-200 border-t-rose-400 rounded-full animate-spin" />
 					</div>
 				)}
 
@@ -235,7 +235,7 @@ export default function DamageCasesLanding() {
 						<p className="text-sand-500 text-lg mb-6">아직 등록된 피해사례가 없습니다.</p>
 						<button
 							onClick={() => navigate('/write/damage-case')}
-							className="px-8 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors"
+							className="px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-colors"
 						>
 							첫 피해사례 등록하기
 						</button>
@@ -259,7 +259,7 @@ export default function DamageCasesLanding() {
 				{hasMore && cases.length > 0 && (
 					<div ref={sentinelRef} className="flex justify-center py-10">
 						{loadingMore && (
-							<Loader2 size={24} className="text-red-400 animate-spin" />
+							<Loader2 size={24} className="text-rose-400 animate-spin" />
 						)}
 					</div>
 				)}

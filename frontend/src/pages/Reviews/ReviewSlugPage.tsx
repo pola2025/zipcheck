@@ -31,6 +31,7 @@ import LikeButton from 'components/community/LikeButton'
 import ReportModal from 'components/community/ReportModal'
 import { getApiUrl } from '../../lib/api-config'
 import { formatKoreanMoney } from '../../lib/pricing'
+import { getSubdomain } from '../../lib/subdomain'
 
 const BASE_URL = 'https://zcheck.co.kr'
 const IMAGE_BASE_URL = getApiUrl('/images/')
@@ -130,6 +131,8 @@ function StarRatingDisplay({ rating, size = 'md' }: { rating: number; size?: 'sm
 export default function ReviewSlugPage() {
 	const { slug } = useParams<{ slug: string }>()
 	const navigate = useNavigate()
+	const subdomain = getSubdomain()
+	const reviewListPath = subdomain === 'review' ? '/reviews' : '/community?tab=reviews'
 	const [review, setReview] = useState<ReviewData | null>(null)
 	const [relatedReviews, setRelatedReviews] = useState<RelatedReview[]>([])
 	const [loading, setLoading] = useState(true)
@@ -335,7 +338,7 @@ export default function ReviewSlugPage() {
 						요청하신 페이지가 존재하지 않거나 삭제되었습니다.
 					</p>
 					<Link
-						to="/community?tab=reviews"
+						to={reviewListPath}
 						className="inline-flex items-center gap-2 px-5 py-2.5 bg-forest-500 text-white rounded-lg hover:bg-forest-600 transition-colors text-sm font-medium"
 					>
 						<ArrowLeft className="w-4 h-4" />
@@ -386,7 +389,7 @@ export default function ReviewSlugPage() {
 				<div className="max-w-3xl mx-auto px-5 md:px-8">
 					{/* Back navigation */}
 					<button
-						onClick={() => navigate('/community?tab=reviews')}
+						onClick={() => navigate(reviewListPath)}
 						className="flex items-center gap-2 text-forest-600 hover:text-forest-700 mb-6 transition-colors text-sm font-medium"
 						aria-label="전체 후기 목록으로 돌아가기"
 					>
@@ -717,7 +720,7 @@ export default function ReviewSlugPage() {
 						</div>
 						<div className="mt-5 pt-4 border-t border-sand-100 text-center">
 							<Link
-								to="/community?tab=reviews"
+								to={reviewListPath}
 								className="inline-flex items-center gap-1.5 text-sm font-medium text-[#0A9DAA] hover:text-[#088997] transition-colors"
 							>
 								더 많은 후기 보기

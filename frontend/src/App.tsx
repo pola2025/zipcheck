@@ -140,6 +140,7 @@ const reviewDomainRoutes = (
 		<Route path='/' element={<ReviewsLanding />} />
 		<Route path='/reviews' element={<ReviewsLanding />} />
 		<Route path='/reviews/:slug' element={<ReviewSlugPage />} />
+		<Route path='/community/reviews/:id' element={<ReviewDetail />} />
 		<Route path='/write/review' element={<ReviewWrite />} />
 		<Route path='/auth/google/callback' element={<GoogleCallback />} />
 		<Route path='/auth/google/success' element={<GoogleCallback />} />
@@ -168,6 +169,7 @@ const reportDomainRoutes = (
 		<Route path='/' element={<DamageCasesLanding />} />
 		<Route path='/damage-cases' element={<DamageCasesLanding />} />
 		<Route path='/damage-cases/:slug' element={<DamageCaseSlugPage />} />
+		<Route path='/community/damage-cases/:id' element={<DamageCaseDetail />} />
 		<Route path='/write/damage-case' element={<DamageCaseWrite />} />
 		<Route path='/blacklist-check' element={<BlacklistCheck />} />
 		<Route path='/auth/google/callback' element={<GoogleCallback />} />

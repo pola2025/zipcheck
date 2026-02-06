@@ -9,6 +9,7 @@ import Comments from 'components/community/Comments'
 import LikeButton from 'components/community/LikeButton'
 import ReportModal from 'components/community/ReportModal'
 import { getApiUrl } from '../../lib/api-config'
+import { getSubdomain } from '../../lib/subdomain'
 
 const BASE_URL = 'https://zcheck.co.kr'
 const IMAGE_BASE_URL = getApiUrl('/images/')
@@ -62,6 +63,8 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function DamageCaseSlugPage() {
 	const { slug } = useParams<{ slug: string }>()
 	const navigate = useNavigate()
+	const subdomain = getSubdomain()
+	const caseListPath = subdomain === 'report' ? '/damage-cases' : '/community?tab=damage-cases'
 	const [damageCase, setDamageCase] = useState<DamageCaseData | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
@@ -200,7 +203,7 @@ export default function DamageCaseSlugPage() {
 						{error || '피해사례를 찾을 수 없습니다'}
 					</h1>
 					<p className="text-sand-600 mb-6">요청하신 페이지가 존재하지 않거나 삭제되었습니다.</p>
-					<Link to="/community?tab=damage-cases" className="text-forest-600 hover:text-forest-700 font-medium transition-colors">
+					<Link to={caseListPath} className="text-forest-600 hover:text-forest-700 font-medium transition-colors">
 						커뮤니티로 돌아가기
 					</Link>
 				</div>
@@ -252,7 +255,7 @@ export default function DamageCaseSlugPage() {
 			<div className="pt-20 pb-8 md:pt-28 md:pb-12 bg-gradient-to-b from-sand-100 to-sand-50">
 				<div className="max-w-3xl mx-auto px-5 md:px-8">
 					<button
-						onClick={() => navigate('/community?tab=damage-cases')}
+						onClick={() => navigate(caseListPath)}
 						className="flex items-center gap-2 text-forest-600 hover:text-forest-700 mb-6 transition-colors text-sm font-medium"
 					>
 						<ArrowLeft className="w-4 h-4" />
@@ -368,7 +371,7 @@ export default function DamageCaseSlugPage() {
 				{/* Back to community */}
 				<div className="mb-8 text-center">
 					<Link
-						to="/community?tab=damage-cases"
+						to={caseListPath}
 						className="inline-flex items-center gap-2 text-forest-600 hover:text-forest-700 font-medium text-sm transition-colors"
 					>
 						<ArrowLeft className="w-4 h-4" />
