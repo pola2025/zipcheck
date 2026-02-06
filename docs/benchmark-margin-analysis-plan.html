@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZipCheck 벤치마크 비교 로직 개선 기획서</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        forest: { 50:'#f0fdf4', 100:'#dcfce7', 200:'#bbf7d0', 500:'#22c55e', 600:'#16a34a', 700:'#15803d', 800:'#166534' },
+        sand: { 50:'#fafaf9', 100:'#f5f5f4', 200:'#e7e5e4', 300:'#d6d3d1', 400:'#a8a29e', 500:'#78716c', 600:'#57534e', 700:'#44403c', 800:'#292524', 900:'#1c1917' },
+      }
+    }
+  }
+}
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap');
+  body { font-family: 'Pretendard', -apple-system, sans-serif; background: #fafaf9; }
+  .wire-box { border: 2px dashed #d6d3d1; border-radius: 12px; background: white; }
+  .wire-box-accent { border: 2px solid #16a34a; border-radius: 12px; background: #f0fdf4; }
+  .wire-box-warn { border: 2px solid #f59e0b; border-radius: 12px; background: #fffbeb; }
+  .wire-box-danger { border: 2px solid #ef4444; border-radius: 12px; background: #fef2f2; }
+  .arrow-down { width:0; height:0; border-left:12px solid transparent; border-right:12px solid transparent; border-top:20px solid #16a34a; margin:0 auto; }
+  .flow-connector { width:2px; height:24px; background:#16a34a; margin:0 auto; }
+  .tag { display:inline-block; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:600; }
+  .section-num { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:#166534; color:white; font-weight:700; font-size:14px; }
+</style>
+</head>
+<body class="p-4 md:p-8 max-w-5xl mx-auto">
+
+<!-- ──────────────────────────────────────────────
+     HEADER
+     ────────────────────────────────────────────── -->
+<header class="mb-10">
+  <div class="flex items-center gap-3 mb-2">
+    <div class="w-10 h-10 rounded-xl bg-forest-600 flex items-center justify-center text-white font-bold text-lg">Z</div>
+    <div>
+      <h1 class="text-2xl md:text-3xl font-extrabold text-sand-900">벤치마크 비교 로직 개선 기획서</h1>
+      <p class="text-sand-500 text-sm">ZipCheck 견적분석 시스템 v1.7 — 원가 기반 마진율 분석</p>
+    </div>
+  </div>
+  <div class="flex gap-2 mt-3 flex-wrap">
+    <span class="tag bg-forest-100 text-forest-700">핵심 차별점: 원가 기반</span>
+    <span class="tag bg-blue-100 text-blue-700">마진율 15~20% 적정 기준</span>
+    <span class="tag bg-sand-200 text-sand-700">2026-02-06</span>
+  </div>
+</header>
+
+<!-- ──────────────────────────────────────────────
+     1. 현재 문제점
+     ────────────────────────────────────────────── -->
+<section class="mb-10">
+  <h2 class="flex items-center gap-2 text-lg font-bold text-sand-900 mb-4">
+    <span class="section-num">1</span> 현재 문제점 (AS-IS)
+  </h2>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <!-- 문제 1 -->
+    <div class="wire-box-danger p-5">
+      <h3 class="font-bold text-red-700 mb-2">문제 1: 원가 vs 견적가 직접 비교</h3>
+      <div class="bg-white rounded-lg p-4 mb-3 border border-red-100">
+        <div class="text-xs text-sand-500 mb-1">현재 비교 방식</div>
+        <div class="flex items-center gap-3">
+          <div class="text-center">
+            <div class="text-sm font-bold text-sand-800">벤치마크 원가</div>
+            <div class="text-lg font-bold text-blue-600">50,000원/㎡</div>
+          </div>
+          <div class="text-red-500 font-bold text-xl">vs</div>
+          <div class="text-center">
+            <div class="text-sm font-bold text-sand-800">견적 가격</div>
+            <div class="text-lg font-bold text-sand-900">65,000원/㎡</div>
+          </div>
+        </div>
+        <div class="mt-2 text-center">
+          <span class="tag bg-red-100 text-red-700">편차 +30% → "높음" 판정</span>
+        </div>
+      </div>
+      <p class="text-sm text-red-800">
+        <strong>실제로는</strong> 마진 30%가 아닌, 원가 50,000 + 적정마진(20%) = 60,000원 기준으로<br>
+        편차 +8.3%로 <strong>"적정" 판정</strong>이 맞음
+      </p>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="wire-box-danger p-5">
+      <h3 class="font-bold text-red-700 mb-2">문제 2: 일식/총액 항목 비교 불가</h3>
+      <div class="bg-white rounded-lg p-4 mb-3 border border-red-100">
+        <div class="text-xs text-sand-500 mb-1">현재 처리</div>
+        <div class="space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-sand-700">도배 1식</span>
+            <span class="text-sm font-bold">250만원</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-sand-700">벤치마크</span>
+            <span class="text-sm font-bold text-blue-600">5,000원/㎡</span>
+          </div>
+          <div class="text-center mt-2">
+            <span class="tag bg-sand-200 text-sand-600">⚠ 단위 불일치 → 비교 스킵</span>
+          </div>
+        </div>
+      </div>
+      <p class="text-sm text-red-800">
+        면적 정보가 있으면 <strong>원가 합산 가능</strong><br>
+        (5,000원 × 110㎡ = 55만원 원가 → 마진율 355% = 과다)
+      </p>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="wire-box-danger p-5">
+      <h3 class="font-bold text-red-700 mb-2">문제 3: 시장가 비교 = 차별성 없음</h3>
+      <p class="text-sm text-sand-700 mb-3">
+        단순 시장가 비교는 아무 인테리어 견적 사이트에서 제공.<br>
+        <strong>ZipCheck의 핵심 USP인 "원가 기반 분석"을 활용 못하는 상태.</strong>
+      </p>
+      <div class="flex gap-2">
+        <span class="tag bg-sand-200 text-sand-600">일반 사이트: 시장가 비교</span>
+        <span class="tag bg-forest-100 text-forest-700">ZipCheck: 원가 + 마진율 분석 ✓</span>
+      </div>
+    </div>
+
+    <!-- 문제 4 -->
+    <div class="wire-box-danger p-5">
+      <h3 class="font-bold text-red-700 mb-2">문제 4: 마진율 기반 판단 부재</h3>
+      <p class="text-sm text-sand-700 mb-3">
+        현재 편차%만 표시 → 사용자가 "비싼지/적정한지" 판단 기준 없음<br>
+        <strong>마진율이 핵심 지표</strong>인데 노출하지 않는 상태.
+      </p>
+      <div class="bg-white rounded-lg p-3 border border-red-100">
+        <div class="text-xs text-sand-500 mb-2">사용자가 알고 싶은 것</div>
+        <ul class="text-sm space-y-1 text-sand-800">
+          <li>"이 항목에서 업체가 <strong>얼마나 남기는 건가요?</strong>"</li>
+          <li>"마진이 <strong>적정 수준인가요?</strong>"</li>
+          <li>"어떤 항목에서 <strong>과하게 남기나요?</strong>"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────────────────────────────────────
+     2. 개선 방향 (핵심 개념)
+     ────────────────────────────────────────────── -->
+<section class="mb-10">
+  <h2 class="flex items-center gap-2 text-lg font-bold text-sand-900 mb-4">
+    <span class="section-num">2</span> 개선 방향: 원가 기반 마진율 분석 (TO-BE)
+  </h2>
+
+  <!-- 핵심 공식 -->
+  <div class="wire-box-accent p-6 mb-6">
+    <h3 class="font-bold text-forest-800 mb-4 text-center text-lg">핵심 공식</h3>
+    <div class="bg-white rounded-xl p-5 border border-forest-200 text-center mb-4">
+      <div class="text-xl md:text-2xl font-bold text-sand-900">
+        마진율 = <span class="text-forest-600">(견적가 - 원가)</span> / <span class="text-blue-600">원가</span> × 100
+      </div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+      <div class="bg-white rounded-lg p-3 border border-forest-200">
+        <div class="text-xs text-sand-500">덤핑 위험</div>
+        <div class="text-xl font-bold text-purple-600">&lt; 5%</div>
+        <div class="text-xs text-purple-600">원가 미만 수준</div>
+      </div>
+      <div class="bg-white rounded-lg p-3 border border-forest-200">
+        <div class="text-xs text-sand-500">적정 마진</div>
+        <div class="text-xl font-bold text-green-600">15~25%</div>
+        <div class="text-xs text-green-600">업계 표준</div>
+      </div>
+      <div class="bg-white rounded-lg p-3 border border-forest-200">
+        <div class="text-xs text-sand-500">약간 높음</div>
+        <div class="text-xl font-bold text-amber-600">25~40%</div>
+        <div class="text-xs text-amber-600">협상 여지</div>
+      </div>
+      <div class="bg-white rounded-lg p-3 border border-forest-200">
+        <div class="text-xs text-sand-500">과다 마진</div>
+        <div class="text-xl font-bold text-red-600">&gt; 40%</div>
+        <div class="text-xs text-red-600">재견적 권고</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AS-IS vs TO-BE 비교 -->
+  <div class="grid md:grid-cols-2 gap-4 mb-6">
+    <div class="wire-box p-5">
+      <h3 class="font-bold text-sand-500 mb-3 text-center">AS-IS: 단순 편차 비교</h3>
+      <div class="space-y-3">
+        <div class="bg-sand-50 rounded-lg p-3">
+          <div class="flex justify-between text-sm">
+            <span>강마루</span>
+            <span class="font-bold">65,000원/㎡</span>
+          </div>
+          <div class="flex justify-between text-xs text-sand-500">
+            <span>벤치마크(원가)</span>
+            <span>50,000원/㎡</span>
+          </div>
+          <div class="mt-2">
+            <span class="tag bg-red-100 text-red-700">편차 +30% "높음"</span>
+          </div>
+        </div>
+        <div class="bg-sand-50 rounded-lg p-3">
+          <div class="flex justify-between text-sm">
+            <span>도배 1식</span>
+            <span class="font-bold">250만원</span>
+          </div>
+          <div class="flex justify-between text-xs text-sand-500">
+            <span>벤치마크</span>
+            <span>5,000원/㎡</span>
+          </div>
+          <div class="mt-2">
+            <span class="tag bg-sand-200 text-sand-600">⚠ 단위 불일치 → 스킵</span>
+          </div>
+        </div>
+      </div>
+      <p class="text-xs text-red-500 mt-3 text-center">원가와 직접 비교 → 항상 "비싸다" / 총액은 비교 불가</p>
+    </div>
+
+    <div class="wire-box-accent p-5">
+      <h3 class="font-bold text-forest-700 mb-3 text-center">TO-BE: 마진율 기반 분석</h3>
+      <div class="space-y-3">
+        <div class="bg-white rounded-lg p-3 border border-forest-200">
+          <div class="flex justify-between text-sm">
+            <span>강마루</span>
+            <span class="font-bold">65,000원/㎡</span>
+          </div>
+          <div class="flex justify-between text-xs text-sand-500">
+            <span>원가 50,000 → 적정가 57,500~62,500</span>
+            <span></span>
+          </div>
+          <div class="mt-2 flex items-center gap-2">
+            <span class="tag bg-amber-100 text-amber-700">마진율 30%</span>
+            <span class="text-xs text-sand-500">약간 높음 (적정: 15~25%)</span>
+          </div>
+          <!-- 마진율 바 -->
+          <div class="mt-2 h-2 bg-sand-100 rounded-full overflow-hidden">
+            <div class="h-full bg-amber-400 rounded-full" style="width:60%"></div>
+          </div>
+          <div class="flex justify-between text-[10px] text-sand-400 mt-0.5">
+            <span>0%</span><span class="text-green-500">15%</span><span class="text-green-500">25%</span><span>50%</span>
+          </div>
+        </div>
+        <div class="bg-white rounded-lg p-3 border border-forest-200">
+          <div class="flex justify-between text-sm">
+            <span>도배 1식</span>
+            <span class="font-bold">250만원</span>
+          </div>
+          <div class="flex justify-between text-xs text-sand-500">
+            <span>원가 합산: 5,000×110㎡ = 55만</span>
+            <span></span>
+          </div>
+          <div class="mt-2 flex items-center gap-2">
+            <span class="tag bg-red-100 text-red-700">마진율 355%</span>
+            <span class="text-xs text-red-500">과다 마진 ⚠</span>
+          </div>
+          <div class="mt-1 text-xs text-sand-500">→ 적정가: 63~69만원 (마진 15~25%)</div>
+        </div>
+      </div>
+      <p class="text-xs text-forest-600 mt-3 text-center">원가 + 마진율 → 정확한 적정가 산출 + 총액도 분석 가능</p>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────────────────────────────────────
+     3. 분석 흐름도
+     ────────────────────────────────────────────── -->
+<section class="mb-10">
+  <h2 class="flex items-center gap-2 text-lg font-bold text-sand-900 mb-4">
+    <span class="section-num">3</span> 분석 로직 흐름도 (TO-BE)
+  </h2>
+
+  <div class="wire-box p-6">
+    <!-- Step 1 -->
+    <div class="bg-blue-50 rounded-xl p-4 border border-blue-200 text-center mb-1">
+      <div class="text-xs text-blue-500 font-bold mb-1">STEP 1</div>
+      <div class="text-sm font-bold text-blue-800">견적 항목 입력</div>
+      <div class="text-xs text-sand-500">카테고리 / 항목명 / 수량 / 단위 / 단가 / 총액</div>
+    </div>
+    <div class="flow-connector"></div>
+
+    <!-- Step 2: 분기 -->
+    <div class="bg-amber-50 rounded-xl p-4 border border-amber-200 text-center mb-1">
+      <div class="text-xs text-amber-600 font-bold mb-1">STEP 2</div>
+      <div class="text-sm font-bold text-amber-800">항목 유형 분류</div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4 mt-3 mb-1">
+      <!-- 왼쪽: 단가 비교 가능 -->
+      <div>
+        <div class="bg-green-50 rounded-xl p-4 border border-green-200">
+          <div class="text-xs text-green-600 font-bold mb-2">A. 단가 비교 가능</div>
+          <div class="text-xs text-sand-600 mb-3">
+            단위가 일치 (㎡, 개, m 등) + 수량 명확
+          </div>
+          <div class="bg-white rounded-lg p-3 border border-green-100 space-y-2">
+            <div class="text-xs">
+              <span class="text-sand-500">① 원가 조회:</span>
+              <span class="font-mono text-xs"> benchmark_prices → 50,000원/㎡</span>
+            </div>
+            <div class="text-xs">
+              <span class="text-sand-500">② 보정 적용:</span>
+              <span class="font-mono text-xs"> × 지역 × 시기 × 면적 = 52,000원/㎡</span>
+            </div>
+            <div class="text-xs">
+              <span class="text-sand-500">③ 마진율:</span>
+              <span class="font-mono text-xs"> (65,000 - 52,000) / 52,000 = <strong>25%</strong></span>
+            </div>
+            <div class="text-xs">
+              <span class="text-sand-500">④ 판정:</span>
+              <span class="tag bg-amber-100 text-amber-700">약간 높음 (적정: 15~25%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 오른쪽: 총액 비교 -->
+      <div>
+        <div class="bg-purple-50 rounded-xl p-4 border border-purple-200">
+          <div class="text-xs text-purple-600 font-bold mb-2">B. 총액(일식) 항목</div>
+          <div class="text-xs text-sand-600 mb-3">
+            단위=식/일식, 수량 없음, 총액만 존재
+          </div>
+          <div class="bg-white rounded-lg p-3 border border-purple-100 space-y-2">
+            <div class="text-xs">
+              <span class="text-sand-500">① 카테고리 원가 합산:</span>
+              <span class="font-mono text-xs"> 해당 카테고리 대표 항목들의 원가 합산</span>
+            </div>
+            <div class="text-xs">
+              <span class="text-sand-500">② 면적 반영:</span>
+              <span class="font-mono text-xs"> 원가단가 × 면적(㎡) = 카테고리 원가 총액</span>
+            </div>
+            <div class="text-xs">
+              <span class="text-sand-500">③ 마진율:</span>
+              <span class="font-mono text-xs"> (견적총액 - 원가총액) / 원가총액 = <strong>X%</strong></span>
+            </div>
+            <div class="text-xs">
+              <span class="text-sand-500">④ 판정:</span>
+              <span class="text-xs text-sand-600">동일한 마진율 기준 적용</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-connector"></div>
+
+    <!-- Step 3 -->
+    <div class="bg-forest-50 rounded-xl p-4 border border-forest-200 text-center">
+      <div class="text-xs text-forest-600 font-bold mb-1">STEP 3</div>
+      <div class="text-sm font-bold text-forest-800">마진율 기반 스코어링</div>
+      <div class="text-xs text-sand-600 mt-1">카테고리별 평균 마진율 → 가중 합산 → 보너스/패널티 → 최종 점수(0~100)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────────────────────────────────────
+     4. 마진율 판정 기준표
+     ────────────────────────────────────────────── -->
+<section class="mb-10">
+  <h2 class="flex items-center gap-2 text-lg font-bold text-sand-900 mb-4">
+    <span class="section-num">4</span> 마진율 판정 기준표
+  </h2>
+
+  <div class="wire-box p-5 overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-sand-200">
+          <th class="text-left py-2 px-3 text-sand-500 font-semibold">마진율 구간</th>
+          <th class="text-left py-2 px-3 text-sand-500 font-semibold">판정</th>
+          <th class="text-left py-2 px-3 text-sand-500 font-semibold">배지 색상</th>
+          <th class="text-left py-2 px-3 text-sand-500 font-semibold">사용자 안내 메시지</th>
+          <th class="text-center py-2 px-3 text-sand-500 font-semibold">스코어 영향</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-sand-100">
+          <td class="py-2.5 px-3 font-mono font-bold text-purple-700">&lt; 5%</td>
+          <td class="py-2.5 px-3"><span class="tag bg-purple-100 text-purple-700">덤핑 위험</span></td>
+          <td class="py-2.5 px-3"><div class="w-5 h-5 rounded bg-purple-500"></div></td>
+          <td class="py-2.5 px-3 text-xs text-sand-600">원가 수준으로 하자/부실 시공 위험</td>
+          <td class="py-2.5 px-3 text-center text-red-600 font-bold">-15</td>
+        </tr>
+        <tr class="border-b border-sand-100">
+          <td class="py-2.5 px-3 font-mono font-bold text-orange-700">5~14%</td>
+          <td class="py-2.5 px-3"><span class="tag bg-orange-100 text-orange-700">저마진</span></td>
+          <td class="py-2.5 px-3"><div class="w-5 h-5 rounded bg-orange-400"></div></td>
+          <td class="py-2.5 px-3 text-xs text-sand-600">가격은 유리하나, 자재/시공 품질 확인 필요</td>
+          <td class="py-2.5 px-3 text-center text-orange-600 font-bold">-5</td>
+        </tr>
+        <tr class="border-b border-sand-100 bg-green-50/50">
+          <td class="py-2.5 px-3 font-mono font-bold text-green-700">15~25%</td>
+          <td class="py-2.5 px-3"><span class="tag bg-green-100 text-green-700">적정 마진</span></td>
+          <td class="py-2.5 px-3"><div class="w-5 h-5 rounded bg-green-500"></div></td>
+          <td class="py-2.5 px-3 text-xs text-sand-600">업계 표준 수준의 합리적인 가격</td>
+          <td class="py-2.5 px-3 text-center text-green-600 font-bold">0 (기준)</td>
+        </tr>
+        <tr class="border-b border-sand-100">
+          <td class="py-2.5 px-3 font-mono font-bold text-amber-700">25~40%</td>
+          <td class="py-2.5 px-3"><span class="tag bg-amber-100 text-amber-700">약간 높음</span></td>
+          <td class="py-2.5 px-3"><div class="w-5 h-5 rounded bg-amber-400"></div></td>
+          <td class="py-2.5 px-3 text-xs text-sand-600">협상 여지 있음. 브랜드/자재 확인 권고</td>
+          <td class="py-2.5 px-3 text-center text-amber-600 font-bold">-5</td>
+        </tr>
+        <tr class="border-b border-sand-100">
+          <td class="py-2.5 px-3 font-mono font-bold text-red-700">40~80%</td>
+          <td class="py-2.5 px-3"><span class="tag bg-red-100 text-red-700">과다 마진</span></td>
+          <td class="py-2.5 px-3"><div class="w-5 h-5 rounded bg-red-500"></div></td>
+          <td class="py-2.5 px-3 text-xs text-sand-600">시장가 대비 과도. 재견적 또는 협상 강력 권고</td>
+          <td class="py-2.5 px-3 text-center text-red-600 font-bold">-10</td>
+        </tr>
+        <tr>
+          <td class="py-2.5 px-3 font-mono font-bold text-red-900">&gt; 80%</td>
+          <td class="py-2.5 px-3"><span class="tag bg-red-200 text-red-800">비정상</span></td>
+          <td class="py-2.5 px-3"><div class="w-5 h-5 rounded bg-red-700"></div></td>
+          <td class="py-2.5 px-3 text-xs text-sand-600">비정상 가격. 항목 누락 또는 과대청구 의심</td>
+          <td class="py-2.5 px-3 text-center text-red-800 font-bold">-20</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ──────────────────────────────────────────────
+     5. 총액(일식) 항목 분석 방법
+     ────────────────────────────────────────────── -->
+<section class="mb-10">
+  <h2 class="flex items-center gap-2 text-lg font-bold text-sand-900 mb-4">
+    <span class="section-num">5</span> 총액(일식) 항목 분석 방법
+  </h2>
+
+  <div class="wire-box p-5">
+    <h3 class="font-bold text-sand-800 mb-3">카테고리별 기준 원가 산출 (면적 기반)</h3>
+    <p class="text-sm text-sand-600 mb-4">
+      면적 정보(평형)가 있을 때, 카테고리별 대표 원가 항목의 합산으로 "이 카테고리 원가 총액"을 추정합니다.
+    </p>
+
+    <div class="bg-sand-50 rounded-xl p-4 border border-sand-200 mb-4">
+      <div class="text-sm font-bold text-sand-800 mb-3">예시: 33평(109㎡) 아파트 — 도배 카테고리</div>
+      <div class="grid md:grid-cols-3 gap-3">
+        <div class="bg-white rounded-lg p-3 border border-sand-200">
+          <div class="text-xs text-sand-500 mb-1">벽면 도배 원가</div>
+          <div class="text-sm">실크 6,000원/㎡ × 벽면적 200㎡</div>
+          <div class="text-right font-bold text-blue-600">= 120만원</div>
+        </div>
+        <div class="bg-white rounded-lg p-3 border border-sand-200">
+          <div class="text-xs text-sand-500 mb-1">천장 도배 원가</div>
+          <div class="text-sm">합지 4,000원/㎡ × 바닥면적 109㎡</div>
+          <div class="text-right font-bold text-blue-600">= 44만원</div>
+        </div>
+        <div class="bg-white rounded-lg p-3 border border-sand-200">
+          <div class="text-xs text-sand-500 mb-1">도배 철거 원가</div>
+          <div class="text-sm">5,000원/㎡ × 벽면적 200㎡</div>
+          <div class="text-right font-bold text-blue-600">= 100만원</div>
+        </div>
+      </div>
+      <div class="mt-3 bg-blue-50 rounded-lg p-3 border border-blue-200">
+        <div class="flex justify-between items-center">
+          <span class="text-sm font-bold text-blue-800">카테고리 원가 합산</span>
+          <span class="text-lg font-bold text-blue-700">264만원</span>
+        </div>
+      </div>
+      <div class="mt-2 bg-forest-50 rounded-lg p-3 border border-forest-200">
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-sand-600">견적 총액: 350만원</span>
+          <span class="text-sm">마진율: (350-264)/264 =</span>
+          <span class="tag bg-amber-100 text-amber-700">32.6% 약간 높음</span>
+        </div>
+        <div class="text-xs text-sand-500 mt-1">적정가 범위: 304~330만원 (마진 15~25%)</div>
+      </div>
+    </div>
+
+    <div class="bg-amber-50 rounded-xl p-4 border border-amber-200">
+      <h4 class="text-sm font-bold text-amber-800 mb-2">면적 정보 없는 경우</h4>
+      <p class="text-sm text-sand-700">
+        면적이 입력되지 않은 경우, 총액 기반 마진율 분석 불가 → <br>
+        <strong>"면적 정보를 입력하면 더 정확한 분석이 가능합니다"</strong> 안내 메시지 표시
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────────────────────────────────────
+     6. 카테고리별 면적 환산 계수
+     ────────────────────────────────────────────── -->
+<section class="mb-10">
+  <h2 class="flex items-center gap-2 text-lg font-bold text-sand-900 mb-4">
+    <span class="section-num">6</span> 카테고리별 면적 환산 계수
+  </h2>
+
+  <div class="wire-box p-5 overflow-x-auto">
+    <p class="text-sm text-sand-600 mb-4">
+      전용면적(㎡) 기준으로 각 카테고리의 시공 면적을 환산하는 계수. 벽면적은 바닥면적의 약 1.8~2.0배.
+    </p>
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-sand-200">
+          <th class="text-left py-2 px-3 text-sand-500">카테고리</th>
+          <th class="text-left py-2 px-3 text-sand-500">시공 면적 환산</th>
+          <th class="text-left py-2 px-3 text-sand-500">대표 원가 항목</th>
+          <th class="text-left py-2 px-3 text-sand-500">비고</th>
+        </tr>
+      </thead>
+      <tbody class="text-xs">
+        <tr class="border-b border-sand-100">
+          <td class="py-2 px-3 font-bold">도배</td>
+          <td class="py-2 px-3">벽: 전용×1.8 / 천장: 전용×1.0</td>
+          <td class="py-2 px-3">실크도배 + 천장도배</td>
+          <td class="py-2 px-3 text-sand-400">등급별 벽지 단가 반영</td>
+        </tr>
+        <tr class="border-b border-sand-100">
+          <td class="py-2 px-3 font-bold">바닥</td>
+          <td class="py-2 px-3">전용면적 × 0.85</td>
+          <td class="py-2 px-3">강마루/강화마루/타일</td>
+          <td class="py-2 px-3 text-sand-400">욕실·발코니 제외</td>
+        </tr>
+        <tr class="border-b border-sand-100">
+          <td class="py-2 px-3 font-bold">페인트</td>
+          <td class="py-2 px-3">벽: 전용×1.8 / 천장: 전용×1.0</td>
+          <td class="py-2 px-3">벽면+천장 페인트</td>
+          <td class="py-2 px-3 text-sand-400">도배 대신 사용 시</td>
+        </tr>
+        <tr class="border-b border-sand-100">
+          <td class="py-2 px-3 font-bold">철거</td>
+          <td class="py-2 px-3">전용면적 × 1.0 (바닥) + 벽×0.5</td>
+          <td class="py-2 px-3">바닥+도배+마루 철거</td>
+          <td class="py-2 px-3 text-sand-400">폐기물 별도</td>
+        </tr>
+        <tr class="border-b border-sand-100">
+          <td class="py-2 px-3 font-bold">욕실</td>
+          <td class="py-2 px-3">개수 기반 (1~2개)</td>
+          <td class="py-2 px-3">타일+위생도기+수전+방수</td>
+          <td class="py-2 px-3 text-sand-400">면적 무관, 세트가</td>
+        </tr>
+        <tr class="border-b border-sand-100">
+          <td class="py-2 px-3 font-bold">주방</td>
+          <td class="py-2 px-3">싱크대 길이 (보통 2.5~3.5m)</td>
+          <td class="py-2 px-3">상/하부장+상판+후드</td>
+          <td class="py-2 px-3 text-sand-400">길이 기반 또는 세트가</td>
+        </tr>
+        <tr class="border-b border-sand-100">
+          <td class="py-2 px-3 font-bold">전기</td>
+          <td class="py-2 px-3">개수 기반 (방 수 × 3~5개)</td>
+          <td class="py-2 px-3">콘센트+스위치+조명+분전반</td>
+          <td class="py-2 px-3 text-sand-400">방 수 추정 가능</td>
+        </tr>
+        <tr class="border-b border-sand-100">
+          <td class="py-2 px-3 font-bold">목공</td>
+          <td class="py-2 px-3">문 개수 + 몰딩 m + 천장㎡</td>
+          <td class="py-2 px-3">문틀+몰딩+걸레받이+천장</td>
+          <td class="py-2 px-3 text-sand-400">복합 산출</td>
+        </tr>
+        <tr class="border-b border-sand-100">
+          <td class="py-2 px-3 font-bold">가구</td>
+          <td class="py-2 px-3">개수 기반</td>
+          <td class="py-2 px-3">붙박이장+신발장</td>
+          <td class="py-2 px-3 text-sand-400">세트가</td>
+        </tr>
+        <tr>
+          <td class="py-2 px-3 font-bold">창호</td>
+          <td class="py-2 px-3">개수 기반 (방 수 × 1~2개)</td>
+          <td class="py-2 px-3">시스템창호+방문+현관문</td>
+          <td class="py-2 px-3 text-sand-400">세트가</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ──────────────────────────────────────────────
+     7. UI 와이어프레임
+     ────────────────────────────────────────────── -->
+<section class="mb-10">
+  <h2 class="flex items-center gap-2 text-lg font-bold text-sand-900 mb-4">
+    <span class="section-num">7</span> UI 와이어프레임 (개선 후)
+  </h2>
+
+  <!-- 7-1: 종합 점수 카드 개선 -->
+  <h3 class="text-sm font-bold text-sand-700 mb-3 mt-6">7-1. 종합 점수 카드 — 마진율 요약 추가</h3>
+  <div class="wire-box p-5 mb-6">
+    <div class="flex flex-col md:flex-row items-center gap-6">
+      <!-- 점수 게이지 -->
+      <div class="w-28 h-28 rounded-full border-8 border-forest-400 flex items-center justify-center flex-shrink-0">
+        <div class="text-center">
+          <div class="text-2xl font-bold">72</div>
+          <div class="text-[10px] text-sand-500">양호</div>
+        </div>
+      </div>
+      <!-- 정보 -->
+      <div class="flex-1 w-full">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="bg-sand-50 rounded-lg p-3 border border-sand-200 text-center">
+            <div class="text-[10px] text-sand-500">총 견적액</div>
+            <div class="text-lg font-bold">3,200만원</div>
+          </div>
+          <div class="bg-sand-50 rounded-lg p-3 border border-sand-200 text-center">
+            <div class="text-[10px] text-sand-500">추정 원가</div>
+            <div class="text-lg font-bold text-blue-600">2,400만원</div>
+          </div>
+          <div class="bg-amber-50 rounded-lg p-3 border border-amber-200 text-center">
+            <div class="text-[10px] text-amber-600">평균 마진율</div>
+            <div class="text-lg font-bold text-amber-700">33.3%</div>
+            <div class="text-[10px] text-amber-500">약간 높음</div>
+          </div>
+          <div class="bg-sand-50 rounded-lg p-3 border border-sand-200 text-center">
+            <div class="text-[10px] text-sand-500">분석 항목</div>
+            <div class="text-lg font-bold">24건</div>
+          </div>
+        </div>
+        <!-- NEW: 적정가 범위 바 -->
+        <div class="mt-3 bg-sand-50 rounded-lg p-3 border border-sand-200">
+          <div class="flex justify-between text-xs text-sand-500 mb-1">
+            <span>적정 견적 범위 (마진 15~25%)</span>
+            <span class="font-bold text-forest-600">2,760만 ~ 3,000만원</span>
+          </div>
+          <div class="relative h-3 bg-sand-200 rounded-full overflow-visible">
+            <!-- 적정 범위 표시 (녹색) -->
+            <div class="absolute h-full bg-green-300 rounded-full" style="left:40%; width:20%"></div>
+            <!-- 현재 견적 위치 (마커) -->
+            <div class="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-amber-500 rounded-full border-2 border-white shadow" style="left:58%"></div>
+          </div>
+          <div class="flex justify-between text-[10px] text-sand-400 mt-1">
+            <span>원가 2,400만</span>
+            <span class="text-green-500">적정 범위</span>
+            <span>견적 3,200만 ▲</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7-2: 카테고리별 마진율 비교 -->
+  <h3 class="text-sm font-bold text-sand-700 mb-3">7-2. 카테고리별 마진율 분석 (신규 섹션)</h3>
+  <div class="wire-box p-5 mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <h4 class="font-bold text-sand-800">카테고리별 마진율</h4>
+      <span class="text-xs text-sand-400">적정: 15~25% | 높음: 25~40% | 과다: 40%+</span>
+    </div>
+
+    <div class="space-y-3">
+      <!-- 각 카테고리 마진율 바 -->
+      <div class="flex items-center gap-3">
+        <div class="w-12 text-xs font-bold text-right text-sand-700">욕실</div>
+        <div class="flex-1">
+          <div class="relative h-6 bg-sand-100 rounded-full overflow-hidden">
+            <!-- 적정 범위 표시 -->
+            <div class="absolute h-full bg-green-100 opacity-50" style="left:15%; width:10%"></div>
+            <!-- 실제 마진율 바 -->
+            <div class="h-full bg-green-400 rounded-full flex items-center justify-end pr-2" style="width:22%">
+              <span class="text-[10px] font-bold text-white">22%</span>
+            </div>
+          </div>
+        </div>
+        <span class="tag bg-green-100 text-green-700 text-[10px] w-16 text-center">적정</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="w-12 text-xs font-bold text-right text-sand-700">바닥</div>
+        <div class="flex-1">
+          <div class="relative h-6 bg-sand-100 rounded-full overflow-hidden">
+            <div class="absolute h-full bg-green-100 opacity-50" style="left:15%; width:10%"></div>
+            <div class="h-full bg-green-400 rounded-full flex items-center justify-end pr-2" style="width:18%">
+              <span class="text-[10px] font-bold text-white">18%</span>
+            </div>
+          </div>
+        </div>
+        <span class="tag bg-green-100 text-green-700 text-[10px] w-16 text-center">적정</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="w-12 text-xs font-bold text-right text-sand-700">도배</div>
+        <div class="flex-1">
+          <div class="relative h-6 bg-sand-100 rounded-full overflow-hidden">
+            <div class="absolute h-full bg-green-100 opacity-50" style="left:15%; width:10%"></div>
+            <div class="h-full bg-amber-400 rounded-full flex items-center justify-end pr-2" style="width:35%">
+              <span class="text-[10px] font-bold text-white">35%</span>
+            </div>
+          </div>
+        </div>
+        <span class="tag bg-amber-100 text-amber-700 text-[10px] w-16 text-center">약간높음</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="w-12 text-xs font-bold text-right text-sand-700">주방</div>
+        <div class="flex-1">
+          <div class="relative h-6 bg-sand-100 rounded-full overflow-hidden">
+            <div class="absolute h-full bg-green-100 opacity-50" style="left:15%; width:10%"></div>
+            <div class="h-full bg-red-400 rounded-full flex items-center justify-end pr-2" style="width:55%">
+              <span class="text-[10px] font-bold text-white">55%</span>
+            </div>
+          </div>
+        </div>
+        <span class="tag bg-red-100 text-red-700 text-[10px] w-16 text-center">과다</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="w-12 text-xs font-bold text-right text-sand-700">전기</div>
+        <div class="flex-1">
+          <div class="relative h-6 bg-sand-100 rounded-full overflow-hidden">
+            <div class="absolute h-full bg-green-100 opacity-50" style="left:15%; width:10%"></div>
+            <div class="h-full bg-green-400 rounded-full flex items-center justify-end pr-2" style="width:20%">
+              <span class="text-[10px] font-bold text-white">20%</span>
+            </div>
+          </div>
+        </div>
+        <span class="tag bg-green-100 text-green-700 text-[10px] w-16 text-center">적정</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="w-12 text-xs font-bold text-right text-sand-700">철거</div>
+        <div class="flex-1">
+          <div class="relative h-6 bg-sand-100 rounded-full overflow-hidden">
+            <div class="absolute h-full bg-green-100 opacity-50" style="left:15%; width:10%"></div>
+            <div class="h-full bg-purple-400 rounded-full flex items-center justify-end pr-2" style="width:3%">
+            </div>
+          </div>
+        </div>
+        <span class="tag bg-purple-100 text-purple-700 text-[10px] w-16 text-center">덤핑</span>
+      </div>
+    </div>
+
+    <!-- 범례 -->
+    <div class="flex gap-3 mt-4 justify-center flex-wrap">
+      <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-purple-400"></div><span class="text-[10px] text-sand-500">덤핑 &lt;5%</span></div>
+      <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-orange-400"></div><span class="text-[10px] text-sand-500">저마진 5~14%</span></div>
+      <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-green-400"></div><span class="text-[10px] text-sand-500">적정 15~25%</span></div>
+      <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-amber-400"></div><span class="text-[10px] text-sand-500">약간높음 25~40%</span></div>
+      <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-red-400"></div><span class="text-[10px] text-sand-500">과다 40%+</span></div>
+    </div>
+  </div>
+
+  <!-- 7-3: 항목별 상세 (개선) -->
+  <h3 class="text-sm font-bold text-sand-700 mb-3">7-3. 항목별 상세 비교 — 마진율 컬럼 추가</h3>
+  <div class="wire-box p-5 mb-6 overflow-x-auto">
+    <table class="w-full text-xs">
+      <thead>
+        <tr class="border-b-2 border-sand-300">
+          <th class="text-left py-2 px-2 text-sand-500">카테고리</th>
+          <th class="text-left py-2 px-2 text-sand-500">항목</th>
+          <th class="text-right py-2 px-2 text-sand-500">견적가</th>
+          <th class="text-right py-2 px-2 text-sand-500 text-blue-600">원가</th>
+          <th class="text-right py-2 px-2 text-sand-500 text-forest-600">적정가</th>
+          <th class="text-center py-2 px-2 text-sand-500">마진율</th>
+          <th class="text-center py-2 px-2 text-sand-500">판정</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-sand-100">
+          <td class="py-2 px-2"><span class="tag bg-emerald-50 text-emerald-700">바닥</span></td>
+          <td class="py-2 px-2 text-sand-700">강마루 30㎡</td>
+          <td class="py-2 px-2 text-right font-bold">195만</td>
+          <td class="py-2 px-2 text-right text-blue-600">150만</td>
+          <td class="py-2 px-2 text-right text-forest-600">173~188만</td>
+          <td class="py-2 px-2 text-center font-bold text-amber-600">30%</td>
+          <td class="py-2 px-2 text-center"><span class="tag bg-amber-100 text-amber-700">약간높음</span></td>
+        </tr>
+        <tr class="border-b border-sand-100 bg-green-50/30">
+          <td class="py-2 px-2"><span class="tag bg-blue-50 text-blue-700">욕실</span></td>
+          <td class="py-2 px-2 text-sand-700">욕실 2개 (일식)</td>
+          <td class="py-2 px-2 text-right font-bold">700만</td>
+          <td class="py-2 px-2 text-right text-blue-600">560만</td>
+          <td class="py-2 px-2 text-right text-forest-600">644~700만</td>
+          <td class="py-2 px-2 text-center font-bold text-green-600">25%</td>
+          <td class="py-2 px-2 text-center"><span class="tag bg-green-100 text-green-700">적정</span></td>
+        </tr>
+        <tr class="border-b border-sand-100 bg-red-50/30">
+          <td class="py-2 px-2"><span class="tag bg-teal-50 text-teal-700">주방</span></td>
+          <td class="py-2 px-2 text-sand-700">주방 싱크대 (일식)</td>
+          <td class="py-2 px-2 text-right font-bold">580만</td>
+          <td class="py-2 px-2 text-right text-blue-600">350만</td>
+          <td class="py-2 px-2 text-right text-forest-600">403~438만</td>
+          <td class="py-2 px-2 text-center font-bold text-red-600">66%</td>
+          <td class="py-2 px-2 text-center"><span class="tag bg-red-100 text-red-700">과다</span></td>
+        </tr>
+        <tr class="border-b border-sand-100">
+          <td class="py-2 px-2"><span class="tag bg-violet-50 text-violet-700">도배</span></td>
+          <td class="py-2 px-2 text-sand-700">도배 전체 (일식)</td>
+          <td class="py-2 px-2 text-right font-bold">280만</td>
+          <td class="py-2 px-2 text-right text-blue-600">200만</td>
+          <td class="py-2 px-2 text-right text-forest-600">230~250만</td>
+          <td class="py-2 px-2 text-center font-bold text-amber-600">40%</td>
+          <td class="py-2 px-2 text-center"><span class="tag bg-amber-100 text-amber-700">약간높음</span></td>
+        </tr>
+        <tr class="border-b border-sand-100 bg-purple-50/30">
+          <td class="py-2 px-2"><span class="tag bg-gray-100 text-gray-700">철거</span></td>
+          <td class="py-2 px-2 text-sand-700">전체 철거 (일식)</td>
+          <td class="py-2 px-2 text-right font-bold">180만</td>
+          <td class="py-2 px-2 text-right text-blue-600">175만</td>
+          <td class="py-2 px-2 text-right text-forest-600">201~219만</td>
+          <td class="py-2 px-2 text-center font-bold text-purple-600">3%</td>
+          <td class="py-2 px-2 text-center"><span class="tag bg-purple-100 text-purple-700">덤핑위험</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="mt-3 text-[10px] text-sand-400">
+      * 적정가 = 원가 × 1.15 ~ 원가 × 1.25 (마진 15~25%)
+    </div>
+  </div>
+
+  <!-- 7-4: 협상 가이드 개선 -->
+  <h3 class="text-sm font-bold text-sand-700 mb-3">7-4. 협상 가이드 — 원가 기반 근거 제시</h3>
+  <div class="wire-box p-5">
+    <div class="bg-forest-50 rounded-xl p-4 border border-forest-200 mb-3">
+      <div class="text-sm font-bold text-forest-800 mb-2">💬 추천 협상 멘트 (원가 근거 포함)</div>
+      <div class="bg-white rounded-lg p-3 border border-forest-100 text-sm text-sand-700 space-y-2">
+        <p>"주방 싱크대 항목의 <strong>업계 원가 기준</strong>으로 봤을 때, 현재 견적의 마진율이 66%로 과다한 편입니다."</p>
+        <p>"적정 마진(15~25%)을 적용하면 <strong>403만~438만원</strong>이 합리적인 범위입니다. 현재 580만원에서 조정이 가능한지 확인 부탁드립니다."</p>
+        <p class="text-xs text-sand-400 border-t border-sand-100 pt-2">* 원가 데이터: 2026년 1월 기준 서울 시장가 기반 산출</p>
+      </div>
+    </div>
+    <div class="text-xs text-sand-500">
+      <strong>기존 대비 개선점:</strong> "시장 적정가 대비 비싸다"(근거 없음) → "원가 대비 마진율 66%로 과다"(구체적 근거)
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────────────────────────────────────
+     8. 데이터 구조 변경
+     ────────────────────────────────────────────── -->
+<section class="mb-10">
+  <h2 class="flex items-center gap-2 text-lg font-bold text-sand-900 mb-4">
+    <span class="section-num">8</span> 데이터 구조 변경
+  </h2>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <!-- 기존 유지 -->
+    <div class="wire-box p-5">
+      <h3 class="font-bold text-sand-700 mb-3">기존 유지: benchmark_prices</h3>
+      <div class="font-mono text-xs bg-sand-50 rounded-lg p-3 border border-sand-200 space-y-1">
+        <div class="text-sand-400">-- 항목별 원가 단가 (변경 없음)</div>
+        <div>id, std_category, std_item</div>
+        <div>unit_price, unit, grade</div>
+        <div>brand, material, source, region</div>
+        <div>reference_date, is_active</div>
+      </div>
+      <p class="text-xs text-sand-500 mt-2">역할: 단가 비교 가능한 항목의 원가 기준</p>
+    </div>
+
+    <!-- 신규 추가 -->
+    <div class="wire-box-accent p-5">
+      <h3 class="font-bold text-forest-700 mb-3">신규: category_cost_profiles</h3>
+      <div class="font-mono text-xs bg-white rounded-lg p-3 border border-forest-200 space-y-1">
+        <div class="text-forest-500">-- 카테고리별 면적 환산 계수 (일식 분석용)</div>
+        <div>id, std_category</div>
+        <div>area_multiplier <span class="text-sand-400">-- 면적 환산 계수</span></div>
+        <div>base_items <span class="text-sand-400">-- 대표 항목 목록 (JSON)</span></div>
+        <div>fixed_cost_min, fixed_cost_max <span class="text-sand-400">-- 고정비</span></div>
+        <div>grade, note</div>
+      </div>
+      <p class="text-xs text-forest-600 mt-2">역할: 일식 항목의 카테고리 원가 총액 산출용</p>
+    </div>
+  </div>
+
+  <div class="wire-box p-5 mt-4">
+    <h3 class="font-bold text-sand-700 mb-3">AnalyzedItem 인터페이스 변경</h3>
+    <div class="font-mono text-xs bg-sand-50 rounded-lg p-3 border border-sand-200 space-y-1">
+      <div class="text-sand-400">// 기존 필드 유지 + 신규 추가</div>
+      <div>benchmark_unit_price: number | null <span class="text-sand-400">-- 기존</span></div>
+      <div>adjusted_benchmark_price: number | null <span class="text-sand-400">-- 기존</span></div>
+      <div>deviation_percent: number | null <span class="text-sand-400">-- 기존 (하위호환)</span></div>
+      <div class="text-forest-600 font-bold">margin_rate: number | null <span class="text-sand-400">-- 신규: 마진율 %</span></div>
+      <div class="text-forest-600 font-bold">margin_bracket: string | null <span class="text-sand-400">-- 신규: 판정</span></div>
+      <div class="text-forest-600 font-bold">estimated_cost: number | null <span class="text-sand-400">-- 신규: 추정 원가 총액</span></div>
+      <div class="text-forest-600 font-bold">fair_price_min: number | null <span class="text-sand-400">-- 신규: 적정가 하한</span></div>
+      <div class="text-forest-600 font-bold">fair_price_max: number | null <span class="text-sand-400">-- 신규: 적정가 상한</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────────────────────────────────────
+     9. 구현 순서
+     ────────────────────────────────────────────── -->
+<section class="mb-10">
+  <h2 class="flex items-center gap-2 text-lg font-bold text-sand-900 mb-4">
+    <span class="section-num">9</span> 구현 순서
+  </h2>
+
+  <div class="space-y-3">
+    <div class="wire-box p-4 flex items-start gap-3">
+      <div class="w-7 h-7 rounded-full bg-forest-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
+      <div>
+        <div class="font-bold text-sm text-sand-800">auto-analysis.ts 마진율 계산 로직 추가</div>
+        <div class="text-xs text-sand-500 mt-1">
+          기존 deviation 계산 → margin_rate 계산으로 변환<br>
+          단가 비교: margin_rate = (견적단가 - 보정원가) / 보정원가 × 100<br>
+          총액 비교: margin_rate = (견적총액 - 추정원가총액) / 추정원가총액 × 100
+        </div>
+      </div>
+    </div>
+
+    <div class="wire-box p-4 flex items-start gap-3">
+      <div class="w-7 h-7 rounded-full bg-forest-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
+      <div>
+        <div class="font-bold text-sm text-sand-800">category_cost_profiles 데이터 구성</div>
+        <div class="text-xs text-sand-500 mt-1">
+          10개 카테고리 × 4개 등급의 면적 환산 계수 + 대표 항목 정의<br>
+          일식 항목의 원가 총액 추정에 사용
+        </div>
+      </div>
+    </div>
+
+    <div class="wire-box p-4 flex items-start gap-3">
+      <div class="w-7 h-7 rounded-full bg-forest-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
+      <div>
+        <div class="font-bold text-sm text-sand-800">스코어링 로직 수정</div>
+        <div class="text-xs text-sand-500 mt-1">
+          기존 편차% 기반 → 마진율 기반 스코어 매핑<br>
+          적정(15~25%) = 감점 없음, 과다(40%+) = 감점, 덤핑(&lt;5%) = 감점
+        </div>
+      </div>
+    </div>
+
+    <div class="wire-box p-4 flex items-start gap-3">
+      <div class="w-7 h-7 rounded-full bg-forest-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">4</div>
+      <div>
+        <div class="font-bold text-sm text-sand-800">프론트엔드 UI 업데이트</div>
+        <div class="text-xs text-sand-500 mt-1">
+          종합 카드: 추정 원가 + 평균 마진율 + 적정가 범위 바<br>
+          카테고리별: 마진율 바 차트 (신규 섹션)<br>
+          항목별 테이블: 원가/적정가/마진율 컬럼 추가<br>
+          협상 스크립트: 원가 근거 포함
+        </div>
+      </div>
+    </div>
+
+    <div class="wire-box p-4 flex items-start gap-3">
+      <div class="w-7 h-7 rounded-full bg-forest-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">5</div>
+      <div>
+        <div class="font-bold text-sm text-sand-800">기존 테스트 케이스 (김현우 견적서) 검증</div>
+        <div class="text-xs text-sand-500 mt-1">
+          마진율 분석 결과가 합리적인지 확인<br>
+          기존 점수와 비교하여 급격한 변동 없는지 검증
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────────────────────────────────────
+     Footer
+     ────────────────────────────────────────────── -->
+<footer class="border-t border-sand-200 pt-6 pb-10">
+  <div class="text-center">
+    <div class="text-sm text-sand-500 mb-2">ZipCheck 견적분석 시스템 v1.7 기획서</div>
+    <div class="text-xs text-sand-400">원가 기반 마진율 분석 — 2026-02-06</div>
+    <div class="flex gap-2 justify-center mt-3 flex-wrap">
+      <span class="tag bg-forest-100 text-forest-700">차별점: 원가 기반 분석</span>
+      <span class="tag bg-blue-100 text-blue-700">핵심 지표: 마진율</span>
+      <span class="tag bg-amber-100 text-amber-700">적정 기준: 15~25%</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

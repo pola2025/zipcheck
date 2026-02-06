@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>견적분석 리포트 Before/After 비교</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Pretendard', -apple-system, system-ui, sans-serif; background: #f8f6f1; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 1200px) { .split { grid-template-columns: 1fr; } }
+  .old-card { border-left: 4px solid #ef4444; }
+  .new-card { border-left: 4px solid #10b981; }
+  .diff-highlight { background: #fef3c7; border-radius: 4px; padding: 2px 6px; }
+  .removed { background: #fecaca; text-decoration: line-through; border-radius: 4px; padding: 2px 6px; }
+  .added { background: #bbf7d0; border-radius: 4px; padding: 2px 6px; }
+  .arrow { font-size: 20px; color: #6b7280; }
+  .section-divider { height: 2px; background: linear-gradient(to right, #d1d5db, transparent); margin: 32px 0; }
+  .score-bar { height: 8px; border-radius: 4px; }
+  .wireframe-box { border: 2px dashed #d1d5db; border-radius: 12px; padding: 16px; background: white; }
+  .label-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase; }
+</style>
+</head>
+<body class="p-6 max-w-[1400px] mx-auto">
+
+<!-- Header -->
+<div class="text-center mb-10">
+  <h1 class="text-3xl font-bold text-gray-900 mb-2">견적분석 리포트 Before / After 비교</h1>
+  <p class="text-gray-500">Phase 1 수정사항이 리포트 결과에 미치는 영향 — 2026-02-06</p>
+  <div class="flex justify-center gap-4 mt-4">
+    <span class="label-tag bg-red-100 text-red-700">BEFORE (기존)</span>
+    <span class="arrow">→</span>
+    <span class="label-tag bg-green-100 text-green-700">AFTER (변경)</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     1. 스코어링 커브 비교
+     ═══════════════════════════════════════════════════════ -->
+<h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+  <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold">1</span>
+  deviationToScore 커브 변화
+</h2>
+
+<div class="split mb-8">
+  <!-- OLD -->
+  <div class="wireframe-box old-card">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="label-tag bg-red-100 text-red-700">BEFORE</span>
+      <span class="text-sm text-gray-500">4단계 매핑 (성긴 구간)</span>
+    </div>
+    <table class="w-full text-sm">
+      <thead><tr class="border-b border-gray-200">
+        <th class="text-left py-2 text-gray-500">편차 (양수)</th>
+        <th class="text-right py-2 text-gray-500">점수</th>
+        <th class="text-right py-2 text-gray-500">Gap</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="py-1.5">0~5%</td><td class="text-right font-mono">95</td><td class="text-right text-gray-400">—</td></tr>
+        <tr class="bg-yellow-50"><td class="py-1.5">5~15%</td><td class="text-right font-mono removed">85</td><td class="text-right text-red-500 font-bold">10점 점프</td></tr>
+        <tr class="bg-yellow-50"><td class="py-1.5">15~25%</td><td class="text-right font-mono removed">65</td><td class="text-right text-red-500 font-bold">20점 점프</td></tr>
+        <tr><td class="py-1.5">25~40%</td><td class="text-right font-mono">40</td><td class="text-right text-red-500">25점 점프</td></tr>
+        <tr><td class="py-1.5">40%+</td><td class="text-right font-mono">20</td><td class="text-right text-gray-400">—</td></tr>
+      </tbody>
+    </table>
+    <div class="mt-3 text-xs text-red-600">⚠ 10%→15% 경계에서 점수 20점 급락 → 비직관적</div>
+    <!-- Visual bar -->
+    <div class="mt-4 relative h-6 bg-gray-100 rounded-full overflow-hidden">
+      <div class="absolute h-full bg-green-400" style="width:5%"></div>
+      <div class="absolute h-full bg-blue-300" style="left:5%;width:10%"></div>
+      <div class="absolute h-full bg-amber-300" style="left:15%;width:10%"></div>
+      <div class="absolute h-full bg-red-300" style="left:25%;width:15%"></div>
+      <div class="absolute h-full bg-red-500" style="left:40%;width:60%"></div>
+    </div>
+    <div class="flex justify-between text-[10px] text-gray-400 mt-1">
+      <span>0%</span><span>5%</span><span>15%</span><span>25%</span><span>40%+</span>
+    </div>
+  </div>
+
+  <!-- NEW -->
+  <div class="wireframe-box new-card">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="label-tag bg-green-100 text-green-700">AFTER</span>
+      <span class="text-sm text-gray-500">7단계 매핑 (스무딩)</span>
+    </div>
+    <table class="w-full text-sm">
+      <thead><tr class="border-b border-gray-200">
+        <th class="text-left py-2 text-gray-500">편차 (양수)</th>
+        <th class="text-right py-2 text-gray-500">점수</th>
+        <th class="text-right py-2 text-gray-500">Gap</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="py-1.5">0~5%</td><td class="text-right font-mono">95</td><td class="text-right text-gray-400">—</td></tr>
+        <tr><td class="py-1.5 added">5~10%</td><td class="text-right font-mono added">87</td><td class="text-right text-green-600">8점</td></tr>
+        <tr><td class="py-1.5 added">10~15%</td><td class="text-right font-mono added">78</td><td class="text-right text-green-600">9점</td></tr>
+        <tr><td class="py-1.5 added">15~20%</td><td class="text-right font-mono added">65</td><td class="text-right text-green-600">13점</td></tr>
+        <tr><td class="py-1.5">20~30%</td><td class="text-right font-mono">50</td><td class="text-right text-green-600">15점</td></tr>
+        <tr><td class="py-1.5">30~40%</td><td class="text-right font-mono">35</td><td class="text-right text-green-600">15점</td></tr>
+        <tr><td class="py-1.5">40%+</td><td class="text-right font-mono">20</td><td class="text-right text-gray-400">—</td></tr>
+      </tbody>
+    </table>
+    <div class="mt-3 text-xs text-green-600">✓ 경계 점프 최대 15점으로 완화 → 부드러운 곡선</div>
+    <div class="mt-4 relative h-6 bg-gray-100 rounded-full overflow-hidden">
+      <div class="absolute h-full bg-green-400" style="width:5%"></div>
+      <div class="absolute h-full bg-green-300" style="left:5%;width:5%"></div>
+      <div class="absolute h-full bg-blue-300" style="left:10%;width:5%"></div>
+      <div class="absolute h-full bg-blue-200" style="left:15%;width:5%"></div>
+      <div class="absolute h-full bg-amber-300" style="left:20%;width:10%"></div>
+      <div class="absolute h-full bg-orange-300" style="left:30%;width:10%"></div>
+      <div class="absolute h-full bg-red-400" style="left:40%;width:60%"></div>
+    </div>
+    <div class="flex justify-between text-[10px] text-gray-400 mt-1">
+      <span>0%</span><span>5</span><span>10</span><span>15</span><span>20</span><span>30</span><span>40%+</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     2. marginToScore 커브 (신규)
+     ═══════════════════════════════════════════════════════ -->
+<h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+  <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold">2</span>
+  marginToScore (마진율 기반 스코어링) — 백엔드 신규
+</h2>
+
+<div class="split mb-8">
+  <div class="wireframe-box old-card">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="label-tag bg-red-100 text-red-700">BEFORE</span>
+    </div>
+    <div class="text-center py-8 text-gray-400">
+      <div class="text-4xl mb-2">∅</div>
+      <p>마진율 기반 스코어링 없음</p>
+      <p class="text-xs mt-1">deviation만 사용 → 단위 불일치 시 비교 불가</p>
+    </div>
+  </div>
+  <div class="wireframe-box new-card">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="label-tag bg-green-100 text-green-700">AFTER</span>
+      <span class="text-sm text-gray-500">10단계 마진율 → 점수 매핑</span>
+    </div>
+    <table class="w-full text-sm">
+      <thead><tr class="border-b border-gray-200">
+        <th class="text-left py-2 text-gray-500">마진율</th>
+        <th class="text-right py-2 text-gray-500">점수</th>
+        <th class="text-right py-2 text-gray-500">판정</th>
+      </tr></thead>
+      <tbody>
+        <tr class="text-purple-600"><td class="py-1">&lt;0%</td><td class="text-right font-mono">35</td><td class="text-right text-xs">데이터 오류</td></tr>
+        <tr class="text-purple-600"><td class="py-1">0~5%</td><td class="text-right font-mono">55</td><td class="text-right text-xs">덤핑 위험</td></tr>
+        <tr class="text-blue-600"><td class="py-1">5~10%</td><td class="text-right font-mono">78</td><td class="text-right text-xs">저마진</td></tr>
+        <tr class="text-blue-600"><td class="py-1">10~15%</td><td class="text-right font-mono">88</td><td class="text-right text-xs">적정 근접</td></tr>
+        <tr class="text-green-600 font-bold"><td class="py-1 added">15~25%</td><td class="text-right font-mono added">95</td><td class="text-right text-xs">적정 ✓</td></tr>
+        <tr class="text-amber-600"><td class="py-1">25~30%</td><td class="text-right font-mono">85</td><td class="text-right text-xs">약간 높음</td></tr>
+        <tr class="text-amber-600"><td class="py-1">30~40%</td><td class="text-right font-mono">70</td><td class="text-right text-xs">높음</td></tr>
+        <tr class="text-red-600"><td class="py-1">40~60%</td><td class="text-right font-mono">50</td><td class="text-right text-xs">과다</td></tr>
+        <tr class="text-red-600"><td class="py-1">60~80%</td><td class="text-right font-mono">35</td><td class="text-right text-xs">매우 과다</td></tr>
+        <tr class="text-red-800"><td class="py-1">80%+</td><td class="text-right font-mono">20</td><td class="text-right text-xs">비정상</td></tr>
+      </tbody>
+    </table>
+    <div class="mt-3 text-xs text-green-600">✓ 일식/세트 가격도 카테고리 합산 원가로 비교 가능</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     3. 패널티 리밸런싱
+     ═══════════════════════════════════════════════════════ -->
+<h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+  <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold">3</span>
+  패널티 리밸런싱
+</h2>
+
+<div class="split mb-8">
+  <div class="wireframe-box old-card">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="label-tag bg-red-100 text-red-700">BEFORE</span>
+    </div>
+    <div class="space-y-3">
+      <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
+        <div>
+          <div class="text-sm font-bold text-red-800">면허 미확인 (고위험)</div>
+          <div class="text-xs text-red-600">전기/욕실/주방 포함 시</div>
+        </div>
+        <span class="text-xl font-bold text-red-700 removed">-15</span>
+      </div>
+      <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
+        <div>
+          <div class="text-sm font-bold text-red-800">면허 미확인 (일반)</div>
+          <div class="text-xs text-red-600">전기/욕실/주방 미포함</div>
+        </div>
+        <span class="text-xl font-bold text-red-700 removed">-5</span>
+      </div>
+      <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
+        <div>
+          <div class="text-sm font-bold text-orange-800">수량 부족</div>
+          <div class="text-xs text-orange-600">개별 아이템별 × 85% 미만</div>
+        </div>
+        <span class="text-xl font-bold text-orange-700 removed">-8 × N</span>
+      </div>
+      <div class="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200">
+        <div>
+          <div class="text-sm font-bold text-amber-800">미분류 항목</div>
+        </div>
+        <span class="text-xl font-bold text-amber-700">-3×N (캡 -12)</span>
+      </div>
+      <div class="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200">
+        <div>
+          <div class="text-sm font-bold text-amber-800">고액 일식</div>
+        </div>
+        <span class="text-xl font-bold text-amber-700">-5×N (캡 -15)</span>
+      </div>
+    </div>
+    <div class="mt-4 p-3 bg-red-100 rounded-lg">
+      <div class="text-xs text-red-700 font-bold">시뮬레이션 (전기+욕실 포함, 미분류 3개, 수량부족 2건)</div>
+      <div class="text-lg font-bold text-red-800 mt-1">패널티 합계: <span class="removed">-46점</span></div>
+      <div class="text-xs text-red-600">= -15(면허) -9(미분류) -16(수량) -5(일식) = -45 → 과도한 감점</div>
+    </div>
+  </div>
+
+  <div class="wireframe-box new-card">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="label-tag bg-green-100 text-green-700">AFTER</span>
+    </div>
+    <div class="space-y-3">
+      <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+        <div>
+          <div class="text-sm font-bold text-green-800">면허 미확인</div>
+          <div class="text-xs text-green-600">자동분석 → 소프트 넛지</div>
+        </div>
+        <span class="text-xl font-bold text-green-700 added">-3</span>
+      </div>
+      <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+        <div>
+          <div class="text-sm font-bold text-green-800">수량 부족</div>
+          <div class="text-xs text-green-600 added">카테고리 합산 비교, 50% 미만일 때만</div>
+        </div>
+        <span class="text-xl font-bold text-green-700 added">-5 /카테고리</span>
+      </div>
+      <div class="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200">
+        <div>
+          <div class="text-sm font-bold text-amber-800">미분류 항목</div>
+        </div>
+        <span class="text-xl font-bold text-amber-700">-3×N (캡 -12)</span>
+      </div>
+      <div class="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200">
+        <div>
+          <div class="text-sm font-bold text-amber-800">고액 일식</div>
+        </div>
+        <span class="text-xl font-bold text-amber-700">-5×N (캡 -15)</span>
+      </div>
+    </div>
+    <div class="mt-4 p-3 bg-green-100 rounded-lg">
+      <div class="text-xs text-green-700 font-bold">동일 시뮬레이션 (전기+욕실 포함, 미분류 3개, 수량부족 2카테고리)</div>
+      <div class="text-lg font-bold text-green-800 mt-1">패널티 합계: <span class="added">-22점</span></div>
+      <div class="text-xs text-green-600">= -3(면허) -9(미분류) -10(수량) = -22 → 합리적 감점</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     4. 등급 구간 비교
+     ═══════════════════════════════════════════════════════ -->
+<h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+  <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold">4</span>
+  등급 구간 (Frontend scoring.ts vs Backend auto-analysis.ts)
+</h2>
+
+<div class="split mb-8">
+  <div class="wireframe-box old-card">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="label-tag bg-red-100 text-red-700">BEFORE</span>
+      <span class="text-sm text-gray-500">프론트/백엔드 불일치</span>
+    </div>
+    <div class="space-y-2">
+      <div class="flex items-center gap-3">
+        <div class="w-16 h-8 rounded-lg bg-green-500 flex items-center justify-center text-white font-bold text-sm">A</div>
+        <div class="flex-1">
+          <div class="text-sm">프론트: <span class="removed">85+</span> / 백엔드: <span class="removed">90+</span></div>
+          <div class="score-bar bg-green-200 w-full"><div class="score-bar bg-green-500" style="width:85%"></div></div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-16 h-8 rounded-lg bg-blue-500 flex items-center justify-center text-white font-bold text-sm">B</div>
+        <div class="flex-1">
+          <div class="text-sm">프론트: <span class="removed">72+</span> / 백엔드: <span class="removed">75+</span></div>
+          <div class="score-bar bg-blue-200 w-full"><div class="score-bar bg-blue-500" style="width:72%"></div></div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-16 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-white font-bold text-sm">C</div>
+        <div class="flex-1">
+          <div class="text-sm">프론트: <span class="removed">55+</span> / 백엔드: <span class="removed">60+</span></div>
+          <div class="score-bar bg-amber-200 w-full"><div class="score-bar bg-amber-500" style="width:55%"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="mt-3 text-xs text-red-600">⚠ 프론트/백엔드 등급 구간이 달라서 같은 점수에 등급이 다를 수 있음</div>
+  </div>
+
+  <div class="wireframe-box new-card">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="label-tag bg-green-100 text-green-700">AFTER</span>
+      <span class="text-sm text-gray-500">프론트/백엔드 통일</span>
+    </div>
+    <div class="space-y-2">
+      <div class="flex items-center gap-3">
+        <div class="w-16 h-8 rounded-lg bg-green-500 flex items-center justify-center text-white font-bold text-sm">A</div>
+        <div class="flex-1">
+          <div class="text-sm added">85+ (매우 적정)</div>
+          <div class="score-bar bg-green-200 w-full"><div class="score-bar bg-green-500" style="width:85%"></div></div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-16 h-8 rounded-lg bg-blue-500 flex items-center justify-center text-white font-bold text-sm">B</div>
+        <div class="flex-1">
+          <div class="text-sm added">72+ (합리적)</div>
+          <div class="score-bar bg-blue-200 w-full"><div class="score-bar bg-blue-500" style="width:72%"></div></div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-16 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-white font-bold text-sm">C</div>
+        <div class="flex-1">
+          <div class="text-sm added">55+ (검토 필요)</div>
+          <div class="score-bar bg-amber-200 w-full"><div class="score-bar bg-amber-500" style="width:55%"></div></div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-16 h-8 rounded-lg bg-orange-500 flex items-center justify-center text-white font-bold text-sm">D</div>
+        <div class="flex-1">
+          <div class="text-sm added">40+ (상당 부분 검토)</div>
+          <div class="score-bar bg-orange-200 w-full"><div class="score-bar bg-orange-500" style="width:40%"></div></div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-16 h-8 rounded-lg bg-red-500 flex items-center justify-center text-white font-bold text-sm">F</div>
+        <div class="flex-1">
+          <div class="text-sm">40 미만 (재검토 권장)</div>
+          <div class="score-bar bg-red-200 w-full"><div class="score-bar bg-red-500" style="width:20%"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="mt-3 text-xs text-green-600">✓ 프론트엔드/백엔드 동일 구간 → 일관된 등급</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     5. 리포트 시각 변화 (와이어프레임)
+     ═══════════════════════════════════════════════════════ -->
+<h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+  <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold">5</span>
+  리포트 UI 와이어프레임 비교
+</h2>
+
+<div class="split mb-8">
+  <!-- OLD WIREFRAME -->
+  <div class="wireframe-box old-card">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="label-tag bg-red-100 text-red-700">BEFORE</span>
+    </div>
+
+    <!-- 종합 점수 카드 -->
+    <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 mb-3">
+      <div class="flex items-center gap-4">
+        <div class="w-20 h-20 rounded-full border-4 border-amber-400 flex items-center justify-center">
+          <span class="text-2xl font-bold text-amber-600">58</span>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl font-bold">58</span>
+            <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">평균 수준</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">일부 항목 검토가 필요합니다</p>
+          <div class="grid grid-cols-4 gap-2 mt-2">
+            <div class="bg-gray-50 rounded p-1.5 text-center">
+              <div class="text-[9px] text-gray-500">총 견적</div>
+              <div class="text-xs font-bold">3,200만</div>
+            </div>
+            <div class="bg-gray-50 rounded p-1.5 text-center">
+              <div class="text-[9px] text-gray-500">시장가</div>
+              <div class="text-xs font-bold">2,800만</div>
+            </div>
+            <div class="bg-amber-50 rounded p-1.5 text-center">
+              <div class="text-[9px] text-amber-600">시장가 대비</div>
+              <div class="text-xs font-bold text-amber-700">+14.3%</div>
+            </div>
+            <div class="bg-gray-50 rounded p-1.5 text-center">
+              <div class="text-[9px] text-gray-500">항목 수</div>
+              <div class="text-xs font-bold">18건</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 패널티 -->
+    <div class="border-2 border-dashed border-red-200 rounded-xl p-3 mb-3">
+      <div class="text-xs font-bold text-red-700 mb-2">주의사항</div>
+      <div class="space-y-1.5">
+        <div class="flex justify-between text-xs">
+          <span class="text-gray-600">면허 미확인 (고위험)</span>
+          <span class="text-red-600 font-bold removed">-15</span>
+        </div>
+        <div class="flex justify-between text-xs">
+          <span class="text-gray-600">바닥 수량 부족 (아이템 A)</span>
+          <span class="text-red-600 font-bold removed">-8</span>
+        </div>
+        <div class="flex justify-between text-xs">
+          <span class="text-gray-600">바닥 수량 부족 (아이템 B)</span>
+          <span class="text-red-600 font-bold removed">-8</span>
+        </div>
+        <div class="flex justify-between text-xs">
+          <span class="text-gray-600">미분류 항목 (2건)</span>
+          <span class="text-red-600 font-bold">-6</span>
+        </div>
+      </div>
+      <div class="border-t border-red-200 mt-2 pt-2 flex justify-between">
+        <span class="text-xs font-bold text-red-700">합계</span>
+        <span class="text-sm font-bold text-red-700 removed">-37</span>
+      </div>
+    </div>
+
+    <!-- 비정상 가격 (보라색 텍스트) -->
+    <div class="border-2 border-dashed border-purple-200 rounded-xl p-3 mb-3 bg-purple-50/50">
+      <div class="text-xs font-bold text-purple-700 mb-2 removed">⚠ 비정상 가격 항목</div>
+      <div class="text-xs text-purple-600 removed">
+        "욕실 타일" — 편차 +120% — 벤치마크 미스매치 가능성<br>
+        이 항목은 단위 불일치로 정확한 비교가 어렵습니다. 업체에 세부 견적서를 요청하세요.
+      </div>
+    </div>
+
+    <!-- 항목 테이블 스니펫 -->
+    <div class="border-2 border-dashed border-gray-300 rounded-xl p-3">
+      <div class="text-xs font-bold text-gray-700 mb-2">항목별 분석 (일부)</div>
+      <table class="w-full text-[10px]">
+        <tr class="border-b"><td class="py-1">바닥 강화마루</td><td class="text-right">단가 비교</td><td class="text-right text-blue-600">+8%</td></tr>
+        <tr class="border-b bg-purple-50"><td class="py-1 text-purple-700">욕실 타일</td><td class="text-right text-purple-600">단위 불일치</td><td class="text-right text-purple-600 removed">+120%</td></tr>
+        <tr class="border-b"><td class="py-1">도배 실크</td><td class="text-right">단가 비교</td><td class="text-right text-green-600">-3%</td></tr>
+        <tr><td class="py-1 text-gray-400">전기 일식</td><td class="text-right text-gray-400">비교 불가</td><td class="text-right text-gray-400">—</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- NEW WIREFRAME -->
+  <div class="wireframe-box new-card">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="label-tag bg-green-100 text-green-700">AFTER</span>
+    </div>
+
+    <!-- 종합 점수 카드 -->
+    <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 mb-3">
+      <div class="flex items-center gap-4">
+        <div class="w-20 h-20 rounded-full border-4 border-blue-400 flex items-center justify-center">
+          <span class="text-2xl font-bold text-blue-600 added">73</span>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl font-bold added">73</span>
+            <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold added">B 합리적</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">대체로 합리적인 견적입니다</p>
+          <div class="grid grid-cols-4 gap-2 mt-2">
+            <div class="bg-gray-50 rounded p-1.5 text-center">
+              <div class="text-[9px] text-gray-500">총 견적</div>
+              <div class="text-xs font-bold">3,200만</div>
+            </div>
+            <div class="bg-gray-50 rounded p-1.5 text-center">
+              <div class="text-[9px] text-gray-500 added">추정 원가</div>
+              <div class="text-xs font-bold added">2,560만</div>
+            </div>
+            <div class="bg-green-50 rounded p-1.5 text-center">
+              <div class="text-[9px] text-green-600 added">평균 마진율</div>
+              <div class="text-xs font-bold text-green-700 added">25.0%</div>
+            </div>
+            <div class="bg-gray-50 rounded p-1.5 text-center">
+              <div class="text-[9px] text-gray-500">항목 수</div>
+              <div class="text-xs font-bold">18건</div>
+            </div>
+          </div>
+          <!-- 적정가 범위 바 (신규) -->
+          <div class="mt-2 bg-gray-50 rounded-lg p-2 border border-gray-200">
+            <div class="flex justify-between text-[9px] text-gray-500 mb-1">
+              <span>적정 범위 (마진 15~25%)</span>
+              <span class="text-green-600 font-bold">2,944만 ~ 3,200만</span>
+            </div>
+            <div class="relative h-2 bg-gray-200 rounded-full">
+              <div class="absolute h-full bg-green-200 rounded-full" style="left:58%;width:15%"></div>
+              <div class="absolute top-1/2 -translate-y-1/2 w-1 h-3 bg-blue-400 rounded-full" style="left:53%"></div>
+              <div class="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" style="left:72%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 패널티 (리밸런스) -->
+    <div class="border-2 border-dashed border-amber-200 rounded-xl p-3 mb-3">
+      <div class="text-xs font-bold text-amber-700 mb-2">주의사항</div>
+      <div class="space-y-1.5">
+        <div class="flex justify-between text-xs">
+          <span class="text-gray-600">면허 미확인</span>
+          <span class="text-amber-600 font-bold added">-3</span>
+        </div>
+        <div class="flex justify-between text-xs">
+          <span class="text-gray-600 added">바닥 수량 부족 (카테고리 합산)</span>
+          <span class="text-amber-600 font-bold added">-5</span>
+        </div>
+        <div class="flex justify-between text-xs">
+          <span class="text-gray-600">미분류 항목 (2건)</span>
+          <span class="text-amber-600 font-bold">-6</span>
+        </div>
+      </div>
+      <div class="border-t border-amber-200 mt-2 pt-2 flex justify-between">
+        <span class="text-xs font-bold text-amber-700">합계</span>
+        <span class="text-sm font-bold text-amber-700 added">-14</span>
+      </div>
+    </div>
+
+    <!-- 보라색 텍스트 제거됨 -->
+    <div class="border-2 border-dashed border-gray-200 rounded-xl p-3 mb-3 bg-gray-50/50">
+      <div class="text-xs text-gray-400 text-center py-2">
+        ✓ 비정상 가격 설명 텍스트 <span class="removed">삭제됨</span><br>
+        <span class="text-green-600">→ 단위 불일치 항목은 마진율 기반으로 분석됨</span>
+      </div>
+    </div>
+
+    <!-- 항목 테이블 (마진율 표시) -->
+    <div class="border-2 border-dashed border-gray-300 rounded-xl p-3">
+      <div class="text-xs font-bold text-gray-700 mb-2">항목별 분석 (일부)</div>
+      <table class="w-full text-[10px]">
+        <tr class="border-b"><td class="py-1">바닥 강화마루</td><td class="text-right">단가 비교</td><td class="text-right text-blue-600">+8%</td><td class="text-right text-green-600 added">마진 18%</td></tr>
+        <tr class="border-b"><td class="py-1 added">욕실 타일</td><td class="text-right added">카테고리 합산</td><td class="text-right text-gray-400">—</td><td class="text-right text-green-600 added">마진 22%</td></tr>
+        <tr class="border-b"><td class="py-1">도배 실크</td><td class="text-right">단가 비교</td><td class="text-right text-green-600">-3%</td><td class="text-right text-blue-600 added">마진 12%</td></tr>
+        <tr><td class="py-1 added">전기 일식</td><td class="text-right added">카테고리 합산</td><td class="text-right text-gray-400">—</td><td class="text-right text-amber-600 added">마진 35%</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     6. Falsy 값 수정 영향
+     ═══════════════════════════════════════════════════════ -->
+<h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+  <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold">6</span>
+  Falsy 값 수정 ( || → ?? ) 영향
+</h2>
+
+<div class="wireframe-box mb-8" style="border-left: 4px solid #3b82f6">
+  <div class="grid md:grid-cols-3 gap-4">
+    <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+      <div class="text-xs font-bold text-red-700 mb-2">BEFORE: quantity || null</div>
+      <div class="text-sm font-mono">
+        quantity = <span class="removed">0</span> → null<br>
+        unitPrice = <span class="removed">0</span> → null<br>
+        totalPrice = <span class="removed">0</span> → null
+      </div>
+      <div class="text-xs text-red-600 mt-2">⚠ 0원 항목이 "데이터 없음"으로 처리됨</div>
+    </div>
+    <div class="p-3 flex items-center justify-center">
+      <span class="text-3xl">→</span>
+    </div>
+    <div class="p-3 bg-green-50 rounded-lg border border-green-200">
+      <div class="text-xs font-bold text-green-700 mb-2">AFTER: quantity ?? null</div>
+      <div class="text-sm font-mono">
+        quantity = <span class="added">0</span> → 0 (보존)<br>
+        unitPrice = <span class="added">0</span> → 0 (보존)<br>
+        totalPrice = <span class="added">0</span> → 0 (보존)
+      </div>
+      <div class="text-xs text-green-600 mt-2">✓ 0원 항목도 정상적으로 분석됨</div>
+    </div>
+  </div>
+  <div class="mt-3 text-xs text-gray-500">
+    영향 범위: <code class="bg-gray-100 px-1 rounded">auto-analysis.ts:693-696</code> — 견적 항목의 quantity, unit, unitPrice, totalPrice 파싱
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     7. 보안 수정 (리포트 외부 영향)
+     ═══════════════════════════════════════════════════════ -->
+<h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+  <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold">7</span>
+  보안 수정 (리포트 직접 영향 없음 — API 레이어)
+</h2>
+
+<div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+  <div class="wireframe-box text-center" style="border-left: 4px solid #6366f1">
+    <div class="text-sm font-bold text-indigo-700">CORS</div>
+    <div class="text-xs text-gray-500 mt-1">미허용 origin 차단</div>
+    <div class="mt-2 text-[10px]">
+      <div class="removed">return origin (모두 허용)</div>
+      <div class="added mt-1">return null (차단)</div>
+    </div>
+  </div>
+  <div class="wireframe-box text-center" style="border-left: 4px solid #6366f1">
+    <div class="text-sm font-bold text-indigo-700">/by-phone 인증</div>
+    <div class="text-xs text-gray-500 mt-1">SHA-256 토큰 필수</div>
+    <div class="mt-2 text-[10px]">
+      <div class="removed">인증 없이 접근 가능</div>
+      <div class="added mt-1">토큰 or JWT 필수</div>
+    </div>
+  </div>
+  <div class="wireframe-box text-center" style="border-left: 4px solid #6366f1">
+    <div class="text-sm font-bold text-indigo-700">에러 메시지</div>
+    <div class="text-xs text-gray-500 mt-1">프로덕션 제네릭화</div>
+    <div class="mt-2 text-[10px]">
+      <div class="removed">err.message 노출</div>
+      <div class="added mt-1">Internal Server Error</div>
+    </div>
+  </div>
+  <div class="wireframe-box text-center" style="border-left: 4px solid #6366f1">
+    <div class="text-sm font-bold text-indigo-700">Race Condition</div>
+    <div class="text-xs text-gray-500 mt-1">중복 분석 방지</div>
+    <div class="mt-2 text-[10px]">
+      <div class="removed">중복 실행 가능</div>
+      <div class="added mt-1">analyzing → 409 반환</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     8. 점수 시뮬레이션 예시
+     ═══════════════════════════════════════════════════════ -->
+<h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+  <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold">8</span>
+  점수 시뮬레이션 (동일 데이터)
+</h2>
+
+<div class="wireframe-box mb-8" style="border-left: 4px solid #8b5cf6">
+  <div class="text-sm text-gray-600 mb-4">
+    <strong>시나리오:</strong> 32평 아파트, 서울, 중급, 항목 18개 (바닥/욕실/주방/전기/도배/철거/목공)<br>
+    면허 미확인, 미분류 2건, 수량 부족 바닥 1카테고리, 일식 전기 1건(700만), 평균 편차 +12%
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-6">
+    <!-- OLD -->
+    <div class="p-4 bg-red-50 rounded-xl border border-red-200">
+      <div class="text-sm font-bold text-red-700 mb-3">BEFORE 스코어</div>
+      <div class="space-y-1.5 text-sm">
+        <div class="flex justify-between"><span>가중 평균 (deviation 기반)</span><span class="font-mono">78.0</span></div>
+        <div class="flex justify-between text-green-700"><span>+ 투명성 보너스</span><span class="font-mono">+3</span></div>
+        <div class="flex justify-between text-red-600"><span class="removed">- 면허 미확인 (고위험)</span><span class="font-mono removed">-15</span></div>
+        <div class="flex justify-between text-red-600"><span>- 미분류 (2건)</span><span class="font-mono">-6</span></div>
+        <div class="flex justify-between text-red-600"><span class="removed">- 수량 부족 (아이템별)</span><span class="font-mono removed">-8</span></div>
+        <div class="flex justify-between text-red-600"><span>- 고액 일식 (1건)</span><span class="font-mono">-5</span></div>
+        <div class="border-t border-red-300 pt-2 flex justify-between font-bold text-lg">
+          <span>최종 점수</span>
+          <span class="text-red-700">47점 (D등급)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW -->
+    <div class="p-4 bg-green-50 rounded-xl border border-green-200">
+      <div class="text-sm font-bold text-green-700 mb-3">AFTER 스코어</div>
+      <div class="space-y-1.5 text-sm">
+        <div class="flex justify-between"><span class="added">가중 평균 (마진율 primary)</span><span class="font-mono added">82.0</span></div>
+        <div class="flex justify-between text-green-700"><span>+ 투명성 보너스</span><span class="font-mono">+3</span></div>
+        <div class="flex justify-between text-amber-600"><span class="added">- 면허 미확인 (넛지)</span><span class="font-mono added">-3</span></div>
+        <div class="flex justify-between text-amber-600"><span>- 미분류 (2건)</span><span class="font-mono">-6</span></div>
+        <div class="flex justify-between text-amber-600"><span class="added">- 수량 부족 (카테고리)</span><span class="font-mono added">-5</span></div>
+        <div class="flex justify-between text-amber-600"><span>- 고액 일식 (1건)</span><span class="font-mono">-5</span></div>
+        <div class="border-t border-green-300 pt-2 flex justify-between font-bold text-lg">
+          <span>최종 점수</span>
+          <span class="text-green-700 added">66점 (C등급)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
+    <div class="text-sm font-bold text-purple-700 mb-1">차이 분석</div>
+    <div class="text-xs text-purple-600">
+      동일 데이터에서 <strong>47점 → 66점 (+19점)</strong> 상승<br>
+      • 가중 평균: deviation(78) → margin-primary(82) = <strong>+4</strong> (마진율 기반 더 정확)<br>
+      • 면허: -15 → -3 = <strong>+12</strong> (자동분석에서 면허 확인 불가 → 넛지로 완화)<br>
+      • 수량: -8 → -5 = <strong>+3</strong> (카테고리 합산, 50% 미만에만 적용)<br>
+      <strong>등급 변화: D "상당부분 검토" → C "일부 검토 필요"</strong> — 더 현실적인 평가
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="text-center text-xs text-gray-400 mt-12 pb-8">
+  GOI (ZipCheck) 견적분석시스템 — Phase 1 Before/After 비교 리포트<br>
+  Generated: 2026-02-06 | Commit: bef7227
+</div>
+
+</body>
+</html>

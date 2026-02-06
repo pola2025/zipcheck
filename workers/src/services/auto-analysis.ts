@@ -542,16 +542,39 @@ function findBenchmarkWithTier(
 	benchmarks: BenchmarkPrice[],
 	grade: string,
 	originalItemName?: string | null,
+	quoteUnit?: string | null,
 ): BenchmarkMatch | null {
 	const isManual = (b: BenchmarkPrice) => b.source !== 'google_search'
 	const isGoogleReliable = (b: BenchmarkPrice) =>
 		b.source === 'google_search' && b.model !== 'low'
 
-	// Tier 1: 수동 벤치마크 exact match (수동 우선)
-	const manualExact = benchmarks.find(
+	// 단위 호환성 체크 (방충망 등 ㎡/개 양쪽 벤치마크가 있는 경우)
+	const unitCompatible = (benchUnit: string | null, qUnit: string | null): boolean => {
+		if (!qUnit || !benchUnit) return true // 정보 부족 시 호환으로 간주
+		const countUnits = ['개', '세트', '조', '짝', '식']
+		const areaUnits = ['㎡', 'm2', 'm²', '평']
+		const qIsCount = countUnits.some(u => qUnit.includes(u))
+		const bIsCount = countUnits.some(u => benchUnit.includes(u))
+		const qIsArea = areaUnits.some(u => qUnit.includes(u))
+		const bIsArea = areaUnits.some(u => benchUnit.includes(u))
+		// 같은 유형이면 호환
+		if (qIsCount && bIsCount) return true
+		if (qIsArea && bIsArea) return true
+		// 유형이 다르면 비호환
+		if ((qIsCount && bIsArea) || (qIsArea && bIsCount)) return false
+		return true // 기타(m, 톤 등)는 호환으로 간주
+	}
+
+	// Tier 1: 수동 벤치마크 exact match (수동 우선, 단위 일치 우선)
+	const manualExacts = benchmarks.filter(
 		b => isManual(b) && b.std_category === stdCategory && b.std_item === stdItem && b.grade === grade
 	)
-	if (manualExact) return { benchmark: manualExact, matchTier: 1 }
+	if (manualExacts.length > 0) {
+		// 단위 호환 벤치마크 우선
+		const unitMatch = manualExacts.find(b => unitCompatible(b.unit, quoteUnit))
+		if (unitMatch) return { benchmark: unitMatch, matchTier: 1 }
+		return { benchmark: manualExacts[0], matchTier: 1 }
+	}
 
 	// Tier 2: 키워드 매칭 (ITEM_KEYWORD_MAP으로 변환 후 매칭)
 	if (originalItemName) {
@@ -999,7 +1022,7 @@ export async function runAutoAnalysis(
 		let matchTier: number | null = null
 
 		if (mapped) {
-			const benchResult = findBenchmarkWithTier(mapped.stdCategory, mapped.stdItem, benchmarks, targetGrade, itemName)
+			const benchResult = findBenchmarkWithTier(mapped.stdCategory, mapped.stdItem, benchmarks, targetGrade, itemName, unit)
 			if (benchResult) {
 				const bench = benchResult.benchmark
 				matchTier = benchResult.matchTier

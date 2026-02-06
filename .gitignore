@@ -96,3 +96,10 @@ output/
 # Root package.json (script-only dev deps)
 /package.json
 /package-lock.json
+
+# Wrangler local state
+workers/.wrangler/
+
+# Temporary scripts
+tmp-*.js
+test-*.js

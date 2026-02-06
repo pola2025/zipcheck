@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOI 견적 분석 결과 v2 - 원가 기반 마진율 분석 (김현우)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        sand: {
+          50: '#FAFAF8', 100: '#F5F4F0', 200: '#ECEAE3', 300: '#DBD8CE',
+          400: '#B8B4A6', 500: '#96917F', 600: '#746F5E', 700: '#5A5647',
+          800: '#403D32', 900: '#2A2822'
+        },
+        forest: {
+          50: '#F0F7F1', 100: '#D4ECD7', 200: '#A8D9AF', 300: '#7CC687',
+          400: '#50B35F', 500: '#3D9A4C', 600: '#2E7B3B', 700: '#235E2D',
+          800: '#18411F', 900: '#0D2411'
+        }
+      }
+    }
+  }
+}
+</script>
+<style>
+body { font-family: 'Pretendard', -apple-system, system-ui, sans-serif; }
+.font-outfit { font-family: 'Outfit', sans-serif; }
+.break-keep { word-break: keep-all; }
+@keyframes score-fill { from { stroke-dashoffset: 314; } }
+@keyframes fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.anim { animation: fade-in 0.4s ease-out forwards; }
+.anim-d1 { animation: fade-in 0.4s ease-out 0.1s forwards; opacity: 0; }
+.anim-d2 { animation: fade-in 0.4s ease-out 0.2s forwards; opacity: 0; }
+.anim-d3 { animation: fade-in 0.4s ease-out 0.3s forwards; opacity: 0; }
+.anim-d4 { animation: fade-in 0.4s ease-out 0.4s forwards; opacity: 0; }
+/* v2 전용: AS-IS / TO-BE 비교 토글 */
+.compare-banner { background: linear-gradient(135deg, #166534 0%, #235E2D 100%); }
+</style>
+</head>
+<body class="bg-sand-50 min-h-screen">
+
+<!-- ===== 개선안 배너 ===== -->
+<div class="compare-banner text-white py-3 px-4 text-center text-sm font-semibold sticky top-0 z-20">
+  <span class="mr-2">v2 개선안</span>
+  <span class="px-2 py-0.5 rounded-full text-xs bg-white/20">원가 기반 마진율 분석</span>
+  <span class="text-white/60 ml-2">| 기존 "시장가 비교" → "원가 + 적정 마진(15~25%)" 기반으로 전환</span>
+</div>
+
+<!-- ===== 헤더 ===== -->
+<div class="bg-white border-b border-sand-200 sticky top-[44px] z-10">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+    <div class="min-w-0">
+      <div class="flex items-center gap-3">
+        <span class="font-outfit text-lg sm:text-xl font-bold text-sand-900">견적 분석 리포트</span>
+        <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200 shrink-0">completed</span>
+      </div>
+      <p class="text-xs sm:text-sm text-sand-600 mt-1 truncate">김현우 | 경기 수원시 영통구 매탄동 | 아파트 34평(112.4㎡)</p>
+    </div>
+    <div class="text-right shrink-0 ml-4">
+      <div class="text-xs text-sand-500">분석일</div>
+      <div class="text-sm font-semibold text-sand-800">2026-02-06</div>
+    </div>
+  </div>
+</div>
+
+<div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+
+<!-- ═══════════════════════════════════════════════
+     1. 종합 점수 + 원가 기반 요약 (★ CHANGED)
+     ═══════════════════════════════════════════════ -->
+<div class="bg-white rounded-2xl border border-sand-300 p-5 sm:p-8 mb-5 sm:mb-6 anim">
+  <div class="flex flex-col md:flex-row items-center gap-6 sm:gap-8">
+    <!-- Score Gauge -->
+    <div class="flex-shrink-0">
+      <svg width="160" height="160" viewBox="0 0 120 120" class="sm:w-[180px] sm:h-[180px]">
+        <circle cx="60" cy="60" r="50" fill="none" stroke="#ECEAE3" stroke-width="10" />
+        <circle cx="60" cy="60" r="50" fill="none" stroke="#3B82F6" stroke-width="10"
+          stroke-dasharray="314" stroke-dashoffset="87.9" stroke-linecap="round"
+          transform="rotate(-90 60 60)"
+          style="animation: score-fill 1s ease-out;" />
+        <text x="60" y="54" text-anchor="middle" style="font-family:Outfit;font-size:28px;font-weight:700;fill:#2A2822;">72</text>
+        <text x="60" y="72" text-anchor="middle" style="font-size:11px;fill:#96917F;">/ 100</text>
+      </svg>
+    </div>
+    <!-- Info -->
+    <div class="flex-1 text-center md:text-left w-full">
+      <div class="flex items-center gap-3 justify-center md:justify-start mb-2">
+        <span class="font-outfit text-3xl sm:text-4xl font-bold text-sand-900">72</span>
+        <span class="px-3 py-1 rounded-full text-sm font-bold bg-blue-50 text-blue-700 border border-blue-200">B등급</span>
+        <span class="px-3 py-1 rounded-full text-sm font-bold bg-forest-50 text-forest-700 border border-forest-200">합리적</span>
+      </div>
+      <p class="text-sand-600 text-sm sm:text-base">원가 대비 적정 마진 범위의 견적입니다</p>
+
+      <!-- ★ CHANGED: 4칸 → 추정 원가 + 평균 마진율 -->
+      <div class="mt-4 grid grid-cols-2 md:flex gap-3 justify-center md:justify-start">
+        <div class="bg-sand-50 rounded-xl px-4 py-2.5 border border-sand-200 text-center md:text-left">
+          <div class="text-[11px] sm:text-xs text-sand-500">총 견적액</div>
+          <div class="text-lg sm:text-xl font-bold text-sand-900">4,274만원</div>
+        </div>
+        <div class="bg-blue-50 rounded-xl px-4 py-2.5 border border-blue-200 text-center md:text-left">
+          <div class="text-[11px] sm:text-xs text-blue-600">추정 원가</div>
+          <div class="text-lg sm:text-xl font-bold text-blue-700">3,470만원</div>
+        </div>
+        <div class="bg-green-50 rounded-xl px-4 py-2.5 border border-green-200 text-center md:text-left">
+          <div class="text-[11px] sm:text-xs text-green-600">평균 마진율</div>
+          <div class="text-lg sm:text-xl font-bold text-green-700">23.2%</div>
+          <div class="text-[10px] text-green-500">적정 (15~25%)</div>
+        </div>
+        <div class="bg-sand-50 rounded-xl px-4 py-2.5 border border-sand-200 text-center md:text-left">
+          <div class="text-[11px] sm:text-xs text-sand-500">항목 수</div>
+          <div class="text-lg sm:text-xl font-bold text-sand-900">33건</div>
+        </div>
+      </div>
+
+      <!-- ★ NEW: 적정가 범위 바 -->
+      <div class="mt-3 bg-sand-50 rounded-xl px-4 py-3 border border-sand-200">
+        <div class="flex justify-between text-xs text-sand-500 mb-1.5">
+          <span>적정 견적 범위 <span class="text-sand-400">(마진 15~25%)</span></span>
+          <span class="font-bold text-forest-600">3,991만 ~ 4,338만원</span>
+        </div>
+        <div class="relative h-3 bg-sand-200 rounded-full">
+          <!-- 적정 범위 (녹색 영역) -->
+          <div class="absolute h-full bg-green-200 rounded-full" style="left:35%; width:25%"></div>
+          <!-- 원가 마커 -->
+          <div class="absolute top-1/2 -translate-y-1/2 w-1 h-5 bg-blue-400 rounded-full" style="left:15%"></div>
+          <!-- 현재 견적 마커 -->
+          <div class="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-forest-500 rounded-full border-2 border-white shadow-md" style="left:calc(55% - 7px)"></div>
+        </div>
+        <div class="flex justify-between text-[10px] text-sand-400 mt-1">
+          <span class="text-blue-500">원가 3,470만</span>
+          <span class="text-green-500 text-center">적정 범위</span>
+          <span class="text-forest-600 font-bold">견적 4,274만</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     2. 요약: 긍정/주의/미포함/절감 (원가 기반 ★ CHANGED)
+     ═══════════════════════════════════════════════ -->
+<div class="grid md:grid-cols-2 gap-4 mb-5 sm:mb-6 anim-d1">
+  <!-- 긍정 -->
+  <div class="bg-white rounded-2xl border border-green-200 p-5">
+    <h3 class="text-sm font-semibold text-green-700 mb-3 flex items-center gap-2">
+      <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      적정 마진 (6개 카테고리)
+    </h3>
+    <ul class="space-y-2.5">
+      <li class="text-sm text-sand-700 flex items-center gap-2 break-keep"><span class="text-green-500 shrink-0">+</span>바닥: 원가 대비 <span class="shrink-0 ml-auto px-2 py-0.5 rounded-md text-xs font-bold bg-green-100 text-green-700 whitespace-nowrap">마진 22.6%</span></li>
+      <li class="text-sm text-sand-700 flex items-center gap-2 break-keep"><span class="text-green-500 shrink-0">+</span>욕실: 프리미엄 자재 포함 <span class="shrink-0 ml-auto px-2 py-0.5 rounded-md text-xs font-bold bg-green-100 text-green-700 whitespace-nowrap">마진 20.0%</span></li>
+      <li class="text-sm text-sand-700 flex items-center gap-2 break-keep"><span class="text-green-500 shrink-0">+</span>도배: 실크+합지 혼합 <span class="shrink-0 ml-auto px-2 py-0.5 rounded-md text-xs font-bold bg-green-100 text-green-700 whitespace-nowrap">마진 20.0%</span></li>
+      <li class="text-sm text-sand-700 flex items-center gap-2 break-keep"><span class="text-green-500 shrink-0">+</span>창호·주방·기타 모두 <span class="shrink-0 ml-auto px-2 py-0.5 rounded-md text-xs font-bold bg-green-100 text-green-700 whitespace-nowrap">마진 20~21%</span></li>
+    </ul>
+  </div>
+  <!-- 주의 -->
+  <div class="bg-white rounded-2xl border border-red-200 p-5">
+    <h3 class="text-sm font-semibold text-red-700 mb-3 flex items-center gap-2">
+      <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      과다 마진 주의 (3건)
+    </h3>
+    <ul class="space-y-2.5">
+      <li class="text-sm text-sand-700 flex items-center gap-2 break-keep"><span class="text-red-500 shrink-0">!</span>가구: 원가 250만 대비 <span class="shrink-0 ml-auto px-2 py-0.5 rounded-md text-xs font-bold bg-red-100 text-red-700 whitespace-nowrap">마진 60.4%</span></li>
+      <li class="text-sm text-sand-700 flex items-center gap-2 break-keep"><span class="text-red-500 shrink-0">!</span>전기: 원가 215만 대비 <span class="shrink-0 ml-auto px-2 py-0.5 rounded-md text-xs font-bold bg-amber-100 text-amber-700 whitespace-nowrap">마진 30.2%</span></li>
+      <li class="text-sm text-sand-700 flex items-center gap-2 break-keep"><span class="text-red-500 shrink-0">!</span>목공: 원가 265만 대비 <span class="shrink-0 ml-auto px-2 py-0.5 rounded-md text-xs font-bold bg-amber-100 text-amber-700 whitespace-nowrap">마진 26.4%</span></li>
+    </ul>
+  </div>
+  <!-- 미포함 -->
+  <div class="bg-white rounded-2xl border border-amber-200 p-5">
+    <h3 class="text-sm font-semibold text-amber-700 mb-3 flex items-center gap-2">
+      <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      미포함 (3건)
+    </h3>
+    <ul class="space-y-2.5">
+      <li class="text-sm text-sand-700 flex items-center gap-2 break-keep"><span class="text-amber-500 shrink-0">~</span>에어컨: 시스템 에어컨 <span class="shrink-0 ml-auto px-2 py-0.5 rounded-md text-xs font-bold bg-amber-100 text-amber-700 whitespace-nowrap">미포함</span></li>
+      <li class="text-sm text-sand-700 flex items-center gap-2 break-keep"><span class="text-amber-500 shrink-0">~</span>샷시: 교체 비용 <span class="shrink-0 ml-auto px-2 py-0.5 rounded-md text-xs font-bold bg-amber-100 text-amber-700 whitespace-nowrap">미포함</span></li>
+      <li class="text-sm text-sand-700 flex items-center gap-2 break-keep"><span class="text-amber-500 shrink-0">~</span>발코니: 확장 공사 <span class="shrink-0 ml-auto px-2 py-0.5 rounded-md text-xs font-bold bg-amber-100 text-amber-700 whitespace-nowrap">미포함</span></li>
+    </ul>
+  </div>
+  <!-- 절감 가능 — 원가 기반 적정가로 환산 -->
+  <div class="bg-white rounded-2xl border border-forest-200 p-5">
+    <h3 class="text-sm font-semibold text-forest-700 mb-3 flex items-center gap-2">
+      <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      적정 마진 적용 시 절감 가능
+      <span class="ml-auto px-2 py-0.5 rounded-full text-[11px] font-bold bg-forest-100 text-forest-700 whitespace-nowrap">-213만원</span>
+    </h3>
+    <ul class="space-y-2.5">
+      <li class="text-sm text-sand-700 flex items-center gap-2 break-keep"><span class="text-forest-500 shrink-0">&#8595;</span>가구: 적정 마진(25%) 적용 시 <span class="shrink-0 ml-auto px-2 py-0.5 rounded-md text-xs font-bold bg-forest-100 text-forest-700 whitespace-nowrap">-89만원</span></li>
+      <li class="text-sm text-sand-700 flex items-center gap-2 break-keep"><span class="text-forest-500 shrink-0">&#8595;</span>가구: 시스템 가구 전환 시 <span class="shrink-0 ml-auto px-2 py-0.5 rounded-md text-xs font-bold bg-forest-100 text-forest-700 whitespace-nowrap">-88만원 추가</span></li>
+      <li class="text-sm text-sand-700 flex items-center gap-2 break-keep"><span class="text-forest-500 shrink-0">&#8595;</span>전기: 적정 마진(25%) 적용 시 <span class="shrink-0 ml-auto px-2 py-0.5 rounded-md text-xs font-bold bg-forest-100 text-forest-700 whitespace-nowrap">-11만원</span></li>
+      <li class="text-sm text-sand-700 flex items-center gap-2 break-keep"><span class="text-forest-500 shrink-0">&#8595;</span>간접조명 단가 협상 <span class="shrink-0 ml-auto px-2 py-0.5 rounded-md text-xs font-bold bg-forest-100 text-forest-700 whitespace-nowrap">-25만원</span></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     3. ★ NEW: 카테고리별 마진율 분석 (핵심 신규 섹션)
+     ═══════════════════════════════════════════════ -->
+<div class="bg-white rounded-2xl border border-sand-300 p-4 sm:p-6 mb-5 sm:mb-6 anim-d1">
+  <h3 class="font-outfit text-lg font-semibold text-sand-900 mb-2 flex items-center gap-2">
+    <svg class="w-5 h-5 text-forest-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+    카테고리별 마진율 분석
+  </h3>
+  <p class="text-sm text-sand-500 mb-5">업체가 각 항목에서 얼마나 남기는지 원가 기반으로 분석합니다. <span class="text-green-600 font-semibold">적정 마진: 15~25%</span></p>
+
+  <!-- 적정 범위 가이드 라인 -->
+  <div class="relative mb-2">
+    <div class="flex items-center gap-2 text-[10px] text-sand-400 mb-1">
+      <span class="w-14"></span>
+      <div class="flex-1 flex justify-between px-1">
+        <span>0%</span><span class="text-green-500 font-bold">15%</span><span class="text-green-500 font-bold">25%</span><span>40%</span><span>60%+</span>
+      </div>
+      <span class="w-16"></span>
+    </div>
+  </div>
+
+  <div class="space-y-2.5">
+    <!-- 바닥 22.6% 적정 -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="w-14 text-xs font-bold text-right text-sand-700 shrink-0">바닥</div>
+      <div class="flex-1 relative">
+        <div class="h-7 bg-sand-100 rounded-full overflow-hidden relative">
+          <div class="absolute h-full bg-green-100/50" style="left:25%; width:16.7%"></div>
+          <div class="h-full bg-green-400 rounded-full flex items-center pl-3" style="width:37.7%">
+            <span class="text-[11px] font-bold text-white drop-shadow-sm">22.6%</span>
+          </div>
+        </div>
+      </div>
+      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 w-16 text-center shrink-0">적정</span>
+    </div>
+
+    <!-- 욕실 20.0% 적정 -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="w-14 text-xs font-bold text-right text-sand-700 shrink-0">욕실</div>
+      <div class="flex-1 relative">
+        <div class="h-7 bg-sand-100 rounded-full overflow-hidden relative">
+          <div class="absolute h-full bg-green-100/50" style="left:25%; width:16.7%"></div>
+          <div class="h-full bg-green-400 rounded-full flex items-center pl-3" style="width:33.3%">
+            <span class="text-[11px] font-bold text-white drop-shadow-sm">20.0%</span>
+          </div>
+        </div>
+      </div>
+      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 w-16 text-center shrink-0">적정</span>
+    </div>
+
+    <!-- 가구 60.4% 과다 ⚠ -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="w-14 text-xs font-bold text-right text-red-700 shrink-0">가구</div>
+      <div class="flex-1 relative">
+        <div class="h-7 bg-sand-100 rounded-full overflow-hidden relative">
+          <div class="absolute h-full bg-green-100/50" style="left:25%; width:16.7%"></div>
+          <div class="h-full bg-red-400 rounded-full flex items-center justify-end pr-3" style="width:100%">
+            <span class="text-[11px] font-bold text-white drop-shadow-sm">60.4% ⚠</span>
+          </div>
+        </div>
+      </div>
+      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 w-16 text-center shrink-0">과다</span>
+    </div>
+
+    <!-- 목공 26.4% 약간높음 -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="w-14 text-xs font-bold text-right text-sand-700 shrink-0">목공</div>
+      <div class="flex-1 relative">
+        <div class="h-7 bg-sand-100 rounded-full overflow-hidden relative">
+          <div class="absolute h-full bg-green-100/50" style="left:25%; width:16.7%"></div>
+          <div class="h-full bg-amber-400 rounded-full flex items-center pl-3" style="width:44%">
+            <span class="text-[11px] font-bold text-white drop-shadow-sm">26.4%</span>
+          </div>
+        </div>
+      </div>
+      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 w-16 text-center shrink-0">약간높음</span>
+    </div>
+
+    <!-- 전기 30.2% 약간높음 -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="w-14 text-xs font-bold text-right text-sand-700 shrink-0">전기</div>
+      <div class="flex-1 relative">
+        <div class="h-7 bg-sand-100 rounded-full overflow-hidden relative">
+          <div class="absolute h-full bg-green-100/50" style="left:25%; width:16.7%"></div>
+          <div class="h-full bg-amber-400 rounded-full flex items-center pl-3" style="width:50.3%">
+            <span class="text-[11px] font-bold text-white drop-shadow-sm">30.2%</span>
+          </div>
+        </div>
+      </div>
+      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 w-16 text-center shrink-0">약간높음</span>
+    </div>
+
+    <!-- 도배 20.0% 적정 -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="w-14 text-xs font-bold text-right text-sand-700 shrink-0">도배</div>
+      <div class="flex-1 relative">
+        <div class="h-7 bg-sand-100 rounded-full overflow-hidden relative">
+          <div class="absolute h-full bg-green-100/50" style="left:25%; width:16.7%"></div>
+          <div class="h-full bg-green-400 rounded-full flex items-center pl-3" style="width:33.3%">
+            <span class="text-[11px] font-bold text-white drop-shadow-sm">20.0%</span>
+          </div>
+        </div>
+      </div>
+      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 w-16 text-center shrink-0">적정</span>
+    </div>
+
+    <!-- 철거 12.8% 저마진 -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="w-14 text-xs font-bold text-right text-sand-700 shrink-0">철거</div>
+      <div class="flex-1 relative">
+        <div class="h-7 bg-sand-100 rounded-full overflow-hidden relative">
+          <div class="absolute h-full bg-green-100/50" style="left:25%; width:16.7%"></div>
+          <div class="h-full bg-orange-300 rounded-full flex items-center pl-3" style="width:21.3%">
+            <span class="text-[11px] font-bold text-white drop-shadow-sm">12.8%</span>
+          </div>
+        </div>
+      </div>
+      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 w-16 text-center shrink-0">저마진</span>
+    </div>
+
+    <!-- 페인트 14.9% 적정(경계) -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="w-14 text-xs font-bold text-right text-sand-700 shrink-0">페인트</div>
+      <div class="flex-1 relative">
+        <div class="h-7 bg-sand-100 rounded-full overflow-hidden relative">
+          <div class="absolute h-full bg-green-100/50" style="left:25%; width:16.7%"></div>
+          <div class="h-full bg-green-300 rounded-full flex items-center pl-3" style="width:24.8%">
+            <span class="text-[11px] font-bold text-white drop-shadow-sm">14.9%</span>
+          </div>
+        </div>
+      </div>
+      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 w-16 text-center shrink-0">적정</span>
+    </div>
+
+    <!-- 창호·주방 축약 -->
+    <div class="grid grid-cols-2 gap-2 mt-1">
+      <div class="flex items-center gap-2 bg-sand-50 rounded-lg p-2 border border-sand-200">
+        <span class="text-xs font-bold text-sand-600">창호</span>
+        <span class="text-xs text-sand-700 ml-auto">마진 20.0%</span>
+        <span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-green-100 text-green-700">적정</span>
+      </div>
+      <div class="flex items-center gap-2 bg-sand-50 rounded-lg p-2 border border-sand-200">
+        <span class="text-xs font-bold text-sand-600">주방</span>
+        <span class="text-xs text-sand-700 ml-auto">마진 20.9%</span>
+        <span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-green-100 text-green-700">적정</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 범례 -->
+  <div class="flex gap-3 mt-4 justify-center flex-wrap border-t border-sand-100 pt-3">
+    <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-purple-400"></div><span class="text-[10px] text-sand-500">덤핑 &lt;5%</span></div>
+    <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-orange-300"></div><span class="text-[10px] text-sand-500">저마진 5~14%</span></div>
+    <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-green-400"></div><span class="text-[10px] text-sand-500">적정 15~25%</span></div>
+    <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-amber-400"></div><span class="text-[10px] text-sand-500">약간높음 25~40%</span></div>
+    <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-red-400"></div><span class="text-[10px] text-sand-500">과다 40%+</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     4. 항목별 원가 비교표 (★ CHANGED: 원가 + 적정가 + 마진율 추가)
+     ═══════════════════════════════════════════════ -->
+<div class="bg-white rounded-2xl border border-sand-300 p-4 sm:p-6 mb-5 sm:mb-6 anim-d2">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-5">
+    <h3 class="font-outfit text-lg font-semibold text-sand-900 flex items-center gap-2">
+      <svg class="w-5 h-5 text-forest-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+      원가 기반 적정가 비교
+    </h3>
+    <div class="flex items-center gap-2 flex-wrap">
+      <span class="px-3 py-1 rounded-full text-xs font-bold bg-forest-50 text-forest-700 border border-forest-200">절감 가능: 213만원</span>
+    </div>
+  </div>
+  <div class="overflow-x-auto -mx-4 sm:mx-0">
+    <table class="w-full text-sm min-w-[750px]">
+      <thead>
+        <tr class="border-b-2 border-sand-200">
+          <th class="text-left py-2.5 px-3 text-xs font-semibold text-sand-500 uppercase tracking-wider">카테고리</th>
+          <th class="text-left py-2.5 px-3 text-xs font-semibold text-sand-500 uppercase tracking-wider">주요 항목</th>
+          <th class="text-right py-2.5 px-3 text-xs font-semibold text-sand-500 uppercase tracking-wider">견적가</th>
+          <th class="text-right py-2.5 px-3 text-xs font-semibold text-blue-600 uppercase tracking-wider">추정 원가</th>
+          <th class="text-right py-2.5 px-3 text-xs font-semibold text-forest-600 uppercase tracking-wider">적정가<br><span class="text-[9px] font-normal text-sand-400">(마진 15~25%)</span></th>
+          <th class="text-center py-2.5 px-3 text-xs font-semibold text-sand-500 uppercase tracking-wider">마진율</th>
+          <th class="text-center py-2.5 px-3 text-xs font-semibold text-sand-500 uppercase tracking-wider">판정</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-sand-100 hover:bg-sand-50 transition-colors">
+          <td class="py-3 px-3"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded text-xs font-bold">바닥</span></td>
+          <td class="py-3 px-3 text-sand-700">LG하우시스 지아 12T 외</td>
+          <td class="py-3 px-3 text-right font-semibold text-sand-800">1,042만</td>
+          <td class="py-3 px-3 text-right text-blue-600 font-semibold">850만</td>
+          <td class="py-3 px-3 text-right text-forest-600">978~1,063만</td>
+          <td class="py-3 px-3 text-center font-bold text-green-600">22.6%</td>
+          <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700">적정</span></td>
+        </tr>
+        <tr class="border-b border-sand-100 hover:bg-sand-50 transition-colors">
+          <td class="py-3 px-3"><span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-bold">욕실</span></td>
+          <td class="py-3 px-3 text-sand-700">듀라빗·코헬러 2개소</td>
+          <td class="py-3 px-3 text-right font-semibold text-sand-800">780만</td>
+          <td class="py-3 px-3 text-right text-blue-600 font-semibold">650만</td>
+          <td class="py-3 px-3 text-right text-forest-600">748~813만</td>
+          <td class="py-3 px-3 text-center font-bold text-green-600">20.0%</td>
+          <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700">적정</span></td>
+        </tr>
+        <tr class="border-b border-sand-100 bg-red-50/30">
+          <td class="py-3 px-3"><span class="px-2 py-0.5 bg-red-50 text-red-700 rounded text-xs font-bold">가구</span></td>
+          <td class="py-3 px-3 text-sand-700">맞춤 붙박이장 외</td>
+          <td class="py-3 px-3 text-right font-semibold text-red-700">401만</td>
+          <td class="py-3 px-3 text-right text-blue-600 font-semibold">250만</td>
+          <td class="py-3 px-3 text-right text-forest-600">288~313만</td>
+          <td class="py-3 px-3 text-center font-bold text-red-600">60.4%</td>
+          <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700">과다</span></td>
+        </tr>
+        <tr class="border-b border-sand-100 bg-amber-50/20">
+          <td class="py-3 px-3"><span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded text-xs font-bold">목공</span></td>
+          <td class="py-3 px-3 text-sand-700">아트월·상판 외</td>
+          <td class="py-3 px-3 text-right font-semibold text-sand-800">335만</td>
+          <td class="py-3 px-3 text-right text-blue-600 font-semibold">265만</td>
+          <td class="py-3 px-3 text-right text-forest-600">305~331만</td>
+          <td class="py-3 px-3 text-center font-bold text-amber-600">26.4%</td>
+          <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">약간높음</span></td>
+        </tr>
+        <tr class="border-b border-sand-100 bg-amber-50/20">
+          <td class="py-3 px-3"><span class="px-2 py-0.5 bg-orange-50 text-orange-700 rounded text-xs font-bold">전기</span></td>
+          <td class="py-3 px-3 text-sand-700">간접조명·콘센트 외</td>
+          <td class="py-3 px-3 text-right font-semibold text-sand-800">280만</td>
+          <td class="py-3 px-3 text-right text-blue-600 font-semibold">215만</td>
+          <td class="py-3 px-3 text-right text-forest-600">247~269만</td>
+          <td class="py-3 px-3 text-center font-bold text-amber-600">30.2%</td>
+          <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">약간높음</span></td>
+        </tr>
+        <tr class="border-b border-sand-100 hover:bg-sand-50 transition-colors">
+          <td class="py-3 px-3"><span class="px-2 py-0.5 bg-violet-50 text-violet-700 rounded text-xs font-bold">도배</span></td>
+          <td class="py-3 px-3 text-sand-700">합지+실크 혼합</td>
+          <td class="py-3 px-3 text-right font-semibold text-sand-800">234만</td>
+          <td class="py-3 px-3 text-right text-blue-600 font-semibold">195만</td>
+          <td class="py-3 px-3 text-right text-forest-600">224~244만</td>
+          <td class="py-3 px-3 text-center font-bold text-green-600">20.0%</td>
+          <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700">적정</span></td>
+        </tr>
+        <tr class="border-b border-sand-100 hover:bg-sand-50 transition-colors">
+          <td class="py-3 px-3"><span class="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs font-bold">철거</span></td>
+          <td class="py-3 px-3 text-sand-700">철거+폐기물 처리</td>
+          <td class="py-3 px-3 text-right font-semibold text-sand-800">203만</td>
+          <td class="py-3 px-3 text-right text-blue-600 font-semibold">180만</td>
+          <td class="py-3 px-3 text-right text-forest-600">207~225만</td>
+          <td class="py-3 px-3 text-center font-bold text-orange-600">12.8%</td>
+          <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 text-orange-700">저마진</span></td>
+        </tr>
+        <tr class="border-b border-sand-100 hover:bg-sand-50 transition-colors">
+          <td class="py-3 px-3"><span class="px-2 py-0.5 bg-green-50 text-green-700 rounded text-xs font-bold">페인트</span></td>
+          <td class="py-3 px-3 text-sand-700">벽면+천장 도장</td>
+          <td class="py-3 px-3 text-right font-semibold text-sand-800">170만</td>
+          <td class="py-3 px-3 text-right text-blue-600 font-semibold">148만</td>
+          <td class="py-3 px-3 text-right text-forest-600">170~185만</td>
+          <td class="py-3 px-3 text-center font-bold text-green-600">14.9%</td>
+          <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700">적정</span></td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr class="border-t-2 border-sand-300 bg-sand-50">
+          <td class="py-3 px-3 font-bold text-sand-900" colspan="2">합계</td>
+          <td class="py-3 px-3 text-right font-bold text-sand-900">4,274만</td>
+          <td class="py-3 px-3 text-right font-bold text-blue-700">3,470만</td>
+          <td class="py-3 px-3 text-right font-bold text-forest-700">3,991~4,338만</td>
+          <td class="py-3 px-3 text-center font-bold text-green-600">23.2%</td>
+          <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700">적정</span></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- ROI -->
+  <div class="mt-4 rounded-xl bg-forest-50 border border-forest-200 p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+    <div class="flex items-center gap-2 shrink-0">
+      <svg class="w-5 h-5 text-forest-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+      <span class="text-sm font-bold text-forest-800">ROI</span>
+    </div>
+    <p class="text-sm text-sand-700 break-keep">과다 마진 항목(가구·전기)을 적정 수준으로 조정하면 <strong class="text-forest-700">213만원 절감 가능</strong> — 분석 비용(3만원)의 <strong class="text-forest-700">약 71배</strong> 투자 수익률</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     5. 종합 분석 의견 (★ CHANGED: 원가 기반으로 재작성)
+     ═══════════════════════════════════════════════ -->
+<div class="bg-white rounded-2xl border border-sand-300 p-4 sm:p-6 mb-5 sm:mb-6 anim-d2">
+  <h3 class="font-outfit text-lg font-semibold text-sand-900 mb-5 flex items-center gap-2">
+    <svg class="w-5 h-5 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+    집첵 원가 기반 견적 평가
+  </h3>
+  <div class="space-y-5 text-sm text-sand-700 break-keep leading-relaxed">
+
+    <div class="border-l-2 border-blue-300 pl-4">
+      <h4 class="font-semibold text-sand-900 mb-1.5">원가 기반 전체 평가</h4>
+      <p>본 견적은 경기 수원시 영통구 매탄동 소재 아파트 34평(112.4㎡) 전체 올수리에 대한 견적으로, 총 33개 세부 항목에 걸쳐 4,274만원이 산정되었습니다. 업종별 원자재 시세·인건비 기준 <strong>추정 원가는 약 3,470만원</strong>이며, 이에 따른 <strong>평균 마진율은 23.2%</strong>로 업계 적정 수준(15~25%)의 상단에 위치합니다. 전체 11개 카테고리 중 <strong>7개 카테고리가 적정 마진 범위</strong> 내에 있어, 견적의 핵심 골격은 합리적으로 구성되어 있습니다.</p>
+    </div>
+
+    <div class="border-l-2 border-green-300 pl-4">
+      <h4 class="font-semibold text-sand-900 mb-1.5">마진율 적정성 분석</h4>
+      <p>바닥(마진 22.6%)·욕실(20.0%)·도배(20.0%)·창호(20.0%)·주방(20.9%) 등 5개 핵심 카테고리가 적정 마진 범위 내에 있으며, 이 카테고리들이 전체 견적의 <strong>약 55%</strong>를 차지합니다. 특히 욕실은 듀라빗·코헬러 등 프리미엄 자재를 포함하고도 마진율 20%를 유지하고 있어 원가 대비 합리적인 가격입니다.</p>
+      <p class="mt-2">반면 <strong>가구 카테고리(마진율 60.4%)</strong>는 적정 마진의 약 2.5배에 달하며, 이는 맞춤 가구 제작 프리미엄이 과도하게 책정된 것으로 분석됩니다. 목공(26.4%)과 전기(30.2%)도 적정 범위를 소폭 초과합니다.</p>
+    </div>
+
+    <div class="border-l-2 border-purple-300 pl-4">
+      <h4 class="font-semibold text-sand-900 mb-1.5">저마진 항목 주의</h4>
+      <p>철거(마진 12.8%)는 적정 범위 하단을 하회하는 저마진 항목입니다. 원가 수준에 가까운 가격으로, <strong>가격 자체는 소비자에게 유리</strong>하지만 시공 품질이나 폐기물 처리 범위를 사전에 명확히 확인하실 것을 권장합니다. 페인트(14.9%)도 경계선에 위치하나 허용 범위 내입니다.</p>
+    </div>
+
+    <div class="border-l-2 border-forest-300 pl-4">
+      <h4 class="font-semibold text-sand-900 mb-1.5">비용 최적화 제안</h4>
+      <p>과다 마진 항목을 적정 수준으로 조정하면 약 <strong>213만원 절감</strong>이 가능합니다. 가구 카테고리를 시스템 가구로 전환하거나 마진율을 25% 수준으로 협상하면 약 177만원, 전기 카테고리의 간접조명 단가를 원가 기준 적정가로 재산정하면 약 36만원 추가 절감이 가능합니다. 이를 반영하면 최종 견적은 <strong>4,061만원(평균 마진율 17.0%)</strong>으로, 적정 마진 범위 하단의 매우 합리적인 가격이 됩니다.</p>
+    </div>
+
+    <div class="border-l-2 border-sand-400 pl-4 bg-sand-50/80 -ml-4 pl-[calc(0.5rem+1rem)] py-3.5 rounded-r-xl">
+      <h4 class="font-semibold text-sand-900 mb-1.5">종합 의견</h4>
+      <p>본 견적은 <strong>72점(B등급, '합리적')</strong>으로 평가됩니다. 전체 평균 마진율 23.2%로 업계 적정 범위 내에 있으며, 대다수 카테고리가 원가 대비 합리적으로 책정되어 있습니다. 다만 <strong>가구 카테고리의 마진율 60.4%는 명확한 협상 대상</strong>이며, 맞춤 가구의 필요성과 가격 타당성을 시공사에 확인하시길 권장합니다. 미포함 항목(에어컨·샷시·발코니)의 추가 여부에 따라 총 공사비가 변동하므로, 계약 전 전체 공사 범위를 확정하세요.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     6. 비용 구조 시각화 (기존 유지)
+     ═══════════════════════════════════════════════ -->
+<div class="bg-white rounded-2xl border border-sand-300 p-4 sm:p-6 mb-5 sm:mb-6 anim-d2">
+  <h3 class="font-outfit text-lg font-semibold text-sand-900 mb-5 flex items-center gap-2">
+    <svg class="w-5 h-5 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+    비용 구조
+  </h3>
+  <div class="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+    <div class="relative w-44 h-44 md:w-56 md:h-56 shrink-0">
+      <div class="w-full h-full rounded-full" style="background:conic-gradient(#60A5FA 0% 24.4%,#3B82F6 24.4% 42.6%,#EF4444 42.6% 52%,#F59E0B 52% 59.9%,#F97316 59.9% 66.5%,#8B5CF6 66.5% 72%,#6B7280 72% 76.8%,#10B981 76.8% 80.8%,#06B6D4 80.8% 84.7%,#22C55E 84.7% 88%,#D1D5DB 88% 100%)"></div>
+      <div class="absolute inset-[22%] bg-white rounded-full flex items-center justify-center flex-col shadow-inner">
+        <span class="font-outfit text-xl md:text-2xl font-bold text-sand-900">4,274</span>
+        <span class="text-[10px] md:text-xs text-sand-500">만원</span>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-x-5 sm:gap-x-8 gap-y-1.5 text-sm flex-1">
+      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:#60A5FA"></span><span class="text-sand-700">바닥 <strong>24.4%</strong></span></div>
+      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:#3B82F6"></span><span class="text-sand-700">욕실 <strong>18.2%</strong></span></div>
+      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:#EF4444"></span><span class="text-sand-700">가구 <strong>9.4%</strong> <span class="text-red-500 text-xs">(마진 과다)</span></span></div>
+      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:#F59E0B"></span><span class="text-sand-700">목공 <strong>7.9%</strong></span></div>
+      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:#F97316"></span><span class="text-sand-700">전기 <strong>6.6%</strong></span></div>
+      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:#8B5CF6"></span><span class="text-sand-700">도배 <strong>5.5%</strong></span></div>
+      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:#6B7280"></span><span class="text-sand-700">철거 <strong>4.8%</strong> <span class="text-orange-500 text-xs">(저마진)</span></span></div>
+      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:#10B981"></span><span class="text-sand-700">페인트 <strong>4.0%</strong></span></div>
+      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:#06B6D4"></span><span class="text-sand-700">창호 <strong>3.9%</strong></span></div>
+      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:#22C55E"></span><span class="text-sand-700">주방 <strong>3.3%</strong></span></div>
+    </div>
+  </div>
+  <p class="mt-4 text-sm text-sand-600 bg-sand-50 rounded-lg p-3 break-keep">바닥(24.4%)과 욕실(18.2%)이 전체의 <strong>42.6%</strong>를 차지하며 핵심 비용 구간. <strong class="text-red-600">가구(9.4%) 마진 과다 — 협상 1순위</strong></p>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     7. 업체 협상 가이드 (★ CHANGED: 원가 근거 기반)
+     ═══════════════════════════════════════════════ -->
+<div class="bg-gradient-to-br from-sand-800 to-sand-900 rounded-2xl p-4 sm:p-6 mb-5 sm:mb-6 anim-d3 text-white">
+  <h3 class="font-outfit text-lg font-semibold mb-2 flex items-center gap-2">
+    <svg class="w-5 h-5 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+    이대로 따라 하세요: 업체 협상 멘트
+  </h3>
+  <p class="text-sm text-sand-400 mb-5 break-keep">아래 멘트에는 <strong class="text-amber-300">원가 데이터 기반 근거</strong>가 포함되어 있어 시공사가 반박하기 어렵습니다.</p>
+  <div class="space-y-4">
+    <!-- 멘트 1: 가구 — 원가 근거 -->
+    <div class="rounded-xl bg-white/10 border border-white/20 p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="px-2 py-0.5 rounded text-xs font-bold bg-red-400/30 text-red-300">가구 · 마진 60%</span>
+        <span class="text-sm font-semibold text-sand-200">붙박이장 단가 협상</span>
+      </div>
+      <p class="text-sm text-sand-300 break-keep italic leading-relaxed">"안방 붙박이장이 미터당 45만원으로 책정되어 있는데, <strong class="text-white not-italic">업계 원가 데이터 기준으로 동급 자재·시공비가 미터당 약 28만원입니다. 현재 마진율이 60%로 적정 수준(15~25%)을 크게 초과하고 있습니다.</strong> 적정 마진을 적용하면 미터당 32~35만원이 합리적인 범위인데, 조정이 가능한지 확인 부탁드립니다."</p>
+    </div>
+    <!-- 멘트 2: 전기 — 원가 근거 -->
+    <div class="rounded-xl bg-white/10 border border-white/20 p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="px-2 py-0.5 rounded text-xs font-bold bg-amber-400/30 text-amber-300">전기 · 마진 30%</span>
+        <span class="text-sm font-semibold text-sand-200">간접조명 단가 재검토</span>
+      </div>
+      <p class="text-sm text-sand-300 break-keep italic leading-relaxed">"간접조명이 미터당 3만원인데, <strong class="text-white not-italic">원가 데이터 기준 LED 모듈+알루미늄 프로파일+시공비가 미터당 약 2.3만원입니다.</strong> 적정가인 2만5천~2만8천원으로 재검토가 가능할까요? 조광(디밍) 기능이 포함된 건지도 확인 부탁드립니다."</p>
+    </div>
+    <!-- 멘트 3: 목공 — 원가 근거 -->
+    <div class="rounded-xl bg-white/10 border border-white/20 p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="px-2 py-0.5 rounded text-xs font-bold bg-amber-400/30 text-amber-300">목공 · 마진 26%</span>
+        <span class="text-sm font-semibold text-sand-200">아트월 단가 확인</span>
+      </div>
+      <p class="text-sm text-sand-300 break-keep italic leading-relaxed">"거실 아트월이 ㎡당 18만원인데, <strong class="text-white not-italic">원자재(MDF+시트지) 원가가 ㎡당 약 8만원, 인건비 포함 원가가 약 14만원입니다.</strong> 원목 패널이면 원가가 달라지니, 정확한 마감재 등급과 디자인 사양을 알 수 있을까요?"</p>
+    </div>
+  </div>
+  <div class="mt-4 rounded-lg bg-white/5 border border-white/10 p-3">
+    <p class="text-xs text-sand-400 break-keep"><strong class="text-sand-300">TIP:</strong> "깎아주세요"가 아니라 <strong class="text-sand-200">"원가 데이터 기준으로 적정 마진을 확인하고 싶다"</strong>는 톤으로 접근하세요. 구체적 숫자를 제시하면 시공사도 합리적 근거로 인식합니다.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     8. 자재 등급 포지셔닝 (기존 유지)
+     ═══════════════════════════════════════════════ -->
+<div class="bg-white rounded-2xl border border-sand-300 p-4 sm:p-6 mb-5 sm:mb-6 anim-d3">
+  <h3 class="font-outfit text-lg font-semibold text-sand-900 mb-4 flex items-center gap-2">
+    <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+    자재 등급 포지셔닝
+  </h3>
+  <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-5">
+    <p class="text-sm text-blue-800 break-keep"><strong>한줄평:</strong> 가격은 실용형이지만 <strong>욕실은 하이엔드, 바닥은 고급형</strong>인 전략적 구성. 생활 만족도가 높은 곳에 집중 투자한 견적입니다.</p>
+  </div>
+  <div class="space-y-6">
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-base font-semibold text-sand-800">바닥재</span>
+        <span class="text-sm text-sand-500">LG하우시스 지아 12T</span>
+      </div>
+      <div class="relative h-5 md:h-6 bg-gradient-to-r from-sand-200 via-blue-100 to-violet-100 rounded-full">
+        <div class="absolute top-1/2 -translate-y-1/2 w-7 h-7 md:w-8 md:h-8 rounded-full bg-blue-500 border-[3px] border-white shadow-md" style="left:calc(55% - 14px)"></div>
+      </div>
+      <div class="flex justify-between text-[11px] sm:text-xs text-sand-400 mt-1.5 px-0.5"><span>경제형</span><span>실용형</span><span>고급형</span><span>하이엔드</span></div>
+    </div>
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-base font-semibold text-sand-800">욕실</span>
+        <span class="text-sm text-violet-600 font-semibold">듀라빗 · 코헬러</span>
+      </div>
+      <div class="relative h-5 md:h-6 bg-gradient-to-r from-sand-200 via-blue-100 to-violet-100 rounded-full">
+        <div class="absolute top-1/2 -translate-y-1/2 w-7 h-7 md:w-8 md:h-8 rounded-full bg-violet-500 border-[3px] border-white shadow-md" style="left:calc(85% - 14px)"></div>
+      </div>
+      <div class="flex justify-between text-[11px] sm:text-xs text-sand-400 mt-1.5 px-0.5"><span>경제형</span><span>실용형</span><span>고급형</span><span>하이엔드</span></div>
+    </div>
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-base font-semibold text-sand-800">가구</span>
+        <span class="text-sm text-red-600 font-semibold">맞춤 붙박이장 (m당 45만 · <span class="text-red-500">마진 60%</span>)</span>
+      </div>
+      <div class="relative h-5 md:h-6 bg-gradient-to-r from-sand-200 via-blue-100 to-violet-100 rounded-full">
+        <div class="absolute top-1/2 -translate-y-1/2 w-7 h-7 md:w-8 md:h-8 rounded-full bg-red-500 border-[3px] border-white shadow-md" style="left:calc(72% - 14px)"></div>
+      </div>
+      <div class="flex justify-between text-[11px] sm:text-xs text-sand-400 mt-1.5 px-0.5"><span>경제형</span><span>실용형</span><span>고급형</span><span>하이엔드</span></div>
+    </div>
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-base font-semibold text-sand-800">도배</span>
+        <span class="text-sm text-sand-500">합지 + 실크 혼합</span>
+      </div>
+      <div class="relative h-5 md:h-6 bg-gradient-to-r from-sand-200 via-blue-100 to-violet-100 rounded-full">
+        <div class="absolute top-1/2 -translate-y-1/2 w-7 h-7 md:w-8 md:h-8 rounded-full bg-sand-500 border-[3px] border-white shadow-md" style="left:calc(30% - 14px)"></div>
+      </div>
+      <div class="flex justify-between text-[11px] sm:text-xs text-sand-400 mt-1.5 px-0.5"><span>경제형</span><span>실용형</span><span>고급형</span><span>하이엔드</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     9. 유지 vs 절감 선택 가이드 (★ CHANGED: 원가 근거)
+     ═══════════════════════════════════════════════ -->
+<div class="bg-white rounded-2xl border border-sand-300 p-4 sm:p-6 mb-5 sm:mb-6 anim-d4">
+  <h3 class="font-outfit text-lg font-semibold text-sand-900 mb-2 flex items-center gap-2">
+    <svg class="w-5 h-5 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+    유지 vs 절감 선택 가이드
+  </h3>
+  <p class="text-sm text-sand-500 mb-5 break-keep">"단순히 싸게"가 아니라, <strong>원가 대비 마진율이 적정한 항목은 유지</strong>하고 과다한 항목만 조정하세요.</p>
+  <div class="space-y-4">
+    <div class="rounded-xl border-2 border-blue-200 bg-blue-50/40 p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700 whitespace-nowrap">유지 추천</span>
+        <span class="text-sm font-semibold text-sand-900">욕실 프리미엄 자재 (마진 20% 적정)</span>
+      </div>
+      <p class="text-sm text-sand-700 break-keep">원가 650만 대비 견적 780만원으로 마진율 20%. <strong>업계 적정 범위 정중앙</strong>이며, 듀라빗·코헬러 등 프리미엄 자재 포함. 매일 사용하는 공간이므로 유지를 강력 추천합니다.</p>
+    </div>
+    <div class="rounded-xl border-2 border-blue-200 bg-blue-50/40 p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700 whitespace-nowrap">유지 추천</span>
+        <span class="text-sm font-semibold text-sand-900">바닥재 LG하우시스 지아 12T (마진 22.6% 적정)</span>
+      </div>
+      <p class="text-sm text-sand-700 break-keep">원가 850만 대비 견적 1,042만원으로 마진율 22.6%. 적정 범위 내이며 12T의 내구성이 우수합니다.</p>
+    </div>
+    <div class="rounded-xl border-2 border-red-200 bg-red-50/40 p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 whitespace-nowrap">절감 1순위</span>
+        <span class="text-sm font-semibold text-sand-900">안방 붙박이장 (마진 60% → 과다)</span>
+      </div>
+      <p class="text-sm text-sand-700 break-keep">원가 250만 대비 견적 401만원으로 <strong>마진율 60.4%는 적정(15~25%)의 2.5배</strong>. 시스템 가구 전환 시 원가 180만원 × 마진 25% = <strong>225만원으로 176만원 절감 가능</strong>. 붙박이장은 문을 닫으면 브랜드 차이가 거의 안 느껴집니다.</p>
+    </div>
+    <div class="rounded-xl border-2 border-forest-200 bg-forest-50/40 p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-forest-100 text-forest-700 whitespace-nowrap">절감 추천</span>
+        <span class="text-sm font-semibold text-sand-900">간접조명 단가 협상 (마진 30% → 25%로 조정)</span>
+      </div>
+      <p class="text-sm text-sand-700 break-keep">원가 m당 2.3만원 대비 견적 3만원(마진 30.4%). 적정 마진(25%) 적용하면 m당 2.8만원으로 약 <strong>25만원 절감</strong> 가능.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     10. AS-IS vs TO-BE 비교 (기획서용)
+     ═══════════════════════════════════════════════ -->
+<div class="bg-gradient-to-br from-forest-800 to-forest-900 rounded-2xl p-4 sm:p-6 mb-5 sm:mb-6 text-white anim-d4">
+  <h3 class="font-outfit text-lg font-semibold mb-4 flex items-center gap-2">
+    <svg class="w-5 h-5 text-forest-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+    AS-IS vs TO-BE 핵심 차이
+  </h3>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-xl bg-white/10 border border-white/20 p-4">
+      <div class="text-xs font-bold text-sand-400 mb-3">AS-IS (기존)</div>
+      <ul class="space-y-2 text-sm text-sand-300">
+        <li class="flex gap-2"><span class="text-red-400 shrink-0">✕</span>시장 평균가 4,500만원 대비 -5%</li>
+        <li class="flex gap-2"><span class="text-red-400 shrink-0">✕</span>편차% 기반 판정 (근거 없음)</li>
+        <li class="flex gap-2"><span class="text-red-400 shrink-0">✕</span>일식 항목 비교 스킵</li>
+        <li class="flex gap-2"><span class="text-red-400 shrink-0">✕</span>협상: "시장 데이터 기준" (모호)</li>
+        <li class="flex gap-2"><span class="text-red-400 shrink-0">✕</span>차별점 없음 (아무 사이트나 가능)</li>
+      </ul>
+    </div>
+    <div class="rounded-xl bg-white/10 border border-forest-400/30 p-4">
+      <div class="text-xs font-bold text-forest-300 mb-3">TO-BE (개선)</div>
+      <ul class="space-y-2 text-sm text-sand-200">
+        <li class="flex gap-2"><span class="text-forest-300 shrink-0">✓</span><strong>추정 원가 3,470만 → 마진율 23.2%</strong></li>
+        <li class="flex gap-2"><span class="text-forest-300 shrink-0">✓</span>마진율 기반 6단계 판정 (원가 근거)</li>
+        <li class="flex gap-2"><span class="text-forest-300 shrink-0">✓</span>일식 항목도 면적 환산으로 원가 추정</li>
+        <li class="flex gap-2"><span class="text-forest-300 shrink-0">✓</span>협상: <strong>"원가 28만, 마진 60%"</strong> (구체적)</li>
+        <li class="flex gap-2"><span class="text-forest-300 shrink-0">✓</span><strong>원가 기반 = 핵심 차별점</strong></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+</div><!-- max-w-6xl -->
+</body>
+</html>

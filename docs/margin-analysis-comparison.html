@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>마진율 분석 로직 수정 비교 — 김현우 견적서</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Pretendard', -apple-system, system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; }
+  .improved { background: #064e3b; border-color: #059669; }
+  .worse { background: #7f1d1d; border-color: #dc2626; }
+  .same { background: #1e293b; border-color: #475569; }
+  .score-bar { height: 8px; border-radius: 4px; transition: width 0.6s ease; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
+  table { border-collapse: collapse; width: 100%; }
+  th { text-align: left; padding: 10px 12px; font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #334155; }
+  td { padding: 10px 12px; border-bottom: 1px solid #1e293b; font-size: 14px; }
+  .arrow { color: #facc15; font-weight: bold; }
+  .highlight { color: #34d399; font-weight: 600; }
+  .negative { color: #f87171; }
+  .neutral { color: #94a3b8; }
+</style>
+</head>
+<body class="p-6 max-w-6xl mx-auto">
+
+<!-- Header -->
+<div class="mb-8">
+  <h1 class="text-2xl font-bold text-white mb-1">마진율 분석 로직 수정 비교</h1>
+  <p class="text-slate-400">김현우 견적서 (112.4㎡, 경기 수원시 영통구) — 33개 항목, 총 37,557,200원</p>
+  <p class="text-slate-500 text-sm mt-1">2026-02-06 테스트 결과</p>
+</div>
+
+<!-- Score Overview -->
+<div class="grid grid-cols-3 gap-4 mb-8">
+  <div class="card p-5 text-center">
+    <div class="text-slate-400 text-xs mb-2">수정 전 (원본)</div>
+    <div class="text-4xl font-bold text-red-400">0<span class="text-lg">점</span></div>
+    <div class="tag bg-red-900 text-red-300 mt-2">F등급</div>
+    <div class="text-slate-500 text-xs mt-2">가중합 31.8 → 패널티 -84</div>
+  </div>
+  <div class="card p-5 text-center border-yellow-600/50">
+    <div class="text-slate-400 text-xs mb-2">Fix 1 (합산원가)</div>
+    <div class="text-4xl font-bold text-yellow-400">23<span class="text-lg">점</span></div>
+    <div class="tag bg-yellow-900 text-yellow-300 mt-2">F등급</div>
+    <div class="text-slate-500 text-xs mt-2">가중합 46.1 → 패널티 -28</div>
+  </div>
+  <div class="card p-5 text-center improved">
+    <div class="text-emerald-400 text-xs mb-2">Fix 2 (카테고리 폴백)</div>
+    <div class="text-4xl font-bold text-emerald-400">30<span class="text-lg">점</span></div>
+    <div class="tag bg-emerald-900 text-emerald-300 mt-2">F등급</div>
+    <div class="text-emerald-500 text-xs mt-2">가중합 53.0 → 패널티 -28</div>
+  </div>
+</div>
+
+<!-- Margin Summary -->
+<div class="card p-5 mb-8">
+  <h2 class="text-lg font-semibold text-white mb-4">마진율 요약</h2>
+  <div class="grid grid-cols-3 gap-6">
+    <div>
+      <div class="text-slate-400 text-xs mb-1">평균 마진율 (항목별)</div>
+      <div class="flex items-center gap-3">
+        <span class="text-red-400 line-through">535.42%</span>
+        <span class="arrow">→</span>
+        <span class="highlight">1.45%</span>
+      </div>
+    </div>
+    <div>
+      <div class="text-slate-400 text-xs mb-1">전체 마진율 (총액 기반)</div>
+      <div class="flex items-center gap-3">
+        <span class="text-slate-300">12.62%</span>
+        <span class="arrow">→</span>
+        <span class="negative">-17.29%</span>
+      </div>
+      <div class="text-slate-500 text-xs mt-1">견적 3,241만 &lt; 추정원가 3,919만</div>
+    </div>
+    <div>
+      <div class="text-slate-400 text-xs mb-1">마진 분석 항목 수</div>
+      <div class="text-white">25 / 33개</div>
+      <div class="text-slate-500 text-xs mt-1">미분류 2, 마진스킵 6</div>
+    </div>
+  </div>
+</div>
+
+<!-- Category Scores Comparison -->
+<div class="card p-5 mb-8">
+  <h2 class="text-lg font-semibold text-white mb-4">카테고리별 점수 비교</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>카테고리</th>
+        <th>가중치</th>
+        <th>수정 전</th>
+        <th></th>
+        <th>Fix 1</th>
+        <th></th>
+        <th>Fix 2</th>
+        <th>avg deviation</th>
+        <th>비고</th>
+      </tr>
+    </thead>
+    <tbody id="categoryTable"></tbody>
+  </table>
+</div>
+
+<!-- Penalty Comparison -->
+<div class="card p-5 mb-8">
+  <h2 class="text-lg font-semibold text-white mb-4">패널티/보너스 비교</h2>
+  <table>
+    <thead>
+      <tr><th>항목</th><th>수정 전</th><th></th><th>Fix 2 (현재)</th><th>변화</th></tr>
+    </thead>
+    <tbody id="penaltyTable"></tbody>
+  </table>
+</div>
+
+<!-- Item Details -->
+<div class="card p-5 mb-8">
+  <h2 class="text-lg font-semibold text-white mb-4">개별 항목 상세 (Fix 2 결과)</h2>
+  <div class="text-slate-400 text-xs mb-3">
+    <span class="tag bg-emerald-900 text-emerald-300 mr-2">정상</span>
+    <span class="tag bg-yellow-900 text-yellow-300 mr-2">높음</span>
+    <span class="tag bg-red-900 text-red-300 mr-2">비정상/스킵</span>
+    <span class="tag bg-blue-900 text-blue-300 mr-2">단위불일치(합산)</span>
+    <span class="tag bg-slate-700 text-slate-300">미분류</span>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="text-sm">
+      <thead>
+        <tr><th>카테고리</th><th>항목명</th><th class="text-right">견적가</th><th class="text-right">추정원가</th><th class="text-right">마진율</th><th class="text-right">편차</th><th>신뢰도</th><th>상태</th></tr>
+      </thead>
+      <tbody id="itemTable"></tbody>
+      <tfoot>
+        <tr class="border-t-2 border-slate-600">
+          <td colspan="2" class="font-semibold text-white">합계</td>
+          <td class="text-right font-semibold text-white" id="totalQuoted"></td>
+          <td class="text-right font-semibold text-white" id="totalEstimated"></td>
+          <td class="text-right font-semibold" id="totalMargin"></td>
+          <td colspan="3"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<!-- Issues -->
+<div class="card p-5 mb-8 border-amber-700/50">
+  <h2 class="text-lg font-semibold text-amber-400 mb-3">남은 과제</h2>
+  <div class="space-y-3 text-sm">
+    <div class="flex gap-3">
+      <span class="tag bg-red-900 text-red-300 shrink-0">치명</span>
+      <div>
+        <div class="text-white font-medium">음수 마진 카테고리 4개 (철거/주방/창호/가구 = 30점)</div>
+        <div class="text-slate-400">벤치마크 원가 > 견적가 → 벤치마크 데이터가 과대 추정이거나 카테고리 매핑 오류. 예: "기존 바닥재 철거"가 바닥 카테고리에 매핑됨</div>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <span class="tag bg-yellow-900 text-yellow-300 shrink-0">높음</span>
+      <div>
+        <div class="text-white font-medium">카테고리 폴백 시 구성요소 불일치</div>
+        <div class="text-slate-400">목공 프로필(문틀+몰딩+걸레받이) vs 실제 견적(아트월+상판+몰딩) — 카테고리 총액 비교라 개별 정확도 떨어짐</div>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <span class="tag bg-yellow-900 text-yellow-300 shrink-0">높음</span>
+      <div>
+        <div class="text-white font-medium">면허 미확인 패널티 -15점</div>
+        <div class="text-slate-400">전기/욕실/주방 포함 견적은 면허 정보 입력 전까지 항상 -15점</div>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <span class="tag bg-blue-900 text-blue-300 shrink-0">중간</span>
+      <div>
+        <div class="text-white font-medium">벤치마크 DB 항목 다양성 부족</div>
+        <div class="text-slate-400">아트월, 비디오폰, 펜던트조명 등 특수 항목은 벤치마크가 없어 카테고리 내 유사 항목으로 대체 → 극단적 편차</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Category data
+const categories = [
+  { cat: '욕실',   w: 0.18, before: 20, fix1: 95, fix2: 95, dev: '20.18%',   note: '구성요소 합산으로 원가 216만원 (기존 6.5만원)' },
+  { cat: '바닥',   w: 0.17, before: 45, fix1: 50, fix2: 50, dev: '50.56%',   note: '개별 단가 비교 유지 (정상)' },
+  { cat: '주방',   w: 0.14, before: 40, fix1: 30, fix2: 30, dev: '-30.32%',  note: '음수 마진 — 벤치마크 > 견적가' },
+  { cat: '목공',   w: 0.12, before: 20, fix1: 25, fix2: 50, dev: '61.31%',   note: '카테고리 폴백 적용 (아트월 미스매치 회피)' },
+  { cat: '전기',   w: 0.08, before: 20, fix1: 30, fix2: 50, dev: '1.82%',    note: '카테고리 폴백 적용 (비디오폰/펜던트 미스매치 회피)' },
+  { cat: '도배',   w: 0.07, before: 20, fix1: 20, fix2: 50, dev: '42.19%',   note: '카테고리 폴백 적용 (㎡ 단가 불일치 해소)' },
+  { cat: '철거',   w: 0.06, before: 40, fix1: 30, fix2: 30, dev: '-78.29%',  note: '음수 마진 — 벤치마크 과대 추정' },
+  { cat: '가구',   w: 0.06, before: 40, fix1: 30, fix2: 30, dev: '-4.59%',   note: '음수 마진 → score 30' },
+  { cat: '창호',   w: 0.05, before: 20, fix1: 30, fix2: 30, dev: '-43.30%',  note: '음수 마진 — 방충망 벤치마크 과대' },
+  { cat: '페인트', w: 0.04, before: 70, fix1: 75, fix2: 75, dev: '26.14%',   note: '개별 단가 비교 유지 (정상)' },
+];
+
+function scoreColor(s) {
+  if (s >= 85) return '#34d399';
+  if (s >= 60) return '#facc15';
+  if (s >= 40) return '#fb923c';
+  return '#f87171';
+}
+
+function renderBar(score, max=100) {
+  return `<div class="flex items-center gap-2">
+    <span style="color:${scoreColor(score)}" class="font-mono font-bold w-8 text-right">${score}</span>
+    <div class="w-24 bg-slate-700 rounded-full overflow-hidden"><div class="score-bar" style="width:${score}%;background:${scoreColor(score)}"></div></div>
+  </div>`;
+}
+
+function diffBadge(before, after) {
+  const d = after - before;
+  if (d > 0) return `<span class="text-emerald-400 text-xs font-bold">+${d}</span>`;
+  if (d < 0) return `<span class="text-red-400 text-xs font-bold">${d}</span>`;
+  return `<span class="text-slate-500 text-xs">±0</span>`;
+}
+
+// Render category table
+const catTbody = document.getElementById('categoryTable');
+categories.forEach(c => {
+  const improved = c.fix2 > c.before;
+  const rowClass = improved ? 'bg-emerald-950/30' : '';
+  catTbody.innerHTML += `<tr class="${rowClass}">
+    <td class="font-medium text-white">${c.cat}</td>
+    <td class="text-slate-400">${(c.w*100).toFixed(0)}%</td>
+    <td>${renderBar(c.before)}</td>
+    <td class="arrow text-center">→</td>
+    <td>${renderBar(c.fix1)}</td>
+    <td class="arrow text-center">→</td>
+    <td>${renderBar(c.fix2)}</td>
+    <td class="font-mono text-xs ${parseFloat(c.dev)<0?'text-red-400':'text-amber-300'}">${c.dev}</td>
+    <td class="text-xs text-slate-400 max-w-xs">${c.note}</td>
+  </tr>`;
+});
+
+// Penalty data
+const penalties = [
+  { label: 'under_quantity (바닥×4)', before: -32, after: 0, note: '개별→합산 비교, 임계값 50%로 완화' },
+  { label: 'under_quantity (도배×2)', before: -16, after: 0, note: '카테고리 합산 후 50% 이상이므로 제거' },
+  { label: 'under_quantity (페인트)', before: -8, after: 0, note: '동일' },
+  { label: '미분류 항목 (2건)', before: -10, after: -10, note: '청소/현장관리비 미분류' },
+  { label: '일식 과다 (33%)', before: -3, after: -3, note: '11/33 항목 일식' },
+  { label: '면허 미확인 (고위험)', before: -15, after: -15, note: '전기/욕실/주방 포함' },
+  { label: '투명성 보너스', before: 5, after: 5, note: '모든 항목 수량/단위 명시' },
+];
+
+const penTbody = document.getElementById('penaltyTable');
+let totalBefore = 0, totalAfter = 0;
+penalties.forEach(p => {
+  totalBefore += p.before; totalAfter += p.after;
+  const d = p.after - p.before;
+  const rowClass = d > 0 ? 'bg-emerald-950/30' : d < 0 ? 'bg-red-950/30' : '';
+  penTbody.innerHTML += `<tr class="${rowClass}">
+    <td class="text-white">${p.label}</td>
+    <td class="font-mono ${p.before<0?'text-red-400':'text-emerald-400'}">${p.before>0?'+':''}${p.before}</td>
+    <td class="arrow text-center">→</td>
+    <td class="font-mono ${p.after<0?'text-red-400':'text-emerald-400'}">${p.after>0?'+':''}${p.after}</td>
+    <td class="text-xs text-slate-400">${d!==0? diffBadge(p.before, p.after)+' '+p.note : p.note}</td>
+  </tr>`;
+});
+penTbody.innerHTML += `<tr class="border-t-2 border-slate-600 font-bold">
+  <td class="text-white">합계</td>
+  <td class="text-red-400">${totalBefore}</td>
+  <td class="arrow text-center">→</td>
+  <td class="${totalAfter<0?'text-red-400':'text-emerald-400'}">${totalAfter}</td>
+  <td>${diffBadge(totalBefore, totalAfter)}</td>
+</tr>`;
+
+// Item details
+const items = [
+  { cat:'바닥', item:'기존 바닥재 철거', quoted:899200, est:5569420, margin:-83.85, dev:-83.85, mm:false, conf:0.8 },
+  { cat:'철거', item:'기존 벽지 제거', quoted:337200, est:2004991, margin:-83.18, dev:-83.18, mm:false, conf:0.8 },
+  { cat:'철거', item:'폐기물 처리', quoted:800000, est:3007487, margin:-73.4, dev:null, mm:true, conf:0.8 },
+  { cat:'목공', item:'거실 아트월 시공', quoted:1440000, est:95136, margin:null, dev:1413.62, mm:false, conf:0.4 },
+  { cat:'목공', item:'주방 상판 교체', quoted:792000, est:42811, margin:null, dev:1749.98, mm:false, conf:0.4 },
+  { cat:'목공', item:'천장 몰딩', quoted:1125000, est:535140, margin:110.23, dev:110.23, mm:false, conf:0.8 },
+  { cat:'바닥', item:'강화마루 (거실, 침실)', quoted:8075000, est:4211750, margin:91.73, dev:91.73, mm:false, conf:0.8 },
+  { cat:'바닥', item:'주방 타일', quoted:1020000, est:594600, margin:71.54, dev:71.54, mm:false, conf:0.8 },
+  { cat:'바닥', item:'현관 포세린 타일', quoted:720000, est:297300, margin:142.18, dev:142.18, mm:false, conf:0.4 },
+  { cat:'바닥', item:'베란다 데크타일', quoted:611000, est:465770, margin:31.18, dev:31.18, mm:false, conf:0.8 },
+  { cat:'도배', item:'거실/주방 실크벽지', quoted:1056000, est:237840, margin:null, dev:344, mm:false, conf:0.4 },
+  { cat:'도배', item:'침실 실크벽지', quoted:1288000, est:319102, margin:null, dev:303.63, mm:false, conf:0.4 },
+  { cat:'욕실', item:'안방 욕실 리모델링', quoted:3800000, est:2163363, margin:75.65, dev:null, mm:true, conf:0.8 },
+  { cat:'욕실', item:'공용 욕실 리모델링', quoted:3500000, est:2163363, margin:61.79, dev:null, mm:true, conf:0.8 },
+  { cat:'욕실', item:'욕실 악세사리', quoted:500000, est:2163363, margin:-76.89, dev:null, mm:true, conf:0.8 },
+  { cat:'주방', item:'주방 벽 타일', quoted:760000, est:2774800, margin:-72.61, dev:-72.61, mm:false, conf:0.8 },
+  { cat:'주방', item:'싱크볼 교체', quoted:350000, est:346850, margin:0.91, dev:0.91, mm:false, conf:0.8 },
+  { cat:'주방', item:'주방 수전', quoted:280000, est:346850, margin:-19.27, dev:-19.27, mm:false, conf:0.8 },
+  { cat:'전기', item:'LED 매입등', quoted:1080000, est:1070280, margin:0.91, dev:0.91, mm:false, conf:0.8 },
+  { cat:'전기', item:'거실 펜던트 조명', quoted:350000, est:44595, margin:null, dev:684.84, mm:false, conf:0.4 },
+  { cat:'전기', item:'간접조명', quoted:630000, est:802710, margin:-21.52, dev:-21.52, mm:false, conf:0.8 },
+  { cat:'전기', item:'스위치/콘센트 교체', quoted:525000, est:1560825, margin:-66.36, dev:-66.36, mm:false, conf:0.8 },
+  { cat:'전기', item:'비디오폰 교체', quoted:220000, est:44595, margin:null, dev:393.33, mm:false, conf:0.4 },
+  { cat:'창호', item:'거실 중문', quoted:1200000, est:1387400, margin:-13.51, dev:null, mm:true, conf:0.8 },
+  { cat:'창호', item:'방충망 교체', quoted:480000, est:1783800, margin:-73.09, dev:-73.09, mm:false, conf:0.8 },
+  { cat:'가구', item:'안방 붙박이장', quoted:1440000, est:1744160, margin:-17.44, dev:-17.44, mm:false, conf:0.8 },
+  { cat:'가구', item:'작은방 붙박이장', quoted:960000, est:1308120, margin:-26.61, dev:-26.61, mm:false, conf:0.8 },
+  { cat:'가구', item:'현관 신발장', quoted:760000, est:1090100, margin:-30.28, dev:-30.28, mm:false, conf:0.8 },
+  { cat:'가구', item:'드레스룸 시스템 선반', quoted:850000, est:545050, margin:55.95, dev:55.95, mm:false, conf:0.8 },
+  { cat:'페인트', item:'천장 도장', quoted:1348800, est:891107, margin:51.36, dev:51.36, mm:false, conf:0.8 },
+  { cat:'페인트', item:'몰딩 도장', quoted:360000, est:356760, margin:0.91, dev:0.91, mm:false, conf:0.8 },
+  { cat:null, item:'청소 및 마무리', quoted:400000, est:null, margin:null, dev:null, mm:false, conf:0.3 },
+  { cat:null, item:'현장 관리비', quoted:800000, est:null, margin:null, dev:null, mm:false, conf:0.3 },
+];
+
+function fmt(n) { return n != null ? n.toLocaleString() : '-'; }
+function marginTag(m) {
+  if (m == null) return '<span class="tag bg-slate-700 text-slate-400">스킵</span>';
+  if (m < 0) return `<span class="tag bg-red-900 text-red-300">${m.toFixed(1)}%</span>`;
+  if (m <= 25) return `<span class="tag bg-emerald-900 text-emerald-300">${m.toFixed(1)}%</span>`;
+  if (m <= 40) return `<span class="tag bg-yellow-900 text-yellow-300">${m.toFixed(1)}%</span>`;
+  return `<span class="tag bg-red-900 text-red-300">${m.toFixed(1)}%</span>`;
+}
+function statusTag(i) {
+  if (!i.cat) return '<span class="tag bg-slate-700 text-slate-300">미분류</span>';
+  if (i.mm) return '<span class="tag bg-blue-900 text-blue-300">합산비교</span>';
+  if (i.conf <= 0.4) return '<span class="tag bg-red-900 text-red-300">미스매치</span>';
+  if (i.margin != null && Math.abs(i.margin) <= 40) return '<span class="tag bg-emerald-900 text-emerald-300">정상</span>';
+  if (i.margin != null && i.margin < 0) return '<span class="tag bg-amber-900 text-amber-300">원가이하</span>';
+  return '<span class="tag bg-yellow-900 text-yellow-300">편차큼</span>';
+}
+
+const itemTbody = document.getElementById('itemTable');
+let sumQ = 0, sumE = 0;
+let prevCat = null;
+items.forEach(i => {
+  sumQ += i.quoted || 0;
+  sumE += i.est || 0;
+  const catChanged = i.cat !== prevCat;
+  prevCat = i.cat;
+  const borderClass = catChanged ? 'border-t border-slate-600' : '';
+  itemTbody.innerHTML += `<tr class="${borderClass} hover:bg-slate-800/50">
+    <td class="text-slate-400 text-xs">${i.cat || '-'}</td>
+    <td class="text-white">${i.item}</td>
+    <td class="text-right font-mono text-sm">${fmt(i.quoted)}</td>
+    <td class="text-right font-mono text-sm ${i.est && i.quoted && i.est > i.quoted*3 ? 'text-red-400' : ''}">${fmt(i.est)}</td>
+    <td class="text-right">${marginTag(i.margin)}</td>
+    <td class="text-right font-mono text-xs ${i.dev && Math.abs(i.dev)>100?'text-red-400':'text-slate-300'}">${i.dev != null ? i.dev.toFixed(1)+'%' : '-'}</td>
+    <td class="text-center"><div class="w-16 bg-slate-700 rounded-full overflow-hidden"><div class="score-bar" style="width:${i.conf*100}%;background:${i.conf>0.6?'#34d399':i.conf>0.3?'#facc15':'#f87171'}"></div></div></td>
+    <td>${statusTag(i)}</td>
+  </tr>`;
+});
+
+document.getElementById('totalQuoted').textContent = fmt(sumQ);
+document.getElementById('totalEstimated').textContent = fmt(sumE);
+const overallMargin = ((sumQ - sumE) / sumE * 100);
+document.getElementById('totalMargin').textContent = overallMargin.toFixed(1) + '%';
+document.getElementById('totalMargin').className = `text-right font-semibold ${overallMargin < 0 ? 'text-red-400' : 'text-emerald-400'}`;
+</script>
+
+</body>
+</html>
