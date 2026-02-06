@@ -22,6 +22,8 @@ import conflictRulesRoutes from './routes/admin/conflict-rules'
 import benchmarksRoutes from './routes/admin/benchmarks'
 import marketPricesRoutes from './routes/admin/market-prices'
 import categoryMappingsRoutes from './routes/admin/category-mappings'
+import calibrationRoutes from './routes/admin/calibration'
+import unmappedTermsRoutes from './routes/admin/unmapped-terms'
 import blogRoutes from './routes/blog'
 import blogAdminRoutes from './routes/admin/blog-admin'
 import imageRoutes from './routes/images'
@@ -82,6 +84,8 @@ app.route('/api/admin/conflict-rules', conflictRulesRoutes)
 app.route('/api/admin/benchmarks', benchmarksRoutes)
 app.route('/api/admin/market-prices', marketPricesRoutes)
 app.route('/api/admin/category-mappings', categoryMappingsRoutes)
+app.route('/api/admin/calibration', calibrationRoutes)
+app.route('/api/admin/unmapped-terms', unmappedTermsRoutes)
 app.route('/api/blog', blogRoutes)
 app.route('/api/admin/blog', blogAdminRoutes)
 app.route('/images', imageRoutes)

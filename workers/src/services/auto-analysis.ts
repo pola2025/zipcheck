@@ -5,6 +5,7 @@
 
 import type { Env } from '../types'
 import { query } from '../lib/db'
+import { CATEGORY_MARGIN_RATES, CATEGORY_WEIGHTS, categoryMarginToScore } from '../lib/constants'
 
 // ============================================
 // Types
@@ -346,18 +347,6 @@ function getMarginBracket(marginRate: number): MarginBracket {
 	return 'abnormal'
 }
 
-function marginToScore(marginRate: number): number {
-	if (marginRate < 0) return 35          // 마이너스 마진 = 데이터 오류 가능성
-	if (marginRate < 5) return 55          // 덤핑 위험
-	if (marginRate < 10) return 78         // 저마진
-	if (marginRate < 15) return 88         // 적정 근접
-	if (marginRate <= 25) return 95        // 적정
-	if (marginRate <= 30) return 85        // 약간 높음
-	if (marginRate <= 40) return 70        // 높음
-	if (marginRate <= 60) return 50        // 과다
-	if (marginRate <= 80) return 35        // 매우 과다
-	return 20                              // 비정상
-}
 
 /**
  * 카테고리 전체 구성요소를 합산하여 원가 추정 (Fix 2)
@@ -404,11 +393,7 @@ function calculateCategoryCost(
 // Scoring (ported from frontend)
 // ============================================
 
-const CATEGORY_WEIGHTS: Record<string, number> = {
-	'욕실': 0.18, '바닥': 0.17, '주방': 0.14, '목공': 0.12,
-	'전기': 0.08, '도배': 0.07, '철거': 0.06, '가구': 0.06,
-	'창호': 0.05, '페인트': 0.04, '기타': 0.03,
-}
+// CATEGORY_WEIGHTS imported from ../lib/constants
 
 function deviationToScore(deviationPercent: number): number {
 	if (deviationPercent >= 0) {
@@ -763,16 +748,22 @@ export async function runAutoAnalysis(
 							marginRate = null
 							marginBracket = null
 						} else {
-							marginRate = deviationPercent
+							// 업종 표준 마진율로 원가 추정 후 실제 마진 계산 (Fix: margin ≠ deviation)
+							const industryMargin = CATEGORY_MARGIN_RATES[mapped.stdCategory] || 0.20
+							const estimatedCostPerUnit = adjustedBenchmarkPrice / (1 + industryMargin)
+							marginRate = Math.round(
+								((comparePrice - estimatedCostPerUnit) / estimatedCostPerUnit) * 10000
+							) / 100
 							marginBracket = getMarginBracket(marginRate)
 						}
 
 						// 추정 원가 총액
+						const industryMarginForCost = CATEGORY_MARGIN_RATES[mapped.stdCategory] || 0.20
 						estimatedCost = (quantity && quantity > 0)
-							? Math.round(adjustedBenchmarkPrice * quantity)
-							: adjustedBenchmarkPrice
-						fairPriceMin = Math.round(estimatedCost * 1.15)
-						fairPriceMax = Math.round(estimatedCost * 1.25)
+							? Math.round((adjustedBenchmarkPrice / (1 + industryMarginForCost)) * quantity)
+							: Math.round(adjustedBenchmarkPrice / (1 + industryMarginForCost))
+						fairPriceMin = Math.round(estimatedCost * (1 + industryMarginForCost * 0.8))
+						fairPriceMax = Math.round(estimatedCost * (1 + industryMarginForCost * 1.2))
 					}
 				}
 			}
@@ -837,10 +828,10 @@ export async function runAutoAnalysis(
 		const isUnreliable = unreliableRatio > 0.5
 
 		if (margins.length > 0 && !isUnreliable) {
-			// 마진율 기반 (primary) — 개별 비교가 신뢰할 만할 때만
+			// 마진율 기반 (primary) — 카테고리별 차등 스코어링
 			const avgMargin = margins.reduce((a, b) => a + b, 0) / margins.length
 			avgDeviation = Math.round(avgMargin * 100) / 100
-			score = marginToScore(avgMargin)
+			score = categoryMarginToScore(avgMargin, category)
 		} else {
 			// 개별 비교 실패 → 카테고리 총액 비교로 폴백
 			const categoryCost = calculateCategoryCost(
@@ -852,13 +843,13 @@ export async function runAutoAnalysis(
 				// 카테고리 전체 견적가 vs 카테고리 합산 원가
 				const categoryMargin = ((totalQuoted - categoryCost) / categoryCost) * 100
 				avgDeviation = Math.round(categoryMargin * 100) / 100
-				score = marginToScore(categoryMargin)
+				score = categoryMarginToScore(categoryMargin, category)
 				console.log(`[AutoAnalysis] ${category}: category-level fallback, cost=${categoryCost}, quoted=${totalQuoted}, margin=${avgDeviation}%`)
 			} else if (margins.length > 0) {
 				// 카테고리 비용 계산 실패 → 기존 마진 사용
 				const avgMargin = margins.reduce((a, b) => a + b, 0) / margins.length
 				avgDeviation = Math.round(avgMargin * 100) / 100
-				score = marginToScore(avgMargin)
+				score = categoryMarginToScore(avgMargin, category)
 			} else if (deviations.length > 0) {
 				// deviation 폴백 (최후 수단)
 				avgDeviation = deviations.reduce((a, b) => a + b, 0) / deviations.length
@@ -940,20 +931,23 @@ export async function runAutoAnalysis(
 		]
 	)
 
-	// 10. Batch insert analysis items (batches of 20 to stay within subrequest limits)
-	const BATCH_SIZE = 20
+	// 10. Batch insert analysis items (batches of 10 for wider columns, stay within subrequest limits)
+	const BATCH_SIZE = 10
 	for (let i = 0; i < analyzedItems.length; i += BATCH_SIZE) {
 		const batch = analyzedItems.slice(i, i + BATCH_SIZE)
 		const values: unknown[] = []
 		const placeholders: string[] = []
+		const COLS_PER_ROW = 22
 
 		batch.forEach((item, idx) => {
-			const offset = idx * 16
+			const offset = idx * COLS_PER_ROW
 			placeholders.push(`(
 				$${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4},
 				$${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8},
 				$${offset + 9}, $${offset + 10}, $${offset + 11}, $${offset + 12},
-				$${offset + 13}, $${offset + 14}, $${offset + 15}, $${offset + 16}
+				$${offset + 13}, $${offset + 14}, $${offset + 15}, $${offset + 16},
+				$${offset + 17}, $${offset + 18}, $${offset + 19}, $${offset + 20},
+				$${offset + 21}, $${offset + 22}
 			)`)
 			values.push(
 				crypto.randomUUID(),        // id
@@ -972,6 +966,12 @@ export async function runAutoAnalysis(
 				item.deviation_percent,      // deviation_percent
 				item.is_bundled,             // is_bundled
 				item.unit_mismatch,          // unit_mismatch
+				item.margin_rate,            // margin_rate
+				item.margin_bracket,         // margin_bracket
+				item.estimated_cost,         // estimated_cost
+				item.fair_price_min,         // fair_price_min
+				item.fair_price_max,         // fair_price_max
+				item.confidence,             // confidence
 			)
 		})
 
@@ -981,7 +981,8 @@ export async function runAutoAnalysis(
 				id, analysis_id, original_category, original_item_name,
 				original_quantity, original_unit, original_unit_price, original_total_price,
 				std_category, std_item, benchmark_unit_price, benchmark_unit, adjusted_benchmark_price,
-				deviation_percent, is_bundled, unit_mismatch
+				deviation_percent, is_bundled, unit_mismatch,
+				margin_rate, margin_bracket, estimated_cost, fair_price_min, fair_price_max, confidence
 			) VALUES ${placeholders.join(', ')}`,
 			values
 		)
@@ -1024,6 +1025,45 @@ export async function runAutoAnalysis(
 			})(),
 		}), input.quoteRequestId]
 	)
+
+	// 12. 미매핑 용어 수집 (매핑 실패 항목 UPSERT)
+	const unmappedItems = analyzedItems.filter(i =>
+		!i.std_category && (i.original_category || i.original_item_name)
+	)
+	if (unmappedItems.length > 0) {
+		const unmappedBatch = unmappedItems.slice(0, 10) // 최대 10개만 (서브리퀘스트 제한)
+		for (const item of unmappedBatch) {
+			const searchText = [item.original_category, item.original_item_name]
+				.filter(Boolean).join(' :: ').trim()
+			if (!searchText) continue
+
+			try {
+				await query(
+					env.DATABASE_URL,
+					`INSERT INTO unmapped_terms (
+						original_category, original_item_name, combined_search_text,
+						quote_request_id, analysis_id, frequency
+					) VALUES ($1, $2, $3, $4, $5, 1)
+					ON CONFLICT (combined_search_text) DO UPDATE SET
+						frequency = unmapped_terms.frequency + 1,
+						last_seen_at = NOW(),
+						quote_request_id = $4,
+						analysis_id = $5`,
+					[
+						item.original_category,
+						item.original_item_name,
+						searchText,
+						input.quoteRequestId,
+						analysisId,
+					]
+				)
+			} catch (e) {
+				// 미매핑 수집 실패는 분석 자체를 실패시키지 않음
+				console.warn(`[AutoAnalysis] Unmapped term insert failed: ${searchText}`, e)
+			}
+		}
+		console.log(`[AutoAnalysis] ${unmappedBatch.length}건 미매핑 용어 수집`)
+	}
 
 	console.log(`[AutoAnalysis] Completed for ${input.quoteRequestId}. Analysis ID: ${analysisId}`)
 

@@ -7,6 +7,8 @@ import type {
 	ScoreBreakdown, CategoryScore, ScoreModifier
 } from '../types/analysis'
 import { getDeviationBracket } from './adjustments'
+import { CATEGORY_MARGIN_RATES, categoryMarginToScore } from './analysis-constants'
+export { categoryMarginToScore, CATEGORY_MARGIN_RATES } from './analysis-constants'
 
 // ============================================
 // 카테고리 가중치

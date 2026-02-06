@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import ScoreGauge, { GRADE_BG } from './ScoreGauge'
 import { getScoreGrade } from '../../lib/scoring'
+import { CATEGORY_MARGIN_RATES } from '../../lib/analysis-constants'
 import { exportToPdf } from '../../lib/pdf-export'
 
 // ─── Interfaces ───────────────────────────────
@@ -158,6 +159,17 @@ function categoryBorderByMargin(margin: number): string {
 	if (margin <= 25) return 'border-green-200 bg-green-50/30'
 	if (margin <= 40) return 'border-amber-200 bg-amber-50/30'
 	return 'border-red-200 bg-red-50/30'
+}
+
+function confidenceBadge(conf: number): { label: string; style: string } {
+	if (conf >= 0.8) return { label: '높음', style: 'bg-green-50 text-green-700 border-green-200' }
+	if (conf >= 0.5) return { label: '보통', style: 'bg-amber-50 text-amber-700 border-amber-200' }
+	return { label: '낮음', style: 'bg-red-50 text-red-700 border-red-200' }
+}
+
+function industryMarginLabel(stdCategory: string): string {
+	const rate = CATEGORY_MARGIN_RATES[stdCategory]
+	return rate != null ? `업계 기준 ${(rate * 100).toFixed(0)}%` : ''
 }
 
 // ─── Constants ───────────────────────────────
@@ -700,6 +712,20 @@ export default function AnalysisResultView({
 										</span>
 									</div>
 								)}
+								{/* 분석 신뢰도 */}
+								{items && items.length > 0 && (() => {
+									const avgConf = items.reduce((s, i) => s + (i.confidence ?? 0.5), 0) / items.length
+									const badge = confidenceBadge(avgConf)
+									return (
+										<div className="flex items-center gap-2">
+											<Shield className="w-4 h-4 text-sand-700 shrink-0" />
+											<span className="text-sm text-sand-600">신뢰도:</span>
+											<span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${badge.style}`}>
+												{badge.label} ({Math.round(avgConf * 100)}%)
+											</span>
+										</div>
+									)
+								})()}
 							</div>
 						</div>
 					</div>
@@ -772,6 +798,11 @@ export default function AnalysisResultView({
 										}`}>
 											{useMargin ? marginBadgeLabel(displayRate) : deviationBadgeLabel(displayRate)}
 										</span>
+										{useMargin && (
+											<span className="text-[9px] text-sand-400 w-12 text-center shrink-0 hidden sm:block" title={industryMarginLabel(cat.name)}>
+												기준{((CATEGORY_MARGIN_RATES[cat.name] || 0.20) * 100).toFixed(0)}%
+											</span>
+										)}
 									</div>
 								)
 							})}
@@ -855,6 +886,7 @@ export default function AnalysisResultView({
 										<th className="text-right py-2.5 px-3 text-xs font-semibold text-sand-600 uppercase tracking-wider">{hasMarginData ? '추정 원가' : '벤치마크 적정가'}</th>
 										<th className="text-right py-2.5 px-3 text-xs font-semibold text-sand-600 uppercase tracking-wider">{hasMarginData ? '마진율' : '차이'}</th>
 										<th className="text-center py-2.5 px-3 text-xs font-semibold text-sand-600 uppercase tracking-wider">판정</th>
+										<th className="text-center py-2.5 px-3 text-xs font-semibold text-sand-600 uppercase tracking-wider">신뢰도</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -914,6 +946,17 @@ export default function AnalysisResultView({
 															}
 														</span>
 													</td>
+													<td className="py-3 px-3 text-center">
+														{(() => {
+															const conf = item.confidence ?? 0.5
+															const badge = confidenceBadge(conf)
+															return (
+																<span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${badge.style}`}>
+																	{badge.label}
+																</span>
+															)
+														})()}
+													</td>
 												</tr>
 											</>
 										)
@@ -941,6 +984,19 @@ export default function AnalysisResultView({
 											}`}>
 												{hasMarginData ? marginBadgeLabel(overallMarginRate) : deviationBadgeLabel(marketDeviation)}
 											</span>
+										</td>
+										<td className="py-3 px-3 text-center">
+											{(() => {
+												const avgConf = items && items.length > 0
+													? items.reduce((s, i) => s + (i.confidence ?? 0.5), 0) / items.length
+													: 0.5
+												const badge = confidenceBadge(avgConf)
+												return (
+													<span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${badge.style}`}>
+														{badge.label}
+													</span>
+												)
+											})()}
 										</td>
 									</tr>
 								</tfoot>

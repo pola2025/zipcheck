@@ -8,6 +8,7 @@
 
 import type { Env } from '../types'
 import { query } from '../lib/db'
+import { CATEGORY_MARGIN_RATES as SHARED_MARGIN_RATES } from '../lib/constants'
 
 // ============================================
 // Types
@@ -126,18 +127,8 @@ const SEARCH_QUERIES: Record<string, SearchQuery[]> = {
 // 카테고리별 마진율 (시장가 → 원가 역추정)
 // ============================================
 
-const CATEGORY_MARGIN_RATES: Record<string, number> = {
-	'철거': 0.35,
-	'도배': 0.25,
-	'페인트': 0.25,
-	'전기': 0.25,
-	'목공': 0.22,
-	'바닥': 0.20,
-	'창호': 0.18,
-	'욕실': 0.18,
-	'주방': 0.15,
-	'가구': 0.15,
-}
+// 로컬 복사본: 마진율 커스텀 오버라이드와 합치기 위해 spread 복사
+const CATEGORY_MARGIN_RATES: Record<string, number> = { ...SHARED_MARGIN_RATES }
 
 // 마진율 커스텀 오버라이드 (KV 저장)
 async function getMarginRates(env: Env): Promise<Record<string, number>> {
