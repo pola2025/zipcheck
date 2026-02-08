@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
-	PenSquare, Plus, Edit3, Trash2, Eye, Upload, Save,
+	PenSquare, Edit3, Trash2, Eye, Upload, Save,
 	X, ChevronLeft, Image as ImageIcon, BarChart3, Send,
 } from 'lucide-react'
 import { getApiUrl } from '../../lib/api-config'
@@ -232,13 +232,6 @@ export default function BlogManagement() {
 							<Send size={14} />
 							{seedLoading ? 'Seeding...' : 'Airtable 동기화'}
 						</button>
-						<button
-							onClick={() => { setEditPost(EMPTY_POST); setViewMode('create') }}
-							className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-forest-600 hover:bg-forest-700 rounded-lg transition-colors"
-						>
-							<Plus size={16} />
-							새 글 작성
-						</button>
 					</div>
 				</div>
 
@@ -260,7 +253,7 @@ export default function BlogManagement() {
 					<div className="text-center py-20 bg-white rounded-xl border border-sand-200">
 						<PenSquare className="w-12 h-12 text-sand-300 mx-auto mb-3" />
 						<p className="text-sand-500 text-sm mb-2">아직 블로그 게시글이 없습니다</p>
-						<p className="text-sand-400 text-xs mb-4">Airtable 동기화 또는 새 글 작성을 시작하세요</p>
+						<p className="text-sand-400 text-xs mb-4">Airtable 동기화를 실행하세요</p>
 						<button
 							onClick={handleSeedStaticData}
 							disabled={seedLoading}
@@ -315,7 +308,7 @@ export default function BlogManagement() {
 										<td className="px-4 py-3">
 											<div className="flex items-center justify-end gap-1">
 												<a
-													href={`/blog/${post.slug}`}
+													href={`https://zcheck.co.kr/blog/${post.slug}`}
 													target="_blank"
 													rel="noopener noreferrer"
 													className="p-1.5 text-sand-400 hover:text-forest-600 transition-colors"
