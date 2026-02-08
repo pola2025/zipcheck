@@ -308,7 +308,7 @@ export default function BlogManagement() {
 										<td className="px-4 py-3">
 											<div className="flex items-center justify-end gap-1">
 												<a
-													href={`https://zcheck.co.kr/blog/${post.slug}`}
+													href={`https://blog.zcheck.co.kr/${post.slug}`}
 													target="_blank"
 													rel="noopener noreferrer"
 													className="p-1.5 text-sand-400 hover:text-forest-600 transition-colors"
