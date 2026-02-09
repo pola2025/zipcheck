@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { CheckCircle, TrendingUp, TrendingDown } from 'lucide-react'
+import { CheckCircle, TrendingUp, TrendingDown, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import type { Analysis, AnalysisItem, ScoreBreakdown } from '../../../types/analysis'
-import { calculateScore, getScoreGrade } from '../../../lib/scoring'
+import { getScoreGrade } from '../../../lib/scoring'
 import { calculateAdjustmentFactors, getDeviationBracket } from '../../../lib/adjustments'
+import { getApiUrl } from '../../../lib/api-config'
 import ScoreGauge from '../ScoreGauge'
 import DeviationBadge from '../DeviationBadge'
 
@@ -78,13 +79,81 @@ const CATEGORY_BADGE: Record<string, string> = {
 	'기타': 'bg-sand-100 text-sand-700',
 }
 
+async function fetchScoreFromServer(analysisId: string): Promise<ScoreBreakdown> {
+	const token = localStorage.getItem('admin_token') || ''
+	const res = await fetch(getApiUrl(`/api/admin/analyses/${analysisId}/calculate-score`), {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`,
+		},
+	})
+	if (!res.ok) {
+		const err = await res.json().catch(() => ({ error: 'Unknown error' }))
+		throw new Error(err.error || `HTTP ${res.status}`)
+	}
+	const json = await res.json()
+	return json.data as ScoreBreakdown
+}
+
 export default function ScoreTab({ analysis, items, onComplete, completing }: Props) {
 	const [breakdown, setBreakdown] = useState<ScoreBreakdown | null>(null)
+	const [loading, setLoading] = useState(true)
+	const [error, setError] = useState<string | null>(null)
 
 	useEffect(() => {
-		const result = calculateScore(analysis, items)
-		setBreakdown(result)
-	}, [analysis, items])
+		let cancelled = false
+		setLoading(true)
+		setError(null)
+
+		fetchScoreFromServer(analysis.id)
+			.then((result) => {
+				if (!cancelled) {
+					setBreakdown(result)
+					setLoading(false)
+				}
+			})
+			.catch((err) => {
+				if (!cancelled) {
+					console.error('[ScoreTab] Failed to fetch score:', err)
+					setError(err.message || '점수 계산 실패')
+					setLoading(false)
+				}
+			})
+
+		return () => { cancelled = true }
+	}, [analysis.id, items.length])
+
+	if (loading) {
+		return (
+			<div className="flex items-center justify-center py-20">
+				<Loader2 className="w-8 h-8 animate-spin text-forest-600" />
+				<span className="ml-3 text-sand-600">점수 계산 중...</span>
+			</div>
+		)
+	}
+
+	if (error) {
+		return (
+			<div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
+				<p className="text-red-700 font-semibold mb-2">점수 계산 오류</p>
+				<p className="text-red-600 text-sm">{error}</p>
+				<button
+					onClick={() => {
+						setLoading(true)
+						setError(null)
+						fetchScoreFromServer(analysis.id)
+							.then(setBreakdown)
+							.catch(e => setError(e.message))
+							.finally(() => setLoading(false))
+					}}
+					className="mt-4 px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200 transition-colors"
+				>
+					다시 시도
+				</button>
+			</div>
+		)
+	}
 
 	if (!breakdown) return null
 

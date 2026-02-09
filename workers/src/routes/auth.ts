@@ -7,7 +7,7 @@ import { sendTelegramMessage } from '../services/telegram'
 
 const ADMIN_EMAIL = 'mkt@polarad.co.kr'
 const RATE_LIMIT_MAX = 5
-const RATE_LIMIT_WINDOW = 15 * 60 // 15 minutes in seconds
+const RATE_LIMIT_WINDOW = 1 * 60 // 1 minute in seconds
 const SESSION_TTL = 300 // 5 minutes
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>()
@@ -39,7 +39,7 @@ app.post('/admin/login', async (c) => {
 		c.executionCtx.waitUntil(
 			sendTelegramMessage(c.env, `<b>⚠️ 관리자 로그인 Rate Limit 초과</b>\n\nIP: <code>${ip}</code>`)
 		)
-		return c.json({ error: '로그인 시도 횟수가 초과되었습니다. 15분 후 다시 시도하세요.' }, 429)
+		return c.json({ error: '로그인 시도 횟수가 초과되었습니다. 1분 후 다시 시도하세요.' }, 429)
 	}
 
 	const { email } = await c.req.json<{ email: string }>()
@@ -107,7 +107,7 @@ app.post('/admin/login/verify-totp', async (c) => {
 	const ip = c.req.header('CF-Connecting-IP') || 'unknown'
 	const { allowed } = await checkRateLimit(c.env.KV, ip)
 	if (!allowed) {
-		return c.json({ error: '로그인 시도 횟수가 초과되었습니다. 15분 후 다시 시도하세요.' }, 429)
+		return c.json({ error: '로그인 시도 횟수가 초과되었습니다. 1분 후 다시 시도하세요.' }, 429)
 	}
 
 	const { code, sessionToken, newSecret } = await c.req.json<{

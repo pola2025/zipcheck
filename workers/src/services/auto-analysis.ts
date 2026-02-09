@@ -11,6 +11,11 @@ import {
 	DUPLICATE_CHECK_RULES, ESSENTIAL_ITEMS_CHECKLIST,
 	type CategoryOverrideRule, type DuplicateCheckRule, type EssentialItem, type LumpSumRange,
 } from '../lib/constants'
+import {
+	deviationToScore, getScoreGrade,
+	calculateBonuses, calculatePenalties,
+	type ScoreBreakdown, type CategoryScore, type ScoreModifier,
+} from './scoring'
 
 // ============================================
 // Types
@@ -35,28 +40,7 @@ interface AdjustmentFactors {
 	exclusive: number
 }
 
-interface CategoryScore {
-	category: StdCategory
-	weight: number
-	avg_deviation: number
-	item_count: number
-	score: number
-}
-
-interface ScoreModifier {
-	type: string
-	label: string
-	points: number
-	reason?: string
-}
-
-interface ScoreBreakdown {
-	categories: CategoryScore[]
-	bonuses: ScoreModifier[]
-	penalties: ScoreModifier[]
-	weighted_sum: number
-	final_score: number
-}
+// CategoryScore, ScoreModifier, ScoreBreakdown → imported from ./scoring
 
 interface AnalyzedItem {
 	original_category: string | null
@@ -412,25 +396,7 @@ function calculateCategoryCost(
 
 // CATEGORY_WEIGHTS imported from ../lib/constants
 
-function deviationToScore(deviationPercent: number): number {
-	if (deviationPercent >= 0) {
-		if (deviationPercent <= 5) return 95
-		if (deviationPercent <= 10) return 87
-		if (deviationPercent <= 15) return 78
-		if (deviationPercent <= 20) return 65
-		if (deviationPercent <= 30) return 50
-		if (deviationPercent <= 40) return 35
-		return 20
-	} else {
-		const abs = Math.abs(deviationPercent)
-		if (abs <= 5) return 95
-		if (abs <= 10) return 85
-		if (abs <= 15) return 75
-		if (abs <= 20) return 60
-		if (abs <= 25) return 45
-		return 30
-	}
-}
+// deviationToScore → imported from ./scoring
 
 function getDeviationBracket(deviation: number): DeviationBracket {
 	if (deviation < -25) return 'dump_risk'
@@ -441,13 +407,7 @@ function getDeviationBracket(deviation: number): DeviationBracket {
 	return 'high'
 }
 
-function getScoreGrade(score: number): { label: string; description: string } {
-	if (score >= 85) return { label: 'A', description: '매우 적정한 견적입니다' }
-	if (score >= 72) return { label: 'B', description: '대체로 합리적인 견적입니다' }
-	if (score >= 55) return { label: 'C', description: '일부 항목 검토가 필요합니다' }
-	if (score >= 40) return { label: 'D', description: '상당 부분 검토가 필요합니다' }
-	return { label: 'F', description: '견적 재검토를 권장합니다' }
-}
+// getScoreGrade → imported from ./scoring
 
 // ============================================
 // Category mapping logic
@@ -888,106 +848,7 @@ function estimateGrade(
 // Bonus / Penalty calculation
 // ============================================
 
-function calculateBonuses(items: AnalyzedItem[], hasLicense?: boolean | null): ScoreModifier[] {
-	const bonuses: ScoreModifier[] = []
-
-	// Transparency bonus
-	const hasFullPricing = items.every(i =>
-		i.original_quantity != null && i.original_unit
-	)
-	if (hasFullPricing && items.length > 0) {
-		bonuses.push({
-			type: 'transparency',
-			label: '투명성 보너스',
-			points: items.length >= 15 ? 5 : 3,
-			reason: '모든 항목에 수량/단위 명시',
-		})
-	}
-
-	// 면허 확인 가점 (한국 시장에서 면허 보유는 차별화 요소)
-	if (hasLicense) {
-		bonuses.push({
-			type: 'license_verified',
-			label: '면허 확인',
-			points: 5,
-			reason: '시공업체 면허/자격 확인됨',
-		})
-	}
-
-	return bonuses
-}
-
-function calculatePenalties(items: AnalyzedItem[], propertySizeSqm: number | null): ScoreModifier[] {
-	const penalties: ScoreModifier[] = []
-
-	// Missing category penalty (capped at -12)
-	const missingItems = items.filter(i => !i.std_category || !i.std_item)
-	if (missingItems.length > 0) {
-		penalties.push({
-			type: 'missing_items',
-			label: '미분류 항목',
-			points: Math.max(-12, -3 * missingItems.length),
-			reason: `${missingItems.length}개 항목 미분류`,
-		})
-	}
-
-	// Bundled items penalty
-	const bundledCount = items.filter(i => i.is_bundled).length
-	const bundledRatio = items.length > 0 ? bundledCount / items.length : 0
-	if (bundledRatio > 0.3 && bundledCount >= 3) {
-		penalties.push({
-			type: 'excessive_bundling',
-			label: '일식 과다',
-			points: bundledRatio > 0.5 ? -5 : -3,
-			reason: `일식 비율 ${(bundledRatio * 100).toFixed(0)}% (${bundledCount}/${items.length})`,
-		})
-	}
-
-	// License: 한국 인테리어 시장에서 면허 없는 게 기본 → 페널티 X, 확인 시 가점
-	// (자동분석에서는 면허 확인 불가 → 보너스도 페널티도 없음)
-
-	// High value bundled penalty (capped at -15)
-	const highValueBundled = items.filter(i =>
-		i.is_bundled && (i.original_total_price ?? 0) > 5_000_000
-	)
-	if (highValueBundled.length > 0) {
-		penalties.push({
-			type: 'high_value_bundled',
-			label: '고액 일식 항목',
-			points: Math.max(-15, -5 * highValueBundled.length),
-			reason: `${highValueBundled.length}건의 500만원 초과 일식 항목`,
-		})
-	}
-
-	// Quantity-area cross-validation (v1.6 → v2: 카테고리 합산 비교, Fix 5)
-	if (propertySizeSqm && propertySizeSqm > 0) {
-		const areaCategories: Array<{ cat: string; stdRatio: number }> = [
-			{ cat: '바닥', stdRatio: 1.05 },
-			{ cat: '도배', stdRatio: 1.15 },
-			{ cat: '페인트', stdRatio: 1.10 },
-		]
-		for (const { cat, stdRatio } of areaCategories) {
-			const catItems = items.filter(i =>
-				i.std_category === cat && i.original_quantity != null && i.original_quantity > 0
-			)
-			if (catItems.length === 0) continue
-			// 카테고리 내 모든 아이템 수량 합산하여 비교 (개별 비교 → 합산 비교)
-			const totalQty = catItems.reduce((sum, i) => sum + (i.original_quantity || 0), 0)
-			const expectedQty = propertySizeSqm * stdRatio
-			const ratio = totalQty / expectedQty
-			if (ratio < 0.5) {  // 50% 미만일 때만 (기존 85%는 너무 엄격)
-				penalties.push({
-					type: 'under_quantity',
-					label: `${cat} 수량 부족`,
-					points: -5,  // -8 → -5 완화, 카테고리당 1번만
-					reason: `${cat} 합산 수량 ${Math.round(totalQty)}㎡ vs 예상 ${Math.round(expectedQty)}㎡ (비율 ${(ratio * 100).toFixed(0)}%)`,
-				})
-			}
-		}
-	}
-
-	return penalties
-}
+// calculateBonuses, calculatePenalties → imported from ./scoring
 
 // ============================================
 // 철거 세부 항목 폴백 벤치마크 (DB에 없을 경우)

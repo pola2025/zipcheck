@@ -8,6 +8,7 @@ import type { Env, Variables } from '../../types'
 import { query, findOne, findMany } from '../../lib/db'
 import { authenticateToken, requireAdmin } from '../../middleware/auth'
 import { sendQuoteCompletedEmail } from '../../services/google-gmail'
+import { calculateScoreFromItems } from '../../services/scoring'
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>()
 
@@ -255,6 +256,46 @@ app.post('/:id/complete', async (c) => {
 		return c.json({ success: true, data: rows[0] })
 	} catch (error) {
 		console.error('[Analyses] Complete error:', error)
+		return c.json({ error: error instanceof Error ? error.message : 'Unknown error' }, 500)
+	}
+})
+
+/**
+ * POST /:id/calculate-score
+ * 서버에서 점수 재계산 (저장하지 않고 결과만 반환)
+ * Frontend ScoreTab에서 사용 — Single Source of Truth
+ */
+app.post('/:id/calculate-score', async (c) => {
+	try {
+		const id = c.req.param('id')
+
+		const analysis = await findOne(
+			c.env.DATABASE_URL,
+			'SELECT property_size_sqm, contractor_license_verified FROM analyses WHERE id = $1',
+			[id]
+		) as Record<string, unknown> | null
+		if (!analysis) {
+			return c.json({ error: '분석을 찾을 수 없습니다.' }, 404)
+		}
+
+		const items = await findMany(
+			c.env.DATABASE_URL,
+			`SELECT std_category, std_item, original_quantity, original_unit,
+				original_unit_price, original_total_price, deviation_percent,
+				is_bundled, unit_mismatch, margin_rate, margin_bracket
+			 FROM analysis_items WHERE analysis_id = $1`,
+			[id]
+		)
+
+		const breakdown = calculateScoreFromItems({
+			items: items as any[],
+			propertySizeSqm: analysis.property_size_sqm as number | null,
+			hasLicense: analysis.contractor_license_verified as boolean | null,
+		})
+
+		return c.json({ data: breakdown })
+	} catch (error) {
+		console.error('[Analyses] Calculate score error:', error)
 		return c.json({ error: error instanceof Error ? error.message : 'Unknown error' }, 500)
 	}
 })
