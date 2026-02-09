@@ -50,6 +50,34 @@ async function uploadToR2(
 }
 
 // ============================================
+// Free Promo Endpoints
+// ============================================
+
+const FREE_PROMO_LIMIT = 50
+
+// Get free analysis remaining slots (public)
+app.get('/free-slots', async (c) => {
+	try {
+		const rows = await query(
+			c.env.DATABASE_URL,
+			`SELECT COUNT(*)::int as used FROM quote_requests WHERE is_free_promo = true`
+		)
+		const used = (rows[0] as Record<string, unknown>)?.used as number || 0
+		const remaining = Math.max(0, FREE_PROMO_LIMIT - used)
+
+		return c.json({
+			total: FREE_PROMO_LIMIT,
+			used,
+			remaining,
+			is_open: remaining > 0,
+		})
+	} catch (error) {
+		console.error('Free slots check error:', error)
+		return c.json({ total: FREE_PROMO_LIMIT, used: 0, remaining: FREE_PROMO_LIMIT, is_open: true })
+	}
+})
+
+// ============================================
 // User Endpoints
 // ============================================
 
@@ -1051,6 +1079,8 @@ app.post('/submit-multiple', async (c) => {
 			original_amount?: number
 			discount_amount?: number
 			paid_amount?: number
+			// Free promo
+			is_free_promo?: boolean
 			// Customer info
 			customer_name: string
 			customer_phone: string
@@ -1079,6 +1109,7 @@ app.post('/submit-multiple', async (c) => {
 			payment_id,
 			plan_name,
 			paid_amount,
+			is_free_promo,
 			customer_name,
 			customer_phone,
 			customer_email,
@@ -1105,11 +1136,26 @@ app.post('/submit-multiple', async (c) => {
 			)
 		}
 
+		// Free promo: check remaining slots
+		if (is_free_promo) {
+			const countRows = await query(
+				c.env.DATABASE_URL,
+				`SELECT COUNT(*)::int as used FROM quote_requests WHERE is_free_promo = true`
+			)
+			const used = (countRows[0] as Record<string, unknown>)?.used as number || 0
+			if (used >= FREE_PROMO_LIMIT) {
+				return c.json({
+					error: '무료 분석 선착순 50명이 마감되었습니다.',
+					code: 'PROMO_CLOSED',
+				}, 429)
+			}
+		}
+
 		console.log(
-			`Multiple quote submission from ${customer_name} (${customer_phone})`
+			`Multiple quote submission from ${customer_name} (${customer_phone})${is_free_promo ? ' [FREE PROMO]' : ''}`
 		)
 		console.log(`   - Quote sets: ${quote_sets.length}`)
-		console.log(`   - Payment: ${plan_name} (${paid_amount}원)`)
+		console.log(`   - Payment: ${plan_name || 'free_promo'} (${paid_amount || 0}원)`)
 
 		// Validate each quote set
 		for (let i = 0; i < quote_sets.length; i++) {
@@ -1227,6 +1273,7 @@ app.post('/submit-multiple', async (c) => {
 				validation_status: 'pending',
 				group_id: finalGroupId,
 				sequence_in_group: sequence,
+				is_free_promo: is_free_promo || false,
 			}
 		)
 

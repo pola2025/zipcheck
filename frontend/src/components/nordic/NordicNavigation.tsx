@@ -33,10 +33,10 @@ export default function NordicNavigation() {
 						)
 					)}
 					<Link
-						to="/plan-selection"
+						to="/quote-submission"
 						className="px-6 py-2.5 bg-forest-600 text-white rounded-xl font-semibold hover:bg-forest-700 transition text-sm shadow-sm"
 					>
-						견적 분석 신청
+						무료 분석 받기 <span className="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full">FREE</span>
 					</Link>
 				</div>
 
@@ -76,11 +76,11 @@ export default function NordicNavigation() {
 							)
 						)}
 						<Link
-							to="/plan-selection"
+							to="/quote-submission"
 							className="mt-2 py-3 bg-forest-600 text-white rounded-xl font-semibold text-center hover:bg-forest-700 transition text-sm shadow-sm"
 							onClick={() => setOpen(false)}
 						>
-							견적 분석 신청
+							무료 분석 받기
 						</Link>
 					</div>
 				</div>

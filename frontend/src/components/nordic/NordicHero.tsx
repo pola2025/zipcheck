@@ -1,7 +1,24 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { heroStats } from 'data/marketing'
+import { getApiUrl } from 'lib/api-config'
 
 export default function NordicHero() {
+	const [freeRemaining, setFreeRemaining] = useState<number | null>(null)
+	const [freeUsed, setFreeUsed] = useState(0)
+
+	useEffect(() => {
+		fetch(getApiUrl('/api/quote-requests/free-slots'))
+			.then(r => r.json())
+			.then(data => {
+				setFreeRemaining(data.remaining)
+				setFreeUsed(data.used)
+			})
+			.catch(() => {})
+	}, [])
+
+	const isClosed = freeRemaining !== null && freeRemaining <= 0
+
 	return (
 		<section className="pt-20 md:pt-28 bg-gradient-to-br from-sand-50/95 to-sand-200/90">
 			<div className="max-w-7xl mx-auto px-5 md:px-8">
@@ -23,18 +40,37 @@ export default function NordicHero() {
 							<span className="text-forest-500">편안하게.</span>
 						</h1>
 
-						<p className="text-base md:text-xl text-sand-700 leading-relaxed mb-8 md:mb-10 max-w-lg font-light">
+						<p className="text-base md:text-xl text-sand-700 leading-relaxed mb-6 md:mb-8 max-w-lg font-light">
 							실제 공사 데이터와 유통망 가격을 기반으로
 							48시간 안에 꼼꼼하게 분석해 드립니다.
 						</p>
 
+						{/* Free Promo Badge */}
+						<div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-full mb-6">
+							<span className="text-red-600 font-bold text-sm">한시적 무료</span>
+							<span className="text-red-300">|</span>
+							<span className="text-red-500 text-sm">선착순 <strong>50</strong>명</span>
+							<span className="text-red-300">|</span>
+							<span className="text-sand-400 text-sm line-through">9,900원</span>
+							<span className="text-red-600 text-sm font-bold ml-1">&rarr; 0원</span>
+						</div>
+
 						<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-5">
-							<Link
-								to="/plan-selection"
-								className="px-8 py-4 bg-forest-600 text-white rounded-2xl font-semibold text-base md:text-lg hover:bg-forest-700 transition shadow-lg shadow-forest-600/15 text-center"
-							>
-								견적 분석 신청하기 &rarr;
-							</Link>
+							{isClosed ? (
+								<button
+									disabled
+									className="px-8 py-4 bg-sand-300 text-sand-500 rounded-2xl font-semibold text-base md:text-lg cursor-not-allowed text-center"
+								>
+									마감되었습니다
+								</button>
+							) : (
+								<Link
+									to="/quote-submission"
+									className="px-8 py-4 bg-forest-600 text-white rounded-2xl font-semibold text-base md:text-lg hover:bg-forest-700 transition shadow-lg shadow-forest-600/15 text-center"
+								>
+									무료 견적 분석 받기 &rarr;
+								</Link>
+							)}
 							<a
 								href="#examples"
 								className="text-sand-600 font-medium hover:text-forest-600 transition underline underline-offset-4 decoration-sand-300 text-center sm:text-left"
@@ -42,6 +78,13 @@ export default function NordicHero() {
 								분석 예시 보기
 							</a>
 						</div>
+
+						{/* Counter */}
+						{freeRemaining !== null && (
+							<p className="text-xs text-sand-500 mt-3">
+								현재 <strong className="text-forest-600">{freeUsed}</strong>/50명 접수 완료
+							</p>
+						)}
 
 						{/* Trust Stats */}
 						<div className="flex items-center gap-6 md:gap-10 mt-10 md:mt-14 pt-6 md:pt-8 border-t border-sand-300">

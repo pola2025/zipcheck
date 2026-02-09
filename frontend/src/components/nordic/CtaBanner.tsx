@@ -19,10 +19,10 @@ export default function CtaBanner() {
 						실제 데이터로 꼼꼼하게 확인해 드립니다.
 					</p>
 					<Link
-						to="/plan-selection"
+						to="/quote-submission"
 						className="inline-block px-10 py-4 bg-white text-forest-700 rounded-2xl font-bold text-lg hover:bg-sand-100 transition shadow-xl"
 					>
-						지금 분석 신청하기 &rarr;
+						무료 견적 분석 받기 &rarr;
 					</Link>
 				</div>
 			</div>

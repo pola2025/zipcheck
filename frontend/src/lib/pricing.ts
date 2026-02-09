@@ -1,16 +1,17 @@
 /**
  * ZipCheck 견적 분석 가격 시스템
  *
- * 요금제: 기본 분석 (30,000원) / 빠른 분석 (45,000원)
- * VAT 별도 (10%)
+ * 현재: 선착순 50명 무료 프로모션 (정가 9,900원)
+ * 단일 플랜: 48시간 분석
  */
 
-export type PlanId = 'basic' | 'fast'
+export type PlanId = 'basic'
 
 export interface Plan {
   id: PlanId
   name: string
   basePrice: number
+  displayPrice: number
   slaHours: number
   description: string
   features: string[]
@@ -25,33 +26,28 @@ export interface PriceCalculation {
   slaHours: number
 }
 
+export const FREE_PROMO = {
+  enabled: true,
+  maxCount: 50,
+  displayPrice: 9900,
+  actualPrice: 0,
+}
+
 export const PLANS: Record<PlanId, Plan> = {
   basic: {
     id: 'basic',
-    name: '기본 분석',
-    basePrice: 30000,
+    name: '견적 분석',
+    basePrice: 9900,
+    displayPrice: 9900,
     slaHours: 48,
     description: '48시간 안에 결과를 전달해 드려요.',
     features: [
-      '주문은 하루 24시간 언제든 받아요.',
-      '분석 결과는 접수 후 48시간 안에 도착해요.',
-      '업무 시간 기준으로 순차 배정해 드려요.',
-      '실제 유통 데이터 기반으로 분석해요.'
+      '항목별 적정가 비교',
+      '항목별 상세 코멘트',
+      '과다 청구 탐지',
+      '시장 데이터 기반 분석',
     ]
   },
-  fast: {
-    id: 'fast',
-    name: '빠른 분석',
-    basePrice: 45000,
-    slaHours: 24,
-    description: '24시간 안에 먼저 처리해 드려요.',
-    features: [
-      '주문은 하루 24시간 언제든 받아요.',
-      '분석 결과는 접수 후 24시간 안에 전달해요.',
-      '긴급 건은 전담 분석팀이 우선 배정돼요.',
-      '세부 코멘트와 후속 질문까지 빠르게 도와드려요.'
-    ]
-  }
 }
 
 /**

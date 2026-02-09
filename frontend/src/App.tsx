@@ -185,7 +185,7 @@ const reportDomainRoutes = (
 const mainDomainRoutes = (
 	<>
 		<Route path='/' element={<ZipCheck />} />
-		<Route path='/plan-selection' element={<PlanSelection />} />
+		<Route path='/plan-selection' element={<Navigate to="/quote-submission" replace />} />
 		<Route path='/community' element={<Community />} />
 		<Route path='/community/reviews/create' element={<ReviewCreate />} />
 		<Route path='/community/reviews/:id' element={<ReviewDetail />} />
@@ -200,7 +200,7 @@ const mainDomainRoutes = (
 		<Route path='/blacklist-check' element={<BlacklistCheck />} />
 		<Route path='/blog' element={<BlogLanding />} />
 		<Route path='/blog/:slug' element={<BlogPostDetail />} />
-		<Route path='/payment' element={<Payment />} />
+		<Route path='/payment' element={<Navigate to="/quote-submission" replace />} />
 		<Route path='/quote-submission' element={<QuoteSubmission />} />
 		<Route path='/quote-status' element={<QuoteStatus />} />
 		<Route path='/ai' element={<AI />}>

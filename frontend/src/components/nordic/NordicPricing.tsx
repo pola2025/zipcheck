@@ -1,107 +1,90 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SectionLabel from './SectionLabel'
-
-const pricingPlans = [
-	{
-		id: 'basic',
-		name: '기본 분석',
-		period: '48시간 이내',
-		price: '₩30,000',
-		priceValue: 30000,
-		priceNote: 'VAT 별도',
-		features: [
-			'항목별 적정가 비교',
-			'항목별 상세 코멘트',
-			'PDF 리포트 제공'
-		],
-		highlighted: false
-	},
-	{
-		id: 'fast',
-		name: '빠른 분석',
-		period: '24시간 이내',
-		price: '₩45,000',
-		priceValue: 45000,
-		priceNote: 'VAT 별도',
-		features: [
-			'우선 배정 전담 분석팀',
-			'추가 Q&A 지원',
-			'기본 분석 모든 기능 포함'
-		],
-		highlighted: true
-	}
-]
+import { getApiUrl } from 'lib/api-config'
 
 export default function NordicPricing() {
 	const navigate = useNavigate()
+	const [freeRemaining, setFreeRemaining] = useState<number | null>(null)
 
-	const handleSelect = (plan: typeof pricingPlans[number]) => {
-		navigate('/payment', {
-			state: {
-				planId: plan.id,
-				planName: plan.name,
-				price: plan.priceValue,
-				priceDisplay: plan.price
-			}
-		})
-	}
+	useEffect(() => {
+		fetch(getApiUrl('/api/quote-requests/free-slots'))
+			.then(r => r.json())
+			.then(data => setFreeRemaining(data.remaining))
+			.catch(() => {})
+	}, [])
+
+	const isClosed = freeRemaining !== null && freeRemaining <= 0
 
 	return (
 		<section id="pricing" className="bg-sand-50 py-24">
-			<div className="max-w-4xl mx-auto px-8">
+			<div className="max-w-3xl mx-auto px-8">
 				<div className="text-center mb-14">
 					<SectionLabel
 						label="Pricing"
 						title="분석 요금"
-						subtitle="3만 원 투자로 수백만 원을 지켜요"
+						subtitle="지금은 무료로 체험해 보세요"
 						align="center"
 					/>
 				</div>
 
-				<div className="grid md:grid-cols-2 gap-8">
-					{pricingPlans.map((plan) => (
-						<div
-							key={plan.name}
-							className={`relative nordic-card rounded-2xl p-8 ${
-								plan.highlighted ? 'border-2 border-forest-600' : ''
-							}`}
-						>
-							{plan.highlighted && (
-								<div className="absolute -top-[10px] left-1/2 -translate-x-1/2 px-4 py-[3px] rounded-2xl text-[11px] font-semibold bg-forest-700 text-white">
-									추천
-								</div>
-							)}
-
-							<h3 className="font-semibold text-sand-900 text-lg">{plan.name}</h3>
-							<p className="text-xs text-sand-600 mb-4">{plan.period}</p>
-							<p className="text-4xl font-bold text-sand-900 font-outfit mb-6">
-								{plan.price}
-								<span className="text-sm font-normal text-sand-500 ml-1">
-									{plan.priceNote}
-								</span>
-							</p>
-
-							<ul className="space-y-2.5 mb-8 text-sm text-sand-700">
-								{plan.features.map((feature) => (
-									<li key={feature} className="flex items-center gap-2">
-										<span className="text-forest-500 font-bold">&#10003;</span>
-										{feature}
-									</li>
-								))}
-							</ul>
-
-							<button
-								onClick={() => handleSelect(plan)}
-								className={`w-full py-3.5 rounded-xl font-semibold transition ${
-									plan.highlighted
-										? 'bg-forest-600 text-white hover:bg-forest-700 shadow-lg shadow-forest-600/15'
-										: 'border border-forest-500 text-forest-600 hover:bg-forest-600 hover:text-white'
-								}`}
-							>
-								선택하기
-							</button>
+				<div className="max-w-md mx-auto">
+					<div className="relative nordic-card rounded-2xl p-8 border-2 border-forest-600">
+						<div className="absolute -top-[10px] left-1/2 -translate-x-1/2 px-4 py-[3px] rounded-2xl text-[11px] font-semibold bg-red-500 text-white">
+							선착순 50명 무료
 						</div>
-					))}
+
+						<h3 className="font-semibold text-sand-900 text-lg">견적 분석</h3>
+						<p className="text-xs text-sand-600 mb-4">48시간 이내</p>
+
+						<div className="flex items-baseline gap-3 mb-6">
+							<p className="text-2xl text-sand-400 line-through font-outfit">
+								₩9,900
+							</p>
+							<p className="text-4xl font-bold text-forest-600 font-outfit">
+								₩0
+							</p>
+							<span className="text-sm text-red-500 font-semibold">무료</span>
+						</div>
+
+						{freeRemaining !== null && (
+							<div className="mb-6 p-3 bg-forest-50 rounded-xl text-center">
+								<p className="text-sm text-sand-700">
+									잔여 <strong className="text-forest-600">{freeRemaining}</strong>/50명
+								</p>
+							</div>
+						)}
+
+						<ul className="space-y-2.5 mb-8 text-sm text-sand-700">
+							{[
+								'항목별 적정가 비교',
+								'항목별 상세 코멘트',
+								'과다 청구 탐지',
+								'시장 데이터 기반 분석',
+							].map((feature) => (
+								<li key={feature} className="flex items-center gap-2">
+									<span className="text-forest-500 font-bold">&#10003;</span>
+									{feature}
+								</li>
+							))}
+						</ul>
+
+						{isClosed ? (
+							<button
+								disabled
+								className="w-full py-3.5 rounded-xl font-semibold bg-sand-300 text-sand-500 cursor-not-allowed"
+							>
+								마감되었습니다
+							</button>
+						) : (
+							<button
+								onClick={() => navigate('/quote-submission')}
+								className="w-full py-3.5 rounded-xl font-semibold transition bg-forest-600 text-white hover:bg-forest-700 shadow-lg shadow-forest-600/15"
+							>
+								무료 분석 받기
+							</button>
+						)}
+					</div>
 				</div>
 			</div>
 		</section>

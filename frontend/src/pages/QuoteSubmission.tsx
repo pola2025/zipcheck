@@ -45,14 +45,25 @@ interface PaymentInfo {
 	customerEmail: string
 }
 
+interface FreeSlots {
+	total: number
+	used: number
+	remaining: number
+	is_open: boolean
+}
+
 export default function QuoteSubmission() {
 	const navigate = useNavigate()
 	const location = useLocation()
 	const paymentInfo = location.state as PaymentInfo | null
 
+	// Free promo mode: when no paymentInfo
+	const isFreePromo = !paymentInfo
+	const [freeSlots, setFreeSlots] = useState<FreeSlots | null>(null)
+
 	const [step, setStep] = useState(1)
 
-	// Customer Info (auto-filled from payment)
+	// Customer Info (auto-filled from payment or empty for free mode)
 	const [customerName, setCustomerName] = useState(paymentInfo?.customerName || '')
 	const [customerPhone, setCustomerPhone] = useState(paymentInfo?.customerPhone || '')
 	const [customerEmail, setCustomerEmail] = useState(paymentInfo?.customerEmail || '')
@@ -63,8 +74,8 @@ export default function QuoteSubmission() {
 	const [region, setRegion] = useState('')
 	const [address, setAddress] = useState('')
 
-	// Quote Sets (multiple quotes)
-	const quantity = paymentInfo?.quantity || 1
+	// Quote Sets - always 1 for free promo
+	const quantity = isFreePromo ? 1 : (paymentInfo?.quantity || 1)
 	const [currentSetIndex, setCurrentSetIndex] = useState(0)
 	const [uploading, setUploading] = useState(false)
 
@@ -89,17 +100,21 @@ export default function QuoteSubmission() {
 
 	const [quoteSets, setQuoteSets] = useState<QuoteSet[]>(initializeQuoteSets())
 
-	// Redirect if no payment info
+	// Fetch free promo slots
 	useEffect(() => {
-		if (!paymentInfo) {
-			alert('결제를 먼저 진행해주세요.')
-			navigate('/plan-selection')
+		if (isFreePromo) {
+			fetch(getApiUrl('/api/quote-requests/free-slots'))
+				.then(r => r.json())
+				.then((data: FreeSlots) => {
+					setFreeSlots(data)
+					if (!data.is_open) {
+						alert('무료 분석 선착순 50명이 마감되었습니다.')
+						navigate('/')
+					}
+				})
+				.catch(() => {})
 		}
-	}, [paymentInfo, navigate])
-
-	if (!paymentInfo) {
-		return null
-	}
+	}, [isFreePromo, navigate])
 
 	// Helper: Update a specific quote set
 	const updateQuoteSet = (index: number, updates: Partial<QuoteSet>) => {
@@ -290,39 +305,49 @@ export default function QuoteSubmission() {
 
 		setUploading(true)
 		try {
+			const submitBody: Record<string, unknown> = {
+				customer_name: customerName,
+				customer_phone: customerPhone,
+				customer_email: customerEmail,
+				property_type: propertyType,
+				property_size: propertySize ? Number(propertySize) : undefined,
+				region,
+				address,
+				quote_sets: quoteSets.map(set => ({
+					set_id: set.setId,
+					vendor_name: set.vendorName,
+					vendor_phone: set.vendorPhone || undefined,
+					vendor_representative: set.vendorRepresentative || undefined,
+					vendor_business_number: set.vendorBusinessNumber || undefined,
+					vendor_license_status: set.vendorLicenseStatus,
+					vendor_warranty_insurance: set.vendorWarrantyInsurance,
+					upload_type: set.uploadType,
+					images: set.images,
+					items: set.items
+				})),
+			}
+
+			if (isFreePromo) {
+				submitBody.is_free_promo = true
+				submitBody.plan_name = '무료 분석'
+				submitBody.paid_amount = 0
+				submitBody.quantity = 1
+			} else {
+				submitBody.payment_id = paymentInfo!.paymentId
+				submitBody.plan_id = paymentInfo!.planId
+				submitBody.plan_name = paymentInfo!.planName
+				submitBody.quantity = quantity
+				submitBody.original_amount = paymentInfo!.originalAmount
+				submitBody.discount_amount = paymentInfo!.discountAmount
+				submitBody.paid_amount = paymentInfo!.price
+			}
+
 			const response = await fetch(getApiUrl('/api/quote-requests/submit-multiple'), {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({
-					payment_id: paymentInfo.paymentId,
-					plan_id: paymentInfo.planId,
-					plan_name: paymentInfo.planName,
-					quantity: quantity,
-					original_amount: paymentInfo.originalAmount,
-					discount_amount: paymentInfo.discountAmount,
-					paid_amount: paymentInfo.price,
-					customer_name: customerName,
-					customer_phone: customerPhone,
-					customer_email: customerEmail,
-					property_type: propertyType,
-					property_size: propertySize ? Number(propertySize) : undefined,
-					region,
-					address,
-					quote_sets: quoteSets.map(set => ({
-						set_id: set.setId,
-						vendor_name: set.vendorName,
-						vendor_phone: set.vendorPhone || undefined,
-						vendor_representative: set.vendorRepresentative || undefined,
-						vendor_business_number: set.vendorBusinessNumber || undefined,
-						vendor_license_status: set.vendorLicenseStatus,
-						vendor_warranty_insurance: set.vendorWarrantyInsurance,
-						upload_type: set.uploadType,
-						images: set.images,
-						items: set.items
-					}))
-				})
+				body: JSON.stringify(submitBody)
 			})
 
 			const contentType = response.headers.get('content-type')
@@ -389,25 +414,48 @@ export default function QuoteSubmission() {
 
 			{/* Content */}
 			<div className="max-w-5xl mx-auto px-5 md:px-8 pb-20">
-				{/* Payment Info Display */}
-				<div className="mb-8 nordic-card rounded-2xl p-5 md:p-6 border border-forest-200 bg-forest-50/30">
-					<div className="flex flex-wrap items-center justify-between gap-4">
-						<div>
-							<p className="text-xs text-sand-500 mb-1">선택한 요금제</p>
-							<p className="text-xl font-bold text-forest-600">{paymentInfo?.planName}</p>
-						</div>
-						<div>
-							<p className="text-xs text-sand-500 mb-1">견적 분석 건수</p>
-							<p className="text-xl font-bold text-sand-900">{quantity}건</p>
-						</div>
-						<div className="text-right">
-							<p className="text-xs text-sand-500 mb-1">결제 금액</p>
-							<p className="text-xl font-bold text-forest-600">
-								{paymentInfo?.price.toLocaleString()}원
-							</p>
+				{/* Free Promo Banner or Payment Info */}
+				{isFreePromo ? (
+					<div className="mb-8 nordic-card rounded-2xl p-5 md:p-6 border-2 border-forest-400 bg-forest-50/40">
+						<div className="flex flex-wrap items-center justify-between gap-4">
+							<div className="flex items-center gap-3">
+								<span className="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full">FREE</span>
+								<div>
+									<p className="text-lg font-bold text-forest-700">무료 견적 분석</p>
+									<p className="text-sm text-sand-600">
+										<span className="line-through text-sand-400 mr-2">9,900원</span>
+										<span className="text-red-500 font-bold">0원</span>
+									</p>
+								</div>
+							</div>
+							<div className="text-right">
+								<p className="text-xs text-sand-500 mb-1">선착순 잔여</p>
+								<p className="text-xl font-bold text-forest-600">
+									{freeSlots ? `${freeSlots.remaining}/${freeSlots.total}명` : '확인 중...'}
+								</p>
+							</div>
 						</div>
 					</div>
-				</div>
+				) : (
+					<div className="mb-8 nordic-card rounded-2xl p-5 md:p-6 border border-forest-200 bg-forest-50/30">
+						<div className="flex flex-wrap items-center justify-between gap-4">
+							<div>
+								<p className="text-xs text-sand-500 mb-1">선택한 요금제</p>
+								<p className="text-xl font-bold text-forest-600">{paymentInfo?.planName}</p>
+							</div>
+							<div>
+								<p className="text-xs text-sand-500 mb-1">견적 분석 건수</p>
+								<p className="text-xl font-bold text-sand-900">{quantity}건</p>
+							</div>
+							<div className="text-right">
+								<p className="text-xs text-sand-500 mb-1">결제 금액</p>
+								<p className="text-xl font-bold text-forest-600">
+									{paymentInfo?.price.toLocaleString()}원
+								</p>
+							</div>
+						</div>
+					</div>
+				)}
 
 				{/* Progress Steps */}
 				<div className="flex items-center justify-center mb-12">

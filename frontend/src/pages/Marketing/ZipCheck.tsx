@@ -56,17 +56,10 @@ const serviceJsonLd = {
 		itemListElement: [
 			{
 				'@type': 'Offer',
-				name: '기본 분석',
-				price: '30000',
+				name: '견적 분석',
+				price: '0',
 				priceCurrency: 'KRW',
-				description: '48시간 내 AI 견적 분석 리포트 제공'
-			},
-			{
-				'@type': 'Offer',
-				name: '빠른 분석',
-				price: '45000',
-				priceCurrency: 'KRW',
-				description: '24시간 내 AI 견적 분석 리포트 제공'
+				description: '선착순 50명 무료 - 48시간 내 AI 견적 분석 리포트 제공'
 			}
 		]
 	}
