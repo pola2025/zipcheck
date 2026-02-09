@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import { type SubdomainType, getSubdomainUrl } from '../lib/subdomain'
 
@@ -51,15 +51,33 @@ function getCtaConfig(subdomain: SubdomainType) {
 
 export default function SubdomainNavigation({ subdomain }: { subdomain: SubdomainType }) {
 	const [open, setOpen] = useState(false)
+	const toggleRef = useRef<HTMLButtonElement>(null)
+	const { pathname } = useLocation()
 	const navLinks = getNavLinks(subdomain)
 	const cta = getCtaConfig(subdomain)
 	const ctaIsExternal = 'isExternal' in cta && cta.isExternal
 
+	// Escape key closes mobile menu
+	const handleKeyDown = useCallback((e: KeyboardEvent) => {
+		if (e.key === 'Escape' && open) {
+			setOpen(false)
+			toggleRef.current?.focus()
+		}
+	}, [open])
+
+	useEffect(() => {
+		document.addEventListener('keydown', handleKeyDown)
+		return () => document.removeEventListener('keydown', handleKeyDown)
+	}, [handleKeyDown])
+
+	// Close mobile menu on route change
+	useEffect(() => { setOpen(false) }, [pathname])
+
 	return (
-		<nav className="fixed top-0 left-0 right-0 z-50 bg-sand-50/85 backdrop-blur-lg border-b border-sand-300/50">
+		<nav className="fixed top-0 left-0 right-0 z-50 bg-sand-50/85 backdrop-blur-lg border-b border-sand-300/50" aria-label="사이트 네비게이션">
 			<div className="max-w-7xl mx-auto px-5 md:px-8 py-4 flex items-center justify-between">
 				<Link to="/" className="flex items-center">
-					<img src="/logo.png" alt="집첵" className="h-12 w-auto" />
+					<img src="/logo.png" alt="집첵 홈" className="h-12 w-auto" />
 				</Link>
 
 				{/* Desktop nav */}
@@ -94,9 +112,12 @@ export default function SubdomainNavigation({ subdomain }: { subdomain: Subdomai
 
 				{/* Mobile hamburger */}
 				<button
+					ref={toggleRef}
 					className="md:hidden p-2 -mr-2 text-sand-700"
 					onClick={() => setOpen(!open)}
 					aria-label={open ? '메뉴 닫기' : '메뉴 열기'}
+					aria-expanded={open}
+					aria-controls="subdomain-mobile-menu"
 				>
 					{open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
 				</button>
@@ -104,7 +125,7 @@ export default function SubdomainNavigation({ subdomain }: { subdomain: Subdomai
 
 			{/* Mobile menu */}
 			{open && (
-				<div className="md:hidden bg-sand-50/95 backdrop-blur-lg border-t border-sand-300/50 px-5 pb-5">
+				<div id="subdomain-mobile-menu" role="menu" className="md:hidden bg-sand-50/95 backdrop-blur-lg border-t border-sand-300/50 px-5 pb-5">
 					<div className="flex flex-col gap-1 pt-2">
 						{navLinks.map((link) =>
 							link.isExternal ? (

@@ -114,10 +114,10 @@ export default function NotFound() {
 					</h3>
 					<div className="flex flex-wrap gap-2 justify-center">
 						<button
-							onClick={() => navigate('/plan-selection')}
+							onClick={() => navigate('/quote-submission')}
 							className="px-4 py-2 bg-white hover:bg-sand-100 border border-sand-300 rounded-xl text-sm text-sand-700 transition-all hover:shadow-sm"
 						>
-							견적 플랜 선택
+							무료 견적 분석
 						</button>
 						<button
 							onClick={() => navigate('/community')}

@@ -1,10 +1,11 @@
-import { NordicFooter } from '../../components/nordic'
+import { NordicNavigation, NordicFooter } from '../../components/nordic'
 
 export default function TermsOfServicePage() {
 	return (
 		<>
+			<NordicNavigation />
 			<div className="min-h-screen bg-white">
-				<div className="max-w-3xl mx-auto px-6 py-16">
+				<div className="max-w-3xl mx-auto px-6 pt-28 pb-16">
 					<h1 className="text-2xl font-bold text-neutral-900 mb-2">이용약관</h1>
 					<p className="text-sm text-neutral-400 mb-10">시행일: 2025년 1월 1일</p>
 
