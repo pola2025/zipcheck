@@ -103,3 +103,6 @@ workers/.wrangler/
 # Temporary scripts
 tmp-*.js
 test-*.js
+
+# Local scripts (may contain DB credentials)
+scripts/

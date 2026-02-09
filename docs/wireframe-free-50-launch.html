@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZipCheck 무료 50명 런칭 - 와이어프레임 설계서</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
+body { font-family: 'Pretendard', sans-serif; }
+.wire-box { border: 2px dashed #94a3b8; background: #f8fafc; }
+.wire-solid { border: 2px solid #334155; }
+.flow-arrow { color: #3b82f6; font-size: 2rem; }
+.badge-new { background: #ef4444; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 9999px; }
+.badge-remove { background: #94a3b8; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 9999px; text-decoration: line-through; }
+.screen-frame {
+  border: 2px solid #1e293b;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+.screen-header {
+  background: #1e293b;
+  color: white;
+  padding: 8px 16px;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.screen-dot { width: 8px; height: 8px; border-radius: 50%; }
+.highlight-change { background: #fef3c7; border-left: 4px solid #f59e0b; }
+.highlight-new { background: #dcfce7; border-left: 4px solid #22c55e; }
+.highlight-remove { background: #fee2e2; border-left: 4px solid #ef4444; }
+</style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+<!-- Header -->
+<div class="bg-slate-900 text-white py-6">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold">ZipCheck 무료 50명 런칭</h1>
+        <p class="text-slate-400 text-sm mt-1">와이어프레임 설계서 v1.0 | 2026-02-08</p>
+      </div>
+      <div class="text-right">
+        <div class="text-xs text-slate-400">Status</div>
+        <div class="text-yellow-400 font-semibold">Review Pending</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOC -->
+<div class="max-w-6xl mx-auto px-6 py-8">
+  <div class="bg-white rounded-xl border p-6 mb-10">
+    <h2 class="font-bold text-lg mb-4">목차</h2>
+    <div class="grid md:grid-cols-2 gap-2 text-sm">
+      <a href="#overview" class="text-blue-600 hover:underline">1. 변경 개요 (Before → After)</a>
+      <a href="#flow" class="text-blue-600 hover:underline">2. 사용자 플로우</a>
+      <a href="#screen-landing" class="text-blue-600 hover:underline">3. 랜딩 페이지 CTA 변경</a>
+      <a href="#screen-submit" class="text-blue-600 hover:underline">4. 견적 접수 페이지 (핵심)</a>
+      <a href="#screen-nav" class="text-blue-600 hover:underline">5. 네비게이션 변경</a>
+      <a href="#backend" class="text-blue-600 hover:underline">6. 백엔드 API 변경</a>
+      <a href="#db" class="text-blue-600 hover:underline">7. DB 변경사항</a>
+      <a href="#files" class="text-blue-600 hover:underline">8. 수정 파일 목록</a>
+    </div>
+  </div>
+
+  <!-- 1. Overview -->
+  <section id="overview" class="mb-16">
+    <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+      <span class="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm">1</span>
+      변경 개요
+    </h2>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <!-- Before -->
+      <div class="highlight-remove p-5 rounded-lg">
+        <h3 class="font-bold text-red-700 mb-3">BEFORE (현재)</h3>
+        <ul class="space-y-2 text-sm">
+          <li>가격: 기본 30,000원 / 빠른 45,000원</li>
+          <li>플로우: 플랜선택 → <strong>결제</strong> → 견적접수</li>
+          <li>결제 필수 (mock PG)</li>
+          <li>접수 제한 없음</li>
+          <li>2개 요금제 (48h / 24h)</li>
+        </ul>
+      </div>
+
+      <!-- After -->
+      <div class="highlight-new p-5 rounded-lg">
+        <h3 class="font-bold text-green-700 mb-3">AFTER (변경)</h3>
+        <ul class="space-y-2 text-sm">
+          <li>가격: <strong>9,900원</strong> (표시만, 실결제 X)</li>
+          <li>플로우: 랜딩 → <strong>바로 견적접수</strong></li>
+          <li>결제 비활성화 (50명 무료)</li>
+          <li><strong>선착순 50명</strong> 제한</li>
+          <li>48시간 단일 플랜</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Key Numbers -->
+    <div class="grid grid-cols-4 gap-4 mt-8">
+      <div class="bg-white rounded-xl border p-4 text-center">
+        <div class="text-3xl font-bold text-blue-600">50명</div>
+        <div class="text-xs text-gray-500 mt-1">무료 분석 한도</div>
+      </div>
+      <div class="bg-white rounded-xl border p-4 text-center">
+        <div class="text-3xl font-bold text-green-600">9,900원</div>
+        <div class="text-xs text-gray-500 mt-1">표시 가격 (할인 전)</div>
+      </div>
+      <div class="bg-white rounded-xl border p-4 text-center">
+        <div class="text-3xl font-bold text-red-600">0원</div>
+        <div class="text-xs text-gray-500 mt-1">실제 결제 금액</div>
+      </div>
+      <div class="bg-white rounded-xl border p-4 text-center">
+        <div class="text-3xl font-bold text-amber-600">48h</div>
+        <div class="text-xs text-gray-500 mt-1">분석 소요시간</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. User Flow -->
+  <section id="flow" class="mb-16">
+    <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+      <span class="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm">2</span>
+      사용자 플로우
+    </h2>
+
+    <!-- Before Flow -->
+    <div class="bg-white rounded-xl border p-6 mb-4">
+      <h3 class="text-sm font-semibold text-red-500 mb-4">BEFORE (4단계)</h3>
+      <div class="flex items-center gap-3 flex-wrap">
+        <div class="px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium">랜딩페이지</div>
+        <span class="flow-arrow">→</span>
+        <div class="px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-sm font-medium line-through text-red-400">/plan-selection</div>
+        <span class="flow-arrow">→</span>
+        <div class="px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-sm font-medium line-through text-red-400">/payment</div>
+        <span class="flow-arrow">→</span>
+        <div class="px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium">/quote-submission</div>
+        <span class="flow-arrow">→</span>
+        <div class="px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium">/quote-status</div>
+      </div>
+    </div>
+
+    <!-- After Flow -->
+    <div class="bg-white rounded-xl border p-6">
+      <h3 class="text-sm font-semibold text-green-500 mb-4">AFTER (2단계)</h3>
+      <div class="flex items-center gap-3 flex-wrap">
+        <div class="px-4 py-2 bg-green-50 border border-green-300 rounded-lg text-sm font-medium">랜딩페이지<br><span class="text-xs text-green-600">CTA: "무료 견적 분석 받기"</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="px-4 py-2 bg-green-50 border border-green-300 rounded-lg text-sm font-medium">/quote-submission<br><span class="text-xs text-green-600">결제 없이 바로 접수</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium">/quote-status<br><span class="text-xs text-gray-500">전화번호로 조회</span></div>
+      </div>
+      <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+        50명 초과 시: 랜딩 CTA → "마감되었습니다" 비활성 + 접수 API 거부 (429)
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Landing CTA -->
+  <section id="screen-landing" class="mb-16">
+    <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+      <span class="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm">3</span>
+      랜딩 페이지 CTA 변경
+    </h2>
+
+    <div class="grid md:grid-cols-2 gap-8">
+      <!-- Before -->
+      <div>
+        <div class="text-sm font-semibold text-red-500 mb-2">BEFORE</div>
+        <div class="screen-frame">
+          <div class="screen-header">
+            <div class="screen-dot bg-red-400"></div>
+            <div class="screen-dot bg-yellow-400"></div>
+            <div class="screen-dot bg-green-400"></div>
+            <span>zcheck.co.kr - 히어로 섹션</span>
+          </div>
+          <div class="bg-white p-8 text-center">
+            <div class="text-2xl font-bold mb-2">인테리어 견적, 제대로 확인하셨나요?</div>
+            <div class="text-gray-500 text-sm mb-6">AI가 견적서를 분석해 드립니다</div>
+            <button class="bg-gray-800 text-white px-8 py-3 rounded-lg font-semibold">
+              견적 분석 시작하기 →
+            </button>
+            <div class="text-xs text-gray-400 mt-2">→ /plan-selection 이동</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- After -->
+      <div>
+        <div class="text-sm font-semibold text-green-500 mb-2">AFTER</div>
+        <div class="screen-frame">
+          <div class="screen-header">
+            <div class="screen-dot bg-red-400"></div>
+            <div class="screen-dot bg-yellow-400"></div>
+            <div class="screen-dot bg-green-400"></div>
+            <span>zcheck.co.kr - 히어로 섹션</span>
+          </div>
+          <div class="bg-white p-8 text-center">
+            <div class="text-2xl font-bold mb-2">인테리어 견적, 제대로 확인하셨나요?</div>
+            <div class="text-gray-500 text-sm mb-4">AI가 견적서를 분석해 드립니다</div>
+            <!-- Promo Banner -->
+            <div class="inline-block bg-red-50 border border-red-200 rounded-full px-4 py-1.5 mb-4">
+              <span class="text-red-600 font-bold text-sm">한시적 무료</span>
+              <span class="text-red-400 text-sm mx-1">|</span>
+              <span class="text-red-500 text-sm">선착순 <strong>50명</strong></span>
+              <span class="text-red-400 text-sm mx-1">|</span>
+              <span class="text-gray-400 text-sm line-through">9,900원</span>
+              <span class="text-red-600 text-sm font-bold ml-1">→ 0원</span>
+            </div>
+            <br>
+            <button class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-semibold">
+              무료 견적 분석 받기 →
+            </button>
+            <div class="text-xs text-green-600 mt-2 font-medium">→ /quote-submission 바로 이동</div>
+            <!-- Counter -->
+            <div class="mt-3 text-xs text-gray-500">
+              현재 <strong class="text-green-600">12</strong>/50명 접수 완료
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 50명 마감 상태 -->
+    <div class="mt-6">
+      <div class="text-sm font-semibold text-gray-500 mb-2">50명 마감 시</div>
+      <div class="screen-frame max-w-md">
+        <div class="screen-header">
+          <div class="screen-dot bg-red-400"></div>
+          <div class="screen-dot bg-yellow-400"></div>
+          <div class="screen-dot bg-green-400"></div>
+          <span>zcheck.co.kr - 마감 상태</span>
+        </div>
+        <div class="bg-white p-8 text-center">
+          <div class="inline-block bg-gray-100 border border-gray-300 rounded-full px-4 py-1.5 mb-4">
+            <span class="text-gray-500 font-bold text-sm">무료 분석 마감</span>
+            <span class="text-gray-400 text-sm mx-1">|</span>
+            <span class="text-gray-400 text-sm">50/50명</span>
+          </div>
+          <br>
+          <button class="bg-gray-300 text-gray-500 px-8 py-3 rounded-lg font-semibold cursor-not-allowed" disabled>
+            마감되었습니다
+          </button>
+          <div class="text-xs text-gray-400 mt-2">정식 오픈 시 알림을 받으시겠어요?</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Quote Submission -->
+  <section id="screen-submit" class="mb-16">
+    <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+      <span class="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm">4</span>
+      견적 접수 페이지 (핵심 변경)
+    </h2>
+
+    <div class="screen-frame max-w-2xl">
+      <div class="screen-header">
+        <div class="screen-dot bg-red-400"></div>
+        <div class="screen-dot bg-yellow-400"></div>
+        <div class="screen-dot bg-green-400"></div>
+        <span>zcheck.co.kr/quote-submission</span>
+      </div>
+      <div class="bg-white p-8">
+        <!-- Promo Banner at top -->
+        <div class="highlight-new p-3 rounded-lg mb-6 text-center">
+          <span class="font-bold text-green-700">무료 견적 분석</span>
+          <span class="text-green-600 text-sm ml-2">선착순 50명 한정 (잔여: <strong>38</strong>명)</span>
+          <span class="mx-2 text-gray-300">|</span>
+          <span class="text-gray-400 text-sm line-through">9,900원</span>
+          <span class="text-green-600 text-sm font-bold ml-1">→ 0원</span>
+        </div>
+
+        <!-- Step indicator -->
+        <div class="flex items-center justify-center gap-2 mb-8 text-xs">
+          <div class="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center font-bold">1</div>
+          <span class="text-green-700 font-medium">고객정보</span>
+          <div class="w-8 h-[2px] bg-gray-300"></div>
+          <div class="w-6 h-6 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center font-bold">2</div>
+          <span class="text-gray-400">시공정보</span>
+          <div class="w-8 h-[2px] bg-gray-300"></div>
+          <div class="w-6 h-6 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center font-bold">3</div>
+          <span class="text-gray-400">견적업로드</span>
+        </div>
+
+        <!-- Step 1: Customer Info -->
+        <h3 class="font-bold text-lg mb-4">고객 정보</h3>
+        <p class="text-sm text-gray-500 mb-4">분석 결과를 안내받으실 연락처를 입력해주세요.</p>
+
+        <div class="space-y-4">
+          <div>
+            <label class="text-sm font-medium text-gray-700 block mb-1">이름 *</label>
+            <div class="wire-box rounded-lg px-4 py-3 text-sm text-gray-400">홍길동</div>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-700 block mb-1">전화번호 *</label>
+            <div class="wire-box rounded-lg px-4 py-3 text-sm text-gray-400">010-1234-5678</div>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-700 block mb-1">이메일</label>
+            <div class="wire-box rounded-lg px-4 py-3 text-sm text-gray-400">선택사항</div>
+          </div>
+        </div>
+
+        <div class="highlight-change p-3 rounded-lg mt-6 text-xs text-amber-800">
+          <strong>변경:</strong> 이전엔 Payment 페이지에서 고객정보를 받아 state로 넘겼음.
+          이제 QuoteSubmission 1단계에서 직접 입력받음.
+          (paymentInfo === null일 때 무료 모드로 동작)
+        </div>
+
+        <button class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold mt-6">
+          다음: 시공 정보 입력 →
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2-3 간략 -->
+    <div class="grid md:grid-cols-2 gap-4 mt-6 max-w-2xl">
+      <div class="bg-white border rounded-xl p-5">
+        <h4 class="font-bold text-sm mb-2">Step 2: 시공 정보</h4>
+        <div class="text-xs text-gray-500 space-y-1">
+          <div>- 건물 유형 (아파트/빌라/오피스텔...)</div>
+          <div>- 시공 면적 (㎡)</div>
+          <div>- 지역 (서울/경기/지방)</div>
+          <div>- 주소 (선택)</div>
+        </div>
+        <div class="text-xs text-gray-400 mt-2 italic">※ 현재와 동일, 변경 없음</div>
+      </div>
+      <div class="bg-white border rounded-xl p-5">
+        <h4 class="font-bold text-sm mb-2">Step 3: 견적 업로드</h4>
+        <div class="text-xs text-gray-500 space-y-1">
+          <div>- 업체명 입력</div>
+          <div>- 이미지 업로드 또는 엑셀 업로드</div>
+          <div>- 견적 항목 파싱/확인</div>
+          <div>- 제출 (1건만, quantity=1 고정)</div>
+        </div>
+        <div class="highlight-change text-xs p-2 rounded mt-2">
+          <strong>변경:</strong> quantity 항상 1, 다중 견적 비교 비활성
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Navigation -->
+  <section id="screen-nav" class="mb-16">
+    <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+      <span class="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm">5</span>
+      네비게이션 변경
+    </h2>
+
+    <div class="grid md:grid-cols-2 gap-8">
+      <div>
+        <div class="text-sm font-semibold text-red-500 mb-2">BEFORE</div>
+        <div class="bg-white border rounded-xl p-4">
+          <div class="flex items-center gap-6 text-sm">
+            <span class="font-bold">ZipCheck</span>
+            <span>견적 분석</span>
+            <span>업체 리뷰</span>
+            <span>피해 사례</span>
+            <span class="bg-gray-800 text-white px-3 py-1 rounded">분석 시작</span>
+          </div>
+          <div class="text-xs text-gray-400 mt-2">"분석 시작" → /plan-selection</div>
+        </div>
+      </div>
+      <div>
+        <div class="text-sm font-semibold text-green-500 mb-2">AFTER</div>
+        <div class="bg-white border rounded-xl p-4">
+          <div class="flex items-center gap-6 text-sm">
+            <span class="font-bold">ZipCheck</span>
+            <span>견적 분석</span>
+            <span>업체 리뷰</span>
+            <span>피해 사례</span>
+            <span class="bg-green-600 text-white px-3 py-1 rounded">무료 분석 받기 <span class="badge-new ml-1">FREE</span></span>
+          </div>
+          <div class="text-xs text-green-600 mt-2">"무료 분석 받기" → /quote-submission (바로)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white border rounded-xl p-4 mt-4">
+      <h4 class="font-bold text-sm mb-2">라우팅 변경</h4>
+      <table class="w-full text-xs">
+        <thead><tr class="border-b"><th class="py-2 text-left">경로</th><th>현재</th><th>변경 후</th></tr></thead>
+        <tbody>
+          <tr class="border-b"><td class="py-2">/plan-selection</td><td>활성</td><td class="text-red-500">→ /quote-submission redirect</td></tr>
+          <tr class="border-b"><td class="py-2">/payment</td><td>활성</td><td class="text-red-500">→ /quote-submission redirect</td></tr>
+          <tr class="border-b"><td class="py-2">/quote-submission</td><td>paymentInfo 필수</td><td class="text-green-600">paymentInfo 없으면 무료 모드</td></tr>
+          <tr><td class="py-2">/quote-status</td><td>활성</td><td class="text-gray-500">변경 없음</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 6. Backend API -->
+  <section id="backend" class="mb-16">
+    <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+      <span class="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm">6</span>
+      백엔드 API 변경
+    </h2>
+
+    <div class="space-y-4">
+      <!-- New endpoint -->
+      <div class="highlight-new p-5 rounded-lg">
+        <h4 class="font-bold text-green-700 text-sm mb-2">NEW: GET /api/quote-requests/free-slots</h4>
+        <div class="text-xs text-gray-600 mb-2">무료 분석 잔여 수 조회 (public)</div>
+        <pre class="bg-white border rounded-lg p-3 text-xs overflow-x-auto">// Response
+{
+  "total": 50,
+  "used": 12,
+  "remaining": 38,
+  "is_open": true       // remaining > 0
+}</pre>
+        <div class="text-xs text-gray-500 mt-2">
+          구현: <code>SELECT COUNT(*) FROM quote_requests WHERE is_free_promo = true</code>
+        </div>
+      </div>
+
+      <!-- Modified endpoint -->
+      <div class="highlight-change p-5 rounded-lg">
+        <h4 class="font-bold text-amber-700 text-sm mb-2">MODIFY: POST /api/quote-requests/submit</h4>
+        <div class="text-xs text-gray-600 space-y-1">
+          <div>1. 요청 body에 <code>is_free_promo: true</code> 필드 추가</div>
+          <div>2. is_free_promo=true일 때:</div>
+          <div class="ml-4">- free promo 카운트 확인 (50명 초과 시 429 반환)</div>
+          <div class="ml-4">- payment 관련 필드 NULL 허용</div>
+          <div class="ml-4">- paid_amount = 0, payment_status = 'free_promo'</div>
+          <div>3. quantity = 1 고정 (다중 비교 비활성)</div>
+        </div>
+      </div>
+
+      <!-- Unchanged -->
+      <div class="bg-white border rounded-xl p-5">
+        <h4 class="font-bold text-gray-500 text-sm mb-2">UNCHANGED: 분석 엔진</h4>
+        <div class="text-xs text-gray-500 space-y-1">
+          <div>- POST /admin/:id/auto-analyze → 그대로 동작</div>
+          <div>- runAutoAnalysis() → 변경 없음</div>
+          <div>- analyses + analysis_items 테이블 → 변경 없음</div>
+          <div>- 관리자 분석 워크플로우 → 완전 동일</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. DB -->
+  <section id="db" class="mb-16">
+    <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+      <span class="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm">7</span>
+      DB 변경사항
+    </h2>
+
+    <div class="bg-white border rounded-xl p-6">
+      <h4 class="font-bold text-sm mb-4">quote_requests 테이블 — 컬럼 추가 1건</h4>
+      <pre class="bg-gray-50 border rounded-lg p-4 text-xs overflow-x-auto">-- 무료 프로모션 플래그
+ALTER TABLE quote_requests
+ADD COLUMN IF NOT EXISTS is_free_promo BOOLEAN DEFAULT false;
+
+-- 인덱스 (카운트 쿼리 최적화)
+CREATE INDEX IF NOT EXISTS idx_quote_requests_free_promo
+ON quote_requests(is_free_promo) WHERE is_free_promo = true;</pre>
+
+      <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-800">
+        <strong>참고:</strong> 새 테이블 생성 없음. 기존 quote_requests에 boolean 컬럼 1개만 추가.
+        payment_status 값에 'free_promo' 추가 (CHECK 제약조건 수정 필요 시 ALTER).
+      </div>
+
+      <h4 class="font-bold text-sm mt-6 mb-3">KV 저장소 (Cloudflare Workers KV)</h4>
+      <pre class="bg-gray-50 border rounded-lg p-4 text-xs overflow-x-auto">// 프로모션 설정 (관리자가 KV로 on/off 가능)
+Key: "promo:free_analysis"
+Value: {
+  "enabled": true,
+  "max_count": 50,
+  "price_display": 9900,
+  "started_at": "2026-02-08T00:00:00Z"
+}</pre>
+      <div class="text-xs text-gray-500 mt-2">
+        KV 사용 이유: DB 쿼리 없이 프로모션 on/off 즉시 전환 가능. 50명 도달 시 enabled=false로 전환.
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. File Changes -->
+  <section id="files" class="mb-16">
+    <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+      <span class="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm">8</span>
+      수정 파일 목록
+    </h2>
+
+    <div class="bg-white border rounded-xl overflow-hidden">
+      <table class="w-full text-xs">
+        <thead>
+          <tr class="bg-gray-50 border-b">
+            <th class="py-3 px-4 text-left">파일</th>
+            <th class="py-3 px-4 text-left">변경 유형</th>
+            <th class="py-3 px-4 text-left">설명</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Frontend -->
+          <tr class="border-b bg-blue-50"><td colspan="3" class="py-2 px-4 font-bold text-blue-700">Frontend</td></tr>
+          <tr class="border-b">
+            <td class="py-2 px-4 font-mono">frontend/src/lib/pricing.ts</td>
+            <td class="py-2 px-4"><span class="badge-new">수정</span></td>
+            <td class="py-2 px-4">9,900원 단일 플랜, 무료 프로모 플래그</td>
+          </tr>
+          <tr class="border-b">
+            <td class="py-2 px-4 font-mono">frontend/src/pages/QuoteSubmission.tsx</td>
+            <td class="py-2 px-4"><span class="badge-new">수정</span></td>
+            <td class="py-2 px-4">paymentInfo 없을 때 무료 모드, 고객정보 직접 입력, 잔여수 표시</td>
+          </tr>
+          <tr class="border-b">
+            <td class="py-2 px-4 font-mono">frontend/src/pages/PlanSelection.tsx</td>
+            <td class="py-2 px-4"><span class="badge-remove">비활성</span></td>
+            <td class="py-2 px-4">/quote-submission으로 redirect</td>
+          </tr>
+          <tr class="border-b">
+            <td class="py-2 px-4 font-mono">frontend/src/pages/Payment.tsx</td>
+            <td class="py-2 px-4"><span class="badge-remove">비활성</span></td>
+            <td class="py-2 px-4">/quote-submission으로 redirect</td>
+          </tr>
+          <tr class="border-b">
+            <td class="py-2 px-4 font-mono">frontend/src/App.tsx</td>
+            <td class="py-2 px-4"><span class="badge-new">수정</span></td>
+            <td class="py-2 px-4">/plan-selection, /payment → redirect 처리</td>
+          </tr>
+          <tr class="border-b">
+            <td class="py-2 px-4 font-mono">frontend/src/components/nordic/NordicNavigation.tsx</td>
+            <td class="py-2 px-4"><span class="badge-new">수정</span></td>
+            <td class="py-2 px-4">CTA 버튼 "무료 분석 받기" + /quote-submission 직행</td>
+          </tr>
+          <tr class="border-b">
+            <td class="py-2 px-4 font-mono">frontend/src/pages/Marketing/ZipCheck.tsx</td>
+            <td class="py-2 px-4"><span class="badge-new">수정</span></td>
+            <td class="py-2 px-4">히어로 CTA, 프로모 배너, 잔여수 카운터</td>
+          </tr>
+          <tr class="border-b">
+            <td class="py-2 px-4 font-mono">frontend/src/components/nordic/NordicPricing.tsx</td>
+            <td class="py-2 px-4"><span class="badge-new">수정</span></td>
+            <td class="py-2 px-4">9,900원 표시 + 취소선 + 0원 강조</td>
+          </tr>
+
+          <!-- Backend -->
+          <tr class="border-b bg-green-50"><td colspan="3" class="py-2 px-4 font-bold text-green-700">Backend (Workers)</td></tr>
+          <tr class="border-b">
+            <td class="py-2 px-4 font-mono">workers/src/routes/quote-requests.ts</td>
+            <td class="py-2 px-4"><span class="badge-new">수정</span></td>
+            <td class="py-2 px-4">GET /free-slots 추가, POST /submit에 무료 프로모 로직</td>
+          </tr>
+
+          <!-- DB -->
+          <tr class="border-b bg-purple-50"><td colspan="3" class="py-2 px-4 font-bold text-purple-700">Database</td></tr>
+          <tr>
+            <td class="py-2 px-4 font-mono">workers/migrations/006_free_promo.sql</td>
+            <td class="py-2 px-4"><span class="badge-new">신규</span></td>
+            <td class="py-2 px-4">is_free_promo 컬럼 + 인덱스</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <section class="mb-16">
+    <div class="bg-slate-900 text-white rounded-2xl p-8">
+      <h2 class="text-xl font-bold mb-4">변경 범위 요약</h2>
+      <div class="grid md:grid-cols-3 gap-6 text-sm">
+        <div>
+          <div class="text-slate-400 text-xs mb-2">프론트엔드</div>
+          <div class="text-2xl font-bold text-blue-400">7 파일</div>
+          <div class="text-slate-400 text-xs mt-1">수정 5 / 비활성 2</div>
+        </div>
+        <div>
+          <div class="text-slate-400 text-xs mb-2">백엔드</div>
+          <div class="text-2xl font-bold text-green-400">1 파일</div>
+          <div class="text-slate-400 text-xs mt-1">엔드포인트 1개 추가 + submit 수정</div>
+        </div>
+        <div>
+          <div class="text-slate-400 text-xs mb-2">DB 마이그레이션</div>
+          <div class="text-2xl font-bold text-purple-400">1 컬럼</div>
+          <div class="text-slate-400 text-xs mt-1">is_free_promo (boolean)</div>
+        </div>
+      </div>
+      <div class="mt-6 pt-6 border-t border-slate-700 text-xs text-slate-400">
+        <strong class="text-slate-300">영향 없는 부분:</strong>
+        분석 엔진 (auto-analysis), 벤치마크 시스템, 관리자 분석 UI, 카테고리 매핑, 이메일/텔레그램 알림 — 모두 기존 그대로 동작
+      </div>
+    </div>
+  </section>
+
+  <!-- Approval -->
+  <section class="mb-16">
+    <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-8 text-center">
+      <h2 class="text-xl font-bold text-amber-800 mb-2">승인 대기</h2>
+      <p class="text-amber-700 text-sm mb-6">위 설계서 내용 확인 후 "확정 진행" 요청 시 구현을 시작합니다.</p>
+      <div class="flex items-center justify-center gap-4 text-sm">
+        <div class="px-6 py-3 bg-white border border-amber-300 rounded-lg text-amber-700">
+          수정 요청 → 피드백 주세요
+        </div>
+        <div class="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold">
+          확정 진행 → 구현 시작
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Footer -->
+<div class="bg-gray-100 border-t py-4 text-center text-xs text-gray-400">
+  ZipCheck 무료 50명 런칭 설계서 | Claude Code 생성 | 2026-02-08
+</div>
+
+</body>
+</html>
