@@ -1,6 +1,8 @@
 // ─── Spring Configs ───
 // Shared animation presets for consistent motion language
 export const SPRING_CONFIGS = {
+	elegant: { damping: 28, stiffness: 60 },
+	confident: { damping: 22, stiffness: 70 },
 	gentle: { damping: 20, stiffness: 80 },
 	bouncy: { damping: 12, stiffness: 80 },
 	snappy: { damping: 15, stiffness: 150 },

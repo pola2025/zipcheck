@@ -75,6 +75,7 @@ const NaverCallback = lazyWithRetry(async () => import('pages/auth/NaverCallback
 const PrivacyPolicy = lazyWithRetry(async () => import('pages/Legal/PrivacyPolicy'))
 const TermsOfService = lazyWithRetry(async () => import('pages/Legal/TermsOfService'))
 const NotFound = lazyWithRetry(async () => import('pages/NotFound'))
+const VideoPreview = lazyWithRetry(async () => import('pages/VideoPreview'))
 
 // BlacklistCheck page
 const BlacklistCheck = lazyWithRetry(async () => import('pages/BlacklistCheck/BlacklistCheck'))
@@ -217,6 +218,7 @@ const mainDomainRoutes = (
 		<Route path='/admin' element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
 			{adminChildRoutes}
 		</Route>
+		<Route path='/video-preview' element={<VideoPreview />} />
 		<Route path='*' element={<NotFound />} />
 	</>
 )
