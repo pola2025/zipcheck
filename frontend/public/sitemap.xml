@@ -3,65 +3,72 @@
 
   <url>
     <loc>https://zcheck.co.kr/</loc>
-    <lastmod>2026-02-04</lastmod>
+    <lastmod>2026-02-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <url>
     <loc>https://zcheck.co.kr/plan-selection</loc>
-    <lastmod>2026-02-04</lastmod>
+    <lastmod>2026-02-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://zcheck.co.kr/reviews</loc>
-    <lastmod>2026-02-04</lastmod>
+    <lastmod>2026-02-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://zcheck.co.kr/damage-cases</loc>
-    <lastmod>2026-02-04</lastmod>
+    <lastmod>2026-02-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://zcheck.co.kr/community</loc>
-    <lastmod>2026-02-04</lastmod>
+    <lastmod>2026-02-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://zcheck.co.kr/privacy</loc>
-    <lastmod>2026-02-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
-
-  <url>
-    <loc>https://zcheck.co.kr/terms</loc>
-    <lastmod>2026-02-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
+    <loc>https://blog.zcheck.co.kr/</loc>
+    <lastmod>2026-02-10</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://review.zcheck.co.kr/</loc>
-    <lastmod>2026-02-04</lastmod>
+    <lastmod>2026-02-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
     <loc>https://report.zcheck.co.kr/</loc>
-    <lastmod>2026-02-04</lastmod>
+    <lastmod>2026-02-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://zcheck.co.kr/privacy</loc>
+    <lastmod>2026-02-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <url>
+    <loc>https://zcheck.co.kr/terms</loc>
+    <lastmod>2026-02-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
   </url>
 
 </urlset>
