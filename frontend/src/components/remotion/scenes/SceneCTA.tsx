@@ -93,7 +93,7 @@ export function SceneCTA({ variant = 'mobile' }: SceneProps) {
 					/>
 				</div>
 
-				<p className={`text-forest-200 mb-4 ${isDesktop ? 'text-xl' : 'text-sm'}`}>인테리어 유통망 원가 기반</p>
+				<p className={`text-forest-200 mb-3 ${isDesktop ? 'text-xl' : 'text-[10px]'}`}>인테리어 유통망 원가 기반</p>
 
 				{/* Gold accent line */}
 				<div
@@ -104,10 +104,10 @@ export function SceneCTA({ variant = 'mobile' }: SceneProps) {
 					}}
 				/>
 
-				<h2 className={`text-white font-bold mb-3 ${isDesktop ? 'text-6xl' : 'text-3xl'}`}>
+				<h2 className={`text-white font-bold mb-2 ${isDesktop ? 'text-6xl' : 'text-xl'}`}>
 					내 견적서, 적정가인지<br />확인해보세요
 				</h2>
-				<p className={`text-forest-200 mb-10 ${isDesktop ? 'text-xl' : 'text-sm'}`}>업로드만 하면 항목별 리스크를 분석해드립니다</p>
+				<p className={`text-forest-200 mb-8 ${isDesktop ? 'text-xl' : 'text-[10px]'}`}>업로드만 하면 항목별 리스크를 분석해드립니다</p>
 
 				{/* CTA Button with glow */}
 				<div className="relative inline-block" style={{ transform: `scale(${buttonPulse})` }}>
@@ -119,7 +119,7 @@ export function SceneCTA({ variant = 'mobile' }: SceneProps) {
 							transform: 'scale(1.8)',
 						}}
 					/>
-					<div className={`relative inline-block bg-white text-forest-700 font-bold rounded-full shadow-lg ${isDesktop ? 'px-14 py-5 text-2xl' : 'px-8 py-3.5 text-base'}`}>
+					<div className={`relative inline-block bg-white text-forest-700 font-bold rounded-full shadow-lg ${isDesktop ? 'px-14 py-5 text-2xl' : 'px-6 py-2.5 text-sm'}`}>
 						내 견적서 분석받기 &rarr;
 					</div>
 				</div>

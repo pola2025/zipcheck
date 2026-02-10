@@ -27,7 +27,7 @@ export function ScenePriceCompare({ variant = 'mobile' }: SceneProps) {
 	})
 
 	const barSection = (
-		<div className={`flex flex-col w-full ${isDesktop ? 'gap-5 max-w-2xl' : 'gap-3 max-w-md'}`}>
+		<div className={`flex flex-col w-full ${isDesktop ? 'gap-5 max-w-2xl' : 'gap-2.5 max-w-xs'}`}>
 			{companies.map((c, i) => {
 				const progress = spring({ frame: frame - c.delay, fps, config: SPRING_CONFIGS.confident })
 				const opacity = interpolate(frame, [c.delay, c.delay + 10], [0, 1], {
@@ -37,10 +37,10 @@ export function ScenePriceCompare({ variant = 'mobile' }: SceneProps) {
 				const scaleX = interpolate(progress, [0, 1], [0, c.width / 100])
 
 				return (
-					<div key={i} style={{ opacity }} className="flex items-center gap-4">
-						<span className={`text-sand-800 font-medium shrink-0 ${isDesktop ? 'text-xl w-20' : 'text-sm w-16'}`}>{c.name}</span>
+					<div key={i} style={{ opacity }} className={`flex items-center ${isDesktop ? 'gap-4' : 'gap-2'}`}>
+						<span className={`text-sand-800 font-medium shrink-0 ${isDesktop ? 'text-xl w-20' : 'text-xs w-12'}`}>{c.name}</span>
 						<div
-							className={`flex-1 rounded-full overflow-hidden relative ${isDesktop ? 'h-14' : 'h-10'}`}
+							className={`flex-1 rounded-full overflow-hidden relative ${isDesktop ? 'h-14' : 'h-8'}`}
 							style={{ background: 'rgba(0,0,0,0.04)' }}
 						>
 							<div
@@ -48,7 +48,10 @@ export function ScenePriceCompare({ variant = 'mobile' }: SceneProps) {
 								className="h-full rounded-full"
 							/>
 						</div>
-						<span className={`text-sand-900 font-bold shrink-0 text-right ${isDesktop ? 'text-xl w-28' : 'text-sm w-24'}`}>
+						<span
+							className={`text-sand-900 font-bold shrink-0 text-right ${isDesktop ? 'text-xl w-28' : 'text-xs w-[4.5rem]'}`}
+							style={{ fontVariantNumeric: 'tabular-nums' }}
+						>
 							<CountingNumber value={c.value} suffix={c.suffix} delay={c.delay} comma />
 						</span>
 					</div>
@@ -58,7 +61,7 @@ export function ScenePriceCompare({ variant = 'mobile' }: SceneProps) {
 	)
 
 	const questionText = (
-		<p style={{ opacity: questionOpacity }} className={`text-sand-700 ${isDesktop ? 'text-2xl text-left' : 'text-base text-center'}`}>
+		<p style={{ opacity: questionOpacity }} className={`text-sand-700 ${isDesktop ? 'text-2xl text-left' : 'text-xs text-center'}`}>
 			같은 평수, 같은 공사인데<br />
 			<span className="font-semibold text-sand-900">왜 이렇게 다를까?</span>
 		</p>
@@ -100,10 +103,10 @@ export function ScenePriceCompare({ variant = 'mobile' }: SceneProps) {
 	}
 
 	return (
-		<AbsoluteFill className="flex flex-col items-center justify-center bg-sand-50 px-8" style={{ opacity: crossfade }}>
-			<p className="text-sand-500 text-xs mb-6 tracking-wider">25평 아파트 전체 리모델링</p>
+		<AbsoluteFill className="flex flex-col items-center justify-center bg-sand-50 px-5" style={{ opacity: crossfade }}>
+			<p className="text-sand-500 text-[10px] mb-4 tracking-wider">25평 아파트 전체 리모델링</p>
 			{barSection}
-			<div className="mt-8">{questionText}</div>
+			<div className="mt-6">{questionText}</div>
 		</AbsoluteFill>
 	)
 }

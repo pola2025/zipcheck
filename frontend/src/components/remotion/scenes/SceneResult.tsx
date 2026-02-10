@@ -48,21 +48,21 @@ function ResultCard({ item, index, isDesktop }: { item: ResultItem; index: numbe
 				borderLeft: `3px solid ${accent.solid}`,
 				boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
 			}}
-			className={`bg-white rounded-xl ${isDesktop ? 'p-5' : 'p-3.5'} flex items-center justify-between`}
+			className={`bg-white rounded-xl ${isDesktop ? 'p-5' : 'p-2.5'} flex items-center justify-between`}
 		>
 			<div>
-				<p className={`text-sand-900 font-medium ${isDesktop ? 'text-xl' : 'text-sm'}`}>{item.name}</p>
-				<p className={`text-sand-500 ${isDesktop ? 'text-lg' : 'text-xs'}`}>적정범위 {item.range}</p>
+				<p className={`text-sand-900 font-medium ${isDesktop ? 'text-xl' : 'text-[11px]'}`}>{item.name}</p>
+				<p className={`text-sand-500 ${isDesktop ? 'text-lg' : 'text-[9px]'}`}>적정범위 {item.range}</p>
 			</div>
 			<div className="text-right flex items-center gap-2">
 				<span
-					className={`text-sand-900 font-bold ${isDesktop ? 'text-xl' : 'text-sm'} text-right`}
-					style={{ minWidth: isDesktop ? '4.5rem' : '3.5rem', fontVariantNumeric: 'tabular-nums', display: 'inline-block' }}
+					className={`text-sand-900 font-bold ${isDesktop ? 'text-xl' : 'text-[11px]'} text-right`}
+					style={{ minWidth: isDesktop ? '4.5rem' : '2.8rem', fontVariantNumeric: 'tabular-nums', display: 'inline-block' }}
 				>
 					<CountingNumber value={parseInt(item.price)} suffix="만" delay={delay} />
 				</span>
 				<span
-					className={`${accent.text} font-bold px-3 py-1 rounded-full ${isDesktop ? 'text-lg' : 'text-xs'}`}
+					className={`${accent.text} font-bold rounded-full ${isDesktop ? 'px-3 py-1 text-lg' : 'px-2 py-0.5 text-[10px]'}`}
 					style={{ background: accent.bg, border: `1px solid ${accent.border}` }}
 				>
 					{item.label}
@@ -93,7 +93,7 @@ export function SceneResult({ variant = 'mobile' }: SceneProps) {
 			))}
 		</div>
 	) : (
-		<div className="w-full max-w-md space-y-3">
+		<div className="w-full max-w-[320px] space-y-2">
 			{items.map((item, i) => (
 				<ResultCard key={i} item={item} index={i} isDesktop={isDesktop} />
 			))}
@@ -141,11 +141,11 @@ export function SceneResult({ variant = 'mobile' }: SceneProps) {
 	}
 
 	return (
-		<AbsoluteFill className="flex flex-col items-center justify-center bg-sand-50 px-6" style={{ opacity: crossfade }}>
-			<p className="text-sand-500 text-xs mb-1 tracking-wider">ANALYSIS RESULT</p>
-			<p className="text-sand-800 font-bold text-lg mb-5">견적 분석 리포트 미리보기</p>
+		<AbsoluteFill className="flex flex-col items-center justify-center bg-sand-50 px-4" style={{ opacity: crossfade }}>
+			<p className="text-sand-500 text-[10px] mb-1 tracking-wider">ANALYSIS RESULT</p>
+			<p className="text-sand-800 font-bold text-sm mb-3">견적 분석 리포트 미리보기</p>
 			{cardList}
-			<p style={{ opacity: bottomCopyOpacity }} className="mt-6 text-sand-600 text-xs text-center">
+			<p style={{ opacity: bottomCopyOpacity }} className="mt-4 text-sand-600 text-[10px] text-center leading-relaxed">
 				비싸다고 나쁜 게 아닙니다. 싸다고 좋은 게 아닙니다.<br />
 				<span className="font-semibold text-sand-800">자재 등급에 맞는 가격인지가 중요합니다.</span>
 			</p>

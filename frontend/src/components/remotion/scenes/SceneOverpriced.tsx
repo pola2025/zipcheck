@@ -26,8 +26,8 @@ export function SceneOverpriced({ variant = 'mobile' }: SceneProps) {
 	const pricePosition = 82
 
 	const rangeBar = (
-		<div className={`w-full ${isDesktop ? 'max-w-2xl' : 'max-w-md'}`}>
-			<div className="relative rounded-xl overflow-visible" style={{ height: isDesktop ? 80 : 56, background: 'rgba(0,0,0,0.03)' }}>
+		<div className={`w-full ${isDesktop ? 'max-w-2xl' : 'max-w-[280px]'}`}>
+			<div className="relative rounded-xl overflow-visible" style={{ height: isDesktop ? 80 : 44, background: 'rgba(0,0,0,0.03)' }}>
 				<div
 					style={{ left: `${rangeLeft}%`, width: `${rangeWidth * barProgress}%` }}
 					className="absolute top-0 h-full bg-forest-50 border-2 border-forest-200 border-dashed rounded-xl"
@@ -66,12 +66,12 @@ export function SceneOverpriced({ variant = 'mobile' }: SceneProps) {
 				borderLeft: '3px solid #C45C5C',
 				background: 'rgba(196, 92, 92, 0.06)',
 			}}
-			className={`rounded-xl ${isDesktop ? 'max-w-2xl text-left p-5' : 'max-w-md text-center p-4'} w-full mt-6`}
+			className={`rounded-xl ${isDesktop ? 'max-w-2xl text-left p-5' : 'max-w-[280px] text-center p-3'} w-full mt-4`}
 		>
-			<span className={`text-red-600 font-bold ${isDesktop ? 'text-xl' : 'text-sm'}`}>
+			<span className={`text-red-600 font-bold ${isDesktop ? 'text-xl' : 'text-xs'}`}>
 				이 자재 기준, 가격이 과다합니다
 			</span>
-			<p className={`text-red-400 mt-1 ${isDesktop ? 'text-lg' : 'text-xs'}`}>유통망 원가 대비 <CountingNumber value={42} suffix="%" delay={50} comma={false} /> 초과</p>
+			<p className={`text-red-400 mt-1 ${isDesktop ? 'text-lg' : 'text-[10px]'}`}>유통망 원가 대비 <CountingNumber value={42} suffix="%" delay={50} comma={false} /> 초과</p>
 		</div>
 	)
 
@@ -110,9 +110,9 @@ export function SceneOverpriced({ variant = 'mobile' }: SceneProps) {
 	}
 
 	return (
-		<AbsoluteFill className="flex flex-col items-center justify-center bg-sand-50 px-8" style={{ opacity: crossfade }}>
-			<p className="text-sand-500 text-xs mb-2 tracking-wider">바닥재 (강마루)</p>
-			<p className="text-sand-800 font-bold text-xl mb-8">항목별 적정가격 범위</p>
+		<AbsoluteFill className="flex flex-col items-center justify-center bg-sand-50 px-5" style={{ opacity: crossfade }}>
+			<p className="text-sand-500 text-[10px] mb-1.5 tracking-wider">바닥재 (강마루)</p>
+			<p className="text-sand-800 font-bold text-base mb-5">항목별 적정가격 범위</p>
 			{rangeBar}
 			{alertCard}
 		</AbsoluteFill>

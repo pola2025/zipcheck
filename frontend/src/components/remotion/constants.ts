@@ -46,7 +46,7 @@ export interface SceneProps {
 }
 
 export const VIEWPORTS = {
-	mobile:  { width: 640,  height: 640, label: '1:1' as const },
+	mobile:  { width: 360,  height: 640, label: '9:16' as const },
 	desktop: { width: 1280, height: 720, label: '16:9' as const },
 } as const
 

@@ -26,8 +26,8 @@ export function SceneUnderpriced({ variant = 'mobile' }: SceneProps) {
 	const pricePosition = 12
 
 	const rangeBar = (
-		<div className={`w-full ${isDesktop ? 'max-w-2xl' : 'max-w-md'}`}>
-			<div className="relative rounded-xl overflow-visible" style={{ height: isDesktop ? 80 : 56, background: 'rgba(0,0,0,0.03)' }}>
+		<div className={`w-full ${isDesktop ? 'max-w-2xl' : 'max-w-[280px]'}`}>
+			<div className="relative rounded-xl overflow-visible" style={{ height: isDesktop ? 80 : 44, background: 'rgba(0,0,0,0.03)' }}>
 				<div
 					style={{ left: `${rangeLeft}%`, width: `${rangeWidth * barProgress}%` }}
 					className="absolute top-0 h-full bg-forest-50 border-2 border-forest-200 border-dashed rounded-xl"
@@ -66,12 +66,12 @@ export function SceneUnderpriced({ variant = 'mobile' }: SceneProps) {
 				borderLeft: '3px solid #C4A850',
 				background: 'rgba(196, 168, 80, 0.06)',
 			}}
-			className={`rounded-xl ${isDesktop ? 'max-w-2xl text-left p-5' : 'max-w-md text-center p-4'} w-full mt-6`}
+			className={`rounded-xl ${isDesktop ? 'max-w-2xl text-left p-5' : 'max-w-[280px] text-center p-3'} w-full mt-4`}
 		>
-			<span className={`text-amber-700 font-bold ${isDesktop ? 'text-xl' : 'text-sm'}`}>
+			<span className={`text-amber-700 font-bold ${isDesktop ? 'text-xl' : 'text-xs'}`}>
 				이 가격이면 자재 등급을 확인하세요
 			</span>
-			<p className={`text-amber-600 mt-1 ${isDesktop ? 'text-lg' : 'text-xs'}`}>자재 하향 또는 부실시공 리스크</p>
+			<p className={`text-amber-600 mt-1 ${isDesktop ? 'text-lg' : 'text-[10px]'}`}>자재 하향 또는 부실시공 리스크</p>
 		</div>
 	)
 
@@ -111,9 +111,9 @@ export function SceneUnderpriced({ variant = 'mobile' }: SceneProps) {
 	}
 
 	return (
-		<AbsoluteFill className="flex flex-col items-center justify-center bg-sand-50 px-8" style={{ opacity: crossfade }}>
-			<p className="text-sand-500 text-xs mb-2 tracking-wider">도배 (실크벽지)</p>
-			<p className="text-sand-800 font-bold text-xl mb-8">항목별 적정가격 범위</p>
+		<AbsoluteFill className="flex flex-col items-center justify-center bg-sand-50 px-5" style={{ opacity: crossfade }}>
+			<p className="text-sand-500 text-[10px] mb-1.5 tracking-wider">도배 (실크벽지)</p>
+			<p className="text-sand-800 font-bold text-base mb-5">항목별 적정가격 범위</p>
 			{rangeBar}
 			{alertCard}
 		</AbsoluteFill>

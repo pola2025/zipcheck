@@ -3,6 +3,9 @@ import { lazy, Suspense, useState } from 'react'
 const PriceAnalysisPlayer = lazy(() =>
 	import('components/remotion/PriceAnalysisPlayer').then(m => ({ default: m.PriceAnalysisPlayer }))
 )
+const PriceAnalysisMobilePlayer = lazy(() =>
+	import('components/remotion/PriceAnalysisPlayer').then(m => ({ default: m.PriceAnalysisMobilePlayer }))
+)
 
 const SCENE_INFO = [
 	{ name: '씬1: 질문', time: '0~3s' },
@@ -14,38 +17,64 @@ const SCENE_INFO = [
 	{ name: '씬7: CTA', time: '25.2~30s' },
 ]
 
+type Mode = 'desktop' | 'mobile'
+
 export default function VideoPreview() {
+	const [mode, setMode] = useState<Mode>('desktop')
 	const [maxWidth, setMaxWidth] = useState(960)
 
 	return (
 		<div className="min-h-screen bg-neutral-900 text-white p-8">
 			<h1 className="text-2xl font-bold mb-2">Remotion 영상 프리뷰</h1>
-			<p className="text-neutral-400 mb-6">텍스트 크기 확인용 전용 페이지 (개발 전용)</p>
+			<p className="text-neutral-400 mb-6">PC / 모바일 비교 확인용 (개발 전용)</p>
 
-			{/* Size controls */}
-			<div className="flex items-center gap-4 mb-6">
-				<span className="text-sm text-neutral-400">Player 크기:</span>
-				{[640, 800, 960, 1120, 1280].map(w => (
+			{/* Mode toggle */}
+			<div className="flex items-center gap-3 mb-4">
+				{(['desktop', 'mobile'] as Mode[]).map(m => (
 					<button
-						key={w}
-						onClick={() => setMaxWidth(w)}
-						className={`px-3 py-1.5 rounded text-sm font-medium transition ${
-							maxWidth === w
+						key={m}
+						onClick={() => setMode(m)}
+						className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+							mode === m
 								? 'bg-forest-600 text-white'
 								: 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
 						}`}
 					>
-						{w}px
+						{m === 'desktop' ? 'PC (1280x720)' : 'Mobile (360x640)'}
 					</button>
 				))}
 			</div>
 
+			{/* Size controls (desktop only) */}
+			{mode === 'desktop' && (
+				<div className="flex items-center gap-4 mb-6">
+					<span className="text-sm text-neutral-400">Player 크기:</span>
+					{[640, 800, 960, 1120, 1280].map(w => (
+						<button
+							key={w}
+							onClick={() => setMaxWidth(w)}
+							className={`px-3 py-1.5 rounded text-sm font-medium transition ${
+								maxWidth === w
+									? 'bg-forest-600 text-white'
+									: 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
+							}`}
+						>
+							{w}px
+						</button>
+					))}
+				</div>
+			)}
+
 			{/* Player */}
 			<div className="bg-neutral-800 rounded-xl p-6 mb-6">
 				<Suspense fallback={<div className="text-neutral-500">로딩 중...</div>}>
-					<PriceAnalysisPlayer
-						style={{ maxWidth, margin: '0 auto' }}
-					/>
+					{mode === 'desktop' ? (
+						<PriceAnalysisPlayer style={{ maxWidth, margin: '0 auto' }} />
+					) : (
+						<div className="flex justify-center">
+							<PriceAnalysisMobilePlayer style={{ maxWidth: 360 }} />
+						</div>
+					)}
 				</Suspense>
 			</div>
 

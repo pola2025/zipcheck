@@ -76,12 +76,12 @@ export function SceneQuestion({ variant = 'mobile' }: SceneProps) {
 					}}
 				/>
 
-				<p className={`text-forest-600 font-semibold mb-4 tracking-[0.2em] ${isDesktop ? 'text-xl' : 'text-sm'}`}>
+				<p className={`text-forest-600 font-semibold mb-4 tracking-[0.2em] ${isDesktop ? 'text-xl' : 'text-xs'}`}>
 					QUESTION
 				</p>
-				<h2 className={`font-bold text-sand-900 leading-tight ${isDesktop ? 'text-7xl' : 'text-3xl'}`}>
+				<h2 className={`font-bold text-sand-900 leading-tight ${isDesktop ? 'text-7xl' : 'text-[22px]'}`}>
 					견적서 받았는데...<br />
-					<span className="text-forest-600">이게 적정 가격인지</span> 어떻게 알죠?
+					<span className="text-forest-600">이게 적정 가격인지</span><br />어떻게 알죠?
 				</h2>
 			</div>
 		</AbsoluteFill>

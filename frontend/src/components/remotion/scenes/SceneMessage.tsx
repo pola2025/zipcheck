@@ -57,7 +57,7 @@ export function SceneMessage({ variant = 'mobile' }: SceneProps) {
 			<div className={`text-center space-y-7 ${isDesktop ? 'max-w-3xl' : 'max-w-lg'} relative z-10`}>
 				<p
 					style={{ opacity: line1, transform: `translateY(${(1 - line1) * 20}px)` }}
-					className={`text-forest-200 ${isDesktop ? 'text-3xl' : 'text-lg'}`}
+					className={`text-forest-200 ${isDesktop ? 'text-3xl' : 'text-sm'}`}
 				>
 					저희는 인테리어 업체가 아닙니다
 				</p>
@@ -74,15 +74,15 @@ export function SceneMessage({ variant = 'mobile' }: SceneProps) {
 
 				<p
 					style={{ opacity: line2, transform: `translateY(${(1 - line2) * 15}px)` }}
-					className={`text-white font-medium ${isDesktop ? 'text-4xl' : 'text-xl'}`}
+					className={`text-white font-medium ${isDesktop ? 'text-4xl' : 'text-base'}`}
 				>
 					소비자가 적정 가격에<br />공사받을 수 있도록
 				</p>
 				<div style={{ opacity: line3, transform: `scale(${0.9 + line3 * 0.1})` }}>
-					<p className={`text-forest-200 ${isDesktop ? 'text-3xl' : 'text-lg'}`}>
+					<p className={`text-forest-200 ${isDesktop ? 'text-3xl' : 'text-xs'}`}>
 						유통망 가격 기반
 					</p>
-					<p className={`text-white font-bold mt-1 ${isDesktop ? 'text-5xl' : 'text-2xl'}`}>
+					<p className={`text-white font-bold mt-1 ${isDesktop ? 'text-5xl' : 'text-lg'}`}>
 						인테리어 견적 분석
 					</p>
 				</div>
@@ -90,7 +90,7 @@ export function SceneMessage({ variant = 'mobile' }: SceneProps) {
 
 			<p
 				style={{ opacity: bridgeOpacity }}
-				className={`mt-12 text-forest-300 ${isDesktop ? 'text-xl' : 'text-sm'} relative z-10`}
+				className={`mt-8 text-forest-300 ${isDesktop ? 'text-xl' : 'text-[10px]'} relative z-10`}
 			>
 				어떻게 분석할까요?
 			</p>
