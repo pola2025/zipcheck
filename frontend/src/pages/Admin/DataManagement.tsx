@@ -158,6 +158,12 @@ export default function DataManagement() {
 				}
 			})
 			const data = await response.json()
+			// Ensure overview exists with defaults
+			if (data && !data.overview) {
+				data.overview = { categories_count: 0, items_count: 0, records_count: 0, total_amount: '0' }
+			}
+			if (data && !data.byCategory) data.byCategory = []
+			if (data && !data.byRegion) data.byRegion = []
 			setDataStats(data)
 		} catch (error) {
 			console.error('Failed to fetch data stats:', error)

@@ -222,14 +222,39 @@ app.get('/upload-history', async (c) => {
 
 // Get data statistics
 app.get('/data-stats', async (c) => {
-	const result = await query(c.env.DATABASE_URL, `
-		SELECT
-			(SELECT COUNT(*) FROM construction_prices) as construction_count,
-			(SELECT COUNT(*) FROM distributor_prices) as distributor_count,
-			(SELECT COUNT(DISTINCT category) FROM construction_prices) as construction_categories,
-			(SELECT COUNT(DISTINCT category) FROM distributor_prices) as distributor_categories
-	`)
-	return c.json(result[0])
+	try {
+		const overview = await query(c.env.DATABASE_URL, `
+			SELECT
+				COUNT(DISTINCT category) as categories_count,
+				COUNT(DISTINCT item_name) as items_count,
+				COUNT(*) as records_count,
+				COALESCE(SUM(unit_price), 0)::text as total_amount
+			FROM construction_prices
+		`)
+
+		const byCategory = await findMany(c.env.DATABASE_URL, `
+			SELECT
+				category,
+				COUNT(*) as record_count,
+				COALESCE(SUM(unit_price), 0)::text as total_cost
+			FROM construction_prices
+			GROUP BY category
+			ORDER BY SUM(unit_price) DESC
+		`)
+
+		return c.json({
+			overview: overview[0] || { categories_count: 0, items_count: 0, records_count: 0, total_amount: '0' },
+			byCategory: byCategory || [],
+			byRegion: []
+		})
+	} catch (error) {
+		const message = error instanceof Error ? error.message : 'Unknown error'
+		return c.json({
+			overview: { categories_count: 0, items_count: 0, records_count: 0, total_amount: '0' },
+			byCategory: [],
+			byRegion: []
+		})
+	}
 })
 
 // Get item-level price statistics
@@ -250,19 +275,26 @@ app.get('/item-stats', async (c) => {
 	}
 
 	const rows = await findMany(c.env.DATABASE_URL, `
-		SELECT item_name, unit, category,
-			AVG(unit_price) as avg_price,
-			MIN(unit_price) as min_price,
-			MAX(unit_price) as max_price,
-			COUNT(*) as sample_count
+		SELECT
+			item_name || '-' || COALESCE(category, '') as id,
+			item_name,
+			category as category_name,
+			COUNT(*) as record_count,
+			ROUND(AVG(unit_price))::int as avg_total_cost,
+			0 as avg_material_cost,
+			0 as avg_labor_cost,
+			0 as avg_overhead_cost,
+			MIN(unit_price)::int as min_cost,
+			MAX(unit_price)::int as max_cost,
+			ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY unit_price))::int as median_cost
 		FROM construction_prices
 		${whereClause}
-		GROUP BY item_name, unit, category
+		GROUP BY item_name, category
 		ORDER BY item_name
 		LIMIT 100
 	`, params)
 
-	return c.json(rows)
+	return c.json({ items: rows || [] })
 })
 
 export default app
