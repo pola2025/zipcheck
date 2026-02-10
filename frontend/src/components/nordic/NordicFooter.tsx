@@ -1,8 +1,8 @@
 export default function NordicFooter() {
 	return (
-		<footer className="bg-sand-900 text-white py-16">
-			<div className="max-w-7xl mx-auto px-8">
-				<div className="grid md:grid-cols-4 gap-12">
+		<footer className="bg-sand-900 text-white py-12 md:py-16">
+			<div className="max-w-7xl mx-auto px-5 md:px-8">
+				<div className="grid md:grid-cols-4 gap-8 md:gap-12">
 					<div className="md:col-span-2">
 						<div className="mb-4">
 							<img src="/logo_white.png" alt="집첵" className="h-7 w-auto" />
@@ -48,7 +48,7 @@ export default function NordicFooter() {
 					</div>
 				</div>
 
-				<div className="mt-12 pt-8 border-t border-white/10 text-xs text-sand-600">
+				<div className="mt-10 md:mt-12 pt-6 md:pt-8 border-t border-white/10 text-xs text-sand-600">
 					<p>polarad | 대표: 이재호 | 사업자등록번호: 808-03-00327</p>
 					<p className="mt-1">
 						서울시 금천구 가산디지털2로 98, 2동 11층 1107호(가산동, IT캐슬)

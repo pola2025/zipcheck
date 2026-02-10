@@ -25,23 +25,23 @@ export default function ProcessSteps() {
 				}}
 			/>
 
-			<div className="relative z-10 max-w-7xl mx-auto px-5 md:px-8 py-16 md:py-24">
+			<div className="relative z-10 max-w-7xl mx-auto px-5 md:px-8 py-14 md:py-24">
 				<div className="max-w-xl">
 					<SectionLabel label="Process" title="간단한 3단계" />
 
-					<div className="space-y-8 mt-10 md:mt-12">
+					<div className="space-y-6 md:space-y-8 mt-8 md:mt-12">
 						{nordicProcessSteps.map((step, i) => (
-							<div key={step.number} className="flex gap-4 md:gap-5">
+							<div key={step.number} className="flex gap-3.5 md:gap-5">
 								<div
-									className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl text-white flex items-center justify-center text-base md:text-lg font-bold flex-shrink-0 shadow-lg ${stepColors[i]}`}
+									className={`w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl text-white flex items-center justify-center text-sm md:text-lg font-bold flex-shrink-0 shadow-lg ${stepColors[i]}`}
 								>
 									{step.number}
 								</div>
 								<div>
-									<h4 className="font-semibold text-sand-900 text-base md:text-lg mb-1">
+									<h4 className="font-semibold text-sand-900 text-sm md:text-lg mb-1">
 										{step.title}
 									</h4>
-									<p className="text-sand-600 text-sm">{step.description}</p>
+									<p className="text-sand-600 text-xs md:text-sm">{step.description}</p>
 								</div>
 							</div>
 						))}

@@ -22,16 +22,16 @@ export default function WhyZipCheck() {
 					/>
 				</div>
 
-				<div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
+				<div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
 					{nordicFeatures.map((feature) => {
 						const Icon = iconMap[feature.icon]
 						return (
-							<div key={feature.title} className="nordic-card p-7 group">
-								<div className="w-12 h-12 rounded-xl bg-forest-50 flex items-center justify-center text-forest-600 mb-5 group-hover:bg-forest-500 group-hover:text-white transition">
-									{Icon && <Icon className="w-5 h-5" strokeWidth={1.8} />}
+							<div key={feature.title} className="nordic-card p-4 md:p-7 group">
+								<div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-forest-50 flex items-center justify-center text-forest-600 mb-3 md:mb-5 group-hover:bg-forest-500 group-hover:text-white transition">
+									{Icon && <Icon className="w-4 h-4 md:w-5 md:h-5" strokeWidth={1.8} />}
 								</div>
-								<h3 className="font-semibold text-sand-900 mb-2">{feature.title}</h3>
-								<p className="text-sm text-sand-600 leading-relaxed">
+								<h3 className="font-semibold text-sand-900 mb-1 md:mb-2 text-sm md:text-base">{feature.title}</h3>
+								<p className="text-xs md:text-sm text-sand-600 leading-relaxed">
 									{feature.description}
 								</p>
 							</div>

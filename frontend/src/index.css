@@ -65,6 +65,16 @@
 		@apply bg-background text-foreground;
 	}
 
+	/* Korean text: prevent orphan text by breaking at word boundaries */
+	h1, h2, h3, h4, h5, h6 {
+		word-break: keep-all;
+		overflow-wrap: break-word;
+	}
+	p, li, span, a {
+		word-break: keep-all;
+		overflow-wrap: break-word;
+	}
+
 	/* Force dark theme for select and option elements */
 	select {
 		color-scheme: dark;

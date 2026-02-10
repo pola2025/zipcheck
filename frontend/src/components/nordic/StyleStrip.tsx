@@ -3,8 +3,8 @@ import SectionLabel from './SectionLabel'
 
 export default function StyleStrip() {
 	return (
-		<section className="bg-white py-20 overflow-hidden">
-			<div className="max-w-7xl mx-auto px-8">
+		<section className="bg-white py-16 md:py-20 overflow-hidden">
+			<div className="max-w-7xl mx-auto px-5 md:px-8">
 				<div className="flex items-end justify-between mb-8">
 					<SectionLabel
 						label="Styles We Analyze"
@@ -13,14 +13,14 @@ export default function StyleStrip() {
 				</div>
 
 				<div
-					className="flex gap-5 overflow-x-auto pb-4"
+					className="flex gap-4 md:gap-5 overflow-x-auto pb-4"
 					style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}
 				>
 					{styleCards.map((card) => (
 						<div
 							key={card.name}
-							className="flex-shrink-0 w-72 img-card relative"
-							style={{ minHeight: 360 }}
+							className="flex-shrink-0 w-60 md:w-72 img-card relative"
+							style={{ minHeight: 320 }}
 						>
 							{card.image ? (
 								<img
@@ -35,8 +35,8 @@ export default function StyleStrip() {
 								/>
 							)}
 							<div className="img-card-overlay" />
-							<div className="relative z-10 absolute bottom-0 left-0 right-0 p-6">
-								<h3 className="text-white font-bold text-lg mb-1">{card.name}</h3>
+							<div className="relative z-10 absolute bottom-0 left-0 right-0 p-5 md:p-6">
+								<h3 className="text-white font-bold text-base md:text-lg mb-1">{card.name}</h3>
 								<p className="text-white/60 text-xs">{card.subtitle}</p>
 							</div>
 						</div>

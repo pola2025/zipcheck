@@ -8,19 +8,19 @@ export default function CtaBanner() {
 			</div>
 			<div className="absolute inset-0 bg-forest-800/50" />
 
-			<div className="relative z-10 flex items-center justify-center min-h-[50vh] text-center px-8">
+			<div className="relative z-10 flex items-center justify-center min-h-[50vh] text-center px-5 md:px-8">
 				<div>
-					<h2 className="font-outfit text-4xl lg:text-5xl font-bold text-white mb-4 tracking-tight">
+					<h2 className="font-outfit text-[1.65rem] md:text-4xl lg:text-5xl font-bold text-white mb-4 tracking-tight">
 						우리 집 인테리어,
 						<br />
 						제대로 시작하세요
 					</h2>
-					<p className="text-forest-200 text-lg mb-10">
+					<p className="text-forest-200 text-sm md:text-lg mb-8 md:mb-10">
 						실제 데이터로 꼼꼼하게 확인해 드립니다.
 					</p>
 					<Link
 						to="/quote-submission"
-						className="inline-block px-10 py-4 bg-white text-forest-700 rounded-2xl font-bold text-lg hover:bg-sand-100 transition shadow-xl"
+						className="inline-block px-8 md:px-10 py-3.5 md:py-4 bg-white text-forest-700 rounded-2xl font-bold text-base md:text-lg hover:bg-sand-100 transition shadow-xl"
 					>
 						무료 견적 분석 받기 &rarr;
 					</Link>

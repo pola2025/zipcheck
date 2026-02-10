@@ -17,9 +17,9 @@ export default function NordicPricing() {
 	const isClosed = freeRemaining !== null && freeRemaining <= 0
 
 	return (
-		<section id="pricing" className="bg-sand-50 py-24">
-			<div className="max-w-3xl mx-auto px-8">
-				<div className="text-center mb-14">
+		<section id="pricing" className="bg-sand-50 py-16 md:py-24">
+			<div className="max-w-3xl mx-auto px-5 md:px-8">
+				<div className="text-center mb-10 md:mb-14">
 					<SectionLabel
 						label="Pricing"
 						title="분석 요금"
@@ -29,8 +29,8 @@ export default function NordicPricing() {
 				</div>
 
 				<div className="max-w-md mx-auto">
-					<div className="relative nordic-card rounded-2xl p-8 border-2 border-forest-600">
-						<div className="absolute -top-[10px] left-1/2 -translate-x-1/2 px-4 py-[3px] rounded-2xl text-[11px] font-semibold bg-red-500 text-white">
+					<div className="relative nordic-card rounded-2xl p-6 md:p-8 border-2 border-forest-600">
+						<div className="absolute -top-[10px] left-1/2 -translate-x-1/2 px-4 py-[3px] rounded-2xl text-[11px] font-semibold bg-red-500 text-white whitespace-nowrap">
 							선착순 50명 무료
 						</div>
 
@@ -38,10 +38,10 @@ export default function NordicPricing() {
 						<p className="text-xs text-sand-600 mb-4">48시간 이내</p>
 
 						<div className="flex items-baseline gap-3 mb-6">
-							<p className="text-2xl text-sand-400 line-through font-outfit">
+							<p className="text-xl md:text-2xl text-sand-400 line-through font-outfit">
 								₩9,900
 							</p>
-							<p className="text-4xl font-bold text-forest-600 font-outfit">
+							<p className="text-3xl md:text-4xl font-bold text-forest-600 font-outfit">
 								₩0
 							</p>
 							<span className="text-sm text-red-500 font-semibold">무료</span>
