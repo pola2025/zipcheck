@@ -23,10 +23,10 @@ export function SceneQuestion({ variant = 'mobile' }: SceneProps) {
 				style={{ opacity: titleOpacity, transform: `translateY(${titleY}px)` }}
 				className={`text-center ${isDesktop ? 'px-20' : 'px-8'}`}
 			>
-				<p className={`text-sand-500 font-medium mb-3 tracking-wider ${isDesktop ? 'text-base' : 'text-sm'}`}>
+				<p className={`text-sand-500 font-medium mb-3 tracking-wider ${isDesktop ? 'text-lg' : 'text-sm'}`}>
 					QUESTION
 				</p>
-				<h2 className={`font-bold text-sand-900 leading-tight ${isDesktop ? 'text-5xl' : 'text-3xl'}`}>
+				<h2 className={`font-bold text-sand-900 leading-tight ${isDesktop ? 'text-6xl' : 'text-3xl'}`}>
 					견적서 받았는데...<br />
 					<span className="text-forest-600">이게 적정 가격인지</span> 어떻게 알죠?
 				</h2>

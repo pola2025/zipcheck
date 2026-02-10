@@ -67,6 +67,9 @@ importers:
       '@react-spring/web':
         specifier: ^10.0.3
         version: 10.0.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@remotion/player':
+        specifier: ^4.0.420
+        version: 4.0.420(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@tailwindcss/typography':
         specifier: ^0.5.16
         version: 0.5.19(tailwindcss@3.4.19(yaml@2.8.2))
@@ -193,6 +196,9 @@ importers:
       remark-parse:
         specifier: ^11.0.0
         version: 11.0.0
+      remotion:
+        specifier: ^4.0.420
+        version: 4.0.420(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       tailwind-merge:
         specifier: ^2.6.0
         version: 2.6.1
@@ -2014,6 +2020,12 @@ packages:
   '@remix-run/router@1.23.2':
     resolution: {integrity: sha512-Ic6m2U/rMjTkhERIa/0ZtXJP17QUi2CbWE7cqx4J58M8aA3QTfW+2UlQ4psvTX9IO1RfNVhK3pcpdjej7L+t2w==}
     engines: {node: '>=14.0.0'}
+
+  '@remotion/player@4.0.420':
+    resolution: {integrity: sha512-Nx5sIvb7K4SWGlbzVFv9qC9vKdTgIhttA84SoBFuWSdLT27jT4ap16Kj9snrEDHtPgZ0YH0w8fetd5cSmo/3yw==}
+    peerDependencies:
+      react: ^18.3.1
+      react-dom: ^18.3.1
 
   '@resvg/resvg-wasm@2.4.0':
     resolution: {integrity: sha512-C7c51Nn4yTxXFKvgh2txJFNweaVcfUPQxwEUFw4aWsCmfiBDJsTSwviIF8EcwjQ6k8bPyMWCl1vw4BdxE569Cg==}
@@ -6076,6 +6088,12 @@ packages:
   remark@15.0.1:
     resolution: {integrity: sha512-Eht5w30ruCXgFmxVUSlNWQ9iiimq07URKeFS3hNc8cUWy1llX4KDWfyEDZRycMc+znsN9Ux5/tJ/BFdgdOwA3A==}
 
+  remotion@4.0.420:
+    resolution: {integrity: sha512-PmFYbYWCVmi8qaDphpeYPU7/SDADjTPtieEvW5VQEQ6SQP3Ntw37Dvr/Y0pm4gOU32Iw7WwT9x96UjCxdZ3d5Q==}
+    peerDependencies:
+      react: ^18.3.1
+      react-dom: ^18.3.1
+
   replicate@0.20.1:
     resolution: {integrity: sha512-QVyI1rowGsSfNuDrRmumYPdCHa/fN/RkI3NHpcK0i5hSSiWK69URAyheAC/0MIAiS3oUs4kD56PB9zEI4oHENw==}
     engines: {git: '>=2.11.0', node: '>=18.0.0', npm: '>=7.19.0', yarn: '>=1.7.0'}
@@ -9069,6 +9087,12 @@ snapshots:
       react-redux: 9.2.0(@types/react@18.3.27)(react@18.3.1)(redux@5.0.1)
 
   '@remix-run/router@1.23.2': {}
+
+  '@remotion/player@4.0.420(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      remotion: 4.0.420(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
 
   '@resvg/resvg-wasm@2.4.0': {}
 
@@ -13447,6 +13471,11 @@ snapshots:
       unified: 11.0.5
     transitivePeerDependencies:
       - supports-color
+
+  remotion@4.0.420(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   replicate@0.20.1: {}
 

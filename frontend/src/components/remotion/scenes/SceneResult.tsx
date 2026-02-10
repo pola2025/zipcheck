@@ -38,15 +38,15 @@ function ResultCard({ item, index, isDesktop }: { item: ResultItem; index: numbe
 	return (
 		<div
 			style={{ opacity, transform: `translateX(${(1 - progress) * 40}px)` }}
-			className={`${colors.bg} border ${colors.border} rounded-xl ${isDesktop ? 'p-4' : 'p-3.5'} flex items-center justify-between`}
+			className={`${colors.bg} border ${colors.border} rounded-xl ${isDesktop ? 'p-5' : 'p-3.5'} flex items-center justify-between`}
 		>
 			<div>
-				<p className={`text-sand-800 font-medium ${isDesktop ? 'text-base' : 'text-sm'}`}>{item.name}</p>
-				<p className={`text-sand-500 ${isDesktop ? 'text-sm' : 'text-xs'}`}>적정범위 {item.range}</p>
+				<p className={`text-sand-800 font-medium ${isDesktop ? 'text-lg' : 'text-sm'}`}>{item.name}</p>
+				<p className={`text-sand-500 ${isDesktop ? 'text-base' : 'text-xs'}`}>적정범위 {item.range}</p>
 			</div>
 			<div className="text-right flex items-center gap-2">
-				<span className={`text-sand-800 font-bold ${isDesktop ? 'text-base' : 'text-sm'}`}>{item.price}</span>
-				<span className={`${colors.text} ${colors.bg} border ${colors.border} font-bold px-2 py-0.5 rounded-full ${isDesktop ? 'text-sm' : 'text-xs'}`}>
+				<span className={`text-sand-800 font-bold ${isDesktop ? 'text-lg' : 'text-sm'}`}>{item.price}</span>
+				<span className={`${colors.text} ${colors.bg} border ${colors.border} font-bold px-2.5 py-1 rounded-full ${isDesktop ? 'text-base' : 'text-xs'}`}>
 					{item.label}
 				</span>
 			</div>
@@ -94,9 +94,9 @@ export function SceneResult({ variant = 'mobile' }: SceneProps) {
 						className="w-[40%] space-y-4"
 						style={{ opacity: leftEntrance, transform: `translateX(${(1 - leftEntrance) * -20}px)` }}
 					>
-						<p className="text-sand-500 text-sm tracking-wider">ANALYSIS RESULT</p>
-						<p className="text-sand-800 font-bold text-2xl">견적 분석 리포트 미리보기</p>
-						<p style={{ opacity: bottomCopyOpacity }} className="text-sand-600 text-sm">
+						<p className="text-sand-500 text-base tracking-wider">ANALYSIS RESULT</p>
+						<p className="text-sand-800 font-bold text-3xl">견적 분석 리포트 미리보기</p>
+						<p style={{ opacity: bottomCopyOpacity }} className="text-sand-600 text-base">
 							비싸다고 나쁜 게 아닙니다. 싸다고 좋은 게 아닙니다.<br />
 							<span className="font-semibold text-sand-800">자재 등급에 맞는 가격인지가 중요합니다.</span>
 						</p>

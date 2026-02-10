@@ -30,7 +30,7 @@ export function SceneOverpriced({ variant = 'mobile' }: SceneProps) {
 				/>
 				<div
 					style={{ left: `${rangeLeft + rangeWidth / 2}%`, opacity: barProgress }}
-					className={`absolute top-1/2 -translate-x-1/2 -translate-y-1/2 text-forest-600 font-semibold ${isDesktop ? 'text-sm' : 'text-xs'}`}
+					className={`absolute top-1/2 -translate-x-1/2 -translate-y-1/2 text-forest-600 font-semibold ${isDesktop ? 'text-base' : 'text-xs'}`}
 				>
 					적정 범위
 				</div>
@@ -39,7 +39,7 @@ export function SceneOverpriced({ variant = 'mobile' }: SceneProps) {
 					className="absolute -top-8 -translate-x-1/2"
 				>
 					<div className="flex flex-col items-center">
-						<span className={`text-red-600 font-bold mb-1 whitespace-nowrap ${isDesktop ? 'text-sm' : 'text-xs'}`}>450만원</span>
+						<span className={`text-red-600 font-bold mb-1 whitespace-nowrap ${isDesktop ? 'text-base' : 'text-xs'}`}>450만원</span>
 						<div className="w-1 h-[72px] bg-red-600 rounded-full" />
 						<div className="w-4 h-4 rounded-full bg-red-600 -mt-1 border-2 border-white shadow" />
 					</div>
@@ -57,10 +57,10 @@ export function SceneOverpriced({ variant = 'mobile' }: SceneProps) {
 			style={{ opacity: alertOpacity, transform: `scale(${0.8 + alertScale * 0.2})` }}
 			className={`bg-red-50 border-2 border-red-300 rounded-xl p-4 ${isDesktop ? 'max-w-xl text-left' : 'max-w-md text-center'} w-full mt-6`}
 		>
-			<span className={`text-red-600 font-bold ${isDesktop ? 'text-base' : 'text-sm'}`}>
+			<span className={`text-red-600 font-bold ${isDesktop ? 'text-lg' : 'text-sm'}`}>
 				이 자재 기준, 가격이 과다합니다
 			</span>
-			<p className={`text-red-400 mt-1 ${isDesktop ? 'text-sm' : 'text-xs'}`}>유통망 원가 대비 42% 초과</p>
+			<p className={`text-red-400 mt-1 ${isDesktop ? 'text-base' : 'text-xs'}`}>유통망 원가 대비 42% 초과</p>
 		</div>
 	)
 
@@ -75,8 +75,8 @@ export function SceneOverpriced({ variant = 'mobile' }: SceneProps) {
 						className="w-[40%] space-y-4"
 						style={{ opacity: leftEntrance, transform: `translateX(${(1 - leftEntrance) * -20}px)` }}
 					>
-						<p className="text-sand-500 text-sm tracking-wider">바닥재 (강마루)</p>
-						<p className="text-sand-800 font-bold text-2xl">항목별 적정가격 범위</p>
+						<p className="text-sand-500 text-base tracking-wider">바닥재 (강마루)</p>
+						<p className="text-sand-800 font-bold text-3xl">항목별 적정가격 범위</p>
 						{alertCard}
 					</div>
 					<div className="w-[60%] flex flex-col items-center">{rangeBar}</div>

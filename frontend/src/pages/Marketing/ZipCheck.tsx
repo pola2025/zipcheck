@@ -20,11 +20,11 @@ const PriceAnalysisSection = lazy(() =>
 			<section className="bg-sand-50 py-16 md:py-24">
 				<div className="max-w-5xl mx-auto px-5 md:px-8">
 					<div className="text-center mb-10">
-						<span className="inline-block text-xs font-semibold tracking-widest text-forest-600 uppercase mb-2">Price Analysis</span>
-						<h2 className="text-2xl md:text-3xl font-bold text-sand-900" style={{ fontFamily: 'Outfit, sans-serif' }}>
+						<span className="inline-block text-sm font-semibold tracking-widest text-forest-600 uppercase mb-2">Price Analysis</span>
+						<h2 className="text-3xl md:text-4xl font-bold text-sand-900" style={{ fontFamily: 'Outfit, sans-serif' }}>
 							왜 견적 분석이 필요할까요?
 						</h2>
-						<p className="text-sand-600 text-sm mt-2">30초만 투자해보세요</p>
+						<p className="text-sand-600 text-base mt-2">30초만 투자해보세요</p>
 					</div>
 					<div className="rounded-2xl overflow-hidden border border-sand-200 shadow-lg bg-white">
 						<m.PriceAnalysisPlayer />

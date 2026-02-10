@@ -33,14 +33,14 @@ export function ScenePriceCompare({ variant = 'mobile' }: SceneProps) {
 
 				return (
 					<div key={i} style={{ opacity }} className="flex items-center gap-3">
-						<span className={`text-sand-600 w-16 shrink-0 ${isDesktop ? 'text-base' : 'text-sm'}`}>{c.name}</span>
-						<div className={`flex-1 bg-sand-200 rounded-full overflow-hidden relative ${isDesktop ? 'h-12' : 'h-10'}`}>
+						<span className={`text-sand-600 w-16 shrink-0 ${isDesktop ? 'text-lg' : 'text-sm'}`}>{c.name}</span>
+						<div className={`flex-1 bg-sand-200 rounded-full overflow-hidden relative ${isDesktop ? 'h-14' : 'h-10'}`}>
 							<div
 								style={{ transform: `scaleX(${scaleX})`, transformOrigin: 'left' }}
 								className={`h-full rounded-full ${i === 1 ? 'bg-amber-400' : i === 2 ? 'bg-red-400' : 'bg-forest-400'}`}
 							/>
 						</div>
-						<span className={`text-sand-800 font-bold w-24 text-right ${isDesktop ? 'text-base' : 'text-sm'}`}>{c.price}</span>
+						<span className={`text-sand-800 font-bold w-24 text-right ${isDesktop ? 'text-lg' : 'text-sm'}`}>{c.price}</span>
 					</div>
 				)
 			})}
@@ -48,7 +48,7 @@ export function ScenePriceCompare({ variant = 'mobile' }: SceneProps) {
 	)
 
 	const questionText = (
-		<p style={{ opacity: questionOpacity }} className={`text-sand-700 ${isDesktop ? 'text-lg' : 'text-base'} ${isDesktop ? 'text-left' : 'text-center'}`}>
+		<p style={{ opacity: questionOpacity }} className={`text-sand-700 ${isDesktop ? 'text-xl' : 'text-base'} ${isDesktop ? 'text-left' : 'text-center'}`}>
 			같은 평수, 같은 공사인데<br />
 			<span className="font-semibold text-sand-900">왜 이렇게 다를까?</span>
 		</p>
@@ -66,9 +66,9 @@ export function ScenePriceCompare({ variant = 'mobile' }: SceneProps) {
 						className="w-[40%] space-y-4"
 						style={{ opacity: leftEntrance, transform: `translateX(${(1 - leftEntrance) * -20}px)` }}
 					>
-						<p className="text-sand-500 text-sm tracking-wider">25평 아파트 전체 리모델링</p>
+						<p className="text-sand-500 text-base tracking-wider">25평 아파트 전체 리모델링</p>
 						{/* #31: Enriched left text with subtitle */}
-						<p className="text-sand-800 font-bold text-2xl">같은 공사, 다른 견적</p>
+						<p className="text-sand-800 font-bold text-3xl">같은 공사, 다른 견적</p>
 						{questionText}
 					</div>
 					{/* Right: bars (60%) */}
