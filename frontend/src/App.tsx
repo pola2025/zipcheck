@@ -76,6 +76,7 @@ const PrivacyPolicy = lazyWithRetry(async () => import('pages/Legal/PrivacyPolic
 const TermsOfService = lazyWithRetry(async () => import('pages/Legal/TermsOfService'))
 const NotFound = lazyWithRetry(async () => import('pages/NotFound'))
 const VideoPreview = lazyWithRetry(async () => import('pages/VideoPreview'))
+const VideoEmbed = lazyWithRetry(async () => import('pages/VideoEmbed'))
 
 // BlacklistCheck page
 const BlacklistCheck = lazyWithRetry(async () => import('pages/BlacklistCheck/BlacklistCheck'))
@@ -219,6 +220,7 @@ const mainDomainRoutes = (
 			{adminChildRoutes}
 		</Route>
 		<Route path='/video-preview' element={<VideoPreview />} />
+		<Route path='/video-embed' element={<VideoEmbed />} />
 		<Route path='*' element={<NotFound />} />
 	</>
 )
