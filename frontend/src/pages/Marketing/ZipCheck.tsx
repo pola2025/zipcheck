@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import {
 	NordicNavigation,
 	NordicHero,
@@ -12,6 +13,27 @@ import {
 } from 'components/nordic'
 import PageSEO from 'components/PageSEO'
 import { faqs, nordicProcessSteps } from '../../data/marketing'
+
+const PriceAnalysisSection = lazy(() =>
+	import('components/remotion/PriceAnalysisPlayer').then(m => ({
+		default: () => (
+			<section className="bg-sand-50 py-16 md:py-24">
+				<div className="max-w-5xl mx-auto px-5 md:px-8">
+					<div className="text-center mb-10">
+						<span className="inline-block text-xs font-semibold tracking-widest text-forest-600 uppercase mb-2">Price Analysis</span>
+						<h2 className="text-2xl md:text-3xl font-bold text-sand-900" style={{ fontFamily: 'Outfit, sans-serif' }}>
+							왜 견적 분석이 필요할까요?
+						</h2>
+						<p className="text-sand-600 text-sm mt-2">30초만 투자해보세요</p>
+					</div>
+					<div className="rounded-2xl overflow-hidden border border-sand-200 shadow-lg bg-white">
+						<m.PriceAnalysisPlayer />
+					</div>
+				</div>
+			</section>
+		),
+	}))
+)
 
 const faqJsonLd = {
 	'@context': 'https://schema.org',
@@ -70,7 +92,7 @@ export default function ZipCheckPage() {
 		<div className="relative min-h-screen bg-sand-50 text-sand-900 font-noto">
 			<PageSEO
 				title="AI 인테리어 견적 분석"
-				description="인테리어 견적서를 AI가 항목별로 분석해 적정 가격을 알려드립니다. 3,000건+ 데이터 기반, 48시간 내 분석 리포트 제공. 과다 청구 항목을 한눈에 확인하세요."
+				description="인테리어 견적서를 AI가 항목별로 분석해 적정 가격을 알려드립니다. 실제 유통망 원가 기반, 48시간 내 분석 리포트 제공. 과다 청구 항목을 한눈에 확인하세요."
 				path="/"
 				jsonLd={[faqJsonLd, howToJsonLd, serviceJsonLd]}
 			/>
@@ -79,6 +101,9 @@ export default function ZipCheckPage() {
 			<NordicHero />
 			<ConceptGallery />
 			<WhyZipCheck />
+			<Suspense fallback={null}>
+				<PriceAnalysisSection />
+			</Suspense>
 			<QuoteExampleBanner />
 			<ProcessSteps />
 			<StyleStrip />
