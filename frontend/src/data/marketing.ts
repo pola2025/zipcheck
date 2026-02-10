@@ -273,7 +273,7 @@ export const faqs: FAQItem[] = [
 	{
 		question: 'ZipCheck는 어떤 서비스인가요?',
 		answer:
-			'ZipCheck(집첵)은 AI 기반 인테리어 견적 분석 서비스입니다. 인테리어 견적서를 업로드하면 3,000건 이상의 실제 시공·유통 데이터를 기반으로 항목별 적정 가격을 분석하고, 과다 청구 여부를 리포트로 알려드립니다.'
+			'ZipCheck(집첵)은 AI 기반 인테리어 견적 분석 서비스입니다. 인테리어 견적서를 업로드하면 자재등급별 시세 데이터를 기반으로 항목별 적정 가격을 분석하고, 과다 청구 여부를 리포트로 알려드립니다.'
 	},
 	{
 		question: '인테리어 견적서 분석 비용은 얼마인가요?',
@@ -318,7 +318,7 @@ export const faqs: FAQItem[] = [
 	{
 		question: '견적 분석 데이터는 어디서 오나요?',
 		answer:
-			'3,000건 이상의 실제 시공 데이터와 자재 유통망 가격을 기반으로 합니다. 최근 시세와 자재 단가를 반영해 현재 시장 상황에 맞는 적정가를 산출해요.'
+			'자재등급별 시세 데이터와 유통망 가격을 기반으로 합니다. 최근 시세와 자재 단가를 반영해 현재 시장 상황에 맞는 적정가를 산출해요.'
 	}
 ]
 
@@ -346,7 +346,7 @@ export const processSteps: ProcessStep[] = [
 ]
 
 export const heroStats: HeroStat[] = [
-	{ value: '3,000', suffix: '+', label: '누적 분석' },
+	{ value: '4', suffix: '등급', label: '자재등급 분석' },
 	{ value: '48', suffix: 'h', label: '응답 보장' },
 	{ value: '9.2', suffix: '%', label: '평균 절감' }
 ]
