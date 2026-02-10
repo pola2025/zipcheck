@@ -36,7 +36,7 @@ const Community: React.FC = () => {
 						커뮤니티
 					</h1>
 					<p className="text-sand-600 text-base md:text-lg max-w-md mx-auto">
-						실제 사용자들의 경험을 공유하고 소통하는 공간입니다
+						커뮤니티에 실제 사용자들의 경험을<br />공유하고 소통하는 공간입니다
 					</p>
 				</div>
 			</div>

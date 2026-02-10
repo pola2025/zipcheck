@@ -17,7 +17,7 @@ export default function WhyZipCheck() {
 					<SectionLabel
 						label="Why ZipCheck"
 						title="왜 견적 분석이 필요할까요"
-						subtitle="같은 공사도 업체마다 수백만 원 차이. 데이터로 확인하세요."
+						subtitle={<>같은 공사도 업체마다 수백만원 차이.<br />데이터로 확인하세요.</>}
 						align="center"
 					/>
 				</div>

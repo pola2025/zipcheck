@@ -1,7 +1,9 @@
+import type { ReactNode } from 'react'
+
 interface SectionLabelProps {
 	label: string
 	title: string
-	subtitle?: string
+	subtitle?: ReactNode
 	align?: 'left' | 'center'
 }
 
