@@ -220,35 +220,48 @@ app.get('/upload-history', async (c) => {
 	return c.json(rows)
 })
 
-// Get data statistics
+// Get data statistics (benchmark_prices = 시드/크롤링 데이터)
 app.get('/data-stats', async (c) => {
 	try {
 		const overview = await query(c.env.DATABASE_URL, `
 			SELECT
-				COUNT(DISTINCT category) as categories_count,
-				COUNT(DISTINCT item_name) as items_count,
+				COUNT(DISTINCT std_category) as categories_count,
+				COUNT(DISTINCT std_item) as items_count,
 				COUNT(*) as records_count,
 				COALESCE(SUM(unit_price), 0)::text as total_amount
-			FROM construction_prices
+			FROM benchmark_prices
+			WHERE is_active = true
 		`)
 
 		const byCategory = await findMany(c.env.DATABASE_URL, `
 			SELECT
-				category,
+				std_category as category,
 				COUNT(*) as record_count,
 				COALESCE(SUM(unit_price), 0)::text as total_cost
-			FROM construction_prices
-			GROUP BY category
+			FROM benchmark_prices
+			WHERE is_active = true
+			GROUP BY std_category
 			ORDER BY SUM(unit_price) DESC
+		`)
+
+		const byRegion = await findMany(c.env.DATABASE_URL, `
+			SELECT
+				region,
+				COUNT(*) as count,
+				COALESCE(SUM(unit_price), 0)::text as total_cost
+			FROM benchmark_prices
+			WHERE is_active = true AND region IS NOT NULL
+			GROUP BY region
+			ORDER BY SUM(unit_price) DESC
+			LIMIT 10
 		`)
 
 		return c.json({
 			overview: overview[0] || { categories_count: 0, items_count: 0, records_count: 0, total_amount: '0' },
 			byCategory: byCategory || [],
-			byRegion: []
+			byRegion: byRegion || []
 		})
 	} catch (error) {
-		const message = error instanceof Error ? error.message : 'Unknown error'
 		return c.json({
 			overview: { categories_count: 0, items_count: 0, records_count: 0, total_amount: '0' },
 			byCategory: [],
@@ -257,28 +270,28 @@ app.get('/data-stats', async (c) => {
 	}
 })
 
-// Get item-level price statistics
+// Get item-level price statistics (benchmark_prices)
 app.get('/item-stats', async (c) => {
 	const category = c.req.query('category')
 	const search = c.req.query('search')
 
-	let whereClause = 'WHERE 1=1'
+	let whereClause = 'WHERE is_active = true'
 	const params: unknown[] = []
 
 	if (category) {
 		params.push(category)
-		whereClause += ` AND category = $${params.length}`
+		whereClause += ` AND std_category = $${params.length}`
 	}
 	if (search) {
 		params.push(`%${search}%`)
-		whereClause += ` AND item_name ILIKE $${params.length}`
+		whereClause += ` AND std_item ILIKE $${params.length}`
 	}
 
 	const rows = await findMany(c.env.DATABASE_URL, `
 		SELECT
-			item_name || '-' || COALESCE(category, '') as id,
-			item_name,
-			category as category_name,
+			std_item || '-' || COALESCE(std_category, '') as id,
+			std_item as item_name,
+			std_category as category_name,
 			COUNT(*) as record_count,
 			ROUND(AVG(unit_price))::int as avg_total_cost,
 			0 as avg_material_cost,
@@ -287,10 +300,10 @@ app.get('/item-stats', async (c) => {
 			MIN(unit_price)::int as min_cost,
 			MAX(unit_price)::int as max_cost,
 			ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY unit_price))::int as median_cost
-		FROM construction_prices
+		FROM benchmark_prices
 		${whereClause}
-		GROUP BY item_name, category
-		ORDER BY item_name
+		GROUP BY std_item, std_category
+		ORDER BY std_item
 		LIMIT 100
 	`, params)
 
