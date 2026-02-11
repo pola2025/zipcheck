@@ -8,6 +8,7 @@ interface PageSEOProps {
 	title: string
 	description: string
 	path?: string
+	baseUrl?: string
 	noindex?: boolean
 	ogImage?: string
 	ogType?: string
@@ -18,13 +19,15 @@ export default function PageSEO({
 	title,
 	description,
 	path = '/',
+	baseUrl,
 	noindex = false,
 	ogImage,
 	ogType = 'website',
 	jsonLd
 }: PageSEOProps) {
+	const effectiveBaseUrl = baseUrl || BASE_URL
 	const fullTitle = path === '/' ? '원가 기준 인테리어 견적 분석' : `${title} | ${SITE_NAME}`
-	const url = `${BASE_URL}${path}`
+	const url = `${effectiveBaseUrl}${path}`
 	const imageUrl = ogImage || DEFAULT_IMAGE
 
 	const jsonLdScripts = jsonLd

@@ -1,6 +1,29 @@
 import { getGoogleAccessToken, SCOPES } from '../lib/google-auth'
 import type { Env } from '../types'
 
+export type SiteFilter = 'main' | 'blog' | undefined
+
+// Hostname filter helpers
+function buildHostnameFilter(site: SiteFilter): Record<string, unknown> | null {
+	if (!site) return null
+	const hostname = site === 'blog' ? 'blog.zcheck.co.kr' : 'zcheck.co.kr'
+	return {
+		filter: {
+			fieldName: 'hostName',
+			stringFilter: { matchType: 'EXACT', value: hostname },
+		},
+	}
+}
+
+function combineDimensionFilters(...filters: (Record<string, unknown> | null)[]): Record<string, unknown> | null {
+	const valid = filters.filter((f): f is Record<string, unknown> => f !== null)
+	if (valid.length === 0) return null
+	if (valid.length === 1) return valid[0]
+	return {
+		andGroup: { expressions: valid },
+	}
+}
+
 // GA4 Data API helper
 async function runReport(accessToken: string, propertyId: string, request: Record<string, unknown>) {
 	const res = await fetch(
@@ -55,11 +78,14 @@ function getToken(env: Env) {
 	)
 }
 
-export async function getTrafficReport(env: Env, days = 30) {
+export async function getTrafficReport(env: Env, days = 30, site?: SiteFilter) {
 	const accessToken = await getToken(env)
 	const propertyId = env.GA4_PROPERTY_ID
 	const prevStart = `${days * 2}daysAgo`
 	const prevEnd = `${days + 1}daysAgo`
+
+	const hostnameFilter = buildHostnameFilter(site)
+	const df = hostnameFilter ? { dimensionFilter: hostnameFilter } : {}
 
 	const [overviewRes, prevOverviewRes, dailyRes, pagesRes, sourcesRes] = await Promise.all([
 		runReport(accessToken, propertyId, {
@@ -68,6 +94,7 @@ export async function getTrafficReport(env: Env, days = 30) {
 				{ name: 'totalUsers' }, { name: 'sessions' }, { name: 'screenPageViews' },
 				{ name: 'averageSessionDuration' }, { name: 'bounceRate' },
 			],
+			...df,
 		}),
 		runReport(accessToken, propertyId, {
 			dateRanges: [{ startDate: prevStart, endDate: prevEnd }],
@@ -75,6 +102,7 @@ export async function getTrafficReport(env: Env, days = 30) {
 				{ name: 'totalUsers' }, { name: 'sessions' }, { name: 'screenPageViews' },
 				{ name: 'averageSessionDuration' }, { name: 'bounceRate' },
 			],
+			...df,
 		}),
 		runReport(accessToken, propertyId, {
 			dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
@@ -84,6 +112,7 @@ export async function getTrafficReport(env: Env, days = 30) {
 				{ name: 'averageSessionDuration' },
 			],
 			orderBys: [{ dimension: { dimensionName: 'date' } }],
+			...df,
 		}),
 		runReport(accessToken, propertyId, {
 			dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
@@ -91,6 +120,7 @@ export async function getTrafficReport(env: Env, days = 30) {
 			metrics: [{ name: 'screenPageViews' }, { name: 'totalUsers' }],
 			orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
 			limit: '20',
+			...df,
 		}),
 		runReport(accessToken, propertyId, {
 			dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
@@ -98,6 +128,7 @@ export async function getTrafficReport(env: Env, days = 30) {
 			metrics: [{ name: 'totalUsers' }, { name: 'sessions' }],
 			orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
 			limit: '15',
+			...df,
 		}),
 	])
 
@@ -137,8 +168,11 @@ export async function getTrafficReport(env: Env, days = 30) {
 	}
 }
 
-export async function getDeviceReport(env: Env, days = 30) {
+export async function getDeviceReport(env: Env, days = 30, site?: SiteFilter) {
 	const accessToken = await getToken(env)
+	const hostnameFilter = buildHostnameFilter(site)
+	const df = hostnameFilter ? { dimensionFilter: hostnameFilter } : {}
+
 	const res = await runReport(accessToken, env.GA4_PROPERTY_ID, {
 		dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
 		dimensions: [{ name: 'deviceCategory' }],
@@ -147,6 +181,7 @@ export async function getDeviceReport(env: Env, days = 30) {
 			{ name: 'screenPageViews' }, { name: 'bounceRate' },
 		],
 		orderBys: [{ metric: { metricName: 'totalUsers' }, desc: true }],
+		...df,
 	})
 
 	return (res.rows || []).map(row => ({
@@ -158,8 +193,11 @@ export async function getDeviceReport(env: Env, days = 30) {
 	}))
 }
 
-export async function getGeoReport(env: Env, days = 30) {
+export async function getGeoReport(env: Env, days = 30, site?: SiteFilter) {
 	const accessToken = await getToken(env)
+	const hostnameFilter = buildHostnameFilter(site)
+	const df = hostnameFilter ? { dimensionFilter: hostnameFilter } : {}
+
 	const [regionsRes, citiesRes] = await Promise.all([
 		runReport(accessToken, env.GA4_PROPERTY_ID, {
 			dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
@@ -167,6 +205,7 @@ export async function getGeoReport(env: Env, days = 30) {
 			metrics: [{ name: 'totalUsers' }, { name: 'sessions' }],
 			orderBys: [{ metric: { metricName: 'totalUsers' }, desc: true }],
 			limit: '15',
+			...df,
 		}),
 		runReport(accessToken, env.GA4_PROPERTY_ID, {
 			dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
@@ -174,6 +213,7 @@ export async function getGeoReport(env: Env, days = 30) {
 			metrics: [{ name: 'totalUsers' }, { name: 'sessions' }],
 			orderBys: [{ metric: { metricName: 'totalUsers' }, desc: true }],
 			limit: '15',
+			...df,
 		}),
 	])
 
@@ -194,18 +234,22 @@ const FUNNEL_PATHS = [
 	{ path: '/quote-status', label: '견적 확인' },
 ]
 
-export async function getFunnelReport(env: Env, days = 30) {
+export async function getFunnelReport(env: Env, days = 30, site?: SiteFilter) {
 	const accessToken = await getToken(env)
+	const hostnameFilter = buildHostnameFilter(site)
+	const pathFilter: Record<string, unknown> = {
+		filter: {
+			fieldName: 'pagePath',
+			inListFilter: { values: FUNNEL_PATHS.map(f => f.path) },
+		},
+	}
+	const dimFilter = combineDimensionFilters(hostnameFilter, pathFilter)
+
 	const res = await runReport(accessToken, env.GA4_PROPERTY_ID, {
 		dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
 		dimensions: [{ name: 'pagePath' }],
 		metrics: [{ name: 'screenPageViews' }, { name: 'totalUsers' }],
-		dimensionFilter: {
-			filter: {
-				fieldName: 'pagePath',
-				inListFilter: { values: FUNNEL_PATHS.map(f => f.path) },
-			},
-		},
+		...(dimFilter ? { dimensionFilter: dimFilter } : {}),
 	})
 
 	const dataMap = new Map<string, { pageViews: number; users: number }>()
@@ -222,13 +266,17 @@ export async function getFunnelReport(env: Env, days = 30) {
 	})
 }
 
-export async function getHourlyReport(env: Env, days = 30) {
+export async function getHourlyReport(env: Env, days = 30, site?: SiteFilter) {
 	const accessToken = await getToken(env)
+	const hostnameFilter = buildHostnameFilter(site)
+	const df = hostnameFilter ? { dimensionFilter: hostnameFilter } : {}
+
 	const res = await runReport(accessToken, env.GA4_PROPERTY_ID, {
 		dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
 		dimensions: [{ name: 'hour' }],
 		metrics: [{ name: 'totalUsers' }, { name: 'sessions' }],
 		orderBys: [{ dimension: { dimensionName: 'hour' } }],
+		...df,
 	})
 
 	const dataMap = new Map<number, { users: number; sessions: number }>()
@@ -246,13 +294,17 @@ export async function getHourlyReport(env: Env, days = 30) {
 	}))
 }
 
-export async function getNewVsReturningReport(env: Env, days = 30) {
+export async function getNewVsReturningReport(env: Env, days = 30, site?: SiteFilter) {
 	const accessToken = await getToken(env)
+	const hostnameFilter = buildHostnameFilter(site)
+	const df = hostnameFilter ? { dimensionFilter: hostnameFilter } : {}
+
 	const res = await runReport(accessToken, env.GA4_PROPERTY_ID, {
 		dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
 		dimensions: [{ name: 'newVsReturning' }],
 		metrics: [{ name: 'totalUsers' }, { name: 'sessions' }],
 		orderBys: [{ metric: { metricName: 'totalUsers' }, desc: true }],
+		...df,
 	})
 
 	return (res.rows || []).map(row => ({
@@ -262,25 +314,32 @@ export async function getNewVsReturningReport(env: Env, days = 30) {
 	}))
 }
 
-export async function getConversionTrend(env: Env, days = 30) {
+export async function getConversionTrend(env: Env, days = 30, site?: SiteFilter) {
 	const accessToken = await getToken(env)
+	const hostnameFilter = buildHostnameFilter(site)
+	const df = hostnameFilter ? { dimensionFilter: hostnameFilter } : {}
+
+	const convPathFilter: Record<string, unknown> = {
+		filter: {
+			fieldName: 'pagePath',
+			stringFilter: { matchType: 'EXACT', value: '/quote-submission' },
+		},
+	}
+	const convDimFilter = combineDimensionFilters(hostnameFilter, convPathFilter)
+
 	const [totalRes, convRes] = await Promise.all([
 		runReport(accessToken, env.GA4_PROPERTY_ID, {
 			dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
 			dimensions: [{ name: 'date' }],
 			metrics: [{ name: 'totalUsers' }],
 			orderBys: [{ dimension: { dimensionName: 'date' } }],
+			...df,
 		}),
 		runReport(accessToken, env.GA4_PROPERTY_ID, {
 			dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
 			dimensions: [{ name: 'date' }],
 			metrics: [{ name: 'totalUsers' }],
-			dimensionFilter: {
-				filter: {
-					fieldName: 'pagePath',
-					stringFilter: { matchType: 'EXACT', value: '/quote-submission' },
-				},
-			},
+			...(convDimFilter ? { dimensionFilter: convDimFilter } : {}),
 			orderBys: [{ dimension: { dimensionName: 'date' } }],
 		}),
 	])
@@ -304,10 +363,14 @@ export async function getConversionTrend(env: Env, days = 30) {
 	})
 }
 
-export async function getRealtimeUsers(env: Env): Promise<number> {
+export async function getRealtimeUsers(env: Env, site?: SiteFilter): Promise<number> {
 	const accessToken = await getToken(env)
+	const hostnameFilter = buildHostnameFilter(site)
+	const df = hostnameFilter ? { dimensionFilter: hostnameFilter } : {}
+
 	const res = await runRealtimeReport(accessToken, env.GA4_PROPERTY_ID, {
 		metrics: [{ name: 'activeUsers' }],
+		...df,
 	})
 	return parseInt(res.rows?.[0]?.metricValues?.[0]?.value || '0')
 }

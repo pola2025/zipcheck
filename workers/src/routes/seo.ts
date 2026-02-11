@@ -8,6 +8,120 @@ import { findMany, findOne } from '../lib/db'
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>()
 
+const BLOG_SLUGS = [
+	'apartment-remodeling-checklist-2026',
+	'questions-before-choosing-contractor',
+	'remodeling-cost-guide-30-pyeong',
+	'material-selection-guide',
+	'site-inspection-checklist',
+	'contract-verification-checklist',
+	'interior-scam-prevention-top5',
+	'fake-estimate-detection',
+	'additional-cost-response-guide',
+	'defective-construction-guide',
+]
+
+const BLOG_META_MAP: Record<string, {
+	title: string
+	excerpt: string
+	date: string
+	author: string
+	category: string
+	tags: string[]
+	readTime: string
+}> = {
+	'apartment-remodeling-checklist-2026': {
+		title: '2026년 아파트 리모델링, 이것만은 꼭 확인하세요',
+		excerpt: '인테리어 견적 시 흔히 놓치는 5가지 항목과 적정 가격 범위를 알려드립니다.',
+		date: '2026-02-03',
+		author: '집첵 에디터',
+		category: '정보 및 참고사항',
+		tags: ['리모델링', '체크리스트', '아파트', '인테리어 견적비교'],
+		readTime: '5분',
+	},
+	'questions-before-choosing-contractor': {
+		title: '업체 선택 시 꼭 물어봐야 할 질문 7가지',
+		excerpt: '계약 전 이 질문들만 던져도 부실업체를 거를 수 있습니다.',
+		date: '2026-01-30',
+		author: '집첵 에디터',
+		category: '정보 및 참고사항',
+		tags: ['업체선택', '질문', '계약'],
+		readTime: '4분',
+	},
+	'remodeling-cost-guide-30-pyeong': {
+		title: '30평대 전체 리모델링 평균 비용은?',
+		excerpt: '2026년 기준 지역별, 시공 범위별 평균 비용을 데이터로 분석했습니다.',
+		date: '2026-01-25',
+		author: '집첵 에디터',
+		category: '정보 및 참고사항',
+		tags: ['비용', '30평', '리모델링', '가격', '인테리어 가격비교'],
+		readTime: '6분',
+	},
+	'material-selection-guide': {
+		title: '올바른 자재 선택법 A to Z',
+		excerpt: '바닥재부터 페인트까지, 자재별 특성과 가격대를 비교 분석합니다.',
+		date: '2026-01-22',
+		author: '집첵 에디터',
+		category: '정보 및 참고사항',
+		tags: ['자재', '바닥재', '타일', '페인트'],
+		readTime: '7분',
+	},
+	'site-inspection-checklist': {
+		title: '인테리어 계약 전 현장 확인 필수 체크리스트',
+		excerpt: '계약 전 현장 방문에서 반드시 확인해야 할 항목들을 정리했습니다.',
+		date: '2026-01-18',
+		author: '집첵 에디터',
+		category: '정보 및 참고사항',
+		tags: ['현장확인', '체크리스트', '계약'],
+		readTime: '4분',
+	},
+	'contract-verification-checklist': {
+		title: '계약서 작성 전 반드시 확인할 체크리스트',
+		excerpt: '피해 사례의 80%는 계약서 미비에서 시작됩니다. 필수 확인사항을 정리했습니다.',
+		date: '2026-01-28',
+		author: '집첵 에디터',
+		category: '피해예방',
+		tags: ['계약서', '피해예방', '체크리스트', '인테리어 리모델링 견적비교'],
+		readTime: '5분',
+	},
+	'interior-scam-prevention-top5': {
+		title: '인테리어 사기 수법 TOP 5와 예방법',
+		excerpt: '실제 피해 사례를 분석하여 가장 흔한 사기 수법과 대처법을 정리했습니다.',
+		date: '2026-01-20',
+		author: '집첵 에디터',
+		category: '피해예방',
+		tags: ['사기', '예방', '피해사례'],
+		readTime: '6분',
+	},
+	'fake-estimate-detection': {
+		title: '견적서 허위 항목 구별하는 법',
+		excerpt: '견적서에 숨겨진 부풀리기와 허위 항목을 식별하는 방법을 알려드립니다.',
+		date: '2026-01-15',
+		author: '집첵 에디터',
+		category: '피해예방',
+		tags: ['견적서', '허위항목', '비교', '인테리어 견적비교'],
+		readTime: '5분',
+	},
+	'additional-cost-response-guide': {
+		title: '공사 중 추가 비용 요구, 어떻게 대응할까?',
+		excerpt: '인테리어 공사 중 추가 비용을 요구받았을 때 현명하게 대처하는 방법입니다.',
+		date: '2026-01-10',
+		author: '집첵 에디터',
+		category: '피해예방',
+		tags: ['추가비용', '대응', '공사중'],
+		readTime: '4분',
+	},
+	'defective-construction-guide': {
+		title: '부실시공 발견 시 대처 가이드',
+		excerpt: '완공 후 하자를 발견했을 때, 단계별로 대처하는 방법을 안내합니다.',
+		date: '2026-01-05',
+		author: '집첵 에디터',
+		category: '피해예방',
+		tags: ['부실시공', '하자', '대처'],
+		readTime: '5분',
+	},
+}
+
 // ─── Static page metadata map ───
 const STATIC_META: Record<string, {
 	title: string
@@ -174,6 +288,44 @@ app.get('/api/seo/meta', async (c) => {
 			})
 		}
 
+		// 3a. Blog landing
+		if (normalizedPath === '/blog') {
+			return c.json({
+				title: '집첵 블로그 | 인테리어 견적비교 가이드 & 정보',
+				description: '인테리어 견적비교, 가격비교, 리모델링 견적비교 정보를 제공합니다. 현명한 인테리어를 위한 필수 가이드.',
+				canonical: 'https://blog.zcheck.co.kr',
+				ogType: 'website',
+				ogImage: `${frontendUrl}/og-image.png`,
+				jsonLdType: 'Blog',
+			})
+		}
+
+		// 3b. Blog post
+		const blogMatch = normalizedPath.match(/^\/blog\/([^/]+)$/)
+		if (blogMatch) {
+			const slug = blogMatch[1]
+			const blogMeta = BLOG_META_MAP[slug]
+			if (blogMeta) {
+				return c.json({
+					title: `${blogMeta.title} | 집첵 블로그`,
+					description: blogMeta.excerpt,
+					canonical: `https://blog.zcheck.co.kr/blog/${slug}`,
+					ogType: 'article',
+					ogImage: `${frontendUrl}/og-image.png`,
+					jsonLdType: 'BlogPosting',
+					data: {
+						title: blogMeta.title,
+						excerpt: blogMeta.excerpt,
+						date: blogMeta.date,
+						author: blogMeta.author,
+						category: blogMeta.category,
+						tags: blogMeta.tags,
+						readTime: blogMeta.readTime,
+					},
+				})
+			}
+		}
+
 		// 4. Fallback
 		return c.json({
 			title: '원가 기준 인테리어 견적 분석',
@@ -263,6 +415,27 @@ app.get('/sitemap.xml', async (c) => {
 `
 		}
 
+		// Blog landing
+		xml += `  <url>
+    <loc>https://blog.zcheck.co.kr</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+`
+		// Blog posts
+		for (const slug of BLOG_SLUGS) {
+			const blogMeta = BLOG_META_MAP[slug]
+			const lastmod = blogMeta ? blogMeta.date.replace(/\./g, '-') : today
+			xml += `  <url>
+    <loc>https://blog.zcheck.co.kr/blog/${slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+`
+		}
+
 		xml += `</urlset>`
 
 		return new Response(xml, {
@@ -290,6 +463,7 @@ Allow: /community
 Allow: /plan-selection
 Allow: /privacy
 Allow: /terms
+Allow: /blog/
 Disallow: /admin/
 Disallow: /api/
 Disallow: /auth/
@@ -318,6 +492,7 @@ User-agent: Applebot
 Allow: /
 
 Sitemap: ${frontendUrl}/sitemap.xml
+Sitemap: https://blog.zcheck.co.kr/sitemap.xml
 `
 
 	return new Response(txt, {

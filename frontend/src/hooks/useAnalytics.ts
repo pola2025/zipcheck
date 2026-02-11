@@ -1,6 +1,8 @@
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { getApiUrl } from '../lib/api-config'
 
+export type SiteFilter = 'main' | 'blog' | undefined
+
 function getAuthHeaders(): HeadersInit {
 	const token = localStorage.getItem('admin_token')
 	return {
@@ -54,10 +56,10 @@ interface TrafficReport {
 	}>
 }
 
-export function useTrafficReport(days: number = 30) {
+export function useTrafficReport(days: number = 30, site?: SiteFilter) {
 	return useQuery<TrafficReport>({
-		queryKey: ['analytics', 'traffic', days],
-		queryFn: () => fetchAnalytics(`/api/admin/google/analytics/traffic?days=${days}`),
+		queryKey: ['analytics', 'traffic', days, site],
+		queryFn: () => fetchAnalytics(`/api/admin/google/analytics/traffic?days=${days}${site ? `&site=${site}` : ''}`),
 		staleTime: 5 * 60 * 1000,
 	})
 }
@@ -66,10 +68,10 @@ export function useTrafficReport(days: number = 30) {
 // Realtime Users
 // ============================================
 
-export function useRealtimeUsers() {
+export function useRealtimeUsers(site?: SiteFilter) {
 	return useQuery<{ activeUsers: number }>({
-		queryKey: ['analytics', 'realtime'],
-		queryFn: () => fetchAnalytics('/api/admin/google/analytics/realtime'),
+		queryKey: ['analytics', 'realtime', site],
+		queryFn: () => fetchAnalytics(`/api/admin/google/analytics/realtime${site ? `?site=${site}` : ''}`),
 		refetchInterval: 60 * 1000,
 		staleTime: 30 * 1000,
 	})
@@ -87,10 +89,10 @@ interface DeviceReportItem {
 	bounceRate: number
 }
 
-export function useDeviceReport(days: number = 30) {
+export function useDeviceReport(days: number = 30, site?: SiteFilter) {
 	return useQuery<DeviceReportItem[]>({
-		queryKey: ['analytics', 'devices', days],
-		queryFn: () => fetchAnalytics(`/api/admin/google/analytics/devices?days=${days}`),
+		queryKey: ['analytics', 'devices', days, site],
+		queryFn: () => fetchAnalytics(`/api/admin/google/analytics/devices?days=${days}${site ? `&site=${site}` : ''}`),
 		staleTime: 5 * 60 * 1000,
 	})
 }
@@ -110,10 +112,10 @@ interface GeoReport {
 	cities: GeoReportItem[]
 }
 
-export function useGeoReport(days: number = 30) {
+export function useGeoReport(days: number = 30, site?: SiteFilter) {
 	return useQuery<GeoReport>({
-		queryKey: ['analytics', 'geo', days],
-		queryFn: () => fetchAnalytics(`/api/admin/google/analytics/geo?days=${days}`),
+		queryKey: ['analytics', 'geo', days, site],
+		queryFn: () => fetchAnalytics(`/api/admin/google/analytics/geo?days=${days}${site ? `&site=${site}` : ''}`),
 		staleTime: 5 * 60 * 1000,
 	})
 }
@@ -130,10 +132,10 @@ interface FunnelStep {
 	users: number
 }
 
-export function useFunnelReport(days: number = 30) {
+export function useFunnelReport(days: number = 30, site?: SiteFilter) {
 	return useQuery<FunnelStep[]>({
-		queryKey: ['analytics', 'funnel', days],
-		queryFn: () => fetchAnalytics(`/api/admin/google/analytics/funnel?days=${days}`),
+		queryKey: ['analytics', 'funnel', days, site],
+		queryFn: () => fetchAnalytics(`/api/admin/google/analytics/funnel?days=${days}${site ? `&site=${site}` : ''}`),
 		staleTime: 5 * 60 * 1000,
 	})
 }
@@ -178,10 +180,10 @@ interface HourlyReportItem {
 	sessions: number
 }
 
-export function useHourlyReport(days: number = 30) {
+export function useHourlyReport(days: number = 30, site?: SiteFilter) {
 	return useQuery<HourlyReportItem[]>({
-		queryKey: ['analytics', 'hourly', days],
-		queryFn: () => fetchAnalytics(`/api/admin/google/analytics/hourly?days=${days}`),
+		queryKey: ['analytics', 'hourly', days, site],
+		queryFn: () => fetchAnalytics(`/api/admin/google/analytics/hourly?days=${days}${site ? `&site=${site}` : ''}`),
 		staleTime: 5 * 60 * 1000,
 	})
 }
@@ -196,10 +198,10 @@ interface NewVsReturningItem {
 	sessions: number
 }
 
-export function useNewVsReturningReport(days: number = 30) {
+export function useNewVsReturningReport(days: number = 30, site?: SiteFilter) {
 	return useQuery<NewVsReturningItem[]>({
-		queryKey: ['analytics', 'new-returning', days],
-		queryFn: () => fetchAnalytics(`/api/admin/google/analytics/new-returning?days=${days}`),
+		queryKey: ['analytics', 'new-returning', days, site],
+		queryFn: () => fetchAnalytics(`/api/admin/google/analytics/new-returning?days=${days}${site ? `&site=${site}` : ''}`),
 		staleTime: 5 * 60 * 1000,
 	})
 }
@@ -215,10 +217,10 @@ interface ConversionTrendItem {
 	conversionRate: number
 }
 
-export function useConversionTrend(days: number = 30) {
+export function useConversionTrend(days: number = 30, site?: SiteFilter) {
 	return useQuery<ConversionTrendItem[]>({
-		queryKey: ['analytics', 'conversion-trend', days],
-		queryFn: () => fetchAnalytics(`/api/admin/google/analytics/conversion-trend?days=${days}`),
+		queryKey: ['analytics', 'conversion-trend', days, site],
+		queryFn: () => fetchAnalytics(`/api/admin/google/analytics/conversion-trend?days=${days}${site ? `&site=${site}` : ''}`),
 		staleTime: 5 * 60 * 1000,
 	})
 }

@@ -27,6 +27,7 @@ import {
 	useNewVsReturningReport,
 	useConversionTrend,
 } from '../../hooks/useAnalytics'
+import type { SiteFilter } from '../../hooks/useAnalytics'
 
 const PERIOD_OPTIONS = [
 	{ label: '7일', value: 7 },
@@ -35,11 +36,18 @@ const PERIOD_OPTIONS = [
 	{ label: '90일', value: 90 },
 ]
 
+const SITE_OPTIONS = [
+	{ label: '전체', value: undefined as SiteFilter },
+	{ label: '홈페이지', value: 'main' as SiteFilter },
+	{ label: '블로그', value: 'blog' as SiteFilter },
+]
+
 function formatDateInput(d: Date): string {
 	return d.toISOString().split('T')[0]
 }
 
 function AnalyticsContent() {
+	const [site, setSite] = useState<SiteFilter>(undefined)
 	const [preset, setPreset] = useState<number | 'custom'>(30)
 	const [startDate, setStartDate] = useState(() => {
 		const d = new Date()
@@ -65,16 +73,16 @@ function AnalyticsContent() {
 		setEndDate(formatDateInput(end))
 	}
 
-	const traffic = useTrafficReport(days)
-	const realtime = useRealtimeUsers()
-	const devices = useDeviceReport(days)
-	const geo = useGeoReport(days)
-	const funnel = useFunnelReport(days)
+	const traffic = useTrafficReport(days, site)
+	const realtime = useRealtimeUsers(site)
+	const devices = useDeviceReport(days, site)
+	const geo = useGeoReport(days, site)
+	const funnel = useFunnelReport(days, site)
 	const search = useSearchPerformance(days)
 	const airtableSync = useAirtableSync()
-	const hourly = useHourlyReport(days)
-	const newVsReturning = useNewVsReturningReport(days)
-	const conversionTrend = useConversionTrend(days)
+	const hourly = useHourlyReport(days, site)
+	const newVsReturning = useNewVsReturningReport(days, site)
+	const conversionTrend = useConversionTrend(days, site)
 
 	const isLoading = traffic.isLoading || devices.isLoading || geo.isLoading || funnel.isLoading
 
@@ -132,6 +140,23 @@ function AnalyticsContent() {
 							직접설정
 						</button>
 					</div>
+				</div>
+
+				{/* Site Filter */}
+				<div className="flex gap-1 bg-sand-100 rounded-xl p-1 w-fit">
+					{SITE_OPTIONS.map(opt => (
+						<button
+							key={opt.label}
+							onClick={() => setSite(opt.value)}
+							className={`px-3.5 py-1.5 text-sm rounded-lg font-medium transition-all ${
+								site === opt.value
+									? 'bg-white text-forest-700 shadow-sm'
+									: 'text-sand-700 hover:text-sand-800'
+							}`}
+						>
+							{opt.label}
+						</button>
+					))}
 				</div>
 
 				{preset === 'custom' && (
@@ -211,12 +236,24 @@ function AnalyticsContent() {
 
 			{/* Funnel */}
 			<motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-				{funnel.data && <FunnelChart data={funnel.data} />}
+				{site === 'blog' ? (
+					<div className="bg-sand-50 rounded-2xl p-5 border border-sand-200">
+						<p className="text-sand-600 text-sm">블로그에는 퍼널 데이터가 없습니다. 전체 또는 홈페이지를 선택해주세요.</p>
+					</div>
+				) : (
+					funnel.data && <FunnelChart data={funnel.data} />
+				)}
 			</motion.div>
 
 			{/* Conversion Trend */}
 			<motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}>
-				{conversionTrend.data && <ConversionTrendChart data={conversionTrend.data} />}
+				{site === 'blog' ? (
+					<div className="bg-sand-50 rounded-2xl p-5 border border-sand-200">
+						<p className="text-sand-600 text-sm">블로그에는 전환율 데이터가 없습니다. 전체 또는 홈페이지를 선택해주세요.</p>
+					</div>
+				) : (
+					conversionTrend.data && <ConversionTrendChart data={conversionTrend.data} />
+				)}
 			</motion.div>
 
 			{/* 2-column: Top Pages + Cities */}

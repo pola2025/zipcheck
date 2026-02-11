@@ -42,6 +42,7 @@ export default function BlogPostDetail() {
 				title={`${post.title} | 집첵 블로그`}
 				description={post.excerpt}
 				path={`/blog/${post.slug}`}
+				baseUrl="https://blog.zcheck.co.kr"
 				jsonLd={[
 					{
 						'@context': 'https://schema.org',
@@ -49,6 +50,7 @@ export default function BlogPostDetail() {
 						headline: post.title,
 						description: post.excerpt,
 						datePublished: post.date.replace(/\./g, '-'),
+						dateModified: post.date.replace(/\./g, '-'),
 						author: { '@type': 'Person', name: post.author },
 						publisher: {
 							'@type': 'Organization',
@@ -59,6 +61,25 @@ export default function BlogPostDetail() {
 							'@type': 'WebPage',
 							'@id': `https://blog.zcheck.co.kr/blog/${post.slug}`,
 						},
+						image: post.thumbnail || 'https://zcheck.co.kr/og-image.png',
+						wordCount: post.content.replace(/<[^>]*>/g, '').length,
+						articleSection: post.category,
+						keywords: [...post.tags, '인테리어 견적비교', '인테리어 가격비교', '인테리어 리모델링 견적비교'].join(', '),
+						inLanguage: 'ko-KR',
+						isPartOf: {
+							'@type': 'Blog',
+							name: '집첵 블로그',
+							url: 'https://blog.zcheck.co.kr',
+						},
+					},
+					{
+						'@context': 'https://schema.org',
+						'@type': 'BreadcrumbList',
+						itemListElement: [
+							{ '@type': 'ListItem', position: 1, name: '블로그', item: 'https://blog.zcheck.co.kr' },
+							{ '@type': 'ListItem', position: 2, name: post.category, item: 'https://blog.zcheck.co.kr' },
+							{ '@type': 'ListItem', position: 3, name: post.title, item: `https://blog.zcheck.co.kr/blog/${post.slug}` },
+						],
 					},
 				]}
 			/>

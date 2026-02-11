@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const API_URL = process.env.VITE_API_URL || process.env.API_URL || 'https://zipcheck-api.zipcheck2025.workers.dev'
 const FRONTEND_URL = 'https://zcheck.co.kr'
+const BLOG_URL = 'https://blog.zcheck.co.kr'
 
 interface MetaResponse {
 	title: string
@@ -22,8 +23,8 @@ function escapeHtml(str: string): string {
 		.replace(/'/g, '&#039;')
 }
 
-function buildBreadcrumbs(path: string): { name: string; url: string }[] {
-	const crumbs = [{ name: '홈', url: FRONTEND_URL }]
+function buildBreadcrumbs(path: string, baseUrl: string = FRONTEND_URL): { name: string; url: string }[] {
+	const crumbs = [{ name: '홈', url: baseUrl }]
 	const segments = path.split('/').filter(Boolean)
 
 	const nameMap: Record<string, string> = {
@@ -33,6 +34,7 @@ function buildBreadcrumbs(path: string): { name: string; url: string }[] {
 		community: '커뮤니티',
 		privacy: '개인정보처리방침',
 		terms: '이용약관',
+		blog: '블로그',
 	}
 
 	let currentPath = ''
@@ -40,16 +42,16 @@ function buildBreadcrumbs(path: string): { name: string; url: string }[] {
 		currentPath += `/${segment}`
 		crumbs.push({
 			name: nameMap[segment] || segment,
-			url: `${FRONTEND_URL}${currentPath}`,
+			url: `${baseUrl}${currentPath}`,
 		})
 	}
 
 	return crumbs
 }
 
-function buildJsonLd(meta: MetaResponse, path: string): string {
+function buildJsonLd(meta: MetaResponse, path: string, baseUrl: string = FRONTEND_URL): string {
 	const schemas: object[] = []
-	const breadcrumbs = buildBreadcrumbs(path)
+	const breadcrumbs = buildBreadcrumbs(path, baseUrl)
 
 	// BreadcrumbList (always)
 	schemas.push({
@@ -123,12 +125,58 @@ function buildJsonLd(meta: MetaResponse, path: string): string {
 		})
 	}
 
+	if (meta.jsonLdType === 'BlogPosting' && data.title) {
+		schemas.push({
+			'@context': 'https://schema.org',
+			'@type': 'BlogPosting',
+			headline: data.title as string,
+			description: (data.excerpt as string) || meta.description,
+			datePublished: (data.date as string || '').replace(/\./g, '-'),
+			dateModified: (data.date as string || '').replace(/\./g, '-'),
+			author: { '@type': 'Person', name: data.author as string || '집첵 에디터' },
+			publisher: {
+				'@type': 'Organization',
+				name: '집첵',
+				url: FRONTEND_URL,
+			},
+			keywords: Array.isArray(data.tags) ? (data.tags as string[]).join(', ') : '',
+			articleSection: data.category as string,
+			inLanguage: 'ko-KR',
+			isPartOf: {
+				'@type': 'Blog',
+				name: '집첵 블로그',
+				url: BLOG_URL,
+			},
+			mainEntityOfPage: {
+				'@type': 'WebPage',
+				'@id': meta.canonical,
+			},
+		})
+	}
+
+	if (meta.jsonLdType === 'Blog') {
+		schemas.push({
+			'@context': 'https://schema.org',
+			'@type': 'Blog',
+			name: meta.title,
+			description: meta.description,
+			url: meta.canonical,
+			keywords: '인테리어 견적비교, 인테리어 가격비교, 인테리어 리모델링 견적비교',
+			inLanguage: 'ko-KR',
+			isPartOf: {
+				'@type': 'WebSite',
+				name: 'ZipCheck',
+				url: FRONTEND_URL,
+			},
+		})
+	}
+
 	return schemas.map((s) => `<script type="application/ld+json">${JSON.stringify(s)}</script>`).join('\n')
 }
 
-function buildSemanticBody(meta: MetaResponse, path: string): string {
+function buildSemanticBody(meta: MetaResponse, path: string, baseUrl: string = FRONTEND_URL): string {
 	const data = meta.data || {}
-	const breadcrumbs = buildBreadcrumbs(path)
+	const breadcrumbs = buildBreadcrumbs(path, baseUrl)
 
 	const breadcrumbNav = `<nav aria-label="breadcrumb"><ol>${breadcrumbs
 		.map((c, i) =>
@@ -173,6 +221,20 @@ function buildSemanticBody(meta: MetaResponse, path: string): string {
 </article>`
 	}
 
+	if (meta.jsonLdType === 'BlogPosting' && data.title) {
+		const bodyExcerpt = (data.excerpt as string || '').substring(0, 500)
+		return `<article>
+	${breadcrumbNav}
+	<header>
+		<h1>${escapeHtml(data.title as string)}</h1>
+		<p>${escapeHtml(data.author as string || '')} | ${data.readTime || ''} 읽기 | ${data.date || ''}</p>
+	</header>
+	<section>
+		<p>${escapeHtml(bodyExcerpt)}</p>
+	</section>
+</article>`
+	}
+
 	// Static pages
 	return `<main>
 	${breadcrumbNav}
@@ -183,6 +245,9 @@ function buildSemanticBody(meta: MetaResponse, path: string): string {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
 	const path = (req.query.path as string) || '/'
+	const host = req.headers.host || ''
+	const isBlog = host.startsWith('blog.')
+	const baseUrl = isBlog ? BLOG_URL : FRONTEND_URL
 
 	try {
 		const metaRes = await fetch(`${API_URL}/api/seo/meta?path=${encodeURIComponent(path)}`, {
@@ -193,12 +258,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 			// Fallback meta for 404 or errors
 			res.setHeader('Content-Type', 'text/html; charset=utf-8')
 			res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
-			return res.status(200).send(buildFallbackHtml(path))
+			return res.status(200).send(buildFallbackHtml(path, baseUrl))
 		}
 
 		const meta: MetaResponse = await metaRes.json()
-		const jsonLdTags = buildJsonLd(meta, path)
-		const semanticBody = buildSemanticBody(meta, path)
+		const jsonLdTags = buildJsonLd(meta, path, baseUrl)
+		const semanticBody = buildSemanticBody(meta, path, baseUrl)
 
 		const html = `<!DOCTYPE html>
 <html lang="ko">
@@ -227,6 +292,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 <meta name="twitter:description" content="${escapeHtml(meta.description)}">
 <meta name="twitter:image" content="${meta.ogImage}">
 
+${isBlog ? '<meta name="keywords" content="인테리어 견적비교, 인테리어 가격비교, 인테리어 리모델링 견적비교, 인테리어 가이드">' : ''}
 ${jsonLdTags}
 </head>
 <body>
@@ -240,22 +306,22 @@ ${semanticBody}
 	} catch (error) {
 		console.error('SEO render error:', error)
 		res.setHeader('Content-Type', 'text/html; charset=utf-8')
-		return res.status(200).send(buildFallbackHtml(path))
+		return res.status(200).send(buildFallbackHtml(path, baseUrl))
 	}
 }
 
-function buildFallbackHtml(path: string): string {
+function buildFallbackHtml(path: string, baseUrl: string = FRONTEND_URL): string {
 	return `<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <title>원가 기준 인테리어 견적 분석</title>
 <meta name="description" content="인테리어 리모델링 견적이 적정한지 궁금하다면, 집첵에서 원가 기준으로 분석해보세요.">
-<link rel="canonical" href="${FRONTEND_URL}${path}">
+<link rel="canonical" href="${baseUrl}${path}">
 <meta property="og:title" content="원가 기준 인테리어 견적 분석">
 <meta property="og:description" content="인테리어 리모델링 견적이 적정한지 궁금하다면, 집첵에서 원가 기준으로 분석해보세요.">
-<meta property="og:image" content="${FRONTEND_URL}/og-image.png">
-<meta property="og:url" content="${FRONTEND_URL}${path}">
+<meta property="og:image" content="${baseUrl}/og-image.png">
+<meta property="og:url" content="${baseUrl}${path}">
 </head>
 <body>
 <h1>집첵 - 내 인테리어 견적 분석</h1>

@@ -2,9 +2,17 @@ import { Hono } from 'hono'
 import type { Env, Variables } from '../../types'
 import { authenticateToken, requireAdmin } from '../../middleware/auth'
 import * as ga4 from '../../services/google-analytics'
+import type { SiteFilter } from '../../services/google-analytics'
 import * as searchConsole from '../../services/google-search-console'
 import * as gmail from '../../services/google-gmail'
 import { syncDailyAnalytics } from '../../services/airtable-sync'
+
+function parseSiteParam(c: any): SiteFilter {
+	const site = c.req.query('site')
+	if (site === 'blog') return 'blog'
+	if (site === 'main') return 'main'
+	return undefined
+}
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>()
 
@@ -14,48 +22,56 @@ app.use('/*', authenticateToken(), requireAdmin())
 // GA4 Analytics
 app.get('/analytics/traffic', async (c) => {
 	const days = parseInt(c.req.query('days') || '30')
-	const data = await ga4.getTrafficReport(c.env, days)
+	const site = parseSiteParam(c)
+	const data = await ga4.getTrafficReport(c.env, days, site)
 	return c.json(data)
 })
 
 app.get('/analytics/realtime', async (c) => {
-	const count = await ga4.getRealtimeUsers(c.env)
+	const site = parseSiteParam(c)
+	const count = await ga4.getRealtimeUsers(c.env, site)
 	return c.json({ activeUsers: count })
 })
 
 app.get('/analytics/devices', async (c) => {
 	const days = parseInt(c.req.query('days') || '30')
-	const data = await ga4.getDeviceReport(c.env, days)
+	const site = parseSiteParam(c)
+	const data = await ga4.getDeviceReport(c.env, days, site)
 	return c.json(data)
 })
 
 app.get('/analytics/geo', async (c) => {
 	const days = parseInt(c.req.query('days') || '30')
-	const data = await ga4.getGeoReport(c.env, days)
+	const site = parseSiteParam(c)
+	const data = await ga4.getGeoReport(c.env, days, site)
 	return c.json(data)
 })
 
 app.get('/analytics/funnel', async (c) => {
 	const days = parseInt(c.req.query('days') || '30')
-	const data = await ga4.getFunnelReport(c.env, days)
+	const site = parseSiteParam(c)
+	const data = await ga4.getFunnelReport(c.env, days, site)
 	return c.json(data)
 })
 
 app.get('/analytics/hourly', async (c) => {
 	const days = parseInt(c.req.query('days') || '30')
-	const data = await ga4.getHourlyReport(c.env, days)
+	const site = parseSiteParam(c)
+	const data = await ga4.getHourlyReport(c.env, days, site)
 	return c.json(data)
 })
 
 app.get('/analytics/new-returning', async (c) => {
 	const days = parseInt(c.req.query('days') || '30')
-	const data = await ga4.getNewVsReturningReport(c.env, days)
+	const site = parseSiteParam(c)
+	const data = await ga4.getNewVsReturningReport(c.env, days, site)
 	return c.json(data)
 })
 
 app.get('/analytics/conversion-trend', async (c) => {
 	const days = parseInt(c.req.query('days') || '30')
-	const data = await ga4.getConversionTrend(c.env, days)
+	const site = parseSiteParam(c)
+	const data = await ga4.getConversionTrend(c.env, days, site)
 	return c.json(data)
 })
 

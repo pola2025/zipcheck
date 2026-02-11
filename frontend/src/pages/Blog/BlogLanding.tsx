@@ -28,16 +28,19 @@ export default function BlogLanding() {
 	return (
 		<div className="min-h-screen bg-sand-900">
 			<PageSEO
-				title="집첵 블로그 | 인테리어 가이드 & 정보"
-				description="인테리어 트렌드, 비용 가이드, 피해 예방 정보를 제공합니다. 현명한 인테리어를 위한 필수 가이드."
+				title="집첵 블로그 | 인테리어 견적비교 가이드 & 정보"
+				description="인테리어 견적비교, 가격비교, 리모델링 견적비교 정보를 제공합니다. 현명한 인테리어를 위한 필수 가이드."
 				path="/"
+				baseUrl="https://blog.zcheck.co.kr"
 				jsonLd={[
 					{
 						'@context': 'https://schema.org',
 						'@type': 'Blog',
 						name: '집첵 블로그',
-						description: '인테리어 가이드 & 정보',
+						description: '인테리어 견적비교, 인테리어 가격비교, 인테리어 리모델링 견적비교 가이드 & 정보',
 						url: 'https://blog.zcheck.co.kr',
+						keywords: '인테리어 견적비교, 인테리어 가격비교, 인테리어 리모델링 견적비교, 인테리어 가이드',
+						inLanguage: 'ko-KR',
 						isPartOf: { '@type': 'WebSite', name: 'ZipCheck', url: 'https://zcheck.co.kr' },
 					},
 				]}
