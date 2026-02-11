@@ -131,7 +131,7 @@ const STATIC_META: Record<string, {
 }> = {
 	'/': {
 		title: '원가 기준 인테리어 견적 분석',
-		description: '인테리어 리모델링 견적이 적정한지 궁금하다면, 집첵에서 원가 기준으로 분석해보세요. 업체가 알려주지 않는 적정 견적을 확인할 수 있습니다.',
+		description: '인테리어 견적비교, 인테리어 가격비교의 새로운 기준. 유통원가 기반으로 견적서를 항목별 분석해 자재등급별 적정 가격을 알려드립니다. 인테리어 리모델링 견적비교도 간편하게, 48시간 내 분석 리포트 제공.',
 		ogType: 'website',
 		jsonLdType: 'WebApplication',
 	},
@@ -309,7 +309,7 @@ app.get('/api/seo/meta', async (c) => {
 				return c.json({
 					title: `${blogMeta.title} | 집첵 블로그`,
 					description: blogMeta.excerpt,
-					canonical: `https://blog.zcheck.co.kr/blog/${slug}`,
+					canonical: `https://blog.zcheck.co.kr/${slug}`,
 					ogType: 'article',
 					ogImage: `${frontendUrl}/og-image.png`,
 					jsonLdType: 'BlogPosting',
@@ -428,7 +428,7 @@ app.get('/sitemap.xml', async (c) => {
 			const blogMeta = BLOG_META_MAP[slug]
 			const lastmod = blogMeta ? blogMeta.date.replace(/\./g, '-') : today
 			xml += `  <url>
-    <loc>https://blog.zcheck.co.kr/blog/${slug}</loc>
+    <loc>https://blog.zcheck.co.kr/${slug}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

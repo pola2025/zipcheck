@@ -71,6 +71,7 @@ const serviceJsonLd = {
 		name: 'ZipCheck',
 		url: 'https://zcheck.co.kr'
 	},
+	serviceType: '인테리어 견적 분석',
 	areaServed: { '@type': 'Country', name: 'KR' },
 	hasOfferCatalog: {
 		'@type': 'OfferCatalog',
@@ -92,7 +93,7 @@ export default function ZipCheckPage() {
 		<div className="relative min-h-screen bg-sand-50 text-sand-900 font-noto">
 			<PageSEO
 				title="AI 인테리어 견적 분석"
-				description="인테리어 견적서를 AI가 항목별로 분석해 적정 가격을 알려드립니다. 실제 유통망 원가 기반, 48시간 내 분석 리포트 제공. 과다 청구 항목을 한눈에 확인하세요."
+				description="인테리어 견적비교, 인테리어 가격비교의 새로운 기준. 유통원가 기반으로 견적서를 항목별 분석해 자재등급별 적정 가격을 알려드립니다. 인테리어 리모델링 견적비교도 간편하게, 48시간 내 분석 리포트 제공."
 				path="/"
 				jsonLd={[faqJsonLd, howToJsonLd, serviceJsonLd]}
 			/>

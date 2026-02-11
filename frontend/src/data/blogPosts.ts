@@ -613,6 +613,17 @@ export const BLOG_POSTS: BlogPost[] = [
 ]
 
 /**
+ * Generate dynamic OG image URL for a blog post
+ */
+export function getBlogOgImage(post: BlogPost): string {
+	const params = new URLSearchParams({
+		title: post.title,
+		category: post.category === '피해예방' ? '피해예방' : '인테리어 가이드',
+	})
+	return `https://zcheck.co.kr/api/og/blog?${params.toString()}`
+}
+
+/**
  * Get a blog post by slug
  */
 export function getBlogPostBySlug(slug: string): BlogPost | undefined {

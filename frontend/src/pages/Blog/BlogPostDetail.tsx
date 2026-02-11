@@ -3,7 +3,7 @@ import { ArrowRight, Clock, User, Tag, ChevronLeft } from 'lucide-react'
 import BlogHeader from 'components/blog/BlogHeader'
 import BlogFooter from 'components/blog/BlogFooter'
 import PageSEO from 'components/PageSEO'
-import { getBlogPostBySlug, getRelatedPosts, getCTAConfig } from '../../data/blogPosts'
+import { getBlogPostBySlug, getRelatedPosts, getCTAConfig, getBlogOgImage } from '../../data/blogPosts'
 import { getSubdomain, getSubdomainUrl } from '../../lib/subdomain'
 import { BlogChart, PRESET_CHARTS } from 'components/blog/charts/BlogCharts'
 
@@ -41,8 +41,9 @@ export default function BlogPostDetail() {
 			<PageSEO
 				title={`${post.title} | 집첵 블로그`}
 				description={post.excerpt}
-				path={`/blog/${post.slug}`}
+				path={`/${post.slug}`}
 				baseUrl="https://blog.zcheck.co.kr"
+				ogImage={post.thumbnail || getBlogOgImage(post)}
 				jsonLd={[
 					{
 						'@context': 'https://schema.org',
@@ -59,9 +60,9 @@ export default function BlogPostDetail() {
 						},
 						mainEntityOfPage: {
 							'@type': 'WebPage',
-							'@id': `https://blog.zcheck.co.kr/blog/${post.slug}`,
+							'@id': `https://blog.zcheck.co.kr/${post.slug}`,
 						},
-						image: post.thumbnail || 'https://zcheck.co.kr/og-image.png',
+						image: post.thumbnail || getBlogOgImage(post),
 						wordCount: post.content.replace(/<[^>]*>/g, '').length,
 						articleSection: post.category,
 						keywords: [...post.tags, '인테리어 견적비교', '인테리어 가격비교', '인테리어 리모델링 견적비교'].join(', '),
@@ -78,7 +79,7 @@ export default function BlogPostDetail() {
 						itemListElement: [
 							{ '@type': 'ListItem', position: 1, name: '블로그', item: 'https://blog.zcheck.co.kr' },
 							{ '@type': 'ListItem', position: 2, name: post.category, item: 'https://blog.zcheck.co.kr' },
-							{ '@type': 'ListItem', position: 3, name: post.title, item: `https://blog.zcheck.co.kr/blog/${post.slug}` },
+							{ '@type': 'ListItem', position: 3, name: post.title, item: `https://blog.zcheck.co.kr/${post.slug}` },
 						],
 					},
 				]}
